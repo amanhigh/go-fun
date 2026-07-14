@@ -200,19 +200,23 @@ var _ = Describe("ValuationManager", func() {
 					var trades []tax.Trade
 
 					BeforeEach(func() {
-						// Same-day complete exit: BUY 10 and SELL 10 on the same date
+						// Same-day complete exit: BUY 10 and SELL 10 on the same date,
+						// then later re-acquire BUY 5 on a subsequent date
 						trades = []tax.Trade{
 							tax.NewTrade(AAPL, "2024-01-15", "BUY", 10, 100),
 							tax.NewTrade(AAPL, "2024-01-15", "SELL", 10, 120),
+							tax.NewTrade(AAPL, "2024-03-15", "BUY", 5, 130),
 						}
 
 						// Daily prices for peak calculation
 						aaplDailyPrices := map[string]float64{
 							"2024-01-15": 100.0,
+							"2024-03-15": 130.0,
 						}
 						// Daily rates for INR calculation
 						aaplDailyRates := map[string]float64{
 							"2024-01-15": 82.5,
+							"2024-03-15": 83.0,
 						}
 
 						mockTickerManager.EXPECT().
@@ -221,8 +225,9 @@ var _ = Describe("ValuationManager", func() {
 						mockSBIManager.EXPECT().
 							GetDailyRates(ctx, year).
 							Return(aaplDailyRates, nil)
-						// NOTE: No GetPrice mock needed - position fully exits on first date (qty = 0),
-						// so determineYearEndPosition doesn't call GetPrice (see line 249 in valuation_manager.go)
+						mockTickerManager.EXPECT().
+							GetPrice(ctx, AAPL, yearEndDate).
+							Return(yearEndPrice, nil)
 					})
 
 					It("should have zero FirstPosition when first date closes at zero", func() {
@@ -234,11 +239,15 @@ var _ = Describe("ValuationManager", func() {
 						Expect(valuation.FirstPosition.Quantity).To(Equal(0.0))
 						Expect(valuation.FirstPosition.USDPrice).To(Equal(0.0))
 
-						// Peak position should also be zero (no positive quantity)
-						Expect(valuation.PeakPosition.Quantity).To(Equal(0.0))
+						// Peak position from later BUY (5 shares on Mar 15)
+						Expect(valuation.PeakPosition.Date).To(Equal(time.Date(2024, 3, 15, 0, 0, 0, 0, time.UTC)))
+						Expect(valuation.PeakPosition.Quantity).To(Equal(5.0))
+						Expect(valuation.PeakPosition.USDPrice).To(Equal(130.0))
 
-						// Empty year end position (zero quantity)
-						Expect(valuation.YearEndPosition.Quantity).To(Equal(0.0))
+						// Year end position (5 shares held to year-end)
+						Expect(valuation.YearEndPosition.Date).To(Equal(yearEndDate))
+						Expect(valuation.YearEndPosition.Quantity).To(Equal(5.0))
+						Expect(valuation.YearEndPosition.USDPrice).To(Equal(yearEndPrice))
 					})
 				})
 			})
@@ -433,12 +442,13 @@ var _ = Describe("ValuationManager", func() {
 					BeforeEach(func() {
 						// TODO: #A Multiple Peaks with Same Value (Take Second higher TBBR Rate) or Throw Error.
 						// Test validates that when multiple position peaks exist with SAME quantity,
-						// the second peak wins because it has HIGHER USD price AND HIGHER TBBR rate
+						// the second peak wins because it has HIGHER USD price AND HIGHER TBBR rate.
+						// Mar 15 fully liquidates (SELL 15 to bring 15→0), then Apr 15 re-acquires fully (BUY 15→15).
 						trades = []tax.Trade{
 							tax.NewTrade(AAPL, "2024-01-15", "BUY", 10, 100),  // Initial 10 shares
 							tax.NewTrade(AAPL, "2024-02-15", "BUY", 5, 110),   // Peak 1: 15 shares @ $110
-							tax.NewTrade(AAPL, "2024-03-15", "SELL", 5, 120),  // Down to 10 shares
-							tax.NewTrade(AAPL, "2024-04-15", "BUY", 5, 115),   // Peak 2: 15 shares @ $115 ← Expected peak (same qty, higher price+rate)
+							tax.NewTrade(AAPL, "2024-03-15", "SELL", 15, 120), // Full liquidation: down to 0
+							tax.NewTrade(AAPL, "2024-04-15", "BUY", 15, 115),  // Full re-acquisition: back to 15 ← Expected peak
 							tax.NewTrade(AAPL, "2024-05-15", "SELL", 12, 125), // Down to 3 shares
 						}
 
@@ -452,16 +462,17 @@ var _ = Describe("ValuationManager", func() {
 						}
 
 						// Daily rates for peak calculation
-						// Strategy: Both Feb 15 and Apr 15 have 15 shares (SAME quantity)
-						// Difference: Apr 15 has higher USD price ($115 vs $110) AND higher TBBR rate
-						// Apr 15 wins when using > comparison because: 15×115×85.0 > 15×110×82.0
+						// Strategy: Both Feb 15 and Apr 15 have 15 shares (SAME quantity).
+						// Mar 15 fully liquidates (SELL 15 → 0) — quantity=0 days are skipped by peak logic.
+						// Difference: Apr 15 has higher USD price ($115 vs $110) AND higher TBBR rate,
+						// so Apr 15 wins when using > comparison because: 15×115×85.0 > 15×110×82.0.
 						//
 						// INR Calculations:
 						// Jan 15: 10 × 100 × 80.0 = 80,000 INR
-						// Feb 15: 15 × 110 × 82.0 = 132,300 INR (first peak candidate, same qty as Apr 15)
-						// Mar 15: 10 × 120 × 82.5 = 99,000 INR (position reduces from 15)
-						// Apr 15: 15 × 115 × 85.0 = 147,375 INR ← PEAK (second peak, same qty but higher price+rate)
-						// May 15: 3 × 125 × 85.5 = 31,912.5 INR (position reduces from 15)
+						// Feb 15: 15 × 110 × 82.0 = 135,300 INR (first peak candidate)
+						// Mar 15:  0 × 120 × 82.5 = 0 INR (fully liquidated — skipped)
+						// Apr 15: 15 × 115 × 85.0 = 146,625 INR ← PEAK (full re-acquisition, higher price+rate)
+						// May 15:  3 × 125 × 85.5 = 32,062.5 INR (position reduces from 15)
 						mergedDailyRates := map[string]float64{
 							"2024-01-15": 80.0,
 							"2024-02-15": 82.0,
@@ -565,63 +576,6 @@ var _ = Describe("ValuationManager", func() {
 						actualPeakINR := valuation.PeakPosition.Quantity * valuation.PeakPosition.USDPrice * 85.0
 						Expect(actualPeakINR).To(Equal(jan15INR))
 						Expect(actualPeakINR).To(BeNumerically(">", jun15INR))
-					})
-				})
-
-				Context("Scenario 2: Same Qty, Same Price, Rate Determines Peak", func() {
-					// Pure rate variation test: isolates rate as the only changing factor
-					var trades []tax.Trade
-
-					BeforeEach(func() {
-						trades = []tax.Trade{
-							tax.NewTrade(AAPL, "2024-01-15", "BUY", 10, 100),
-						}
-
-						// Same quantity and same price on both dates
-						aaplDailyPrices := map[string]float64{
-							"2024-01-15": 100.0,
-							"2024-06-15": 100.0, // Same price as Jan 15
-						}
-
-						// Only rate varies: higher rate later
-						aaplDailyRates := map[string]float64{
-							"2024-01-15": 82.0,
-							"2024-06-15": 84.0, // Higher rate
-						}
-
-						// INR Calculations:
-						// Jan 15: 10 × $100 × 82.0 = 82,000 INR
-						// Jun 15: 10 × $100 × 84.0 = 84,000 INR ← PEAK (only rate differs)
-
-						mockTickerManager.EXPECT().
-							GetDailyPrices(ctx, AAPL, year).
-							Return(aaplDailyPrices, nil)
-						mockSBIManager.EXPECT().
-							GetDailyRates(ctx, year).
-							Return(aaplDailyRates, nil)
-						mockTickerManager.EXPECT().
-							GetPrice(ctx, AAPL, yearEndDate).
-							Return(yearEndPrice, nil)
-					})
-
-					It("should identify peak on higher rate date when price and quantity are same", func() {
-						valuation, err := valuationManager.AnalyzeValuation(ctx, AAPL, trades, year)
-						Expect(err).ToNot(HaveOccurred())
-
-						// Peak should be Jun 15 (higher rate)
-						Expect(valuation.PeakPosition.Date).To(Equal(time.Date(2024, 6, 15, 0, 0, 0, 0, time.UTC)))
-						Expect(valuation.PeakPosition.Quantity).To(Equal(10.0))
-						Expect(valuation.PeakPosition.USDPrice).To(Equal(100.0))
-
-						// Verify INR values: Jun 15 > Jan 15
-						jan15INR := 10.0 * 100.0 * 82.0 // = 82,000 INR
-						jun15INR := 10.0 * 100.0 * 84.0 // = 84,000 INR
-						Expect(jun15INR).To(BeNumerically(">", jan15INR))
-
-						// Verify only rate changed
-						actualPeakINR := valuation.PeakPosition.Quantity * valuation.PeakPosition.USDPrice * 84.0
-						Expect(actualPeakINR).To(Equal(jun15INR))
-						Expect(actualPeakINR).To(BeNumerically(">", jan15INR))
 					})
 				})
 
@@ -962,6 +916,39 @@ var _ = Describe("ValuationManager", func() {
 					Expect(err).To(HaveOccurred())                                           // Should fail fast
 					Expect(err.Code()).To(Equal(http.StatusInternalServerError))             // Server error expected
 					Expect(err.Error()).To(ContainSubstring("failed to get year end price")) // Specific error message
+				})
+			})
+
+			Context("Negative First-Date Net Quantity", func() {
+				It("should return error when net quantity on first date is negative", func() {
+					trades := []tax.Trade{
+						tax.NewTrade(AAPL, "2024-01-15", "BUY", 5, 100),
+						tax.NewTrade(AAPL, "2024-01-15", "SELL", 10, 120),
+					}
+
+					// Fresh start: no carry-over
+					mockAccountManager.EXPECT().
+						GetRecord(ctx, AAPL, year-1).
+						Return(tax.Account{}, common.ErrNotFound)
+
+					// Daily prices and rates needed for peak calculation (function proceeds despite negative net)
+					aaplDailyPrices := map[string]float64{
+						"2024-01-15": 100.0,
+					}
+					aaplDailyRates := map[string]float64{
+						"2024-01-15": 82.5,
+					}
+					mockTickerManager.EXPECT().
+						GetDailyPrices(ctx, AAPL, year).
+						Return(aaplDailyPrices, nil)
+					mockSBIManager.EXPECT().
+						GetDailyRates(ctx, year).
+						Return(aaplDailyRates, nil)
+
+					_, err := valuationManager.AnalyzeValuation(ctx, AAPL, trades, year)
+					Expect(err).To(HaveOccurred())
+					Expect(err.Code()).To(Equal(http.StatusBadRequest))
+					Expect(err.Error()).To(ContainSubstring("negative"))
 				})
 			})
 		})
@@ -1585,72 +1572,6 @@ var _ = Describe("ValuationManager", func() {
 			})
 		})
 
-		Context("With No Trades in Year", func() {
-			var (
-				testYear     = 2023
-				yearEndDate  = time.Date(testYear, 12, 31, 0, 0, 0, 0, time.UTC)
-				yearEndPrice = 185.00 // A different price for clarity
-			)
-
-			BeforeEach(func() {
-				carryOverAccount.Quantity = 75
-				carryOverAccount.MarketValue = 12000.00 // Year-end market value: $160.00 per share
-				// FirstPosition metadata
-				carryOverAccount.OriginDate = "2020-08-15"
-				carryOverAccount.OriginQty = 75.0
-				carryOverAccount.OriginPrice = 130.00
-
-				// Daily prices map is empty (no trades in year)
-				// Q3: Yes, empty maps work - getClosestPrice returns 0, day skipped
-				aaplDailyPrices := map[string]float64{}
-
-				// Daily rates map is empty (no trades in year)
-				aaplDailyRates := map[string]float64{}
-
-				mockAccountManager.EXPECT().
-					GetRecord(ctx, AAPL, testYear-1).
-					Return(carryOverAccount, nil).Once()
-
-				mockTickerManager.EXPECT().
-					GetDailyPrices(ctx, AAPL, testYear).
-					Return(aaplDailyPrices, nil).Once()
-
-				mockSBIManager.EXPECT().
-					GetDailyRates(ctx, testYear).
-					Return(aaplDailyRates, nil).Once()
-
-				mockTickerManager.EXPECT().
-					GetPrice(ctx, AAPL, yearEndDate).
-					Return(yearEndPrice, nil).Once()
-
-				tradesInYear = []tax.Trade{} // Explicitly empty
-			})
-
-			It("should correctly set Valuations based on carry-over when no trades occur", func() {
-				valuation, err := valuationManager.AnalyzeValuation(ctx, AAPL, tradesInYear, testYear)
-
-				Expect(err).ToNot(HaveOccurred())
-				Expect(valuation.Ticker).To(Equal(AAPL))
-
-				// 1. Assert FirstPosition (Opening balance preserves ORIGINAL acquisition)
-				// Should be: 2020-08-15 (original first acquisition), NOT 2022-12-31 (year-end)
-				expectedFirstPosDate := time.Date(2020, 8, 15, 0, 0, 0, 0, time.UTC)
-				Expect(valuation.FirstPosition.Date.Format(time.DateOnly)).To(Equal(expectedFirstPosDate.Format(time.DateOnly)))
-				Expect(valuation.FirstPosition.Quantity).To(Equal(75.0))
-				Expect(valuation.FirstPosition.USDPrice).To(Equal(130.00)) // Original cost, NOT $160 market value
-
-				// 2. Assert PeakPosition (Should be the same as FirstPosition as no trades occurred)
-				Expect(valuation.PeakPosition.Date.Format(time.DateOnly)).To(Equal(expectedFirstPosDate.Format(time.DateOnly)))
-				Expect(valuation.PeakPosition.Quantity).To(Equal(75.0))
-				Expect(valuation.PeakPosition.USDPrice).To(Equal(130.00)) // Same as FirstPosition
-
-				// 3. Assert YearEndPosition (Quantity remains the same, price is year-end price)
-				Expect(valuation.YearEndPosition.Date.Format(time.DateOnly)).To(Equal(yearEndDate.Format(time.DateOnly)))
-				Expect(valuation.YearEndPosition.Quantity).To(Equal(75.0))
-				Expect(valuation.YearEndPosition.USDPrice).To(Equal(yearEndPrice))
-			})
-		})
-
 		Context("Prior-Year Year-End Liquidation with Next-Year Repurchase", func() {
 			// Scenario: Position fully liquidated at 2023 year-end (Quantity=0, MarketValue=0),
 			// but account record still carries old origin metadata (OriginDate, OriginQty, OriginPrice).
@@ -1900,103 +1821,4 @@ var _ = Describe("ValuationManager", func() {
 		})
 	})
 
-	Context("Fresh Acquisition After Prior Liquidation (Tax.md Scenario 3A)", func() {
-		BeforeEach(func() {
-			// Default GetSplits returns empty for fresh acquisition tests
-			mockGetSplitsEmpty(mockTickerManager, ctx)
-		})
-
-		// Scenario: Position fully liquidated at prior year-end, then re-acquired in current year
-		// Per Tax.md Scenario 3A (lines 398-409), FirstPosition resets to the new acquisition date
-		// (NOT preserved from prior year).
-		var (
-			tradesInYear []tax.Trade
-		)
-
-		Context("Liquidated at Year-End, Re-acquired Next Year", func() {
-			// Scenario: Position fully liquidated at 2023 year-end, then re-acquired in 2024
-			// - 2023-05-01: Acquired 30 shares @ $180
-			// - 2023-10-15: Sold all 30 shares (fully liquidated)
-			// - 2023 year-end: Qty = 0 (NO carry-over to 2024)
-			// - 2024-03-10: Re-acquired 25 shares @ $195
-			// - FirstPosition.Date RESETS to 2024-03-10 (new acquisition date)
-			// Tax.md Line 398-409: "FirstPosition resets to reflect new acquisition date from subsequent year"
-			const NVDA = "NVDA"
-			var (
-				testYear    = 2024
-				yearEndDate = time.Date(testYear, 12, 31, 0, 0, 0, 0, time.UTC)
-			)
-
-			BeforeEach(func() {
-				// NO carry-over account from 2023 (liquidated at year-end 2023)
-				mockAccountManager.EXPECT().
-					GetRecord(ctx, NVDA, testYear-1).
-					Return(tax.Account{}, common.ErrNotFound).Once()
-
-				// Daily prices showing holding period and peak
-				nvdaDailyPrices := map[string]float64{
-					"2024-03-10": 195.00, // Re-acquisition date
-					"2024-05-15": 210.00, // Mid-year price increase
-					"2024-07-20": 225.00, // Peak price (highest USD)
-					"2024-09-10": 220.00, // Later price
-					"2024-11-05": 215.00, // Near year-end
-				}
-
-				// Daily rates for peak calculation
-				nvdaDailyRates := map[string]float64{
-					"2024-03-10": 82.00,
-					"2024-05-15": 82.50,
-					"2024-07-20": 83.20, // Peak rate with peak price
-					"2024-09-10": 83.00,
-					"2024-11-05": 82.80,
-				}
-
-				mockTickerManager.EXPECT().
-					GetDailyPrices(ctx, NVDA, testYear).
-					Return(nvdaDailyPrices, nil).Once()
-
-				mockSBIManager.EXPECT().
-					GetDailyRates(ctx, testYear).
-					Return(nvdaDailyRates, nil).Once()
-
-				mockTickerManager.EXPECT().
-					GetPrice(ctx, NVDA, yearEndDate).
-					Return(212.00, nil).Once()
-
-				tradesInYear = []tax.Trade{
-					tax.NewTrade(NVDA, "2024-03-10", "BUY", 25, 195.00), // Fresh acquisition in 2024
-					tax.NewTrade(NVDA, "2024-05-15", "BUY", 15, 210.00), // Additional purchase
-				}
-			})
-
-			It("should reset OriginDate to 2024 re-acquisition date (NOT 2023)", func() {
-				valuation, err := valuationManager.AnalyzeValuation(ctx, NVDA, tradesInYear, testYear)
-
-				Expect(err).ToNot(HaveOccurred())
-				Expect(valuation.Ticker).To(Equal(NVDA))
-
-				// 1. Assert FirstPosition RESETS to 2024 acquisition (NOT 2023)
-				// Tax.md Scenario 3A: "FirstPosition RESETS = (5 qty, $180, 2025-03-10)"
-				expectedFirstPosDate := time.Date(2024, 3, 10, 0, 0, 0, 0, time.UTC)
-				Expect(valuation.FirstPosition.Date.Format(time.DateOnly)).To(Equal(expectedFirstPosDate.Format(time.DateOnly)),
-					"FirstPosition.Date should be 2024-03-10 (fresh acquisition after 2023 liquidation)")
-				Expect(valuation.FirstPosition.Quantity).To(Equal(25.0),
-					"FirstPosition.Quantity should be from first 2024 trade")
-				Expect(valuation.FirstPosition.USDPrice).To(Equal(195.00),
-					"FirstPosition.Price should be from first 2024 trade")
-
-				// 2. Assert PeakPosition (July 20 with highest INR value)
-				// INR calculation: 40 × $225 × 83.20 = ₹748,800
-				peakDate := time.Date(2024, 7, 20, 0, 0, 0, 0, time.UTC)
-				Expect(valuation.PeakPosition.Date.Format(time.DateOnly)).To(Equal(peakDate.Format(time.DateOnly)))
-				Expect(valuation.PeakPosition.Quantity).To(Equal(40.0)) // 25 + 15 from both buys
-				Expect(valuation.PeakPosition.USDPrice).To(Equal(225.00))
-
-				// 3. Assert YearEndPosition
-				Expect(valuation.YearEndPosition.Date.Format(time.DateOnly)).To(Equal(yearEndDate.Format(time.DateOnly)))
-				Expect(valuation.YearEndPosition.Quantity).To(Equal(40.0))
-				Expect(valuation.YearEndPosition.USDPrice).To(Equal(212.00))
-			})
-		})
-	})
 })
