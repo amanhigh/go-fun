@@ -4,7 +4,6 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
-	"math"
 	"net/http"
 	"os"
 	"path/filepath"
@@ -91,7 +90,6 @@ func (t *TickerManagerImpl) GetPrice(ctx context.Context, ticker string, date ti
 	}
 
 	dateStr := date.Format(time.DateOnly)
-	dateUnix := date.Unix()
 
 	var rawPrice float64
 	if closePrice, exists := data.Prices[dateStr]; exists {
@@ -102,7 +100,7 @@ func (t *TickerManagerImpl) GetPrice(ctx context.Context, ticker string, date ti
 		return 0, common.NewHttpError("No price data found", http.StatusNotFound)
 	}
 
-	adjustedPrice, adjErr := t.adjustPriceForSplits(rawPrice, dateUnix, data.Splits, ticker)
+	adjustedPrice, adjErr := t.adjustPriceForSplits(rawPrice, date, data.Splits, ticker)
 	if adjErr != nil {
 		return 0, adjErr
 	}
@@ -131,30 +129,21 @@ func (t *TickerManagerImpl) findClosestPreviousPrice(ticker string, data tax.Sto
 	return 0, common.NewHttpError("No price data found", http.StatusNotFound)
 }
 
-// hoursPerDay is the number of hours in a day, used for calendar-day truncation.
-const hoursPerDay = 24
-
-// calendarDay returns the Unix timestamp at midnight UTC for the given Unix timestamp,
-// normalizing any intraday timestamp to the start of its UTC calendar date.
-func calendarDay(ts int64) int64 {
-	return time.Unix(ts, 0).UTC().Truncate(hoursPerDay * time.Hour).Unix()
-}
-
 // adjustPriceForSplits returns the historical date's price expressed on the historical date's share basis
 // by multiplying the raw cached price by cumulative split ratios
 // for all split events on strictly later calendar dates.
-func (t *TickerManagerImpl) adjustPriceForSplits(price float64, dateUnix int64, splits []tax.YahooSplit, ticker string) (float64, common.HttpError) {
+func (t *TickerManagerImpl) adjustPriceForSplits(price float64, date time.Time, splits []tax.YahooSplit, ticker string) (float64, common.HttpError) {
 	// Validate all splits before multiplying
 	for _, split := range splits {
-		if vErr := t.validateSplitEvent(split, ticker); vErr != nil {
+		if vErr := split.Validate(ticker); vErr != nil {
 			return 0, vErr
 		}
 	}
 
-	refDay := calendarDay(dateUnix)
+	refDay := date.UTC().Truncate(24 * time.Hour) //nolint:mnd
 	ratio := 1.0
 	for _, split := range splits {
-		if calendarDay(split.Date) > refDay {
+		if split.EffectiveDate().After(refDay) {
 			ratio *= split.Numerator / split.Denominator
 		}
 	}
@@ -241,23 +230,6 @@ func (t *TickerManagerImpl) saveTickerData(data tax.StockData, ticker string) co
 	return nil
 }
 
-// validateSplitEvent checks that a YahooSplit has valid event data:
-// positive finite numerator and denominator, and a valid usable Unix timestamp.
-// The error message includes the ticker and event timestamp for traceability.
-func (t *TickerManagerImpl) validateSplitEvent(split tax.YahooSplit, ticker string) common.HttpError {
-	prefix := fmt.Sprintf("ticker %s: split event timestamp %d", ticker, split.Date)
-	if split.Date <= 0 {
-		return common.NewHttpError(fmt.Sprintf("%s: non-positive timestamp %d", prefix, split.Date), http.StatusBadRequest)
-	}
-	if split.Numerator <= 0 || math.IsInf(split.Numerator, 0) || math.IsNaN(split.Numerator) {
-		return common.NewHttpError(fmt.Sprintf("%s: non-positive or non-finite numerator %f", prefix, split.Numerator), http.StatusBadRequest)
-	}
-	if split.Denominator <= 0 || math.IsInf(split.Denominator, 0) || math.IsNaN(split.Denominator) {
-		return common.NewHttpError(fmt.Sprintf("%s: non-positive or non-finite denominator %f", prefix, split.Denominator), http.StatusBadRequest)
-	}
-	return nil
-}
-
 // GetSplits returns split events within the given date range (inclusive).
 // Returns chronologically ordered defensive copy and non-nil empty slice.
 func (t *TickerManagerImpl) GetSplits(ctx context.Context, ticker string, from, to time.Time) ([]tax.YahooSplit, common.HttpError) {
@@ -272,17 +244,17 @@ func (t *TickerManagerImpl) GetSplits(ctx context.Context, ticker string, from, 
 
 	// Validate all split events before filtering
 	for _, split := range data.Splits {
-		if vErr := t.validateSplitEvent(split, ticker); vErr != nil {
+		if vErr := split.Validate(ticker); vErr != nil {
 			return nil, vErr
 		}
 	}
 
-	fromDay := calendarDay(from.Unix())
-	toDay := calendarDay(to.Unix())
+	fromDay := from.UTC().Truncate(24 * time.Hour).Unix() //nolint:mnd
+	toDay := to.UTC().Truncate(24 * time.Hour).Unix()     //nolint:mnd
 
 	result := make([]tax.YahooSplit, 0)
 	for _, split := range data.Splits {
-		splitDay := calendarDay(split.Date)
+		splitDay := split.EffectiveDate().Unix()
 		if splitDay >= fromDay && splitDay <= toDay {
 			result = append(result, split)
 		}
@@ -303,7 +275,7 @@ func (t *TickerManagerImpl) filterYearPrices(data tax.StockData, yearStr, ticker
 		if strings.HasPrefix(date, yearStr) {
 			parsedDate, parseErr := time.Parse(time.DateOnly, date)
 			if parseErr == nil {
-				adjustedPrice, adjErr := t.adjustPriceForSplits(price, parsedDate.Unix(), data.Splits, ticker)
+				adjustedPrice, adjErr := t.adjustPriceForSplits(price, parsedDate, data.Splits, ticker)
 				if adjErr != nil {
 					return nil, adjErr
 				}
@@ -321,7 +293,7 @@ func (t *TickerManagerImpl) addBackfillPrice(yearPrices map[string]float64, data
 	prevYearEnd := fmt.Sprintf("%d-12-31", year-1)
 	if prevPrice, exists := data.Prices[prevYearEnd]; exists {
 		if prevDate, parseErr := time.Parse(time.DateOnly, prevYearEnd); parseErr == nil {
-			adjustedPrice, adjErr := t.adjustPriceForSplits(prevPrice, prevDate.Unix(), data.Splits, ticker)
+			adjustedPrice, adjErr := t.adjustPriceForSplits(prevPrice, prevDate, data.Splits, ticker)
 			if adjErr != nil {
 				return adjErr
 			}

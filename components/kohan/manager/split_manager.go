@@ -91,7 +91,7 @@ func (s *SplitManagerImpl) normalizeTickerTrades(ctx context.Context, ticker str
 
 	// Validate every split event once per ticker
 	for _, split := range splits {
-		if vErr := validateSplit(split, ticker); vErr != nil {
+		if vErr := split.Validate(ticker); vErr != nil {
 			return vErr
 		}
 	}
@@ -105,7 +105,7 @@ func (s *SplitManagerImpl) normalizeTickerTrades(ctx context.Context, ticker str
 				http.StatusBadRequest,
 			)
 		}
-		tradeDay := calendarDay(tradeDate.Unix())
+		tradeDay := tradeDate.UTC().Truncate(24 * time.Hour).Unix() //nolint:mnd
 		result[idx] = s.applySplitsToTrade(result[idx], splits, tradeDay)
 	}
 
@@ -124,7 +124,7 @@ func (s *SplitManagerImpl) normalizeTickerTrades(ctx context.Context, ticker str
 func (s *SplitManagerImpl) applySplitsToTrade(trade tax.Trade, splits []tax.YahooSplit, tradeDay int64) tax.Trade {
 	factor := 1.0
 	for _, split := range splits {
-		splitDay := calendarDay(split.Date)
+		splitDay := split.EffectiveDate().Unix()
 		if splitDay > tradeDay {
 			factor *= split.Numerator / split.Denominator
 		}
@@ -153,27 +153,6 @@ func (s *SplitManagerImpl) applySplitsToTrade(trade tax.Trade, splits []tax.Yaho
 		USDValue:   trade.USDValue,
 		Commission: trade.Commission,
 	}
-}
-
-// ---------------------------------------------------------------------------
-// Validation
-// ---------------------------------------------------------------------------
-
-// validateSplit checks that a YahooSplit has valid event data:
-// positive finite numerator and denominator, and a valid usable Unix timestamp.
-// The error message includes the ticker name.
-func validateSplit(split tax.YahooSplit, ticker string) common.HttpError {
-	prefix := fmt.Sprintf("ticker %s: split event timestamp %d", ticker, split.Date)
-	if split.Date <= 0 {
-		return common.NewHttpError(fmt.Sprintf("%s: non-positive timestamp %d", prefix, split.Date), http.StatusBadRequest)
-	}
-	if split.Numerator <= 0 || math.IsInf(split.Numerator, 0) || math.IsNaN(split.Numerator) {
-		return common.NewHttpError(fmt.Sprintf("%s: non-positive or non-finite numerator %f", prefix, split.Numerator), http.StatusBadRequest)
-	}
-	if split.Denominator <= 0 || math.IsInf(split.Denominator, 0) || math.IsNaN(split.Denominator) {
-		return common.NewHttpError(fmt.Sprintf("%s: non-positive or non-finite denominator %f", prefix, split.Denominator), http.StatusBadRequest)
-	}
-	return nil
 }
 
 // ---------------------------------------------------------------------------
