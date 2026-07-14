@@ -605,11 +605,14 @@ var _ = Describe("Tax Integration", Label("it"), func() {
 			Expect(adiVal.FirstPosition.TTRate).To(Equal(82.10)) // Jun 15 TT Buy rate
 
 			// PeakPosition: Occurs on Jul 10, 2023 (highest INR value from Qty × Price × ExchangeRate)
-			// Note: Price is same (181.90 from backfill), but exchange rate is higher on Jul 10 (82.1 vs 82.0).
-			// Quantity is 4 after 2:1 split on 2023-07-01 (ADI.json split event).
+			// After 2:1 split on 2023-07-01 (ADI.json split event), adjusted price is $90.95.
+			// Value preserved: 4 × $90.95 = 2 × $181.90 = $363.80
+			// Jul 10 TT Buy rate (82.50) selects the peak with qty 4.
 			Expect(adiVal.PeakPosition.Quantity).To(Equal(4.0))
-			Expect(adiVal.PeakPosition.USDPrice).To(Equal(181.90))
+			Expect(adiVal.PeakPosition.USDPrice).To(Equal(90.95))
 			Expect(adiVal.PeakPosition.Date.Format(time.DateOnly)).To(Equal("2023-07-10"))
+			Expect(adiVal.PeakPosition.TTRate).To(Equal(82.50))
+			Expect(adiVal.PeakPosition.TTDate.Format(time.DateOnly)).To(Equal("2023-07-10"))
 
 			// YearEndPosition: ZERO quantity (fully liquidated on Aug 31, 2023)
 			// System does not fetch year-end price for zero quantity (optimization: 0 × anyPrice = 0)

@@ -136,7 +136,12 @@ func (v *ValuationManagerImpl) AnalyzeValuation(ctx context.Context, tickerSymbo
 		return tax.Valuation{}, err
 	}
 
-	// Step 4: Get split events for the calendar year (Jan 1 - Dec 31 inclusive)
+	// Step 4: Validate negative net quantity on fresh start (before any market data calls)
+	if err := v.validateFirstDateNetNotNegative(trades, holdingPosition, tickerSymbol); err != nil {
+		return tax.Valuation{}, err
+	}
+
+	// Step 5: Get split events for the calendar year (Jan 1 - Dec 31 inclusive)
 	splitStart := time.Date(year, 1, 1, 0, 0, 0, 0, time.UTC)
 	splitEnd := time.Date(year, 12, 31, 0, 0, 0, 0, time.UTC)
 	splits, splitErr := v.tickerManager.GetSplits(ctx, tickerSymbol, splitStart, splitEnd)
@@ -156,18 +161,18 @@ func (v *ValuationManagerImpl) AnalyzeValuation(ctx context.Context, tickerSymbo
 
 	analysis := tax.Valuation{Ticker: tickerSymbol, FirstPosition: firstPos}
 
-	// Step 5: Validate first trade isn't sell on fresh start
+	// Step 6: Validate first trade isn't sell on fresh start
 	if vErr := v.validateFirstTradeNotSellOnFreshStart(trades, holdingPosition, tickerSymbol); vErr != nil {
 		return tax.Valuation{}, vErr
 	}
 
-	// Step 6: Build daily quantity timeline with event-date split awareness.
+	// Step 7: Build daily quantity timeline with event-date split awareness.
 	// Split events are applied before trades on the same date,
 	// then end-of-day quantity is recorded.
 	// TODO: Genuine intraday support (e.g., split after trade on same day) is deliberately out of scope.
 	quantityByDate := v.buildDailyQuantityTimeline(year, holdingPosition, trades, splits)
 
-	// Step 7: Calculate daily peak value from the timeline (Tax.md Line 124 compliance - MANDATORY)
+	// Step 8: Calculate daily peak value from the timeline (Tax.md Line 124 compliance - MANDATORY)
 	peakPosition, peakErr := v.calculateDailyPeak(ctx, tickerSymbol, year, holdingPosition, quantityByDate)
 	if peakErr != nil {
 		return tax.Valuation{}, common.NewServerError(
@@ -175,7 +180,7 @@ func (v *ValuationManagerImpl) AnalyzeValuation(ctx context.Context, tickerSymbo
 	}
 	analysis.PeakPosition = peakPosition
 
-	// Step 8: Determine year-end position from timeline Dec 31 end-of-day quantity
+	// Step 9: Determine year-end position from timeline Dec 31 end-of-day quantity
 	yearEndQuantity := v.getClosestValue(quantityByDate, splitEnd.Format(time.DateOnly))
 	if detErr := v.determineYearEndPosition(ctx, &analysis, year, yearEndQuantity); detErr != nil {
 		return tax.Valuation{}, detErr
@@ -228,6 +233,33 @@ func (v *ValuationManagerImpl) validateTradesExistOrCarryOver(trades []tax.Trade
 	if len(trades) == 0 && openingPosition.Quantity == 0 {
 		return common.NewHttpError(fmt.Sprintf("no trades or carry-over position provided for ticker %s", expectedTicker), http.StatusBadRequest)
 	}
+	return nil
+}
+
+// validateFirstDateNetNotNegative checks that the net quantity from aggregating
+// all trades on the first trade date is not negative on a fresh start.
+// Single-trade and first-trade-SELL scenarios are handled separately by
+// validateFirstTradeNotSellOnFreshStart.
+func (v *ValuationManagerImpl) validateFirstDateNetNotNegative(trades []tax.Trade, holdingPosition tax.Position, tickerSymbol string) common.HttpError {
+	// Only applicable on fresh start with trades
+	if holdingPosition.Quantity != 0 || len(trades) == 0 || trades[0].GetType() == tax.TRADE_TYPE_SELL {
+		return nil
+	}
+
+	firstDate, dateErr := trades[0].GetDate()
+	if dateErr != nil {
+		return dateErr
+	}
+
+	_, netQty, aggErr := aggregateFirstDateTrades(trades, firstDate)
+	if aggErr != nil {
+		return aggErr
+	}
+
+	if netQty < 0 {
+		return common.NewHttpError(fmt.Sprintf("negative net quantity on first date for %s", tickerSymbol), http.StatusBadRequest)
+	}
+
 	return nil
 }
 
