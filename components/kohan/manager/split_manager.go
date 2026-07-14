@@ -3,7 +3,6 @@ package manager
 import (
 	"context"
 	"fmt"
-	"math"
 	"net/http"
 	"time"
 
@@ -139,17 +138,17 @@ func (s *SplitManagerImpl) applySplitsToTrade(trade tax.Trade, splits []tax.Yaho
 		Str("Date", trade.Date).
 		Float64("selected_factor", factor).
 		Float64("original_qty", trade.Quantity).
-		Float64("normalized_qty", round2(trade.Quantity*factor)).
+		Float64("normalized_qty", trade.Quantity*factor).
 		Float64("original_price", trade.USDPrice).
-		Float64("normalized_price", round2(trade.USDPrice/factor)).
+		Float64("normalized_price", trade.USDPrice/factor).
 		Msg("SplitManager: event-based split adjustment — adjusting trade")
 
 	return tax.Trade{
 		Symbol:     trade.Symbol,
 		Date:       trade.Date,
 		Type:       trade.Type,
-		Quantity:   round2(trade.Quantity * factor),
-		USDPrice:   round2(trade.USDPrice / factor),
+		Quantity:   trade.Quantity * factor,
+		USDPrice:   trade.USDPrice / factor,
 		USDValue:   trade.USDValue,
 		Commission: trade.Commission,
 	}
@@ -158,8 +157,3 @@ func (s *SplitManagerImpl) applySplitsToTrade(trade tax.Trade, splits []tax.Yaho
 // ---------------------------------------------------------------------------
 // Helpers
 // ---------------------------------------------------------------------------
-
-func round2(v float64) float64 {
-	const decimalPlaces = 100.0
-	return math.Round(v*decimalPlaces) / decimalPlaces
-}

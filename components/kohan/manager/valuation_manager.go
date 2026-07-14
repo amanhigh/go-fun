@@ -172,7 +172,7 @@ func (v *ValuationManagerImpl) AnalyzeValuation(ctx context.Context, tickerSymbo
 	// TODO: Genuine intraday support (e.g., split after trade on same day) is deliberately out of scope.
 	quantityByDate := v.buildDailyQuantityTimeline(year, holdingPosition, trades, splits)
 
-	// Step 8: Calculate daily peak value from the timeline (Tax.md Line 124 compliance - MANDATORY)
+	// Step 8: Calculate daily peak value from the timeline (Tax.md daily peak calculation rule — mandatory)
 	peakPosition, peakErr := v.calculateDailyPeak(ctx, tickerSymbol, year, holdingPosition, quantityByDate)
 	if peakErr != nil {
 		return tax.Valuation{}, common.NewServerError(
@@ -397,7 +397,7 @@ func (v *ValuationManagerImpl) getOpeningPositions(ctx context.Context, ticker s
 
 // calculateDailyPeak evaluates (Quantity × Market_Price × SBI_Rate) for every day in the year
 // to find the true INR peak value during the calendar year.
-// This ensures compliance with Tax.md Line 124 requirement for daily evaluation.
+// This ensures compliance with the Tax.md daily peak calculation rule.
 // The quantityByDate timeline is pre-built by AnalyzeValuation with split events applied.
 func (v *ValuationManagerImpl) calculateDailyPeak(
 	ctx context.Context,
@@ -422,7 +422,7 @@ func (v *ValuationManagerImpl) calculateDailyPeak(
 	return v.findPeakByIteratingYear(year, openingPosition, quantityByDate, dailyPrices, dailyRates), nil
 }
 
-// findPeakByIteratingYear finds maximum INR value (Qty × Price × Rate) across the year (Tax.md Line 124).
+// findPeakByIteratingYear finds maximum INR value (Qty × Price × Rate) across the year (Tax.md daily peak calculation rule).
 func (v *ValuationManagerImpl) findPeakByIteratingYear(
 	year int,
 	openingPosition tax.Position,

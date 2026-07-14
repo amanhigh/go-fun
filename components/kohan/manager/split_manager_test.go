@@ -56,21 +56,21 @@ var _ = Describe("SplitManager", func() {
 				input = []tax.Trade{
 					{Symbol: VO, Date: "2024-06-01", Type: "BUY", Quantity: 10, USDPrice: 100.00, USDValue: 1000, Commission: 1.0},
 				}
-				// 4:1 split on 2024-09-01 — trade is before the event
+				// 3:2 split on 2024-09-01 — trade is before the event
 				mockTicker.EXPECT().
 					GetSplits(ctx, VO, time.Date(2024, 6, 1, 0, 0, 0, 0, time.UTC), mock.Anything).
 					Return([]tax.YahooSplit{
-						{Date: time.Date(2024, 9, 1, 0, 0, 0, 0, time.UTC).Unix(), Numerator: 4, Denominator: 1},
+						{Date: time.Date(2024, 9, 1, 0, 0, 0, 0, time.UTC).Unix(), Numerator: 3, Denominator: 2},
 					}, nil).Once()
 				output, err = splitManager.NormalizeTrades(ctx, input)
 				Expect(err).ToNot(HaveOccurred())
 			})
 
-			It("should multiply pre-split quantity by 4", func() {
-				Expect(output[0].Quantity).To(Equal(40.0))
+			It("should multiply pre-split quantity by 3/2", func() {
+				Expect(output[0].Quantity).To(Equal(15.0))
 			})
-			It("should divide pre-split price by 4", func() {
-				Expect(output[0].USDPrice).To(Equal(25.0))
+			It("should divide pre-split price by 1.5 with fractional precision", func() {
+				Expect(output[0].USDPrice).To(BeNumerically("~", 100.0/1.5, 1e-9))
 			})
 			It("should preserve USDValue", func() {
 				Expect(output[0].USDValue).To(Equal(1000.0))

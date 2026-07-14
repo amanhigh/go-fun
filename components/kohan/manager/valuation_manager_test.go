@@ -15,7 +15,6 @@ import (
 	"github.com/amanhigh/go-fun/models/tax"
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
-	"github.com/stretchr/testify/mock"
 )
 
 // Helper function to assert valuation positions
@@ -42,14 +41,6 @@ var expectGetSplits = func(mgr *mocks.TickerManager, ctx context.Context, ticker
 		).
 		Return(splits, nil).
 		Once()
-}
-
-// Helper for permissive empty-split setup with mock.Anything and .Maybe()
-var mockGetSplitsEmpty = func(mgr *mocks.TickerManager, ctx context.Context) {
-	mgr.EXPECT().
-		GetSplits(ctx, mock.Anything, mock.Anything, mock.Anything).
-		Return([]tax.YahooSplit{}, nil).
-		Maybe()
 }
 
 var _ = Describe("ValuationManager", func() {
@@ -83,17 +74,14 @@ var _ = Describe("ValuationManager", func() {
 	})
 
 	Context("Analyse Valuation", func() {
-		BeforeEach(func() {
-			// Default GetSplits returns empty for most Analyse Valuation tests
-			mockGetSplitsEmpty(mockTickerManager, ctx)
-		})
-
 		Context("Fresh Start", func() {
 			BeforeEach(func() {
 				// All tests under Fresh Start expect no last year position
 				mockAccountManager.EXPECT().
 					GetRecord(ctx, AAPL, year-1).
 					Return(tax.Account{}, common.ErrNotFound)
+				// All Fresh Start children use AAPL/year — exact empty-split expectation
+				expectGetSplits(mockTickerManager, ctx, AAPL, year, []tax.YahooSplit{})
 			})
 
 			Context("Basic Position Tracking", func() {
@@ -173,8 +161,8 @@ var _ = Describe("ValuationManager", func() {
 						mockSBIManager.EXPECT().
 							GetDailyRates(ctx, year).
 							Return(aaplDailyRates, nil)
-						// NOTE: No GetPrice mock needed - position fully exits (quantity = 0),
-						// so determineYearEndPosition doesn't call GetPrice (see line 249 in valuation_manager.go)
+						// NOTE: No GetPrice mock needed — position fully exits (quantity = 0),
+						// so determineYearEndPosition skips the year-end price lookup.
 					})
 
 					It("should compute positions with zero year-end", func() {
@@ -519,7 +507,7 @@ var _ = Describe("ValuationManager", func() {
 			Context("Peak Should be INR Based (Qty × Price × Rate)", func() {
 				// Test suite validating that peak is determined by INR value (Qty × USD_Price × SBI_Rate),
 				// NOT just by quantity. All scenarios use constant quantity to isolate price/rate variations.
-				// This ensures compliance with Tax.md Line 124 daily peak calculation requirement.
+				// This ensures compliance with Tax.md daily peak calculation rule.
 
 				Context("Scenario 1: Same Qty, Lower USD Price WINS due to Higher Rate", func() {
 					// Prove that exchange rate can dominate over USD price
@@ -779,6 +767,7 @@ var _ = Describe("ValuationManager", func() {
 				}
 
 				mockAccountManager.EXPECT().GetRecord(ctx, AAPL, year-1).Return(tax.Account{}, common.ErrNotFound)
+				expectGetSplits(mockTickerManager, ctx, AAPL, year, []tax.YahooSplit{})
 
 				_, err := valuationManager.AnalyzeValuation(ctx, AAPL, trades, year)
 				Expect(err).To(HaveOccurred())
@@ -816,6 +805,7 @@ var _ = Describe("ValuationManager", func() {
 				mockAccountManager.EXPECT().
 					GetRecord(ctx, AAPL, year-1).
 					Return(tax.Account{}, common.ErrNotFound) // Fresh start
+				expectGetSplits(mockTickerManager, ctx, AAPL, year, []tax.YahooSplit{})
 
 				mockTickerManager.EXPECT().
 					GetDailyPrices(ctx, AAPL, year).
@@ -900,6 +890,7 @@ var _ = Describe("ValuationManager", func() {
 					mockAccountManager.EXPECT().
 						GetRecord(ctx, AAPL, year-1).
 						Return(tax.Account{}, common.ErrNotFound)
+					expectGetSplits(mockTickerManager, ctx, AAPL, year, []tax.YahooSplit{})
 					mockTickerManager.EXPECT().
 						GetDailyPrices(ctx, AAPL, year).
 						Return(aaplDailyPrices, nil)
@@ -931,19 +922,7 @@ var _ = Describe("ValuationManager", func() {
 						GetRecord(ctx, AAPL, year-1).
 						Return(tax.Account{}, common.ErrNotFound)
 
-					// Daily prices and rates needed for peak calculation (function proceeds despite negative net)
-					aaplDailyPrices := map[string]float64{
-						"2024-01-15": 100.0,
-					}
-					aaplDailyRates := map[string]float64{
-						"2024-01-15": 82.5,
-					}
-					mockTickerManager.EXPECT().
-						GetDailyPrices(ctx, AAPL, year).
-						Return(aaplDailyPrices, nil)
-					mockSBIManager.EXPECT().
-						GetDailyRates(ctx, year).
-						Return(aaplDailyRates, nil)
+					// No daily price/rate mocks needed — validation fires before GetDailyPrices/GetDailyRates
 
 					_, err := valuationManager.AnalyzeValuation(ctx, AAPL, trades, year)
 					Expect(err).To(HaveOccurred())
@@ -1476,11 +1455,6 @@ var _ = Describe("ValuationManager", func() {
 	})
 
 	Context("With Carry-Over Position", func() {
-		BeforeEach(func() {
-			// Default GetSplits returns empty for carry-over position tests
-			mockGetSplitsEmpty(mockTickerManager, ctx)
-		})
-
 		var (
 			carryOverAccount tax.Account
 			tradesInYear     []tax.Trade
@@ -1524,6 +1498,7 @@ var _ = Describe("ValuationManager", func() {
 				mockAccountManager.EXPECT().
 					GetRecord(ctx, AAPL, testYear-1).
 					Return(carryOverAccount, nil).Once()
+				expectGetSplits(mockTickerManager, ctx, AAPL, testYear, []tax.YahooSplit{})
 
 				mockTickerManager.EXPECT().
 					GetDailyPrices(ctx, AAPL, testYear).
@@ -1578,9 +1553,9 @@ var _ = Describe("ValuationManager", func() {
 			// Current year has a fresh BUY — AnalyzeValuation must produce a FirstPosition from the
 			// current-year purchase, NOT the old origin metadata (regression test).
 			//
-			// Current bug in setupFirstPosition (line 270): returns carry-over firstPosition unchanged
-			// whenever Date is non-zero, ignoring that Quantity=0 means the position was fully liquidated.
-			// The fix should treat Quantity=0 as a fresh-start even when OriginDate is present.
+			// Regression guard: setupFirstPosition must not treat a fully liquidated prior-year
+			// account (Quantity=0) as a valid carry-over — even when stale OriginDate metadata exists.
+			// Verify that Quantity=0 forces fresh-start behavior regardless of non-zero Date.
 			var (
 				testYear     = 2024
 				yearEndDate  = time.Date(testYear, 12, 31, 0, 0, 0, 0, time.UTC)
@@ -1616,6 +1591,7 @@ var _ = Describe("ValuationManager", func() {
 				mockAccountManager.EXPECT().
 					GetRecord(ctx, AAPL, testYear-1).
 					Return(carryOverAccount, nil).Once()
+				expectGetSplits(mockTickerManager, ctx, AAPL, testYear, []tax.YahooSplit{})
 
 				mockTickerManager.EXPECT().
 					GetDailyPrices(ctx, AAPL, testYear).
@@ -1636,8 +1612,8 @@ var _ = Describe("ValuationManager", func() {
 				Expect(valuation.Ticker).To(Equal(AAPL))
 
 				// 1. FirstPosition MUST come from the 2024 purchase, NOT the 2020 origin
-				//    Current bug: setupFirstPosition returns carry-over firstPosition unchanged
-				//    when Date is non-zero, even when Quantity=0 (fully liquidated)
+				//    Regression guard: setupFirstPosition checks Quantity, not just Date,
+				//    to detect full prior-year liquidation.
 				expectedFirstPosDate := time.Date(2024, 6, 15, 0, 0, 0, 0, time.UTC)
 				Expect(valuation.FirstPosition.Date.Format(time.DateOnly)).To(Equal(expectedFirstPosDate.Format(time.DateOnly)))
 				Expect(valuation.FirstPosition.Quantity).To(Equal(25.0))
@@ -1703,6 +1679,7 @@ var _ = Describe("ValuationManager", func() {
 				mockAccountManager.EXPECT().
 					GetRecord(ctx, MSFT, testYear-1).
 					Return(carryOverAccount, nil).Once()
+				expectGetSplits(mockTickerManager, ctx, MSFT, testYear, []tax.YahooSplit{})
 
 				mockTickerManager.EXPECT().
 					GetDailyPrices(ctx, MSFT, testYear).
@@ -1712,8 +1689,8 @@ var _ = Describe("ValuationManager", func() {
 					GetDailyRates(ctx, testYear).
 					Return(msftDailyRates, nil).Once()
 
-				// NOTE: No GetPrice mock needed - position fully exits (quantity = 0 after sell)
-				// Code skips GetPrice call when quantity = 0 (see determineYearEndPosition line 249)
+				// NOTE: No GetPrice mock needed — position fully exits (quantity = 0 after sell);
+				// determineYearEndPosition skips the price lookup for zero quantity.
 
 				tradesInYear = []tax.Trade{
 					tax.NewTrade(MSFT, "2024-02-15", "SELL", 50, 210.00),
@@ -1804,6 +1781,7 @@ var _ = Describe("ValuationManager", func() {
 				}
 
 				mockAccountManager.EXPECT().GetRecord(ctx, AAPL, testYear-1).Return(carryOverAccount, nil).Once()
+				expectGetSplits(mockTickerManager, ctx, AAPL, testYear, []tax.YahooSplit{})
 				mockTickerManager.EXPECT().GetDailyPrices(ctx, AAPL, testYear).Return(aaplDailyPrices, nil).Once()
 				mockSBIManager.EXPECT().GetDailyRates(ctx, testYear).Return(aaplDailyRates, nil).Once()
 				mockTickerManager.EXPECT().GetPrice(ctx, AAPL, yearEndDate).Return(yearEndPrice, nil).Once()
