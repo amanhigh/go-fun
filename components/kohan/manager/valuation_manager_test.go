@@ -33,6 +33,25 @@ var assertValuationPositions = func(valuation tax.Valuation, expectedFirst tax.P
 	Expect(valuation.YearEndPosition.USDPrice).To(Equal(expectedYearEnd.USDPrice))
 }
 
+// Helper for precise GetSplits expectations with concrete ticker, Jan 1–Dec 31 UTC, and .Once()
+var expectGetSplits = func(mgr *mocks.TickerManager, ctx context.Context, ticker string, year int, splits []tax.YahooSplit) {
+	mgr.EXPECT().
+		GetSplits(ctx, ticker,
+			time.Date(year, 1, 1, 0, 0, 0, 0, time.UTC),
+			time.Date(year, 12, 31, 0, 0, 0, 0, time.UTC),
+		).
+		Return(splits, nil).
+		Once()
+}
+
+// Helper for permissive empty-split setup with mock.Anything and .Maybe()
+var mockGetSplitsEmpty = func(mgr *mocks.TickerManager, ctx context.Context) {
+	mgr.EXPECT().
+		GetSplits(ctx, mock.Anything, mock.Anything, mock.Anything).
+		Return([]tax.YahooSplit{}, nil).
+		Maybe()
+}
+
 var _ = Describe("ValuationManager", func() {
 	const (
 		AAPL = "AAPL"
@@ -45,17 +64,12 @@ var _ = Describe("ValuationManager", func() {
 		mockTradeRepository *repoMocks.TradeRepository
 		mockFyManager       *mocks.FinancialYearManager[tax.Trade]
 		mockSBIManager      *mocks.SBIManager
-		mockSplitManager    *mocks.SplitManager
 		valuationManager    manager.ValuationManager
 
 		// Common variables
 		year         = 2024
 		yearEndDate  = time.Date(year, 12, 31, 0, 0, 0, 0, time.UTC)
 		yearEndPrice = 150.00
-
-		// defaultNormalizer returns trades unchanged — no splits for test tickers
-		defaultNormalizer func(ctx context.Context, trades []tax.Trade) ([]tax.Trade, common.HttpError)
-		defaultAccounter  func(ctx context.Context, account tax.Account) (tax.Account, common.HttpError)
 	)
 
 	BeforeEach(func() {
@@ -64,30 +78,15 @@ var _ = Describe("ValuationManager", func() {
 		mockTradeRepository = repoMocks.NewTradeRepository(GinkgoT())
 		mockFyManager = mocks.NewFinancialYearManager[tax.Trade](GinkgoT())
 		mockSBIManager = mocks.NewSBIManager(GinkgoT())
-		mockSplitManager = mocks.NewSplitManager(GinkgoT())
 
-		// Default normalizer returns input unchanged
-		defaultNormalizer = func(_ context.Context, trades []tax.Trade) ([]tax.Trade, common.HttpError) {
-			out := make([]tax.Trade, len(trades))
-			copy(out, trades)
-			return out, nil
-		}
-		defaultAccounter = func(_ context.Context, account tax.Account) (tax.Account, common.HttpError) {
-			return account, nil
-		}
-		mockSplitManager.EXPECT().
-			NormalizeTrades(ctx, mock.Anything).
-			RunAndReturn(defaultNormalizer).
-			Maybe()
-		mockSplitManager.EXPECT().
-			NormalizeAccount(ctx, mock.Anything).
-			RunAndReturn(defaultAccounter).
-			Maybe()
-
-		valuationManager = manager.NewValuationManager(mockTickerManager, mockAccountManager, mockTradeRepository, mockFyManager, mockSBIManager, mockSplitManager)
+		valuationManager = manager.NewValuationManager(mockTickerManager, mockAccountManager, mockTradeRepository, mockFyManager, mockSBIManager)
 	})
 
 	Context("Analyse Valuation", func() {
+		BeforeEach(func() {
+			// Default GetSplits returns empty for most Analyse Valuation tests
+			mockGetSplitsEmpty(mockTickerManager, ctx)
+		})
 
 		Context("Fresh Start", func() {
 			BeforeEach(func() {
@@ -765,21 +764,7 @@ var _ = Describe("ValuationManager", func() {
 					tax.NewTrade(AAPL, "2024-01-15", "SELL", 10, 100),
 				}
 
-				// Daily prices and rates needed (calculateDailyPeak called before processTrades validation)
-				aaplDailyPrices := map[string]float64{
-					"2024-01-15": 100.0,
-				}
-				aaplDailyRates := map[string]float64{
-					"2024-01-15": 82.5,
-				}
-
 				mockAccountManager.EXPECT().GetRecord(ctx, AAPL, year-1).Return(tax.Account{}, common.ErrNotFound)
-				mockTickerManager.EXPECT().
-					GetDailyPrices(ctx, AAPL, year).
-					Return(aaplDailyPrices, nil)
-				mockSBIManager.EXPECT().
-					GetDailyRates(ctx, year).
-					Return(aaplDailyRates, nil)
 
 				_, err := valuationManager.AnalyzeValuation(ctx, AAPL, trades, year)
 				Expect(err).To(HaveOccurred())
@@ -969,6 +954,7 @@ var _ = Describe("ValuationManager", func() {
 
 			// Mock dependencies needed by AnalyzeValuation for AAPL
 			mockAccountManager.EXPECT().GetRecord(ctx, AAPL, year-1).Return(tax.Account{}, common.ErrNotFound).Once() // Fresh start for AAPL
+			expectGetSplits(mockTickerManager, ctx, AAPL, year, []tax.YahooSplit{})
 			mockTickerManager.EXPECT().GetDailyPrices(ctx, AAPL, year).Return(aaplDailyPrices, nil).Once()
 			mockTickerManager.EXPECT().GetPrice(ctx, AAPL, yearEndDate).Return(150.0, nil).Once() // AAPL year end price
 
@@ -981,6 +967,7 @@ var _ = Describe("ValuationManager", func() {
 				OriginQty:   10,
 				OriginPrice: 180.0,
 			}, nil).Once()
+			expectGetSplits(mockTickerManager, ctx, "MSFT", year, []tax.YahooSplit{})
 			mockTickerManager.EXPECT().GetDailyPrices(ctx, "MSFT", year).Return(msftDailyPrices, nil).Once()
 			mockTickerManager.EXPECT().GetPrice(ctx, "MSFT", yearEndDate).Return(210.0, nil).Once() // MSFT year end price
 
@@ -1086,6 +1073,7 @@ var _ = Describe("ValuationManager", func() {
 
 			// Mock dependencies for AAPL (price fetch fails)
 			mockAccountManager.EXPECT().GetRecord(ctx, AAPL, year-1).Return(tax.Account{}, common.ErrNotFound).Once()
+			expectGetSplits(mockTickerManager, ctx, AAPL, year, []tax.YahooSplit{})
 			mockTickerManager.EXPECT().GetDailyPrices(ctx, AAPL, year).Return(aaplDailyPrices, nil).Once()
 			mockSBIManager.EXPECT().GetDailyRates(ctx, year).Return(mergedDailyRates, nil).Once() // Called once for AAPL
 			expectedErr := common.NewServerError(errors.New("price fetch failed"))
@@ -1157,11 +1145,13 @@ var _ = Describe("ValuationManager", func() {
 
 				// Mock: AAPL dependencies (fresh start in current year)
 				mockAccountManager.EXPECT().GetRecord(ctx, tickerWithTrades, year-1).Return(tax.Account{}, common.ErrNotFound).Once()
+				expectGetSplits(mockTickerManager, ctx, tickerWithTrades, year, []tax.YahooSplit{})
 				mockTickerManager.EXPECT().GetDailyPrices(ctx, tickerWithTrades, year).Return(aaplDailyPrices, nil).Once()
 				mockTickerManager.EXPECT().GetPrice(ctx, tickerWithTrades, yearEndDate).Return(160.0, nil).Once()
 
 				// Mock: MSFT dependencies (carry-over, no trades)
 				mockAccountManager.EXPECT().GetRecord(ctx, tickerWithoutTrades, year-1).Return(prevYearAccount, nil).Once()
+				expectGetSplits(mockTickerManager, ctx, tickerWithoutTrades, year, []tax.YahooSplit{})
 				mockTickerManager.EXPECT().GetDailyPrices(ctx, tickerWithoutTrades, year).Return(msftDailyPrices, nil).Once()
 				mockTickerManager.EXPECT().GetPrice(ctx, tickerWithoutTrades, yearEndDate).Return(210.0, nil).Once()
 
@@ -1211,105 +1201,189 @@ var _ = Describe("ValuationManager", func() {
 			})
 		})
 
-		Context("with real split normalization", func() {
+		Context("Split-Event Event-Date Valuation", func() {
 			const vo = "VO"
 
-			Context("for a fresh acquisition", func() {
+			Context("Contract 1: 2025 acquisition — no splits in year", func() {
 				var (
-					year             = 2025
-					yearEndDate      = time.Date(year, 12, 31, 0, 0, 0, 0, time.UTC)
-					yearEndPrice     = 72.555
-					valuationResults []tax.Valuation
-					valuationErr     common.HttpError
+					year        = 2025
+					yearEndDate = time.Date(year, 12, 31, 0, 0, 0, 0, time.UTC)
+					yearEndVal  = 290.22
+					trades      []tax.Trade
+					valuation   tax.Valuation
+					err         common.HttpError
 				)
 
 				BeforeEach(func() {
-					rawTrade := tax.Trade{
-						Symbol: vo, Date: "2025-12-31", Type: tax.TRADE_TYPE_BUY,
-						Quantity: 9, USDPrice: 292.11, USDValue: 2628.99,
+					trades = []tax.Trade{
+						tax.NewTrade(vo, "2025-12-31", "BUY", 9, 292.11),
 					}
-					normalizedTrade := rawTrade
-					normalizedTrade.Quantity = 36
-					normalizedTrade.USDPrice = 73.03
 
-					mockTradeRepository.EXPECT().GetAllRecords(ctx).Return([]tax.Trade{rawTrade}, nil).Once()
-					mockTickerManager.EXPECT().GetPrice(ctx, vo, yearEndDate).Return(yearEndPrice, nil).Twice()
-					mockFyManager.EXPECT().FilterUS(ctx, []tax.Trade{normalizedTrade}, year).Return([]tax.Trade{normalizedTrade}, nil).Once()
-					mockAccountManager.EXPECT().GetAllRecords(ctx, year-1).Return(nil, common.ErrNotFound).Once()
-					mockAccountManager.EXPECT().GetRecord(ctx, vo, year-1).Return(tax.Account{}, common.ErrNotFound).Once()
-					mockTickerManager.EXPECT().GetDailyPrices(ctx, vo, year).Return(map[string]float64{"2025-12-31": yearEndPrice}, nil).Once()
-					mockSBIManager.EXPECT().GetDailyRates(ctx, year).Return(map[string]float64{"2025-12-31": 89.47}, nil).Once()
+					mockAccountManager.EXPECT().
+						GetRecord(ctx, vo, year-1).
+						Return(tax.Account{}, common.ErrNotFound)
 
-					valuationManager = manager.NewValuationManager(
-						mockTickerManager,
-						mockAccountManager,
-						mockTradeRepository,
-						mockFyManager,
-						mockSBIManager,
-						manager.NewSplitManager(mockTickerManager),
-					)
-					valuationResults, valuationErr = valuationManager.GetYearlyValuationsUSD(ctx, year)
+					// GetSplits inclusive Jan 1–Dec 31 once per ticker
+					expectGetSplits(mockTickerManager, ctx, vo, year, []tax.YahooSplit{})
+
+					mockTickerManager.EXPECT().
+						GetDailyPrices(ctx, vo, year).
+						Return(map[string]float64{"2025-12-31": yearEndVal}, nil)
+					mockSBIManager.EXPECT().
+						GetDailyRates(ctx, year).
+						Return(map[string]float64{"2025-12-31": 89.47}, nil)
+					mockTickerManager.EXPECT().
+						GetPrice(ctx, vo, yearEndDate).
+						Return(yearEndVal, nil)
+
+					valuation, err = valuationManager.AnalyzeValuation(ctx, vo, trades, year)
 				})
 
-				It("should use normalized trade positions throughout valuation", func() {
-					Expect(valuationErr).ToNot(HaveOccurred())
-					Expect(valuationResults).To(HaveLen(1))
-					Expect(valuationResults[0].Ticker).To(Equal(vo))
+				It("should report 9 shares in First, Peak, and YearEnd with GetSplits returning empty", func() {
+					Expect(err).ToNot(HaveOccurred())
 					assertValuationPositions(
-						valuationResults[0],
-						tax.Position{Date: yearEndDate, Quantity: 36, USDPrice: 73.03},
-						tax.Position{Date: yearEndDate, Quantity: 36, USDPrice: yearEndPrice},
-						tax.Position{Date: yearEndDate, Quantity: 36, USDPrice: yearEndPrice},
+						valuation,
+						tax.Position{Date: yearEndDate, Quantity: 9, USDPrice: 292.11},
+						tax.Position{Date: yearEndDate, Quantity: 9, USDPrice: yearEndVal},
+						tax.Position{Date: yearEndDate, Quantity: 9, USDPrice: yearEndVal},
 					)
 				})
 			})
 
-			Context("for a carry-over position", func() {
+			Context("Contract 2: 2026 carry-over with 4:1 split on Apr 21", func() {
 				var (
-					year             = 2025
+					year             = 2026
 					yearEndDate      = time.Date(year, 12, 31, 0, 0, 0, 0, time.UTC)
-					yearEndPrice     = 72.555
-					valuationResults []tax.Valuation
-					valuationErr     common.HttpError
+					yearEndVal       = 285.00
+					carryOverAccount tax.Account
+					valuation        tax.Valuation
+					err              common.HttpError
 				)
 
 				BeforeEach(func() {
-					legacyAccount := tax.Account{
-						Symbol: vo, Quantity: 9, MarketValue: 653,
-						OriginDate: "2024-01-15", OriginQty: 9, OriginPrice: 292.11,
+					carryOverAccount = tax.Account{
+						Symbol: vo, Quantity: 9, MarketValue: 2628.99,
+						OriginDate: "2025-12-31", OriginQty: 9, OriginPrice: 292.11,
 					}
 
-					mockTradeRepository.EXPECT().GetAllRecords(ctx).Return([]tax.Trade{}, nil).Once()
-					mockFyManager.EXPECT().FilterUS(ctx, []tax.Trade{}, year).Return([]tax.Trade{}, nil).Once()
-					mockAccountManager.EXPECT().GetAllRecords(ctx, year-1).Return([]tax.Account{legacyAccount}, nil).Once()
-					mockAccountManager.EXPECT().GetRecord(ctx, vo, year-1).Return(legacyAccount, nil).Once()
-					mockTickerManager.EXPECT().
-						GetPrice(ctx, vo, time.Date(2024, 1, 15, 0, 0, 0, 0, time.UTC)).
-						Return(yearEndPrice, nil).Once()
-					mockTickerManager.EXPECT().GetPrice(ctx, vo, yearEndDate).Return(yearEndPrice, nil).Once()
-					mockTickerManager.EXPECT().GetDailyPrices(ctx, vo, year).Return(map[string]float64{"2025-12-31": yearEndPrice}, nil).Once()
-					mockSBIManager.EXPECT().GetDailyRates(ctx, year).Return(map[string]float64{"2025-12-31": 89.47}, nil).Once()
+					mockAccountManager.EXPECT().
+						GetRecord(ctx, vo, year-1).
+						Return(carryOverAccount, nil)
 
-					valuationManager = manager.NewValuationManager(
-						mockTickerManager,
-						mockAccountManager,
-						mockTradeRepository,
-						mockFyManager,
-						mockSBIManager,
-						manager.NewSplitManager(mockTickerManager),
-					)
-					valuationResults, valuationErr = valuationManager.GetYearlyValuationsUSD(ctx, year)
+					// Returns a 4:1 Yahoo split event on 2026-04-21
+					expectGetSplits(mockTickerManager, ctx, vo, year, []tax.YahooSplit{
+						{
+							Date:        time.Date(2026, 4, 21, 0, 0, 0, 0, time.UTC).Unix(),
+							Numerator:   4,
+							Denominator: 1,
+						},
+					})
+
+					// Pre-split: ~1170, post-split: ~292.50 (same economic value per 4 shares)
+					mockTickerManager.EXPECT().
+						GetDailyPrices(ctx, vo, year).
+						Return(map[string]float64{
+							"2026-04-20": 1170.00,
+							"2026-04-21": 292.50,
+							"2026-12-31": yearEndVal,
+						}, nil)
+					mockSBIManager.EXPECT().
+						GetDailyRates(ctx, year).
+						Return(map[string]float64{
+							"2026-04-20": 89.0,
+							"2026-04-21": 89.5,
+							"2026-12-31": 89.0,
+						}, nil)
+					mockTickerManager.EXPECT().
+						GetPrice(ctx, vo, yearEndDate).
+						Return(yearEndVal, nil)
+
+					// No trades in 2026 — pure carry-over
+					valuation, err = valuationManager.AnalyzeValuation(ctx, vo, []tax.Trade{}, year)
 				})
 
-				It("should use normalized account positions throughout valuation", func() {
-					Expect(valuationErr).ToNot(HaveOccurred())
-					Expect(valuationResults).To(HaveLen(1))
-					Expect(valuationResults[0].Ticker).To(Equal(vo))
+				It("should report 9 shares before split, 36 after split in Peak and YearEnd", func() {
+					Expect(err).ToNot(HaveOccurred())
+					// FirstPosition preserves origin: 9 @ 292.11 from 2025-12-31
+					// Peak uses post-split 36 shares @ 292.50 on 2026-04-21 (highest INR value)
+					// YearEnd uses post-split 36 shares @ 285.00
 					assertValuationPositions(
-						valuationResults[0],
-						tax.Position{Date: time.Date(2024, 1, 15, 0, 0, 0, 0, time.UTC), Quantity: 36, USDPrice: 73.03},
-						tax.Position{Date: yearEndDate, Quantity: 36, USDPrice: yearEndPrice},
-						tax.Position{Date: yearEndDate, Quantity: 36, USDPrice: yearEndPrice},
+						valuation,
+						tax.Position{Date: time.Date(2025, 12, 31, 0, 0, 0, 0, time.UTC), Quantity: 9, USDPrice: 292.11},
+						tax.Position{Date: time.Date(2026, 4, 21, 0, 0, 0, 0, time.UTC), Quantity: 36, USDPrice: 292.50},
+						tax.Position{Date: yearEndDate, Quantity: 36, USDPrice: yearEndVal},
+					)
+				})
+			})
+
+			Context("Contract 3: same-day buy with 4:1 split on Apr 21", func() {
+				var (
+					year             = 2026
+					yearEndDate      = time.Date(year, 12, 31, 0, 0, 0, 0, time.UTC)
+					yearEndVal       = 285.00
+					carryOverAccount tax.Account
+					trades           []tax.Trade
+					valuation        tax.Valuation
+					err              common.HttpError
+				)
+
+				BeforeEach(func() {
+					carryOverAccount = tax.Account{
+						Symbol: vo, Quantity: 9, MarketValue: 2628.99,
+						OriginDate: "2025-12-31", OriginQty: 9, OriginPrice: 292.11,
+					}
+
+					// Same-day trade on Apr 21: BUY 1 @ 292.50
+					trades = []tax.Trade{
+						tax.NewTrade(vo, "2026-04-21", "BUY", 1, 292.50),
+					}
+
+					mockAccountManager.EXPECT().
+						GetRecord(ctx, vo, year-1).
+						Return(carryOverAccount, nil)
+
+					// Same 4:1 split event as Contract 2
+					expectGetSplits(mockTickerManager, ctx, vo, year, []tax.YahooSplit{
+						{
+							Date:        time.Date(2026, 4, 21, 0, 0, 0, 0, time.UTC).Unix(),
+							Numerator:   4,
+							Denominator: 1,
+						},
+					})
+
+					// Same prices/rates as Contract 2
+					mockTickerManager.EXPECT().
+						GetDailyPrices(ctx, vo, year).
+						Return(map[string]float64{
+							"2026-04-20": 1170.00,
+							"2026-04-21": 292.50,
+							"2026-12-31": yearEndVal,
+						}, nil)
+					mockSBIManager.EXPECT().
+						GetDailyRates(ctx, year).
+						Return(map[string]float64{
+							"2026-04-20": 89.0,
+							"2026-04-21": 89.5,
+							"2026-12-31": 89.0,
+						}, nil)
+					mockTickerManager.EXPECT().
+						GetPrice(ctx, vo, yearEndDate).
+						Return(yearEndVal, nil)
+
+					valuation, err = valuationManager.AnalyzeValuation(ctx, vo, trades, year)
+				})
+
+				It("should apply split before trade: 9→36→37 = 37 shares at end-of-day", func() {
+					Expect(err).ToNot(HaveOccurred())
+					// FirstPosition: 9 @ 292.11 (origin unaffected)
+					// Split on Apr 21: 9 → 36, then BUY 1 → 37
+					// Peak uses 37 @ 292.50 on Apr 21
+					// YearEnd uses 37 @ 285.00
+					assertValuationPositions(
+						valuation,
+						tax.Position{Date: time.Date(2025, 12, 31, 0, 0, 0, 0, time.UTC), Quantity: 9, USDPrice: 292.11},
+						tax.Position{Date: time.Date(2026, 4, 21, 0, 0, 0, 0, time.UTC), Quantity: 37, USDPrice: 292.50},
+						tax.Position{Date: yearEndDate, Quantity: 37, USDPrice: yearEndVal},
 					)
 				})
 			})
@@ -1317,6 +1391,11 @@ var _ = Describe("ValuationManager", func() {
 	})
 
 	Context("With Carry-Over Position", func() {
+		BeforeEach(func() {
+			// Default GetSplits returns empty for carry-over position tests
+			mockGetSplitsEmpty(mockTickerManager, ctx)
+		})
+
 		var (
 			carryOverAccount tax.Account
 			tradesInYear     []tax.Trade
@@ -1639,6 +1718,11 @@ var _ = Describe("ValuationManager", func() {
 	})
 
 	Context("Fresh Acquisition After Prior Liquidation (Tax.md Scenario 3A)", func() {
+		BeforeEach(func() {
+			// Default GetSplits returns empty for fresh acquisition tests
+			mockGetSplitsEmpty(mockTickerManager, ctx)
+		})
+
 		// Scenario: Position fully liquidated at prior year-end, then re-acquired in current year
 		// Per Tax.md Scenario 3A (lines 398-409), FirstPosition resets to the new acquisition date
 		// (NOT preserved from prior year).
