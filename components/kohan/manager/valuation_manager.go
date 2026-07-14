@@ -136,12 +136,17 @@ func (v *ValuationManagerImpl) AnalyzeValuation(ctx context.Context, tickerSymbo
 		return tax.Valuation{}, err
 	}
 
-	// Step 4: Validate negative net quantity on fresh start (before any market data calls)
+	// Step 4: Validate first trade isn't sell on fresh start (before any market data calls)
+	if err := v.validateFirstTradeNotSellOnFreshStart(trades, holdingPosition, tickerSymbol); err != nil {
+		return tax.Valuation{}, err
+	}
+
+	// Step 5: Validate negative net quantity on fresh start (before any market data calls)
 	if err := v.validateFirstDateNetNotNegative(trades, holdingPosition, tickerSymbol); err != nil {
 		return tax.Valuation{}, err
 	}
 
-	// Step 5: Get split events for the calendar year (Jan 1 - Dec 31 inclusive)
+	// Step 6: Get split events for the calendar year (Jan 1 - Dec 31 inclusive)
 	splitStart := time.Date(year, 1, 1, 0, 0, 0, 0, time.UTC)
 	splitEnd := time.Date(year, 12, 31, 0, 0, 0, 0, time.UTC)
 	splits, splitErr := v.tickerManager.GetSplits(ctx, tickerSymbol, splitStart, splitEnd)
@@ -160,11 +165,6 @@ func (v *ValuationManagerImpl) AnalyzeValuation(ctx context.Context, tickerSymbo
 	}
 
 	analysis := tax.Valuation{Ticker: tickerSymbol, FirstPosition: firstPos}
-
-	// Step 6: Validate first trade isn't sell on fresh start
-	if vErr := v.validateFirstTradeNotSellOnFreshStart(trades, holdingPosition, tickerSymbol); vErr != nil {
-		return tax.Valuation{}, vErr
-	}
 
 	// Step 7: Build daily quantity timeline with event-date split awareness.
 	// Split events are applied before trades on the same date,

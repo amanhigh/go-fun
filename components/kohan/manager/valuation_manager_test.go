@@ -767,7 +767,6 @@ var _ = Describe("ValuationManager", func() {
 				}
 
 				mockAccountManager.EXPECT().GetRecord(ctx, AAPL, year-1).Return(tax.Account{}, common.ErrNotFound)
-				expectGetSplits(mockTickerManager, ctx, AAPL, year, []tax.YahooSplit{})
 
 				_, err := valuationManager.AnalyzeValuation(ctx, AAPL, trades, year)
 				Expect(err).To(HaveOccurred())
