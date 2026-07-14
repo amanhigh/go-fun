@@ -357,14 +357,17 @@ The `FirstPosition` represents the **initial reporting position/value baseline**
 **The `FirstPosition` is immutable and anchors to the first acquisition date.**
 
 - **FirstPosition is set ONCE** on the first acquisition date of a security
-- **FirstPosition persists UNCHANGED** across years as long as holdings continue (even through quantity changes or buying more shares)
+- **FirstPosition persists UNCHANGED** across years as long as holdings continue with a non-zero quantity at prior year-end (even through quantity changes or buying more shares)
 - **Date anchors to the FIRST ACQUISITION DATE** — if first-date trades net to zero, the date is preserved with zero quantity and zero price; later dates never replace it
 - **Quantity is the NET of same-date BUYs minus SELLs** on the first acquisition date
 - **Price rule:**
   - **Single first-date BUY:** trade execution price is used as the FirstPosition price
   - **Multiple first-date trades** (multiple BUYs, or BUYs and SELLs on the same date): historical market closing price (via TickerManager.GetPrice) on the first acquisition date is used instead
-- **Carry-over identity uses OriginDate** even when OriginQty is zero
-- **FirstPosition RESETS** only when the position is completely liquidated to 0 quantity at year-end AND then re-acquired in a subsequent year
+- **Year-end carry-over requires prior year-end Account.Quantity > 0:** If the prior year-end account shows Quantity == 0, any OriginDate, OriginQty, and OriginPrice metadata is stale historical metadata and must not preserve the old FirstPosition into the next year
+- **FirstPosition RESETS** when a position is completely liquidated to 0 quantity at year-end:
+  - A new purchase in the subsequent year establishes the new FirstPosition (date, quantity, and applicable price)
+  - If no subsequent-year purchase occurs, the squared-off ticker is absent from that year's valuation/Schedule FA output
+- **Same-year liquidation retains FirstPosition:** Liquidation and re-acquisition within the same calendar year preserves the original FirstPosition for that year's valuation; the reset takes effect only at the following year boundary
 - For Schedule FA reporting, this provides a consistent initial value baseline across years
 
 ---
@@ -373,12 +376,7 @@ The `FirstPosition` represents the **initial reporting position/value baseline**
 
 #### Scenario 1: Carry-Over from Prior Year (Typical Case)
 
-When holdings continue from the previous year, `FirstPosition` reflects the **first acquisition date, same-date net quantity, and applicable price** (trade execution price for a single first-date BUY, or historical market closing price for multiple first-date trades) of that security, preserved from when it was first acquired (potentially years ago). The `FirstPosition` remains constant as long as holdings continue uninterrupted.
-
-- **Date:** Earliest acquisition date of this security (preserved across years)
-- **Quantity:** Net quantity from all same-date trades on the first acquisition date (buys minus sells)
-- **Price:** Trade execution price for a single first-date BUY; historical market closing price (via TickerManager.GetPrice) for multiple first-date trades on the same date
-- **Example:**
+Refer to the **Key Principle** above for carry-over rules. **Example:**
   - 2021 March 5: BUY 50 AAPL @ $130/share
   - 2022 year-end: Still holding 50 shares (market value $160/share)
   - 2023 FirstPosition: (50 qty, $130.00 price, 2021-03-05 date)
@@ -387,23 +385,17 @@ When holdings continue from the previous year, `FirstPosition` reflects the **fi
 
 #### Scenario 2: Fresh Acquisition (First Purchase of Year)
 
-When acquiring a security for the first time in a calendar year:
-- **Date:** Date of first BUY trade (earliest acquisition date)
-- **Quantity:** Net quantity from all same-date trades on the first acquisition date (buys minus sells)
-- **Price:** Trade execution price for a single first-date BUY; historical market closing price (via TickerManager.GetPrice) for multiple first-date trades on the same date
-- **Example:**
+Refer to the **Key Principle** for acquisition date and price rules. **Example:**
   - 2024 Jan 15: BUY 10 AAPL @ $175/share
   - 2024 FirstPosition: (10 qty, $175.00 price, 2024-01-15 date)
   - SBI Rate on 2024-01-15: 83.00 INR/USD
   - INRValue = 10 × $175.00 × 83.00 = **₹145,250**
 
-**Note — Zero-Net First Date:** If the aggregated trades on the first acquisition date net to zero quantity (buys equal sells), the FirstPosition preserves that date with zero quantity and zero price. A later acquisition date in the same year does **not** replace this FirstPosition. The OriginDate is maintained for carry-over identity even though OriginQty is zero.
+**Note — Zero-Net First Date:** If the aggregated trades on the first acquisition date net to zero quantity (buys equal sells), the FirstPosition preserves that date with zero quantity and zero price. A later acquisition date in the same year does **not** replace this FirstPosition.
 
 #### Scenario 3: Complete Liquidation & Re-acquisition in Subsequent Year
 
-**Important Behavior:** When a security position is completely liquidated (sold out entirely to 0 quantity) at year-end and then **re-acquired in the following year**, the `FirstPosition` resets to reflect the new acquisition date and price from the subsequent year.
-
-**Rationale:** The `FirstPosition` anchors to the initial acquisition within a holding period. If a position is completely liquidated by year-end (quantity = 0), the prior year's `FirstPosition` is final and reported for Schedule FA. When re-acquired in the next year, the new year begins with a fresh holding period, so `FirstPosition` reflects the new acquisition date from that year.
+Per the **Key Principle**, a position liquidated to 0 at year-end resets its `FirstPosition`. Any stale origin metadata on the zero-quantity account must not carry forward — the ticker starts fresh (or is absent) in the next year, depending on whether a new purchase occurs.
 
 **Scenario 3A: Liquidation at Year-End, Re-acquisition in Next Year**
 

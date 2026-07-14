@@ -335,6 +335,12 @@ func (v *ValuationManagerImpl) getOpeningPositions(ctx context.Context, ticker s
 		return tax.Position{}, tax.Position{}, accErr
 	}
 
+	// Quantity == 0 means the position was fully liquidated at year-end.
+	// Treat as a fresh start even when stale origin metadata remains.
+	if account.Quantity == 0 {
+		return tax.Position{}, tax.Position{}, nil
+	}
+
 	// Account record found (carry-over scenario)
 	// Reconstruct FirstPosition from Account metadata (original acquisition date/price)
 	// OriginDate MUST be present for carry-over accounts - it's required for tax reporting

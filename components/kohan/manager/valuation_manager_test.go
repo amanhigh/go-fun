@@ -1259,6 +1259,44 @@ var _ = Describe("ValuationManager", func() {
 				Expect(msftVal.YearEndPosition.Quantity).To(Equal(50.0), "YearEndPosition quantity unchanged (no trades)")
 				Expect(msftVal.YearEndPosition.USDPrice).To(Equal(210.0), "YearEndPosition price from year-end lookup")
 			})
+
+		})
+
+		Context("Squared-Off Prior Ticker", func() {
+			// TDD Regression: A ticker fully squared off in the prior year
+			// (Quantity=0, MarketValue=0) must NOT appear in current year
+			// valuations when there are no current-year trades.
+			var (
+				prevYearAccount tax.Account
+			)
+
+			BeforeEach(func() {
+				// Prior-year account: fully squared off with stale origin metadata
+				prevYearAccount = tax.Account{
+					Symbol:      MSFT,
+					Quantity:    0,
+					MarketValue: 0,
+					OriginDate:  "2020-03-20",
+					OriginQty:   50,
+					OriginPrice: 200.0,
+				}
+
+				// No current-year trades
+				mockTradeRepository.EXPECT().GetAllRecords(ctx).Return([]tax.Trade{}, nil).Once()
+				mockFyManager.EXPECT().FilterUS(ctx, []tax.Trade{}, year).Return([]tax.Trade{}, nil).Once()
+
+				// Prior year has one account, but it's fully squared off (Quantity=0)
+				mockAccountManager.EXPECT().GetAllRecords(ctx, year-1).Return([]tax.Account{prevYearAccount}, nil).Once()
+			})
+
+			It("should exclude squared-off ticker and return not-found error", func() {
+				valuations, err := valuationManager.GetYearlyValuationsUSD(ctx, year)
+
+				Expect(err).To(HaveOccurred())
+				Expect(err.Code()).To(Equal(http.StatusNotFound))
+				Expect(err.Error()).To(ContainSubstring("no trades or carry-over positions found for year"))
+				Expect(valuations).To(BeEmpty())
+			})
 		})
 
 		Context("Split-Event Event-Date Valuation", func() {
@@ -1609,6 +1647,91 @@ var _ = Describe("ValuationManager", func() {
 				// 3. Assert YearEndPosition (Quantity remains the same, price is year-end price)
 				Expect(valuation.YearEndPosition.Date.Format(time.DateOnly)).To(Equal(yearEndDate.Format(time.DateOnly)))
 				Expect(valuation.YearEndPosition.Quantity).To(Equal(75.0))
+				Expect(valuation.YearEndPosition.USDPrice).To(Equal(yearEndPrice))
+			})
+		})
+
+		Context("Prior-Year Year-End Liquidation with Next-Year Repurchase", func() {
+			// Scenario: Position fully liquidated at 2023 year-end (Quantity=0, MarketValue=0),
+			// but account record still carries old origin metadata (OriginDate, OriginQty, OriginPrice).
+			// Current year has a fresh BUY — AnalyzeValuation must produce a FirstPosition from the
+			// current-year purchase, NOT the old origin metadata (regression test).
+			//
+			// Current bug in setupFirstPosition (line 270): returns carry-over firstPosition unchanged
+			// whenever Date is non-zero, ignoring that Quantity=0 means the position was fully liquidated.
+			// The fix should treat Quantity=0 as a fresh-start even when OriginDate is present.
+			var (
+				testYear     = 2024
+				yearEndDate  = time.Date(testYear, 12, 31, 0, 0, 0, 0, time.UTC)
+				yearEndPrice = 180.00
+			)
+
+			BeforeEach(func() {
+				// Prior-year account: fully liquidated (Qty=0, MV=0) but retains old origin metadata
+				carryOverAccount.Quantity = 0
+				carryOverAccount.MarketValue = 0
+				carryOverAccount.OriginDate = "2020-08-15"
+				carryOverAccount.OriginQty = 75
+				carryOverAccount.OriginPrice = 130.00
+
+				// Current-year BUY — re-acquiring the position after year-end liquidation
+				tradesInYear = []tax.Trade{
+					tax.NewTrade(AAPL, "2024-06-15", "BUY", 25, 160.00),
+				}
+
+				// Daily prices for peak calculation
+				aaplDailyPrices := map[string]float64{
+					"2024-06-15": 160.00,
+				}
+
+				// Daily rates: June 15 has higher rate to make it the undisputed peak
+				// June 15: 25 × 160 × 86 = 344,000 INR ← PEAK
+				// Dec 31:  25 × 180 × 76 = 342,000 INR
+				aaplDailyRates := map[string]float64{
+					"2024-06-15": 86.0,
+					"2024-12-31": 76.0,
+				}
+
+				mockAccountManager.EXPECT().
+					GetRecord(ctx, AAPL, testYear-1).
+					Return(carryOverAccount, nil).Once()
+
+				mockTickerManager.EXPECT().
+					GetDailyPrices(ctx, AAPL, testYear).
+					Return(aaplDailyPrices, nil).Once()
+
+				mockSBIManager.EXPECT().
+					GetDailyRates(ctx, testYear).
+					Return(aaplDailyRates, nil).Once()
+
+				mockTickerManager.EXPECT().
+					GetPrice(ctx, AAPL, yearEndDate).
+					Return(yearEndPrice, nil).Once()
+			})
+
+			It("should produce a fresh FirstPosition from current-year purchase, not old origin metadata", func() {
+				valuation, err := valuationManager.AnalyzeValuation(ctx, AAPL, tradesInYear, testYear)
+				Expect(err).ToNot(HaveOccurred())
+				Expect(valuation.Ticker).To(Equal(AAPL))
+
+				// 1. FirstPosition MUST come from the 2024 purchase, NOT the 2020 origin
+				//    Current bug: setupFirstPosition returns carry-over firstPosition unchanged
+				//    when Date is non-zero, even when Quantity=0 (fully liquidated)
+				expectedFirstPosDate := time.Date(2024, 6, 15, 0, 0, 0, 0, time.UTC)
+				Expect(valuation.FirstPosition.Date.Format(time.DateOnly)).To(Equal(expectedFirstPosDate.Format(time.DateOnly)))
+				Expect(valuation.FirstPosition.Quantity).To(Equal(25.0))
+				Expect(valuation.FirstPosition.USDPrice).To(Equal(160.00))
+
+				// 2. Peak reflects only the new purchase (no carry-over from prior year)
+				//    Opening quantity is 0, only the 25 BUY contributes
+				peakDate := time.Date(2024, 6, 15, 0, 0, 0, 0, time.UTC)
+				Expect(valuation.PeakPosition.Date.Format(time.DateOnly)).To(Equal(peakDate.Format(time.DateOnly)))
+				Expect(valuation.PeakPosition.Quantity).To(Equal(25.0))
+				Expect(valuation.PeakPosition.USDPrice).To(Equal(160.00))
+
+				// 3. YearEnd reflects same quantity with year-end price
+				Expect(valuation.YearEndPosition.Date.Format(time.DateOnly)).To(Equal(yearEndDate.Format(time.DateOnly)))
+				Expect(valuation.YearEndPosition.Quantity).To(Equal(25.0))
 				Expect(valuation.YearEndPosition.USDPrice).To(Equal(yearEndPrice))
 			})
 		})
