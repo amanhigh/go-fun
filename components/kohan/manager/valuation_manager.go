@@ -27,7 +27,6 @@ type ValuationManagerImpl struct {
 	tradeRepository repository.TradeRepository
 	fyManager       FinancialYearManager[tax.Trade]
 	sbiManager      SBIManager
-	splitManager    SplitManager
 }
 
 func NewValuationManager(
@@ -36,7 +35,6 @@ func NewValuationManager(
 	tradeRepository repository.TradeRepository,
 	fyManager FinancialYearManager[tax.Trade],
 	sbiManager SBIManager,
-	splitManager SplitManager,
 ) ValuationManager {
 	return &ValuationManagerImpl{
 		tickerManager:   tickerManager,
@@ -44,25 +42,17 @@ func NewValuationManager(
 		tradeRepository: tradeRepository,
 		fyManager:       fyManager,
 		sbiManager:      sbiManager,
-		splitManager:    splitManager,
 	}
 }
 
-//nolint:cyclop,gocyclo,funlen // Acceptable complexity from multi-step pipeline (fetch, filter, group, normalize)
 func (v *ValuationManagerImpl) GetYearlyValuationsUSD(ctx context.Context, year int) (valuations []tax.Valuation, err common.HttpError) {
 	allTrades, repoErr := v.tradeRepository.GetAllRecords(ctx)
 	if repoErr != nil {
 		return nil, repoErr // Return other errors
 	}
 
-	// Normalize trades onto split-adjusted basis before valuation calculations
-	normalizedTrades, normErr := v.splitManager.NormalizeTrades(ctx, allTrades)
-	if normErr != nil {
-		return nil, normErr
-	}
-
 	// Filter trades for the specified US financial year (calendar year) and sort them
-	yearTrades, filterErr := v.fyManager.FilterUS(ctx, normalizedTrades, year)
+	yearTrades, filterErr := v.fyManager.FilterUS(ctx, allTrades, year)
 	if filterErr != nil {
 		return nil, filterErr
 	}
@@ -124,6 +114,8 @@ func (v *ValuationManagerImpl) processTradesByTicker(ctx context.Context, trades
 }
 
 // AnalyzeValuation calculates valuation based on trades and opening position for a given ticker.
+//
+//nolint:funlen // Multi-step pipeline (validate, fetch splits, build timeline, peak, year-end)
 func (v *ValuationManagerImpl) AnalyzeValuation(ctx context.Context, tickerSymbol string, trades []tax.Trade, year int) (tax.Valuation, common.HttpError) {
 	// Step 1: Validate trade symbols first. This is crucial for the "Multiple Ticker Trades" test
 	// to fail before attempting to get an opening position if symbols are inconsistent.
@@ -138,94 +130,56 @@ func (v *ValuationManagerImpl) AnalyzeValuation(ctx context.Context, tickerSymbo
 	}
 
 	// Step 3: Validate if trades exist or if there's a carry-over
-	// Use holdingPosition for validation (it has the actual opening quantity)
+	// (checked before GetSplits so invalid/no-position requests do not
+	// query ticker data and a split-fetch error cannot mask this error).
 	if err := v.validateTradesExistOrCarryOver(trades, holdingPosition, tickerSymbol); err != nil {
 		return tax.Valuation{}, err
 	}
 
-	analysis := tax.Valuation{Ticker: tickerSymbol}
-	analysis.FirstPosition = firstPosition  // OriginQty-based for First/Initial metadata
-	analysis.PeakPosition = holdingPosition // Quantity-based for Peak calculation (may be overwritten)
+	// Step 4: Get split events for the calendar year (Jan 1 - Dec 31 inclusive)
+	splitStart := time.Date(year, 1, 1, 0, 0, 0, 0, time.UTC)
+	splitEnd := time.Date(year, 12, 31, 0, 0, 0, 0, time.UTC)
+	splits, splitErr := v.tickerManager.GetSplits(ctx, tickerSymbol, splitStart, splitEnd)
+	if splitErr != nil {
+		return tax.Valuation{}, splitErr
+	}
 
-	// Step 4: Calculate daily peak value (Tax.md Line 124 compliance - MANDATORY)
-	// Daily peak calculation is the authoritative method for determining peak INR value
-	peakPosition, peakErr := v.calculateDailyPeak(ctx, tickerSymbol, year, holdingPosition, trades)
+	// setupFirstPosition determines FirstPosition: for a fresh-start (no carry-over)
+	// with a first BUY trade, it derives from that trade; otherwise retains the
+	// carry-over firstPosition from getOpeningPositions.
+	firstPos, fpErr := v.setupFirstPosition(trades, firstPosition)
+	if fpErr != nil {
+		return tax.Valuation{}, fpErr
+	}
+
+	analysis := tax.Valuation{Ticker: tickerSymbol, FirstPosition: firstPos}
+
+	// Step 5: Validate first trade isn't sell on fresh start
+	if vErr := v.validateFirstTradeNotSellOnFreshStart(trades, holdingPosition, tickerSymbol); vErr != nil {
+		return tax.Valuation{}, vErr
+	}
+
+	// Step 6: Build daily quantity timeline with event-date split awareness.
+	// Split events are applied before trades on the same date,
+	// then end-of-day quantity is recorded.
+	// TODO: Genuine intraday support (e.g., split after trade on same day) is deliberately out of scope.
+	quantityByDate := v.buildDailyQuantityTimeline(year, holdingPosition, trades, splits)
+
+	// Step 7: Calculate daily peak value from the timeline (Tax.md Line 124 compliance - MANDATORY)
+	peakPosition, peakErr := v.calculateDailyPeak(ctx, tickerSymbol, year, holdingPosition, quantityByDate)
 	if peakErr != nil {
 		return tax.Valuation{}, common.NewServerError(
 			fmt.Errorf("failed to calculate daily peak for %s: %w", tickerSymbol, peakErr))
 	}
 	analysis.PeakPosition = peakPosition
 
-	// Step 5: Determine current quantity at year end
-	currentQuantity, processErr := v.processTrades(&analysis, trades, holdingPosition)
-	if processErr != nil {
-		return tax.Valuation{}, processErr
-	}
-
-	// Step 6: Determine year end position
-	if detErr := v.determineYearEndPosition(ctx, &analysis, year, currentQuantity); detErr != nil {
+	// Step 8: Determine year-end position from timeline Dec 31 end-of-day quantity
+	yearEndQuantity := v.getClosestValue(quantityByDate, splitEnd.Format(time.DateOnly))
+	if detErr := v.determineYearEndPosition(ctx, &analysis, year, yearEndQuantity); detErr != nil {
 		return tax.Valuation{}, detErr
 	}
 
 	return analysis, nil
-}
-
-// processTrades updates analysis based on trades and opening position.
-// It returns the final currentQuantity, and any error.
-func (v *ValuationManagerImpl) processTrades(
-	analysis *tax.Valuation,
-	trades []tax.Trade,
-	openingPeriodPosition tax.Position,
-) (currentQuantity float64, err common.HttpError) {
-	// Use GetType() for normalized type comparison
-	if openingPeriodPosition.Quantity == 0 && len(trades) > 0 && trades[0].GetType() == tax.TRADE_TYPE_SELL {
-		return 0, common.NewHttpError(fmt.Sprintf("first trade can't be sell on fresh start for %s", analysis.Ticker), http.StatusBadRequest)
-	}
-
-	currentQuantity = openingPeriodPosition.Quantity
-	// Peak will be calculated by calculateDailyPeak() using INR values
-
-	for i, trade := range trades {
-		if i == 0 && openingPeriodPosition.Quantity == 0 {
-			currentQuantity, err = v.handleFirstTrade(analysis, trade)
-			if err != nil {
-				return 0, err
-			}
-			continue
-		}
-
-		currentQuantity = v.applyTrade(trade, currentQuantity)
-	}
-	return currentQuantity, nil
-}
-
-// handleFirstTrade handles the very first BUY trade in a fresh start scenario.
-func (v *ValuationManagerImpl) handleFirstTrade(analysis *tax.Valuation, trade tax.Trade) (currentQuantity float64, err common.HttpError) {
-	tradeDate, dateErr := trade.GetDate()
-	if dateErr != nil {
-		return 0, dateErr
-	}
-
-	// Use GetType() for normalized type comparison with constants
-	// Real data has "Buy"/"Sell" from DriveWealth, GetType() normalizes to uppercase
-	if trade.GetType() == tax.TRADE_TYPE_BUY {
-		analysis.FirstPosition = tax.Position{
-			Date:     tradeDate,
-			Quantity: trade.Quantity,
-			USDPrice: trade.USDPrice,
-		}
-		// Peak will be calculated by calculateDailyPeak() using INR values
-		return trade.Quantity, nil
-	}
-	return 0, nil // Should not happen due to initial check in processTrades
-}
-
-// applyTrade processes subsequent trades or trades in a carry-over scenario.
-func (v *ValuationManagerImpl) applyTrade(trade tax.Trade, currentQuantity float64) float64 {
-	if trade.GetType() == tax.TRADE_TYPE_BUY {
-		return currentQuantity + trade.Quantity
-	}
-	return currentQuantity - trade.Quantity
 }
 
 // determineYearEndPosition sets the YearEndPosition in the analysis.
@@ -275,10 +229,39 @@ func (v *ValuationManagerImpl) validateTradesExistOrCarryOver(trades []tax.Trade
 	return nil
 }
 
+// setupFirstPosition determines the FirstPosition for a fresh-start scenario
+// (no carry-over). When there is no carry-over position and the first trade is
+// a BUY, the FirstPosition is set from that trade's metadata. Otherwise the
+// carry-over firstPosition is returned unchanged.
+func (v *ValuationManagerImpl) setupFirstPosition(trades []tax.Trade, firstPosition tax.Position) (tax.Position, common.HttpError) {
+	if firstPosition.Quantity == 0 && len(trades) > 0 && trades[0].GetType() == tax.TRADE_TYPE_BUY {
+		tradeDate, dateErr := trades[0].GetDate()
+		if dateErr != nil {
+			return tax.Position{}, dateErr
+		}
+		return tax.Position{
+			Date:     tradeDate,
+			Quantity: trades[0].Quantity,
+			USDPrice: trades[0].USDPrice,
+		}, nil
+	}
+	return firstPosition, nil
+}
+
+// validateFirstTradeNotSellOnFreshStart returns an error when there is no
+// carry-over position and the first trade is a SELL, which is invalid.
+func (v *ValuationManagerImpl) validateFirstTradeNotSellOnFreshStart(trades []tax.Trade, holdingPosition tax.Position, tickerSymbol string) common.HttpError {
+	if holdingPosition.Quantity == 0 && len(trades) > 0 && trades[0].GetType() == tax.TRADE_TYPE_SELL {
+		return common.NewHttpError(fmt.Sprintf("first trade can't be sell on fresh start for %s", tickerSymbol), http.StatusBadRequest)
+	}
+	return nil
+}
+
 // getOpeningPositions returns two positions from a single GetRecord call:
 //   - firstPosition: OriginQty-based (for First/Initial metadata)
 //   - holdingPosition: Quantity-based (for Peak/Closing calculations)
 //
+// Raw account values are used directly — no split normalization is applied.
 // In a fresh-start scenario, both are returned as zero positions.
 func (v *ValuationManagerImpl) getOpeningPositions(ctx context.Context, ticker string, year int) (firstPosition, holdingPosition tax.Position, err common.HttpError) {
 	account, accErr := v.accountManager.GetRecord(ctx, ticker, year-1)
@@ -290,29 +273,23 @@ func (v *ValuationManagerImpl) getOpeningPositions(ctx context.Context, ticker s
 	}
 
 	// Account record found (carry-over scenario)
-	// Normalize to split-adjusted basis (idempotent for already-normalized accounts)
-	normalizedAccount, normErr := v.splitManager.NormalizeAccount(ctx, account)
-	if normErr != nil {
-		return tax.Position{}, tax.Position{}, normErr
-	}
-
 	// Reconstruct FirstPosition from Account metadata (original acquisition date/price)
 	// OriginDate MUST be present for carry-over accounts - it's required for tax reporting
-	originDate, parseErr := time.Parse(time.DateOnly, normalizedAccount.OriginDate)
+	originDate, parseErr := time.Parse(time.DateOnly, account.OriginDate)
 	if parseErr != nil {
 		return tax.Position{}, tax.Position{}, tax.NewInvalidDateError(
-			fmt.Sprintf("failed to parse OriginDate '%s' for carry-over account %s: %v", normalizedAccount.OriginDate, ticker, parseErr))
+			fmt.Sprintf("failed to parse OriginDate '%s' for carry-over account %s: %v", account.OriginDate, ticker, parseErr))
 	}
 
 	firstPosition = tax.Position{
 		Date:     originDate,
-		Quantity: normalizedAccount.OriginQty,
-		USDPrice: normalizedAccount.OriginPrice,
+		Quantity: account.OriginQty,
+		USDPrice: account.OriginPrice,
 	}
 	holdingPosition = tax.Position{
 		Date:     originDate,
-		Quantity: normalizedAccount.Quantity,
-		USDPrice: normalizedAccount.OriginPrice,
+		Quantity: account.Quantity,
+		USDPrice: account.OriginPrice,
 	}
 	return firstPosition, holdingPosition, nil
 }
@@ -320,33 +297,27 @@ func (v *ValuationManagerImpl) getOpeningPositions(ctx context.Context, ticker s
 // calculateDailyPeak evaluates (Quantity × Market_Price × SBI_Rate) for every day in the year
 // to find the true INR peak value during the calendar year.
 // This ensures compliance with Tax.md Line 124 requirement for daily evaluation.
+// The quantityByDate timeline is pre-built by AnalyzeValuation with split events applied.
 func (v *ValuationManagerImpl) calculateDailyPeak(
 	ctx context.Context,
 	ticker string,
 	year int,
 	openingPosition tax.Position,
-	trades []tax.Trade,
+	quantityByDate map[string]float64,
 ) (peakPosition tax.Position, err common.HttpError) {
-	// Step 1: Build daily quantity timeline by processing trades chronologically
-	quantityByDate := v.buildDailyQuantityTimeline(year, openingPosition, trades)
-	if len(quantityByDate) == 0 {
-		// No holdings during the year
-		return tax.Position{}, nil
-	}
-
-	// Step 2: Get daily market prices for the ticker
+	// Step 1: Get daily market prices for the ticker
 	dailyPrices, priceErr := v.tickerManager.GetDailyPrices(ctx, ticker, year)
 	if priceErr != nil {
 		return tax.Position{}, priceErr
 	}
 
-	// Step 3: Get daily SBI TT Buy rates for the year
+	// Step 2: Get daily SBI TT Buy rates for the year
 	dailyRates, rateErr := v.sbiManager.GetDailyRates(ctx, year)
 	if rateErr != nil {
 		return tax.Position{}, rateErr
 	}
 
-	// Step 4: Find the date with maximum INR value by iterating through each day
+	// Step 3: Find the date with maximum INR value by iterating through each day
 	return v.findPeakByIteratingYear(year, openingPosition, quantityByDate, dailyPrices, dailyRates), nil
 }
 
@@ -387,11 +358,16 @@ func (v *ValuationManagerImpl) findPeakByIteratingYear(
 	return peakPos
 }
 
-// buildDailyQuantityTimeline creates a map of date → quantity held by processing trades
+// buildDailyQuantityTimeline creates a map of date → end-of-day quantity held.
+// Split events are applied before trades on the same date (split-before-same-day-trades ordering).
+// The timeline is used for both daily peak and Dec 31 YearEnd quantity.
+//
+// TODO: Genuine intraday support (e.g., split after trade on same day) is deliberately out of scope.
 func (v *ValuationManagerImpl) buildDailyQuantityTimeline(
 	year int,
 	openingPosition tax.Position,
 	trades []tax.Trade,
+	splits []tax.YahooSplit,
 ) map[string]float64 {
 	timeline := make(map[string]float64)
 	currentQuantity := openingPosition.Quantity
@@ -400,49 +376,99 @@ func (v *ValuationManagerImpl) buildDailyQuantityTimeline(
 	startDate := time.Date(year, 1, 1, 0, 0, 0, 0, time.UTC)
 	timeline[startDate.Format(time.DateOnly)] = currentQuantity
 
-	// Process each trade chronologically
-	for _, trade := range trades {
-		tradeDate, dateErr := trade.GetDate()
-		if dateErr != nil {
-			continue // Skip trades with invalid dates
+	// Group trades and splits by calendar date, then collect sorted event dates
+	tradesByDate := groupTradesByDate(trades, year)
+	splitsByDate := groupSplitsByDate(splits, year)
+	dates := collectEventDates(tradesByDate, splitsByDate)
+
+	// Process events chronologically: splits before trades on same date, then record end-of-day
+	for _, dateStr := range dates {
+		// Step 1: Apply all split events on this date first (before trades)
+		for _, split := range splitsByDate[dateStr] {
+			ratio := split.Numerator / split.Denominator
+			currentQuantity *= ratio
 		}
 
-		if tradeDate.Year() != year {
-			continue // Skip trades outside the target year
+		// Step 2: Apply all trades on this date
+		for _, trade := range tradesByDate[dateStr] {
+			if trade.GetType() == tax.TRADE_TYPE_BUY {
+				currentQuantity += trade.Quantity
+			} else { // SELL
+				currentQuantity -= trade.Quantity
+			}
 		}
 
-		// Update quantity based on trade type
-		if trade.GetType() == tax.TRADE_TYPE_BUY {
-			currentQuantity += trade.Quantity
-		} else { // SELL
-			currentQuantity -= trade.Quantity
-		}
-
-		timeline[tradeDate.Format(time.DateOnly)] = currentQuantity
+		// Step 3: Record end-of-day quantity
+		timeline[dateStr] = currentQuantity
 	}
 
 	return timeline
+}
+
+// groupTradesByDate partitions trades by calendar date, filtering out entries
+// whose date cannot be parsed or falls outside the given year.
+func groupTradesByDate(trades []tax.Trade, year int) map[string][]tax.Trade {
+	tradesByDate := make(map[string][]tax.Trade)
+	for _, trade := range trades {
+		tradeDate, err := trade.GetDate()
+		if err != nil || tradeDate.Year() != year {
+			continue
+		}
+		dateStr := tradeDate.Format(time.DateOnly)
+		tradesByDate[dateStr] = append(tradesByDate[dateStr], trade)
+	}
+	return tradesByDate
+}
+
+// groupSplitsByDate partitions Yahoo split events by calendar date, filtering
+// out entries whose timestamp falls outside the given year.
+func groupSplitsByDate(splits []tax.YahooSplit, year int) map[string][]tax.YahooSplit {
+	splitsByDate := make(map[string][]tax.YahooSplit)
+	for _, split := range splits {
+		splitDate := split.EffectiveDate()
+		if splitDate.Year() != year {
+			continue
+		}
+		dateStr := splitDate.Format(time.DateOnly)
+		splitsByDate[dateStr] = append(splitsByDate[dateStr], split)
+	}
+	return splitsByDate
+}
+
+// collectEventDates returns a chronologically sorted slice of unique dates
+// present in either the trade-by-date or split-by-date maps.
+func collectEventDates(tradesByDate map[string][]tax.Trade, splitsByDate map[string][]tax.YahooSplit) []string {
+	dates := make([]string, 0, len(tradesByDate)+len(splitsByDate))
+	for dateStr := range tradesByDate {
+		dates = append(dates, dateStr)
+	}
+	for dateStr := range splitsByDate {
+		dates = append(dates, dateStr)
+	}
+	slices.Sort(dates)
+	return lo.Uniq(dates)
 }
 
 // getClosestValue finds the nearest previous value for a given date using backfill logic.
 // If the exact date exists in the map, it returns that value immediately.
 // Otherwise, it searches for the closest previous date with available data.
 // Returns 0 if no previous data is found.
+//
+// Invariant: dateStr and all dateKey elements are canonical time.DateOnly
+// strings ("YYYY-MM-DD"), so lexicographic ordering === chronological ordering.
 func (v *ValuationManagerImpl) getClosestValue(dataMap map[string]float64, dateStr string) float64 {
 	if value, exists := dataMap[dateStr]; exists {
 		return value
 	}
 
 	// Backfill: find the closest previous date's value
-	parsedDate, _ := time.Parse(time.DateOnly, dateStr)
 	var closestValue float64
-	var closestDate time.Time
+	var closestDate string
 
 	for dateKey, value := range dataMap {
-		keyDate, _ := time.Parse(time.DateOnly, dateKey)
-		if !keyDate.After(parsedDate) && (closestDate.IsZero() || keyDate.After(closestDate)) {
+		if dateKey < dateStr && (closestDate == "" || dateKey > closestDate) {
 			closestValue = value
-			closestDate = keyDate
+			closestDate = dateKey
 		}
 	}
 
