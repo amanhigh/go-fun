@@ -144,10 +144,12 @@ func (v *ValuationManagerImpl) AnalyzeValuation(ctx context.Context, tickerSymbo
 		return tax.Valuation{}, splitErr
 	}
 
-	// setupFirstPosition determines FirstPosition: for a fresh-start (no carry-over)
-	// with a first BUY trade, it derives from that trade; otherwise retains the
-	// carry-over firstPosition from getOpeningPositions.
-	firstPos, fpErr := v.setupFirstPosition(trades, firstPosition)
+	// setupFirstPosition derives FirstPosition for a fresh-start by aggregating
+	// all trades on the first date (BUY added, SELL subtracted). Single BUY uses
+	// the trade price directly; multiple trades with positive net use GetPrice;
+	// zero net preserves the date without a price lookup. Carry-over positions
+	// (non-zero Date) are returned unchanged.
+	firstPos, fpErr := v.setupFirstPosition(ctx, trades, firstPosition, tickerSymbol)
 	if fpErr != nil {
 		return tax.Valuation{}, fpErr
 	}
@@ -229,22 +231,83 @@ func (v *ValuationManagerImpl) validateTradesExistOrCarryOver(trades []tax.Trade
 	return nil
 }
 
-// setupFirstPosition determines the FirstPosition for a fresh-start scenario
-// (no carry-over). When there is no carry-over position and the first trade is
-// a BUY, the FirstPosition is set from that trade's metadata. Otherwise the
-// carry-over firstPosition is returned unchanged.
-func (v *ValuationManagerImpl) setupFirstPosition(trades []tax.Trade, firstPosition tax.Position) (tax.Position, common.HttpError) {
-	if firstPosition.Quantity == 0 && len(trades) > 0 && trades[0].GetType() == tax.TRADE_TYPE_BUY {
-		tradeDate, dateErr := trades[0].GetDate()
-		if dateErr != nil {
-			return tax.Position{}, dateErr
+// aggregateFirstDateTrades collects all trades on the same calendar date as the
+// first trade and calculates the net quantity (BUY added, SELL subtracted).
+func aggregateFirstDateTrades(trades []tax.Trade, firstDate time.Time) (firstDateTrades []tax.Trade, netQty float64, httpErr common.HttpError) {
+	firstDateStr := firstDate.Format(time.DateOnly)
+	for _, trade := range trades {
+		tradeDate, tErr := trade.GetDate()
+		if tErr != nil {
+			return nil, 0, tErr
 		}
+		if tradeDate.Format(time.DateOnly) != firstDateStr {
+			break
+		}
+		firstDateTrades = append(firstDateTrades, trade)
+		if trade.GetType() == tax.TRADE_TYPE_BUY {
+			netQty += trade.Quantity
+		} else {
+			netQty -= trade.Quantity
+		}
+	}
+	return firstDateTrades, netQty, nil
+}
+
+// setupFirstPosition determines the FirstPosition for a fresh-start scenario
+// (no carry-over) with the following rules:
+//   - Multiple trades on the first date: all trades are aggregated (BUY added,
+//     SELL subtracted). If the net quantity is positive, GetPrice is called
+//     for the historical closing price. If zero, the date is preserved with
+//     Quantity=0 and USDPrice=0 without a price lookup.
+//   - Single BUY trade on the first date: the trade's price is used directly
+//     (preserving existing multi-day single-first-BUY behavior).
+//   - Single SELL on fresh start: returns the zero firstPosition (the separate
+//     validateFirstTradeNotSellOnFreshStart check produces the error).
+//   - Carry-over (non-zero Date): always returned unchanged, even when
+//     OriginQty=0 but OriginDate is valid.
+func (v *ValuationManagerImpl) setupFirstPosition(ctx context.Context, trades []tax.Trade, firstPosition tax.Position, ticker string) (tax.Position, common.HttpError) {
+	// Preserve carry-over positions (even when OriginQty=0 but OriginDate is valid)
+	if !firstPosition.Date.IsZero() {
+		return firstPosition, nil
+	}
+
+	// Fresh start with no trades — nothing to derive
+	if len(trades) == 0 {
+		return firstPosition, nil
+	}
+
+	firstDate, dateErr := trades[0].GetDate()
+	if dateErr != nil {
+		return tax.Position{}, dateErr
+	}
+
+	firstDateTrades, netQty, aggErr := aggregateFirstDateTrades(trades, firstDate)
+	if aggErr != nil {
+		return tax.Position{}, aggErr
+	}
+
+	// Multiple trades on the first date: aggregate and potentially call GetPrice
+	if len(firstDateTrades) > 1 {
+		if netQty > 0 {
+			price, priceErr := v.tickerManager.GetPrice(ctx, ticker, firstDate)
+			if priceErr != nil {
+				return tax.Position{}, priceErr
+			}
+			return tax.Position{Date: firstDate, Quantity: netQty, USDPrice: price}, nil
+		}
+		// Zero net quantity: preserve the date without a price lookup
+		return tax.Position{Date: firstDate}, nil
+	}
+
+	// Single BUY trade on the first date: preserve existing behavior
+	if firstDateTrades[0].GetType() == tax.TRADE_TYPE_BUY {
 		return tax.Position{
-			Date:     tradeDate,
-			Quantity: trades[0].Quantity,
-			USDPrice: trades[0].USDPrice,
+			Date:     firstDate,
+			Quantity: firstDateTrades[0].Quantity,
+			USDPrice: firstDateTrades[0].USDPrice,
 		}, nil
 	}
+
 	return firstPosition, nil
 }
 
