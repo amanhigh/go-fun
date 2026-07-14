@@ -305,6 +305,57 @@ func (t *TickerManagerImpl) addBackfillPrice(yearPrices map[string]float64, data
 	return nil
 }
 
+// findClosestPriceOnOrBefore returns the latest price whose date is on or before refDate.
+func findClosestPriceOnOrBefore(prices map[string]float64, refDate string) (float64, bool) {
+	var closestDate string
+	for date := range prices {
+		if date <= refDate && (closestDate == "" || date > closestDate) {
+			closestDate = date
+		}
+	}
+	if closestDate == "" {
+		return 0, false
+	}
+	price, ok := prices[closestDate]
+	return price, ok
+}
+
+// addSplitBarrierPrices adds synthetic daily price entries on split effective dates that
+// lack exact cached prices. This prevents post-split backfill from using a pre-split price
+// (higher share basis) when the quantity has already been split-adjusted.
+// The synthetic entry is derived from the closest raw price on/before the split date,
+// adjusted to the split date's share basis (post-split basis, since no split occurs
+// strictly after the split date itself). Does not overwrite existing exact cached prices.
+func (t *TickerManagerImpl) addSplitBarrierPrices(yearPrices map[string]float64, data tax.StockData, year int, ticker string) common.HttpError {
+	yearStart := time.Date(year, 1, 1, 0, 0, 0, 0, time.UTC)
+	yearEnd := time.Date(year, 12, 31, 0, 0, 0, 0, time.UTC)
+
+	for _, split := range data.Splits {
+		splitDate := split.EffectiveDate()
+		if splitDate.Before(yearStart) || splitDate.After(yearEnd) {
+			continue
+		}
+
+		splitDateStr := splitDate.Format(time.DateOnly)
+		if _, exists := yearPrices[splitDateStr]; exists {
+			continue
+		}
+
+		rawPrice, ok := findClosestPriceOnOrBefore(data.Prices, splitDateStr)
+		if !ok {
+			continue
+		}
+
+		adjustedPrice, adjErr := t.adjustPriceForSplits(rawPrice, splitDate, data.Splits, ticker)
+		if adjErr != nil {
+			return adjErr
+		}
+
+		yearPrices[splitDateStr] = adjustedPrice
+	}
+	return nil
+}
+
 // GetDailyPrices returns all available closing prices for a given year
 // as a map with date format "YYYY-MM-DD" as key and price as value.
 // Used for daily peak INR value evaluation during valuation calculations.
@@ -326,6 +377,14 @@ func (t *TickerManagerImpl) GetDailyPrices(ctx context.Context, ticker string, y
 			fmt.Sprintf("no price data found for ticker %s in year %d", ticker, year),
 			http.StatusNotFound,
 		)
+	}
+
+	// Add synthetic price entries for split effective dates that lack cached prices.
+	// This ensures getClosestValue (in valuation_manager) does not backfill a pre-split
+	// price into post-split dates, which would overstate economic value when the
+	// quantity has already been split-adjusted.
+	if splitErr := t.addSplitBarrierPrices(yearPrices, data, year, ticker); splitErr != nil {
+		return nil, splitErr
 	}
 
 	if backfillErr := t.addBackfillPrice(yearPrices, data, year, ticker); backfillErr != nil {
