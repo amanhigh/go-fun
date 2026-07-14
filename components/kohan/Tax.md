@@ -463,6 +463,10 @@ The system performs daily INR valuation throughout the calendar year, considerin
 
 This approach ensures the reported peak reflects the true highest INR valuation, capturing scenarios where exchange rate movements may dominate price movements or vice versa.
 
+## Stock Split Handling
+
+Yahoo split events change share quantity on their effective UTC calendar date; historical Yahoo closes are reconstructed to that date's actual share basis. Daily reports use end-of-day sequencing (the split is applied before same-day trades are processed), while intraday handling is intentionally unsupported.
+
 ## Disclaimer
 
 *This system and its documentation are for informational purposes only and should not be considered as financial or legal advice. Users are strongly advised to consult with a qualified Chartered Accountant (CA) for validation of the data and for professional advice regarding their specific tax filing requirements and financial matters.*
