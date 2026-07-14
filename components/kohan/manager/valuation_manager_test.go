@@ -230,7 +230,9 @@ var _ = Describe("ValuationManager", func() {
 						Expect(err).ToNot(HaveOccurred())
 
 						// FirstPosition should be zero when the first date closes at zero
+						Expect(valuation.FirstPosition.Date).To(Equal(time.Date(2024, 1, 15, 0, 0, 0, 0, time.UTC)))
 						Expect(valuation.FirstPosition.Quantity).To(Equal(0.0))
+						Expect(valuation.FirstPosition.USDPrice).To(Equal(0.0))
 
 						// Peak position should also be zero (no positive quantity)
 						Expect(valuation.PeakPosition.Quantity).To(Equal(0.0))
