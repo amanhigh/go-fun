@@ -2,29 +2,47 @@ package manager_test
 
 import (
 	"context"
+	"net/http"
 
 	"github.com/amanhigh/go-fun/components/kohan/manager"
+	"github.com/amanhigh/go-fun/components/kohan/manager/mocks"
+	"github.com/amanhigh/go-fun/models/common"
 	"github.com/amanhigh/go-fun/models/tax"
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
+	mock "github.com/stretchr/testify/mock"
 )
 
 var _ = Describe("GainsComputationManager", func() {
 	const AAPL = "AAPL"
 	var (
-		gainsManager manager.GainsComputationManager
-		ctx          context.Context
+		gainsManager     manager.GainsComputationManager
+		ctx              context.Context
+		mockSplitManager *mocks.SplitManager
 	)
 
 	BeforeEach(func() {
-		gainsManager = manager.NewGainsComputationManager()
 		ctx = context.Background()
 	})
+
+	setupIdentitySplitManager := func() {
+		mockSplitManager = mocks.NewSplitManager(GinkgoT())
+		mockSplitManager.EXPECT().
+			NormalizeTrades(mock.Anything, mock.Anything).
+			RunAndReturn(func(_ context.Context, trades []tax.Trade) ([]tax.Trade, common.HttpError) {
+				out := make([]tax.Trade, len(trades))
+				copy(out, trades)
+				return out, nil
+			}).
+			Once()
+		gainsManager = manager.NewGainsComputationManager(mockSplitManager)
+	}
 
 	Context("with simple BUY/SELL pairs", func() {
 		var trades []tax.Trade
 
 		BeforeEach(func() {
+			setupIdentitySplitManager()
 			trades = []tax.Trade{
 				{Symbol: AAPL, Date: "2024-01-15", Type: "BUY", Quantity: 100, USDPrice: 140.00, Commission: 10.00},
 				{Symbol: AAPL, Date: "2024-01-17", Type: "SELL", Quantity: 100, USDPrice: 150.00, Commission: 10.00},
@@ -68,6 +86,7 @@ var _ = Describe("GainsComputationManager", func() {
 		var trades []tax.Trade
 
 		BeforeEach(func() {
+			setupIdentitySplitManager()
 			trades = []tax.Trade{
 				// Buy multiple lots of AAPL
 				{Symbol: AAPL, Date: "2023-01-10", Type: "BUY", Quantity: 20, USDPrice: 150.00, Commission: 2.00},
@@ -103,6 +122,7 @@ var _ = Describe("GainsComputationManager", func() {
 		var trades []tax.Trade
 
 		BeforeEach(func() {
+			setupIdentitySplitManager()
 			trades = []tax.Trade{
 				{Symbol: AAPL, Date: "2023-01-10", Type: "BUY", Quantity: 20, USDPrice: 150.00, Commission: 2.00},
 				{Symbol: AAPL, Date: "2023-07-10", Type: "BUY", Quantity: 30, USDPrice: 165.00, Commission: 3.00},
@@ -151,6 +171,7 @@ var _ = Describe("GainsComputationManager", func() {
 		var trades []tax.Trade
 
 		BeforeEach(func() {
+			setupIdentitySplitManager()
 			trades = []tax.Trade{
 				// Less than 2 years - STCG
 				{Symbol: "STCG1", Date: "2023-01-15", Type: "BUY", Quantity: 100, USDPrice: 100.00, Commission: 1.00},
@@ -192,6 +213,10 @@ var _ = Describe("GainsComputationManager", func() {
 	})
 
 	Context("edge cases", func() {
+		BeforeEach(func() {
+			setupIdentitySplitManager()
+		})
+
 		Context("with no sell transactions", func() {
 			var trades []tax.Trade
 
@@ -309,6 +334,7 @@ var _ = Describe("GainsComputationManager", func() {
 		var trades []tax.Trade
 
 		BeforeEach(func() {
+			setupIdentitySplitManager()
 			// Trades are pre-sorted by BrokerageManager (chronologically, BUY before SELL on same date)
 			trades = []tax.Trade{
 				// MSFT transactions (chronologically first)
@@ -377,6 +403,7 @@ var _ = Describe("GainsComputationManager", func() {
 		var trades []tax.Trade
 
 		BeforeEach(func() {
+			setupIdentitySplitManager()
 			// Use commission values that create floating point precision issues
 			trades = []tax.Trade{
 				// Partial lot matching will create commission allocation with many decimal places
@@ -398,6 +425,82 @@ var _ = Describe("GainsComputationManager", func() {
 
 			// PNL: (100.50 - 100.00) * 3 - 1.11 = 0.50 * 3 - 1.11 = 1.50 - 1.11 = 0.39
 			Expect(gain.PNL).To(Equal(0.39))
+		})
+	})
+
+	Context("split ownership boundary", func() {
+		Context("normalizes raw trades before FIFO", func() {
+			var (
+				rawTrades        []tax.Trade
+				normalizedTrades []tax.Trade
+				mockSplitManager *mocks.SplitManager
+			)
+
+			BeforeEach(func() {
+				rawTrades = []tax.Trade{
+					{Symbol: AAPL, Date: "2024-01-15", Type: "BUY", Quantity: 10, USDPrice: 100.00, Commission: 10.00},
+					{Symbol: AAPL, Date: "2024-01-17", Type: "SELL", Quantity: 10, USDPrice: 120.00, Commission: 10.00},
+				}
+				// 4:1 forward split: quantity × 4, price ÷ 4, commission unchanged
+				normalizedTrades = []tax.Trade{
+					{Symbol: AAPL, Date: "2024-01-15", Type: "BUY", Quantity: 40, USDPrice: 25.00, Commission: 10.00},
+					{Symbol: AAPL, Date: "2024-01-17", Type: "SELL", Quantity: 40, USDPrice: 30.00, Commission: 10.00},
+				}
+
+				mockSplitManager = mocks.NewSplitManager(GinkgoT())
+				mockSplitManager.EXPECT().
+					NormalizeTrades(ctx, rawTrades).
+					Return(normalizedTrades, nil)
+
+				gainsManager = manager.NewGainsComputationManager(mockSplitManager)
+			})
+
+			It("should compute FIFO gains using split-normalized trades", func() {
+				gains, err := gainsManager.ComputeGainsFromTrades(ctx, rawTrades)
+				Expect(err).ToNot(HaveOccurred())
+				Expect(gains).To(HaveLen(1))
+
+				gain := gains[0]
+				Expect(gain.Symbol).To(Equal(AAPL))
+				Expect(gain.Quantity).To(Equal(40.0))
+				Expect(gain.BuyDate).To(Equal("2024-01-15"))
+				Expect(gain.SellDate).To(Equal("2024-01-17"))
+
+				// PNL = (30-25)*40 - (10+10) = 200 - 20 = 180
+				Expect(gain.PNL).To(Equal(180.00))
+				Expect(gain.Commission).To(Equal(20.00))
+				Expect(gain.Type).To(Equal(tax.GAIN_TYPE_STCG))
+			})
+		})
+
+		Context("returns normalization errors", func() {
+			var (
+				rawTrades        []tax.Trade
+				mockSplitManager *mocks.SplitManager
+				expectedErr      common.HttpError
+			)
+
+			BeforeEach(func() {
+				rawTrades = []tax.Trade{
+					{Symbol: AAPL, Date: "2024-01-15", Type: "BUY", Quantity: 10, USDPrice: 100.00, Commission: 10.00},
+				}
+				expectedErr = common.NewHttpError("split normalization failure", http.StatusBadRequest)
+
+				mockSplitManager = mocks.NewSplitManager(GinkgoT())
+				mockSplitManager.EXPECT().
+					NormalizeTrades(ctx, rawTrades).
+					Return(nil, expectedErr)
+
+				gainsManager = manager.NewGainsComputationManager(mockSplitManager)
+			})
+
+			It("should propagate the error without producing gains", func() {
+				gains, err := gainsManager.ComputeGainsFromTrades(ctx, rawTrades)
+				Expect(err).To(HaveOccurred())
+				Expect(err.Error()).To(Equal("split normalization failure"))
+				Expect(err.Code()).To(Equal(http.StatusBadRequest))
+				Expect(gains).To(BeNil())
+			})
 		})
 	})
 })

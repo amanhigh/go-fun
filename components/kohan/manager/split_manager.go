@@ -38,6 +38,22 @@ func NewSplitManager(tickerManager TickerManager) *SplitManagerImpl {
 
 var _ SplitManager = (*SplitManagerImpl)(nil)
 
+// tradeDateRange holds the inclusive date span for a single ticker's trades.
+// Both values are pre-parsed time.Time values, ensuring deterministic
+// downstream calls that depend only on trade data, not wall-clock time.
+type tradeDateRange struct {
+	earliest time.Time
+	latest   time.Time
+}
+
+// tickerInfo groups trade indices, their pre-parsed dates, and the inclusive
+// date range for a single ticker.  parsedDates[i] corresponds to indices[i].
+type tickerInfo struct {
+	indices     []int
+	parsedDates []time.Time
+	rng         tradeDateRange
+}
+
 // ---------------------------------------------------------------------------
 // NormalizeTrades
 // ---------------------------------------------------------------------------
@@ -49,14 +65,13 @@ func (s *SplitManagerImpl) NormalizeTrades(ctx context.Context, trades []tax.Tra
 		return result, nil
 	}
 
-	// Group trade indices by ticker so we fetch splits once per ticker
-	tickerIndices := make(map[string][]int)
-	for i, t := range trades {
-		tickerIndices[t.Symbol] = append(tickerIndices[t.Symbol], i)
+	tickerMap, httpErr := validateAndGroupTrades(trades)
+	if httpErr != nil {
+		return nil, httpErr
 	}
 
-	for ticker, indices := range tickerIndices {
-		if err := s.normalizeTickerTrades(ctx, ticker, indices, result); err != nil {
+	for ticker, info := range tickerMap {
+		if err := s.normalizeTickerTrades(ctx, ticker, info, result); err != nil {
 			return nil, err
 		}
 	}
@@ -64,48 +79,62 @@ func (s *SplitManagerImpl) NormalizeTrades(ctx context.Context, trades []tax.Tra
 	return result, nil
 }
 
-// normalizeTickerTrades fetches splits for a single ticker and adjusts all
-// trades for that ticker in the result slice in-place.
-func (s *SplitManagerImpl) normalizeTickerTrades(ctx context.Context, ticker string, indices []int, result []tax.Trade) common.HttpError {
-	// Find earliest trade date for this ticker
-	earliest := result[indices[0]].Date
-	for _, idx := range indices[1:] {
-		if result[idx].Date < earliest {
-			earliest = result[idx].Date
+// validateAndGroupTrades parses every trade date, validates it, and groups
+// trades by ticker in a single pass.  Returns a map from ticker to tickerInfo
+// that holds each ticker's global trade indices, parsed dates, and inclusive
+// date range.  On the first invalid date a BadRequest error is returned and
+// no TickerManager.GetSplits call is made.
+func validateAndGroupTrades(trades []tax.Trade) (map[string]*tickerInfo, common.HttpError) {
+	tickerMap := make(map[string]*tickerInfo)
+	for i, t := range trades {
+		d, err := time.Parse(time.DateOnly, t.Date)
+		if err != nil {
+			return nil, common.NewHttpError(
+				fmt.Sprintf("invalid trade date %q for ticker %s", t.Date, t.Symbol),
+				http.StatusBadRequest,
+			)
+		}
+		info, ok := tickerMap[t.Symbol]
+		if !ok {
+			tickerMap[t.Symbol] = &tickerInfo{
+				indices:     []int{i},
+				parsedDates: []time.Time{d},
+				rng: tradeDateRange{
+					earliest: d,
+					latest:   d,
+				},
+			}
+		} else {
+			if d.Before(info.rng.earliest) {
+				info.rng.earliest = d
+			}
+			if d.After(info.rng.latest) {
+				info.rng.latest = d
+			}
+			info.indices = append(info.indices, i)
+			info.parsedDates = append(info.parsedDates, d)
 		}
 	}
+	return tickerMap, nil
+}
 
-	earliestDate, dateErr := time.Parse(time.DateOnly, earliest)
-	if dateErr != nil {
-		return common.NewServerError(
-			fmt.Errorf("invalid trade date %q for ticker %s: %w", earliest, ticker, dateErr),
-		)
-	}
-
-	// Fetch splits once per ticker — from earliest trade to current UTC date
-	splits, httpErr := s.tickerManager.GetSplits(ctx, ticker, earliestDate, time.Now().UTC())
+// normalizeTickerTrades fetches splits for a single ticker and adjusts all
+// trades for that ticker in the result slice using pre-parsed dates held
+// inside info.
+func (s *SplitManagerImpl) normalizeTickerTrades(ctx context.Context, ticker string, info *tickerInfo, result []tax.Trade) common.HttpError {
+	// Fetch splits once per ticker — from earliest to latest trade date
+	splits, httpErr := s.tickerManager.GetSplits(ctx, ticker, info.rng.earliest, info.rng.latest)
 	if httpErr != nil {
 		return httpErr
 	}
 
-	// Validate every split event once per ticker
-	for _, split := range splits {
-		if vErr := split.Validate(ticker); vErr != nil {
-			return vErr
-		}
+	if vErr := validateSplits(splits, ticker); vErr != nil {
+		return vErr
 	}
 
-	// Parse and validate every trade date, then normalize
-	for _, idx := range indices {
-		tradeDate, dateErr := time.Parse(time.DateOnly, result[idx].Date)
-		if dateErr != nil {
-			return common.NewHttpError(
-				fmt.Sprintf("invalid trade date %q for ticker %s", result[idx].Date, ticker),
-				http.StatusBadRequest,
-			)
-		}
-		tradeDay := tradeDate.UTC().Truncate(24 * time.Hour).Unix() //nolint:mnd
-		result[idx] = s.applySplitsToTrade(result[idx], splits, tradeDay)
+	// Normalize using pre-parsed dates from the grouped info
+	for i, idx := range info.indices {
+		result[idx] = s.applySplitsToTrade(result[idx], splits, info.parsedDates[i])
 	}
 
 	return nil
@@ -117,17 +146,12 @@ func (s *SplitManagerImpl) normalizeTickerTrades(ctx context.Context, ticker str
 
 // applySplitsToTrade returns a copy of trade with quantity and price
 // adjusted by the cumulative factor from all split events on strictly
-// later UTC calendar dates.  USDValue and Commission are unchanged.
-// tradeDay must be the pre-parsed calendar-day Unix timestamp of the
-// trade's date (caller validates the date before calling this).
-func (s *SplitManagerImpl) applySplitsToTrade(trade tax.Trade, splits []tax.YahooSplit, tradeDay int64) tax.Trade {
-	factor := 1.0
-	for _, split := range splits {
-		splitDay := split.EffectiveDate().Unix()
-		if splitDay > tradeDay {
-			factor *= split.Ratio()
-		}
-	}
+// later UTC calendar dates.  Only Quantity and USDPrice are modified;
+// USDValue, Commission, Symbol, Date and Type are preserved from the
+// original.  refDay must be the pre-parsed calendar-day time.Time of
+// the trade's date (caller validates the date before calling this).
+func (s *SplitManagerImpl) applySplitsToTrade(trade tax.Trade, splits []tax.YahooSplit, refDay time.Time) tax.Trade {
+	factor := cumulativeSplitFactor(splits, refDay)
 
 	if factor == 1 {
 		return trade
@@ -143,17 +167,37 @@ func (s *SplitManagerImpl) applySplitsToTrade(trade tax.Trade, splits []tax.Yaho
 		Float64("normalized_price", trade.USDPrice/factor).
 		Msg("SplitManager: event-based split adjustment — adjusting trade")
 
-	return tax.Trade{
-		Symbol:     trade.Symbol,
-		Date:       trade.Date,
-		Type:       trade.Type,
-		Quantity:   trade.Quantity * factor,
-		USDPrice:   trade.USDPrice / factor,
-		USDValue:   trade.USDValue,
-		Commission: trade.Commission,
-	}
+	result := trade
+	result.Quantity = trade.Quantity * factor
+	result.USDPrice = trade.USDPrice / factor
+	return result
 }
 
 // ---------------------------------------------------------------------------
 // Helpers
 // ---------------------------------------------------------------------------
+
+// validateSplits validates every YahooSplit event in the slice for the given
+// ticker. Returns the first validation error, or nil if all splits are valid.
+func validateSplits(splits []tax.YahooSplit, ticker string) common.HttpError {
+	for _, split := range splits {
+		if vErr := split.Validate(ticker); vErr != nil {
+			return vErr
+		}
+	}
+	return nil
+}
+
+// cumulativeSplitFactor returns the product of all split ratios for events
+// whose UTC calendar date is strictly later than refDay. The reference day
+// is normalized to UTC midnight before comparison.
+func cumulativeSplitFactor(splits []tax.YahooSplit, refDay time.Time) float64 {
+	normalizedDay := refDay.UTC().Truncate(24 * time.Hour) //nolint:mnd
+	factor := 1.0
+	for _, split := range splits {
+		if split.EffectiveDate().After(normalizedDay) {
+			factor *= split.Ratio()
+		}
+	}
+	return factor
+}

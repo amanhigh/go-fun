@@ -94,8 +94,14 @@ func (t *TickerManagerImpl) GetPrice(ctx context.Context, ticker string, date ti
 	var rawPrice float64
 	if closePrice, exists := data.Prices[dateStr]; exists {
 		rawPrice = closePrice
-	} else if closePrice, findErr := t.findClosestPreviousPrice(ticker, data, dateStr); findErr == nil {
-		rawPrice = closePrice
+	} else if closestDate, closestPrice, ok := findClosestPriceOnOrBefore(data.Prices, dateStr); ok {
+		log.Debug().
+			Str("Ticker", ticker).
+			Str("RequestedDate", dateStr).
+			Str("ClosestDate", closestDate).
+			Float64("Price", closestPrice).
+			Msg("Using closest previous date price")
+		rawPrice = closestPrice
 	} else {
 		return 0, common.NewHttpError("No price data found", http.StatusNotFound)
 	}
@@ -107,47 +113,14 @@ func (t *TickerManagerImpl) GetPrice(ctx context.Context, ticker string, date ti
 	return adjustedPrice, nil
 }
 
-func (t *TickerManagerImpl) findClosestPreviousPrice(ticker string, data tax.StockData, dateStr string) (float64, common.HttpError) {
-	var closestDate string
-	for priceDate := range data.Prices {
-		if priceDate <= dateStr && (closestDate == "" || priceDate > closestDate) {
-			closestDate = priceDate
-		}
-	}
-
-	if closestDate != "" {
-		if closePrice, exists := data.Prices[closestDate]; exists {
-			log.Debug().
-				Str("Ticker", ticker).
-				Str("RequestedDate", dateStr).
-				Str("ClosestDate", closestDate).
-				Float64("Price", closePrice).
-				Msg("Using closest previous date price")
-			return closePrice, nil
-		}
-	}
-	return 0, common.NewHttpError("No price data found", http.StatusNotFound)
-}
-
 // adjustPriceForSplits returns the historical date's price expressed on the historical date's share basis
 // by multiplying the raw cached price by cumulative split ratios
 // for all split events on strictly later calendar dates.
 func (t *TickerManagerImpl) adjustPriceForSplits(price float64, date time.Time, splits []tax.YahooSplit, ticker string) (float64, common.HttpError) {
-	// Validate all splits before multiplying
-	for _, split := range splits {
-		if vErr := split.Validate(ticker); vErr != nil {
-			return 0, vErr
-		}
+	if vErr := validateSplits(splits, ticker); vErr != nil {
+		return 0, vErr
 	}
-
-	refDay := date.UTC().Truncate(24 * time.Hour) //nolint:mnd
-	ratio := 1.0
-	for _, split := range splits {
-		if split.EffectiveDate().After(refDay) {
-			ratio *= split.Ratio()
-		}
-	}
-	return price * ratio, nil
+	return price * cumulativeSplitFactor(splits, date), nil
 }
 
 func (t *TickerManagerImpl) getTickerData(ctx context.Context, ticker string) (data tax.StockData, err common.HttpError) {
@@ -242,11 +215,8 @@ func (t *TickerManagerImpl) GetSplits(ctx context.Context, ticker string, from, 
 		return nil, err
 	}
 
-	// Validate all split events before filtering
-	for _, split := range data.Splits {
-		if vErr := split.Validate(ticker); vErr != nil {
-			return nil, vErr
-		}
+	if vErr := validateSplits(data.Splits, ticker); vErr != nil {
+		return nil, vErr
 	}
 
 	fromDay := from.UTC().Truncate(24 * time.Hour).Unix() //nolint:mnd
@@ -305,19 +275,18 @@ func (t *TickerManagerImpl) addBackfillPrice(yearPrices map[string]float64, data
 	return nil
 }
 
-// findClosestPriceOnOrBefore returns the latest price whose date is on or before refDate.
-func findClosestPriceOnOrBefore(prices map[string]float64, refDate string) (float64, bool) {
-	var closestDate string
+// findClosestPriceOnOrBefore returns the closest date on or before refDate, its price, and whether a match was found.
+func findClosestPriceOnOrBefore(prices map[string]float64, refDate string) (closestDate string, price float64, ok bool) {
 	for date := range prices {
 		if date <= refDate && (closestDate == "" || date > closestDate) {
 			closestDate = date
 		}
 	}
 	if closestDate == "" {
-		return 0, false
+		return "", 0, false
 	}
-	price, ok := prices[closestDate]
-	return price, ok
+	price, ok = prices[closestDate]
+	return
 }
 
 // addSplitBarrierPrices adds synthetic daily price entries on split effective dates that
@@ -341,7 +310,7 @@ func (t *TickerManagerImpl) addSplitBarrierPrices(yearPrices map[string]float64,
 			continue
 		}
 
-		rawPrice, ok := findClosestPriceOnOrBefore(data.Prices, splitDateStr)
+		_, rawPrice, ok := findClosestPriceOnOrBefore(data.Prices, splitDateStr)
 		if !ok {
 			continue
 		}

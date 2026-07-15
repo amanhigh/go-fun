@@ -45,9 +45,10 @@ var _ = Describe("SplitManager", func() {
 		// -------- 1. Happy path: two tickers, five trades --------
 		Context("happy path", func() {
 			var (
-				input  []tax.Trade
-				output []tax.Trade
-				err    common.HttpError
+				input         []tax.Trade
+				expectedInput []tax.Trade // deep copy for immutability check
+				output        []tax.Trade
+				err           common.HttpError
 			)
 
 			BeforeEach(func() {
@@ -58,6 +59,7 @@ var _ = Describe("SplitManager", func() {
 					{Symbol: AAPL, Date: "2024-10-15", Type: "SELL", Quantity: 100, USDPrice: 200, USDValue: 20000, Commission: 5.0},
 					{Symbol: VO, Date: "2025-06-01", Type: "SELL", Quantity: 5, USDPrice: 60, USDValue: 300},
 				}
+				expectedInput = append([]tax.Trade(nil), input...)
 
 				// VO: 3:2 split on 2024-09-01, 4:3 split on 2025-01-15
 				// Exact GetSplits range: 2024-06-01 through 2025-06-01
@@ -79,6 +81,9 @@ var _ = Describe("SplitManager", func() {
 
 			It("should normalize trades across all scenarios preserving input order and invariant fields", func() {
 				Expect(err).ToNot(HaveOccurred())
+
+				// 0. Original input unchanged (immutability guarantee)
+				Expect(input).To(Equal(expectedInput))
 
 				// 1. Original input order preserved
 				Expect(output[0].Symbol).To(Equal(VO))
