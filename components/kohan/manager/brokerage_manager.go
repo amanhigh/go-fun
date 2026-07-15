@@ -22,7 +22,6 @@ type BrokerageManagerImpl struct {
 	DriveWealth  Broker                  `container:"name"`
 	IB           Broker                  `container:"name"`
 	GainsManager GainsComputationManager `container:"type"`
-	SplitManager SplitManager            `container:"type"`
 	Config       config.TaxConfig
 }
 
@@ -31,17 +30,17 @@ func NewBrokerageManager(
 	dwManager Broker,
 	ibManager Broker,
 	gainsManager GainsComputationManager,
-	splitManager SplitManager,
 	config config.TaxConfig,
-) BrokerageManager {
+) *BrokerageManagerImpl {
 	return &BrokerageManagerImpl{
 		DriveWealth:  dwManager,
 		IB:           ibManager,
 		GainsManager: gainsManager,
-		SplitManager: splitManager,
 		Config:       config,
 	}
 }
+
+var _ BrokerageManager = (*BrokerageManagerImpl)(nil)
 
 func (m *BrokerageManagerImpl) ParseAndGenerate(ctx context.Context, year int) error {
 	var merged tax.BrokerageInfo
@@ -82,13 +81,7 @@ func (m *BrokerageManagerImpl) writeCSVs(ctx context.Context, info tax.Brokerage
 		return err
 	}
 
-	// Normalize trades for gains computation — synthetic adjusted basis
-	normalizedTrades, normErr := m.SplitManager.NormalizeTrades(ctx, sortedTrades)
-	if normErr != nil {
-		return normErr
-	}
-
-	return m.createGainsFile(ctx, normalizedTrades)
+	return m.createGainsFile(ctx, sortedTrades)
 }
 
 func (m *BrokerageManagerImpl) createInterestFile(interests []tax.Interest) error {

@@ -17,12 +17,18 @@ type GainsComputationManager interface {
 }
 
 // GainsComputationManagerImpl handles FIFO-based gains computation from trades
-type GainsComputationManagerImpl struct{}
+type GainsComputationManagerImpl struct {
+	splitManager SplitManager
+}
 
 // NewGainsComputationManager creates a new GainsComputationManager
-func NewGainsComputationManager() GainsComputationManager {
-	return &GainsComputationManagerImpl{}
+func NewGainsComputationManager(splitManager SplitManager) *GainsComputationManagerImpl {
+	return &GainsComputationManagerImpl{
+		splitManager: splitManager,
+	}
 }
+
+var _ GainsComputationManager = (*GainsComputationManagerImpl)(nil)
 
 // PositionLot represents a buy position lot for FIFO matching
 type PositionLot struct {
@@ -33,15 +39,20 @@ type PositionLot struct {
 	Symbol     string
 }
 
-func (g *GainsComputationManagerImpl) ComputeGainsFromTrades(_ context.Context, trades []tax.Trade) ([]tax.Gains, common.HttpError) {
-	// Trades are already sorted by BrokerageManager before being written to trades.csv
-	// No need to sort again - just process them in order
+func (g *GainsComputationManagerImpl) ComputeGainsFromTrades(ctx context.Context, trades []tax.Trade) ([]tax.Gains, common.HttpError) {
+	// The caller provides trades sorted chronologically.
+	// NormalizeTrades preserves input order, so the normalized slice
+	// remains sorted and is safe for FIFO processing.
+	normalizedTrades, httpErr := g.splitManager.NormalizeTrades(ctx, trades)
+	if httpErr != nil {
+		return nil, httpErr
+	}
 
 	// Track buy positions by symbol using FIFO
 	buyPositions := make(map[string][]PositionLot)
 	var gains []tax.Gains
 
-	for _, trade := range trades {
+	for _, trade := range normalizedTrades {
 		tradeDate, err := time.Parse(time.DateOnly, trade.Date)
 		if err != nil {
 			return nil, common.NewHttpError(fmt.Sprintf("invalid trade date '%s': %v", trade.Date, err), http.StatusBadRequest)

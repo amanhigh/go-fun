@@ -142,8 +142,8 @@ func (ki *KohanInjector) provideExcelManager() manager.ExcelManager {
 	return manager.NewExcelManager(ki.config.Tax.ReportsDir)
 }
 
-func (ki *KohanInjector) provideGainsComputationManager() manager.GainsComputationManager {
-	return manager.NewGainsComputationManager()
+func (ki *KohanInjector) provideGainsComputationManager(splitManager manager.SplitManager) manager.GainsComputationManager {
+	return manager.NewGainsComputationManager(splitManager)
 }
 
 func (ki *KohanInjector) provideBrokerageManager() manager.BrokerageManager {
