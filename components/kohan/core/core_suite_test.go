@@ -2,10 +2,13 @@ package core_test
 
 import (
 	"context"
+	"fmt"
+	"net"
 	"net/http"
 	"os"
 	"path/filepath"
 	"testing"
+	"time"
 
 	"github.com/amanhigh/go-fun/common/util"
 	"github.com/amanhigh/go-fun/components/kohan/core"
@@ -63,6 +66,15 @@ func configureMockOSHandler() *handlerMocks.OSHandler {
 	}).Maybe()
 
 	return osHandler
+}
+
+// verifyServerUp checks that the test server is accepting TCP connections.
+func verifyServerUp() error {
+	conn, err := net.Dial("tcp", fmt.Sprintf("localhost:%d", testPort))
+	if conn != nil {
+		conn.Close()
+	}
+	return err
 }
 
 func TestCore(t *testing.T) {
@@ -131,6 +143,8 @@ var _ = BeforeSuite(func() {
 		defer GinkgoRecover()
 		_ = server.Start()
 	}()
+
+	Eventually(verifyServerUp, 5*time.Second, 10*time.Millisecond).Should(Succeed())
 })
 
 var _ = AfterSuite(func() {
