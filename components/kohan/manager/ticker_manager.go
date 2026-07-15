@@ -238,8 +238,9 @@ func (t *TickerManagerImpl) GetSplits(ctx context.Context, ticker string, from, 
 	return result, nil
 }
 
-// filterYearPrices filters prices for a given year and applies split adjustments.
-func (t *TickerManagerImpl) filterYearPrices(data tax.StockData, yearStr, ticker string) (map[string]float64, common.HttpError) {
+// filterAndAdjustYearPrices filters prices for a given year and applies split adjustments.
+func (t *TickerManagerImpl) filterAndAdjustYearPrices(data tax.StockData, year int, ticker string) (map[string]float64, common.HttpError) {
+	yearStr := strconv.Itoa(year)
 	yearPrices := make(map[string]float64)
 	for date, price := range data.Prices {
 		if strings.HasPrefix(date, yearStr) {
@@ -258,23 +259,6 @@ func (t *TickerManagerImpl) filterYearPrices(data tax.StockData, yearStr, ticker
 	return yearPrices, nil
 }
 
-// addBackfillPrice includes the previous year-end price with split adjustment for carry-over.
-func (t *TickerManagerImpl) addBackfillPrice(yearPrices map[string]float64, data tax.StockData, year int, ticker string) common.HttpError {
-	prevYearEnd := fmt.Sprintf("%d-12-31", year-1)
-	if prevPrice, exists := data.Prices[prevYearEnd]; exists {
-		if prevDate, parseErr := time.Parse(time.DateOnly, prevYearEnd); parseErr == nil {
-			adjustedPrice, adjErr := t.adjustPriceForSplits(prevPrice, prevDate, data.Splits, ticker)
-			if adjErr != nil {
-				return adjErr
-			}
-			yearPrices[prevYearEnd] = adjustedPrice
-		} else {
-			yearPrices[prevYearEnd] = prevPrice
-		}
-	}
-	return nil
-}
-
 // findClosestPriceOnOrBefore returns the closest date on or before refDate, its price, and whether a match was found.
 func findClosestPriceOnOrBefore(prices map[string]float64, refDate string) (closestDate string, price float64, ok bool) {
 	for date := range prices {
@@ -289,42 +273,6 @@ func findClosestPriceOnOrBefore(prices map[string]float64, refDate string) (clos
 	return
 }
 
-// addSplitBarrierPrices adds synthetic daily price entries on split effective dates that
-// lack exact cached prices. This prevents post-split backfill from using a pre-split price
-// (higher share basis) when the quantity has already been split-adjusted.
-// The synthetic entry is derived from the closest raw price on/before the split date,
-// adjusted to the split date's share basis (post-split basis, since no split occurs
-// strictly after the split date itself). Does not overwrite existing exact cached prices.
-func (t *TickerManagerImpl) addSplitBarrierPrices(yearPrices map[string]float64, data tax.StockData, year int, ticker string) common.HttpError {
-	yearStart := time.Date(year, 1, 1, 0, 0, 0, 0, time.UTC)
-	yearEnd := time.Date(year, 12, 31, 0, 0, 0, 0, time.UTC)
-
-	for _, split := range data.Splits {
-		splitDate := split.EffectiveDate()
-		if splitDate.Before(yearStart) || splitDate.After(yearEnd) {
-			continue
-		}
-
-		splitDateStr := splitDate.Format(time.DateOnly)
-		if _, exists := yearPrices[splitDateStr]; exists {
-			continue
-		}
-
-		_, rawPrice, ok := findClosestPriceOnOrBefore(data.Prices, splitDateStr)
-		if !ok {
-			continue
-		}
-
-		adjustedPrice, adjErr := t.adjustPriceForSplits(rawPrice, splitDate, data.Splits, ticker)
-		if adjErr != nil {
-			return adjErr
-		}
-
-		yearPrices[splitDateStr] = adjustedPrice
-	}
-	return nil
-}
-
 // GetDailyPrices returns all available closing prices for a given year
 // as a map with date format "YYYY-MM-DD" as key and price as value.
 // Used for daily peak INR value evaluation during valuation calculations.
@@ -334,8 +282,7 @@ func (t *TickerManagerImpl) GetDailyPrices(ctx context.Context, ticker string, y
 		return nil, err
 	}
 
-	yearStr := strconv.Itoa(year)
-	yearPrices, filterErr := t.filterYearPrices(data, yearStr, ticker)
+	yearPrices, filterErr := t.filterAndAdjustYearPrices(data, year, ticker)
 	if filterErr != nil {
 		return nil, filterErr
 	}
@@ -348,16 +295,29 @@ func (t *TickerManagerImpl) GetDailyPrices(ctx context.Context, ticker string, y
 		)
 	}
 
-	// Add synthetic price entries for split effective dates that lack cached prices.
-	// This ensures getClosestValue (in valuation_manager) does not backfill a pre-split
-	// price into post-split dates, which would overstate economic value when the
-	// quantity has already been split-adjusted.
-	if splitErr := t.addSplitBarrierPrices(yearPrices, data, year, ticker); splitErr != nil {
-		return nil, splitErr
+	// missing exact split-date prices are unsafe to synthesize because
+	// the post-split share basis is unverified; investigate and add a
+	// verified fallback only if real data requires it.
+	for _, split := range data.Splits {
+		if splitDateStr := split.EffectiveDate().Format(time.DateOnly); split.EffectiveDate().Year() == year {
+			if _, exists := data.Prices[splitDateStr]; !exists {
+				return nil, common.NewHttpError(
+					fmt.Sprintf("no cached price on split date %s for ticker %s", splitDateStr, ticker),
+					http.StatusNotFound,
+				)
+			}
+		}
 	}
 
-	if backfillErr := t.addBackfillPrice(yearPrices, data, year, ticker); backfillErr != nil {
-		return nil, backfillErr
+	// Backfill previous year-end price with split adjustment for carry-over.
+	prevYearEnd := fmt.Sprintf("%d-12-31", year-1)
+	if prevPrice, exists := data.Prices[prevYearEnd]; exists {
+		prevDate := time.Date(year-1, 12, 31, 0, 0, 0, 0, time.UTC)
+		adjustedPrice, adjErr := t.adjustPriceForSplits(prevPrice, prevDate, data.Splits, ticker)
+		if adjErr != nil {
+			return nil, adjErr
+		}
+		yearPrices[prevYearEnd] = adjustedPrice
 	}
 
 	return yearPrices, nil

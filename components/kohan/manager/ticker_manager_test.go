@@ -771,5 +771,30 @@ var _ = Describe("TickerManager", func() {
 			Expect(pricesErr).ToNot(HaveOccurred())
 			Expect(prices["2024-03-01"]).To(Equal(50.00))
 		})
+
+		Context("with missing price on split date", func() {
+			BeforeEach(func() {
+				stockData = tax.StockData{
+					Prices: map[string]float64{
+						"2024-01-10": 100.00, // Pre-split price only; no exact price on split date
+					},
+					Splits: []tax.YahooSplit{
+						{Date: 1709251200, Numerator: 2, Denominator: 1}, // 2024-03-01 2:1 split
+					},
+				}
+				filePath := filepath.Join(testDir, ticker+".json")
+				data, err := json.Marshal(stockData)
+				Expect(err).ToNot(HaveOccurred())
+				err = os.WriteFile(filePath, data, 0600)
+				Expect(err).ToNot(HaveOccurred())
+			})
+
+			It("should return error when no exact cached price exists on split date", func() {
+				Expect(pricesErr).To(HaveOccurred())
+				Expect(pricesErr.Code()).To(Equal(http.StatusNotFound))
+				Expect(pricesErr.Error()).To(ContainSubstring(ticker))
+				Expect(pricesErr.Error()).To(ContainSubstring("2024-03-01"))
+			})
+		})
 	})
 })
