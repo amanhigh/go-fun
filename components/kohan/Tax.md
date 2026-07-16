@@ -348,19 +348,27 @@ This conceptual flow allows for modular management of different aspects of tax c
 
 ### Understanding FirstPosition
 
-The `FirstPosition` represents the **acquisition cost basis** of a security - the original date, quantity, and price at which it was first acquired. It establishes the cost baseline for Schedule FA reporting and persists across years as long as holdings remain uninterrupted.
+The `FirstPosition` represents the **initial reporting position/value baseline** of a security — the first acquisition date, the net quantity of same-date buys minus sells, and the applicable price (trade execution price for a single first-date BUY, or historical market closing price for multiple first-date trades on the same date). It establishes the baseline for Schedule FA reporting and persists across years as long as holdings remain uninterrupted.
 
 ---
 
 ### Key Principle: FirstPosition Preservation
 
-**The `FirstPosition` is immutable and anchors to the cost basis of the initial acquisition.** 
+**The `FirstPosition` is immutable and anchors to the first acquisition date.**
 
-- **FirstPosition is set ONCE** when a security is first acquired
-- **FirstPosition persists UNCHANGED** across years as long as holdings continue (even through quantity changes or buying more shares)
-- **FirstPosition anchors to ORIGINAL ACQUISITION DATE/PRICE/QUANTITY**, not the current market price
-- **FirstPosition RESETS** only when the position is completely liquidated to 0 quantity at year-end AND then re-acquired in a subsequent year
-- For Schedule FA reporting, this ensures the true cost basis is maintained indefinitely
+- **FirstPosition is set ONCE** on the first acquisition date of a security
+- **FirstPosition persists UNCHANGED** across years as long as holdings continue with a non-zero quantity at prior year-end (even through quantity changes or buying more shares)
+- **Date anchors to the FIRST ACQUISITION DATE** — if first-date trades net to zero, the date is preserved with zero quantity and zero price; later dates never replace it
+- **Quantity is the NET of same-date BUYs minus SELLs** on the first acquisition date
+- **Price rule:**
+  - **Single first-date BUY:** trade execution price is used as the FirstPosition price
+  - **Multiple first-date trades** (multiple BUYs, or BUYs and SELLs on the same date): historical market closing price (via TickerManager.GetPrice) on the first acquisition date is used instead
+- **Year-end carry-over requires prior year-end Account.Quantity > 0:** If the prior year-end account shows Quantity == 0, any OriginDate, OriginQty, and OriginPrice metadata is stale historical metadata and must not preserve the old FirstPosition into the next year
+- **FirstPosition RESETS** when a position is completely liquidated to 0 quantity at year-end:
+  - A new purchase in the subsequent year establishes the new FirstPosition (date, quantity, and applicable price)
+  - If no subsequent-year purchase occurs, the squared-off ticker is absent from that year's valuation/Schedule FA output
+- **Same-year liquidation retains FirstPosition:** Liquidation and re-acquisition within the same calendar year preserves the original FirstPosition for that year's valuation; the reset takes effect only at the following year boundary
+- For Schedule FA reporting, this provides a consistent initial value baseline across years
 
 ---
 
@@ -368,44 +376,35 @@ The `FirstPosition` represents the **acquisition cost basis** of a security - th
 
 #### Scenario 1: Carry-Over from Prior Year (Typical Case)
 
-When holdings continue from the previous year, `FirstPosition` reflects the **original first acquisition date and price** of that security, preserved from when it was first purchased (potentially years ago). The `FirstPosition` remains constant as long as holdings continue uninterrupted.
-
-- **Date:** Date of the very first BUY of this security (preserved across years)
-- **Quantity:** Original quantity purchased at first acquisition
-- **Price:** Original price per share at first acquisition
-- **Example:**
-  - 2021 March 5: First BUY 50 AAPL @ $130/share (Initial acquisition)
+Refer to the **Key Principle** above for carry-over rules. **Example:**
+  - 2021 March 5: BUY 50 AAPL @ $130/share
   - 2022 year-end: Still holding 50 shares (market value $160/share)
-  - 2023 FirstPosition: (50 qty, $130 price, 2021-03-05 date) ← **Preserved from original acquisition**
+  - 2023 FirstPosition: (50 qty, $130.00 price, 2021-03-05 date)
   - SBI Rate on 2021-03-05: 74.00 INR/USD
-  - INRValue = 50 × $130 × 74.00 = **₹481,000** (This value represents the original cost basis)
+  - INRValue = 50 × $130.00 × 74.00 = **₹481,000**
 
 #### Scenario 2: Fresh Acquisition (First Purchase of Year)
 
-When acquiring a security for the first time in a calendar year:
-- **Date:** Date of first BUY trade
-- **Quantity:** Shares purchased in that first trade
-- **Price:** Purchase price per share
-- **Example:**
-  - 2024 Jan 15: First BUY 10 AAPL @ $175/share
-  - 2024 FirstPosition: (10 qty, $175 price, 2024-01-15 date)
+Refer to the **Key Principle** for acquisition date and price rules. **Example:**
+  - 2024 Jan 15: BUY 10 AAPL @ $175/share
+  - 2024 FirstPosition: (10 qty, $175.00 price, 2024-01-15 date)
   - SBI Rate on 2024-01-15: 83.00 INR/USD
-  - INRValue = 10 × $175 × 83.00 = **₹145,250**
+  - INRValue = 10 × $175.00 × 83.00 = **₹145,250**
+
+**Note — Zero-Net First Date:** If the aggregated trades on the first acquisition date net to zero quantity (buys equal sells), the FirstPosition preserves that date with zero quantity and zero price. A later acquisition date in the same year does **not** replace this FirstPosition.
 
 #### Scenario 3: Complete Liquidation & Re-acquisition in Subsequent Year
 
-**Important Behavior:** When a security position is completely liquidated (sold out entirely to 0 quantity) at year-end and then **re-acquired in the following year**, the `FirstPosition` resets to reflect the new acquisition date and price from the subsequent year.
-
-**Rationale:** The `FirstPosition` anchors to the initial acquisition within a holding period. If a position is completely liquidated by year-end (quantity = 0), the prior year's `FirstPosition` is final and reported for Schedule FA. When re-acquired in the next year, the new year begins with a fresh holding period, so `FirstPosition` reflects the new acquisition date from that year.
+Per the **Key Principle**, a position liquidated to 0 at year-end resets its `FirstPosition`. Any stale origin metadata on the zero-quantity account must not carry forward — the ticker starts fresh (or is absent) in the next year, depending on whether a new purchase occurs.
 
 **Scenario 3A: Liquidation at Year-End, Re-acquisition in Next Year**
 
 | Year | Date | Transaction | Quantity | Price | Balance | FirstPosition Status |
 |------|------|-------------|----------|-------|---------|----------------------|
-| 2024 | 2024-01-15 | BUY 10 AAPL | 10 | $170 | 10 shares | FirstPosition = (10 qty, $170, 2024-01-15, SBI: 83.00) → ₹141,100 |
+| 2024 | 2024-01-15 | BUY 10 AAPL | 10 | $170 | 10 shares | FirstPosition = (10 qty, $170.00, 2024-01-15, SBI: 83.00) → ₹141,100 |
 | 2024 | 2024-05-20 | SELL 10 AAPL | -10 | $185 | **0 shares** | Position completely liquidated by year-end |
 | 2024 | 2024-12-31 | Year-End | - | - | 0 shares | **2024 Schedule FA:** No AAPL entry (quantity = 0) |
-| 2025 | 2025-03-10 | BUY 5 AAPL | 5 | $180 | 5 shares | **FirstPosition RESETS** = (5 qty, $180, 2025-03-10, SBI: 81.00) → ₹72,900 |
+| 2025 | 2025-03-10 | BUY 5 AAPL | 5 | $180 | 5 shares | **FirstPosition RESETS** = (5 qty, $180.00, 2025-03-10, SBI: 81.00) → ₹72,900 |
 | 2025 | 2025-12-31 | Year-End | - | $190 | 5 shares | YearEndPosition = (5 qty, $190, 2025-12-31, SBI: 82.50) → ₹79,125 |
 
 **Schedule FA Reporting:**
@@ -423,9 +422,9 @@ When acquiring a security for the first time in a calendar year:
 
 | Date | Transaction | Quantity | Price | Balance | FirstPosition Status |
 |------|-------------|----------|-------|---------|----------------------|
-| 2024-01-15 | BUY 10 AAPL | 10 | $170 | 10 shares | FirstPosition = (10 qty, $170, 2024-01-15, SBI: 83.00) → ₹141,100 |
+| 2024-01-15 | BUY 10 AAPL | 10 | $170 | 10 shares | FirstPosition = (10 qty, $170.00, 2024-01-15, SBI: 83.00) → ₹141,100 |
 | 2024-05-20 | SELL 10 AAPL | -10 | $185 | **0 shares** | Position liquidated mid-year |
-| 2024-08-10 | BUY 5 AAPL | 5 | $180 | 5 shares | **FirstPosition REMAINS** = (10 qty, $170, 2024-01-15, SBI: 83.00) → ₹141,100 |
+| 2024-08-10 | BUY 5 AAPL | 5 | $180 | 5 shares | **FirstPosition REMAINS** = (10 qty, $170.00, 2024-01-15, SBI: 83.00) → ₹141,100 |
 | 2024-12-31 | Year-End | - | $190 | 5 shares | YearEndPosition = (5 qty, $190, 2024-12-31, SBI: 82.50) → ₹79,125 |
 
 **Schedule FA Reporting for 2024:**
@@ -436,7 +435,7 @@ When acquiring a security for the first time in a calendar year:
 **Tax Implications:**
 - The Jan 15 purchase and May 20 sale are treated as a **complete transaction** - reported separately as capital gains/losses
 - The Aug 10 re-purchase is treated as a **new position** for 2024 reporting, but inherits the original FirstPosition from Jan 15
-- Schedule FA for 2024 reflects the Jan 15 acquisition cost as initial value
+- Schedule FA for 2024 reflects the Jan 15 acquisition as the initial value baseline
 - At year-end 2024, the holding consists of 5 shares from Aug 10, but Schedule FA still anchors to Jan 15 (the original acquisition within that year)
 
 ---
@@ -462,6 +461,10 @@ The system performs daily INR valuation throughout the calendar year, considerin
 4. **Peak Identification:** The maximum INR value across all days in the calendar year becomes the "Peak Balance Value"
 
 This approach ensures the reported peak reflects the true highest INR valuation, capturing scenarios where exchange rate movements may dominate price movements or vice versa.
+
+## Stock Split Handling
+
+Yahoo split events change share quantity on their effective UTC calendar date; historical Yahoo closes are reconstructed to that date's actual share basis. Daily reports use end-of-day sequencing (the split is applied before same-day trades are processed), while intraday handling is intentionally unsupported.
 
 ## Disclaimer
 

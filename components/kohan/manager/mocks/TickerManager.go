@@ -9,6 +9,7 @@ import (
 	"time"
 
 	"github.com/amanhigh/go-fun/models/common"
+	"github.com/amanhigh/go-fun/models/tax"
 	mock "github.com/stretchr/testify/mock"
 )
 
@@ -244,6 +245,88 @@ func (_c *TickerManager_GetPrice_Call) Return(f float64, httpError common.HttpEr
 }
 
 func (_c *TickerManager_GetPrice_Call) RunAndReturn(run func(ctx context.Context, ticker string, date time.Time) (float64, common.HttpError)) *TickerManager_GetPrice_Call {
+	_c.Call.Return(run)
+	return _c
+}
+
+// GetSplits provides a mock function for the type TickerManager
+func (_mock *TickerManager) GetSplits(ctx context.Context, ticker string, from time.Time, to time.Time) ([]tax.YahooSplit, common.HttpError) {
+	ret := _mock.Called(ctx, ticker, from, to)
+
+	if len(ret) == 0 {
+		panic("no return value specified for GetSplits")
+	}
+
+	var r0 []tax.YahooSplit
+	var r1 common.HttpError
+	if returnFunc, ok := ret.Get(0).(func(context.Context, string, time.Time, time.Time) ([]tax.YahooSplit, common.HttpError)); ok {
+		return returnFunc(ctx, ticker, from, to)
+	}
+	if returnFunc, ok := ret.Get(0).(func(context.Context, string, time.Time, time.Time) []tax.YahooSplit); ok {
+		r0 = returnFunc(ctx, ticker, from, to)
+	} else {
+		if ret.Get(0) != nil {
+			r0 = ret.Get(0).([]tax.YahooSplit)
+		}
+	}
+	if returnFunc, ok := ret.Get(1).(func(context.Context, string, time.Time, time.Time) common.HttpError); ok {
+		r1 = returnFunc(ctx, ticker, from, to)
+	} else {
+		if ret.Get(1) != nil {
+			r1 = ret.Get(1).(common.HttpError)
+		}
+	}
+	return r0, r1
+}
+
+// TickerManager_GetSplits_Call is a *mock.Call that shadows Run/Return methods with type explicit version for method 'GetSplits'
+type TickerManager_GetSplits_Call struct {
+	*mock.Call
+}
+
+// GetSplits is a helper method to define mock.On call
+//   - ctx context.Context
+//   - ticker string
+//   - from time.Time
+//   - to time.Time
+func (_e *TickerManager_Expecter) GetSplits(ctx interface{}, ticker interface{}, from interface{}, to interface{}) *TickerManager_GetSplits_Call {
+	return &TickerManager_GetSplits_Call{Call: _e.mock.On("GetSplits", ctx, ticker, from, to)}
+}
+
+func (_c *TickerManager_GetSplits_Call) Run(run func(ctx context.Context, ticker string, from time.Time, to time.Time)) *TickerManager_GetSplits_Call {
+	_c.Call.Run(func(args mock.Arguments) {
+		var arg0 context.Context
+		if args[0] != nil {
+			arg0 = args[0].(context.Context)
+		}
+		var arg1 string
+		if args[1] != nil {
+			arg1 = args[1].(string)
+		}
+		var arg2 time.Time
+		if args[2] != nil {
+			arg2 = args[2].(time.Time)
+		}
+		var arg3 time.Time
+		if args[3] != nil {
+			arg3 = args[3].(time.Time)
+		}
+		run(
+			arg0,
+			arg1,
+			arg2,
+			arg3,
+		)
+	})
+	return _c
+}
+
+func (_c *TickerManager_GetSplits_Call) Return(yahooSplits []tax.YahooSplit, httpError common.HttpError) *TickerManager_GetSplits_Call {
+	_c.Call.Return(yahooSplits, httpError)
+	return _c
+}
+
+func (_c *TickerManager_GetSplits_Call) RunAndReturn(run func(ctx context.Context, ticker string, from time.Time, to time.Time) ([]tax.YahooSplit, common.HttpError)) *TickerManager_GetSplits_Call {
 	_c.Call.Return(run)
 	return _c
 }

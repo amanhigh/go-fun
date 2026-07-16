@@ -13,8 +13,8 @@ type Account struct {
 	Quantity    float64 `csv:"Quantity"`    // Year-end quantity
 	MarketValue float64 `csv:"MarketValue"` // Year-end market value
 	OriginDate  string  `csv:"OriginDate"`  // ISO format: YYYY-MM-DD (original acquisition date)
-	OriginQty   float64 `csv:"OriginQty"`   // Original acquisition quantity
-	OriginPrice float64 `csv:"OriginPrice"` // Original cost basis per unit (USD)
+	OriginQty   float64 `csv:"OriginQty"`   // Persisted from FirstPosition.Quantity: net same-date quantity on first acquisition date (may be zero)
+	OriginPrice float64 `csv:"OriginPrice"` // From FirstPosition: trade price (single BUY) or market close (multiple trades); zero when first-date nets to zero
 }
 
 // GetKey implements CSVRecord interface

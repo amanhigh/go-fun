@@ -76,6 +76,10 @@ func rawTickerRequest(method, url, body string) (*http.Request, *httptest.Respon
 //
 // -> Context(Errors): 5xx Server Error Cases
 var _ = Describe("TickerHandler Integration - CUD Tests - Section 2.2.1 Primary Ticker APIs", func() {
+	const (
+		tickerTypeComposite = "COMPOSITE"
+		tickerNiftyUSDINR   = "NIFTY/USDINR"
+	)
 	var (
 		tickerHandler      handler.TickerHandler
 		router             *gin.Engine
@@ -203,37 +207,37 @@ var _ = Describe("TickerHandler Integration - CUD Tests - Section 2.2.1 Primary 
 
 					It("should accept composite expression when type = COMPOSITE", func() {
 						payload := validTickerPayload
-						payload.Ticker = "NIFTY/USDINR"
-						payload.Type = "COMPOSITE"
+						payload.Ticker = tickerNiftyUSDINR
+						payload.Type = tickerTypeComposite
 						_, response := createTickerRequest(router, payload)
-						Expect(response.Type).To(Equal("COMPOSITE"))
-						Expect(response.Ticker).To(Equal("NIFTY/USDINR"))
+						Expect(response.Type).To(Equal(tickerTypeComposite))
+						Expect(response.Ticker).To(Equal(tickerNiftyUSDINR))
 					})
 					It("should accept plus operator NIFTY+USDINR in composite expression", func() {
 						payload := validTickerPayload
 						payload.Ticker = "NIFTY+USDINR"
-						payload.Type = "COMPOSITE"
+						payload.Type = tickerTypeComposite
 						_, response := createTickerRequest(router, payload)
 						Expect(response.Ticker).To(Equal("NIFTY+USDINR"))
 					})
 					It("should accept minus operator US10Y-US02Y in composite expression", func() {
 						payload := validTickerPayload
 						payload.Ticker = "US10Y-US02Y"
-						payload.Type = "COMPOSITE"
+						payload.Type = tickerTypeComposite
 						_, response := createTickerRequest(router, payload)
 						Expect(response.Ticker).To(Equal("US10Y-US02Y"))
 					})
 					It("should accept multiply operator XAUUSD*USDINR in composite expression", func() {
 						payload := validTickerPayload
 						payload.Ticker = "XAUUSD*USDINR"
-						payload.Type = "COMPOSITE"
+						payload.Type = tickerTypeComposite
 						_, response := createTickerRequest(router, payload)
 						Expect(response.Ticker).To(Equal("XAUUSD*USDINR"))
 					})
 					It("should accept ^ operator NIFTY^USDINR in composite expression", func() {
 						payload := validTickerPayload
 						payload.Ticker = "NIFTY^USDINR"
-						payload.Type = "COMPOSITE"
+						payload.Type = tickerTypeComposite
 						_, response := createTickerRequest(router, payload)
 						Expect(response.Ticker).To(Equal("NIFTY^USDINR"))
 					})
@@ -316,7 +320,7 @@ var _ = Describe("TickerHandler Integration - CUD Tests - Section 2.2.1 Primary 
 					It("should return 400 for composite expression with non-math invalid char @", func() {
 						payload := validTickerPayload
 						payload.Ticker = "NIFTY@USDINR"
-						payload.Type = "COMPOSITE"
+						payload.Type = tickerTypeComposite
 						req, w := util.CreateTestRequest(http.MethodPost, barkat.TickerBase, payload)
 						router.ServeHTTP(w, req)
 						util.AssertError(w, "Ticker", "ticker")
@@ -324,7 +328,7 @@ var _ = Describe("TickerHandler Integration - CUD Tests - Section 2.2.1 Primary 
 					It("should return 400 for composite expression containing whitespace", func() {
 						payload := validTickerPayload
 						payload.Ticker = "NIFTY / USDINR"
-						payload.Type = "COMPOSITE"
+						payload.Type = tickerTypeComposite
 						req, w := util.CreateTestRequest(http.MethodPost, barkat.TickerBase, payload)
 						router.ServeHTTP(w, req)
 						util.AssertError(w, "Ticker", "ticker")
@@ -503,13 +507,13 @@ var _ = Describe("TickerHandler Integration - CUD Tests - Section 2.2.1 Primary 
 
 			Context("Type Field", func() {
 				Context("Allowed Values", func() {
-					for _, tickerType := range []string{"EQUITY", "INDEX", "CRYPTO", "COMMODITY", "FX", "BOND", "COMPOSITE"} {
+					for _, tickerType := range []string{"EQUITY", "INDEX", "CRYPTO", "COMMODITY", "FX", "BOND", tickerTypeComposite} {
 						typeValue := tickerType
 						It("should accept type "+typeValue, func() {
 							payload := validTickerPayload
 							payload.Type = typeValue
-							if typeValue == "COMPOSITE" {
-								payload.Ticker = "NIFTY/USDINR"
+							if typeValue == tickerTypeComposite {
+								payload.Ticker = tickerNiftyUSDINR
 							}
 							_, response := createTickerRequest(router, payload)
 							Expect(response.Type).To(Equal(typeValue))
@@ -822,15 +826,15 @@ var _ = Describe("TickerHandler Integration - CUD Tests - Section 2.2.1 Primary 
 					})
 					It("should accept encoded composite ticker path NIFTY/USDINR", func() {
 						compositePayload := validTickerPayload
-						compositePayload.Ticker = "NIFTY/USDINR"
-						compositePayload.Type = "COMPOSITE"
+						compositePayload.Ticker = tickerNiftyUSDINR
+						compositePayload.Type = tickerTypeComposite
 						_, compositeTicker := createTickerRequest(router, compositePayload)
 
 						compositeUpdate := validUpdatePayload
-						compositeUpdate.Type = "COMPOSITE"
+						compositeUpdate.Type = tickerTypeComposite
 						_, response := updateTickerRequest(router, url.PathEscape(compositeTicker.Ticker), compositeUpdate)
 						Expect(response.Ticker).To(Equal(compositeTicker.Ticker))
-						Expect(response.Type).To(Equal("COMPOSITE"))
+						Expect(response.Type).To(Equal(tickerTypeComposite))
 					})
 				})
 				Context("Bad Values", func() {
@@ -842,7 +846,7 @@ var _ = Describe("TickerHandler Integration - CUD Tests - Section 2.2.1 Primary 
 					It("should return 400 when composite ticker path is updated with non-COMPOSITE type", func() {
 						compositePayload := validTickerPayload
 						compositePayload.Ticker = "ABC(DEF)"
-						compositePayload.Type = "COMPOSITE"
+						compositePayload.Type = tickerTypeComposite
 						_, compositeTicker := createTickerRequest(router, compositePayload)
 
 						updatePayload := validUpdatePayload
@@ -976,11 +980,11 @@ var _ = Describe("TickerHandler Integration - CUD Tests - Section 2.2.1 Primary 
 			Context("Type Field", func() {
 				Context("Allowed Values", func() {
 					It("should accept every supported type enum value", func() {
-						for _, v := range []string{"EQUITY", "INDEX", "CRYPTO", "COMMODITY", "FX", "BOND", "COMPOSITE"} {
+						for _, v := range []string{"EQUITY", "INDEX", "CRYPTO", "COMMODITY", "FX", "BOND", tickerTypeComposite} {
 							payload := validUpdatePayload
 							payload.Type = v
-							if v == "COMPOSITE" {
-								payload.Ticker = "NIFTY/USDINR"
+							if v == tickerTypeComposite {
+								payload.Ticker = tickerNiftyUSDINR
 							}
 							_, response := updateTickerRequest(router, createdTicker.Ticker, payload)
 							Expect(response.Type).To(Equal(v))
@@ -1192,7 +1196,7 @@ var _ = Describe("TickerHandler Integration - CUD Tests - Section 2.2.1 Primary 
 					It("should accept encoded composite ticker path US10Y-US02Y", func() {
 						compositePayload := validTickerPayload
 						compositePayload.Ticker = "US10Y-US02Y"
-						compositePayload.Type = "COMPOSITE"
+						compositePayload.Type = tickerTypeComposite
 						_, compositeTicker := createTickerRequest(router, compositePayload)
 						_, response := patchTickerRequest(router, url.PathEscape(compositeTicker.Ticker), validPatchPayload)
 						Expect(response.Ticker).To(Equal(compositeTicker.Ticker))
@@ -1330,8 +1334,8 @@ var _ = Describe("TickerHandler Integration - CUD Tests - Section 2.2.1 Primary 
 					})
 					It("should accept encoded composite ticker path NIFTY/USDINR", func() {
 						compositePayload := validTickerPayload
-						compositePayload.Ticker = "NIFTY/USDINR"
-						compositePayload.Type = "COMPOSITE"
+						compositePayload.Ticker = tickerNiftyUSDINR
+						compositePayload.Type = tickerTypeComposite
 						_, compositeTicker := createTickerRequest(router, compositePayload)
 						req, w := util.CreateTestRequest(http.MethodDelete,
 							barkat.TickerBase+"/"+url.PathEscape(compositeTicker.Ticker), nil)

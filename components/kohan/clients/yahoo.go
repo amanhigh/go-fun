@@ -3,6 +3,7 @@ package clients
 import (
 	"context"
 	"fmt"
+	"sort"
 	"time"
 
 	"github.com/amanhigh/go-fun/common/util"
@@ -47,6 +48,7 @@ func (y *YahooClient) FetchDailyPrices(ctx context.Context, ticker string) (tax.
 			"interval": "1d",
 			"period1":  fmt.Sprintf("%d", startDate),
 			"period2":  fmt.Sprintf("%d", now),
+			"events":   "splits",
 		}).
 		SetHeader("User-Agent", "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36").
 		SetResult(&response).
@@ -61,12 +63,15 @@ func (y *YahooClient) FetchDailyPrices(ctx context.Context, ticker string) (tax.
 		return tax.StockData{}, err
 	}
 
+	splits := y.extractSplits(&response)
+
 	log.Info().
 		Str("Ticker", ticker).
 		Int("DataPoints", len(prices)).
+		Int("Splits", len(splits)).
 		Msg("Successfully fetched ticker data from Yahoo Finance")
 
-	return tax.StockData{Prices: prices}, nil
+	return tax.StockData{Prices: prices, Splits: splits}, nil
 }
 
 // extractPrices validates response and builds prices map from timestamps and closing prices
@@ -94,6 +99,32 @@ func (y *YahooClient) extractPrices(response *tax.YahooChartResponse, ticker str
 	}
 
 	return prices, nil
+}
+
+// extractSplits parses Yahoo's nested events.splits map into a chronologically ordered slice.
+// Returns a non-nil empty slice when no split events exist.
+func (y *YahooClient) extractSplits(response *tax.YahooChartResponse) []tax.YahooSplit {
+	if len(response.Chart.Result) == 0 {
+		return []tax.YahooSplit{}
+	}
+
+	result := response.Chart.Result[0]
+	splitsMap := result.Events.Splits
+	if splitsMap == nil {
+		return []tax.YahooSplit{}
+	}
+
+	splits := make([]tax.YahooSplit, 0, len(splitsMap))
+	for _, split := range splitsMap {
+		splits = append(splits, split)
+	}
+
+	// Sort chronologically by Date
+	sort.SliceStable(splits, func(i, j int) bool {
+		return splits[i].Date < splits[j].Date
+	})
+
+	return splits
 }
 
 // getChartURL builds the chart URL using the configured base URL

@@ -248,6 +248,7 @@ var _ = Describe("BrokerageManager", func() {
 				Expect(trades[2].Type).To(Equal("SELL")) // SELL second
 			})
 		})
+
 	})
 })
 

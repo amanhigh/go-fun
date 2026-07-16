@@ -8,6 +8,8 @@ import (
 	"gorm.io/gorm"
 )
 
+const CreatedByAman = "AMAN"
+
 type PersonRequest struct {
 	// Validations - https://gin-gonic.com/docs/examples/binding-and-validation/
 	Name   string `json:"name" gorm:"not null" binding:"required,min=1,max=25,name=person"`
@@ -55,7 +57,7 @@ func CreatePersonAudit(p Person) (audit PersonAudit) {
 func (p *Person) AfterCreate(tx *gorm.DB) (err error) {
 	audit := CreatePersonAudit(*p)
 	audit.Operation = "CREATE"
-	audit.CreatedBy = "AMAN"
+	audit.CreatedBy = CreatedByAman
 	audit.CreatedAt = time.Now()
 
 	return tx.Create(&audit).Error
@@ -64,7 +66,7 @@ func (p *Person) AfterCreate(tx *gorm.DB) (err error) {
 func (p *Person) AfterUpdate(tx *gorm.DB) (err error) {
 	audit := CreatePersonAudit(*p)
 	audit.Operation = "UPDATE"
-	audit.CreatedBy = "AMAN"
+	audit.CreatedBy = CreatedByAman
 	audit.CreatedAt = time.Now()
 
 	return tx.Create(&audit).Error
@@ -73,7 +75,7 @@ func (p *Person) AfterUpdate(tx *gorm.DB) (err error) {
 func (p *Person) AfterDelete(tx *gorm.DB) (err error) {
 	audit := CreatePersonAudit(*p)
 	audit.Operation = "DELETE"
-	audit.CreatedBy = "AMAN"
+	audit.CreatedBy = CreatedByAman
 	audit.CreatedAt = time.Now()
 
 	return tx.Create(&audit).Error

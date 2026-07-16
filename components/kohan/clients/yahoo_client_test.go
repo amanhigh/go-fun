@@ -102,6 +102,11 @@ var _ = Describe("YahooClient", func() {
 				Expect(stockData.Prices).To(HaveKey("2024-01-16"))
 				Expect(stockData.Prices).To(HaveKey("2024-01-17"))
 			})
+
+			It("should return non-nil empty splits when no events present", func() {
+				Expect(stockData.Splits).ToNot(BeNil())
+				Expect(stockData.Splits).To(BeEmpty())
+			})
 		})
 
 		Context("empty chart result", func() {
@@ -348,6 +353,79 @@ var _ = Describe("YahooClient", func() {
 
 			It("should have verified User-Agent header", func() {
 				Expect(userAgentVerified).To(BeTrue())
+			})
+		})
+
+		Context("split events parsing", func() {
+			var (
+				stockData      tax.StockData
+				err            error
+				eventsVerified bool
+			)
+
+			BeforeEach(func() {
+				// Two out-of-order events: 1705363200 listed first, 1705276800 listed second.
+				// Includes a 4:1 split (numerator:4, denominator:1).
+				responseBody := `{
+					"chart": {
+						"result": [
+							{
+								"meta": {"currency": "USD", "symbol": "AAPL"},
+								"timestamp": [1705276800],
+								"indicators": {
+									"quote": [{"open": [190.0], "high": [192.0], "low": [189.0], "close": [191.5], "volume": [50000000]}]
+								},
+								"events": {
+									"splits": {
+										"1705363200": {
+											"date": 1705363200,
+											"numerator": 2,
+											"denominator": 1
+										},
+										"1705276800": {
+											"date": 1705276800,
+											"numerator": 4,
+											"denominator": 1
+										}
+									}
+								}
+							}
+						],
+						"error": null
+					}
+				}`
+
+				server = httptest.NewServer(
+					http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+						Expect(r.URL.Query().Get("events")).To(Equal("splits"))
+						eventsVerified = true
+						w.Header().Set("Content-Type", "application/json")
+						w.WriteHeader(http.StatusOK)
+						_, _ = w.Write([]byte(responseBody))
+					}),
+				)
+
+				client := resty.NewWithClient(&http.Client{})
+				yahooClient = clients.NewYahooClient(client, server.URL, tickerDataStartYear)
+				stockData, err = yahooClient.FetchDailyPrices(ctx, ticker)
+			})
+
+			It("should return no error", func() {
+				Expect(err).ToNot(HaveOccurred())
+			})
+
+			It("should have verified events=splits query parameter", func() {
+				Expect(eventsVerified).To(BeTrue())
+			})
+
+			It("should have two splits in chronological order", func() {
+				Expect(stockData.Splits).To(HaveLen(2))
+				Expect(stockData.Splits[0].Date).To(Equal(int64(1705276800)))
+				Expect(stockData.Splits[0].Numerator).To(Equal(4.0))
+				Expect(stockData.Splits[0].Denominator).To(Equal(1.0))
+				Expect(stockData.Splits[1].Date).To(Equal(int64(1705363200)))
+				Expect(stockData.Splits[1].Numerator).To(Equal(2.0))
+				Expect(stockData.Splits[1].Denominator).To(Equal(1.0))
 			})
 		})
 

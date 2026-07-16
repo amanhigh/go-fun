@@ -2,31 +2,50 @@ package manager_test
 
 import (
 	"context"
+	"net/http"
 
 	"github.com/amanhigh/go-fun/components/kohan/manager"
+	"github.com/amanhigh/go-fun/components/kohan/manager/mocks"
+	"github.com/amanhigh/go-fun/models/common"
 	"github.com/amanhigh/go-fun/models/tax"
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
+	mock "github.com/stretchr/testify/mock"
 )
 
 var _ = Describe("GainsComputationManager", func() {
+	const AAPL = "AAPL"
 	var (
-		gainsManager manager.GainsComputationManager
-		ctx          context.Context
+		gainsManager     manager.GainsComputationManager
+		ctx              context.Context
+		mockSplitManager *mocks.SplitManager
 	)
 
 	BeforeEach(func() {
-		gainsManager = manager.NewGainsComputationManager()
 		ctx = context.Background()
 	})
+
+	setupIdentitySplitManager := func() {
+		mockSplitManager = mocks.NewSplitManager(GinkgoT())
+		mockSplitManager.EXPECT().
+			NormalizeTrades(mock.Anything, mock.Anything).
+			RunAndReturn(func(_ context.Context, trades []tax.Trade) ([]tax.Trade, common.HttpError) {
+				out := make([]tax.Trade, len(trades))
+				copy(out, trades)
+				return out, nil
+			}).
+			Once()
+		gainsManager = manager.NewGainsComputationManager(mockSplitManager)
+	}
 
 	Context("with simple BUY/SELL pairs", func() {
 		var trades []tax.Trade
 
 		BeforeEach(func() {
+			setupIdentitySplitManager()
 			trades = []tax.Trade{
-				{Symbol: "AAPL", Date: "2024-01-15", Type: "BUY", Quantity: 100, USDPrice: 140.00, Commission: 10.00},
-				{Symbol: "AAPL", Date: "2024-01-17", Type: "SELL", Quantity: 100, USDPrice: 150.00, Commission: 10.00},
+				{Symbol: AAPL, Date: "2024-01-15", Type: "BUY", Quantity: 100, USDPrice: 140.00, Commission: 10.00},
+				{Symbol: AAPL, Date: "2024-01-17", Type: "SELL", Quantity: 100, USDPrice: 150.00, Commission: 10.00},
 				{Symbol: "MSFT", Date: "2022-01-10", Type: "BUY", Quantity: 50, USDPrice: 200.00, Commission: 5.00},
 				{Symbol: "MSFT", Date: "2024-02-15", Type: "SELL", Quantity: 50, USDPrice: 210.00, Commission: 5.00},
 			}
@@ -38,12 +57,12 @@ var _ = Describe("GainsComputationManager", func() {
 			Expect(gains).To(HaveLen(2))
 
 			// Find gains by symbol using helper function
-			aaplGain := findGainBySymbol(gains, "AAPL")
+			aaplGain := findGainBySymbol(gains, AAPL)
 			msftGain := findGainBySymbol(gains, "MSFT")
 
 			// Validate AAPL gain (STCG - 2 days holding)
 			Expect(aaplGain).ToNot(BeNil())
-			Expect(aaplGain.Symbol).To(Equal("AAPL"))
+			Expect(aaplGain.Symbol).To(Equal(AAPL))
 			Expect(aaplGain.BuyDate).To(Equal("2024-01-15"))
 			Expect(aaplGain.SellDate).To(Equal("2024-01-17"))
 			Expect(aaplGain.Quantity).To(Equal(100.0))
@@ -67,13 +86,14 @@ var _ = Describe("GainsComputationManager", func() {
 		var trades []tax.Trade
 
 		BeforeEach(func() {
+			setupIdentitySplitManager()
 			trades = []tax.Trade{
 				// Buy multiple lots of AAPL
-				{Symbol: "AAPL", Date: "2023-01-10", Type: "BUY", Quantity: 20, USDPrice: 150.00, Commission: 2.00},
-				{Symbol: "AAPL", Date: "2023-07-10", Type: "BUY", Quantity: 30, USDPrice: 165.00, Commission: 3.00},
-				{Symbol: "AAPL", Date: "2023-12-10", Type: "BUY", Quantity: 50, USDPrice: 180.00, Commission: 5.00},
+				{Symbol: AAPL, Date: "2023-01-10", Type: "BUY", Quantity: 20, USDPrice: 150.00, Commission: 2.00},
+				{Symbol: AAPL, Date: "2023-07-10", Type: "BUY", Quantity: 30, USDPrice: 165.00, Commission: 3.00},
+				{Symbol: AAPL, Date: "2023-12-10", Type: "BUY", Quantity: 50, USDPrice: 180.00, Commission: 5.00},
 				// Sell partial quantity - should match FIFO (oldest first)
-				{Symbol: "AAPL", Date: "2023-10-20", Type: "SELL", Quantity: 15, USDPrice: 170.00, Commission: 1.50},
+				{Symbol: AAPL, Date: "2023-10-20", Type: "SELL", Quantity: 15, USDPrice: 170.00, Commission: 1.50},
 			}
 		})
 
@@ -83,7 +103,7 @@ var _ = Describe("GainsComputationManager", func() {
 			Expect(gains).To(HaveLen(1))
 
 			gain := gains[0]
-			Expect(gain.Symbol).To(Equal("AAPL"))
+			Expect(gain.Symbol).To(Equal(AAPL))
 			Expect(gain.BuyDate).To(Equal("2023-01-10")) // Should match oldest buy
 			Expect(gain.SellDate).To(Equal("2023-10-20"))
 			Expect(gain.Quantity).To(Equal(15.0))
@@ -102,11 +122,12 @@ var _ = Describe("GainsComputationManager", func() {
 		var trades []tax.Trade
 
 		BeforeEach(func() {
+			setupIdentitySplitManager()
 			trades = []tax.Trade{
-				{Symbol: "AAPL", Date: "2023-01-10", Type: "BUY", Quantity: 20, USDPrice: 150.00, Commission: 2.00},
-				{Symbol: "AAPL", Date: "2023-07-10", Type: "BUY", Quantity: 30, USDPrice: 165.00, Commission: 3.00},
+				{Symbol: AAPL, Date: "2023-01-10", Type: "BUY", Quantity: 20, USDPrice: 150.00, Commission: 2.00},
+				{Symbol: AAPL, Date: "2023-07-10", Type: "BUY", Quantity: 30, USDPrice: 165.00, Commission: 3.00},
 				// Sell more than first lot - should span multiple lots
-				{Symbol: "AAPL", Date: "2024-01-15", Type: "SELL", Quantity: 35, USDPrice: 180.00, Commission: 3.50},
+				{Symbol: AAPL, Date: "2024-01-15", Type: "SELL", Quantity: 35, USDPrice: 180.00, Commission: 3.50},
 			}
 		})
 
@@ -122,7 +143,7 @@ var _ = Describe("GainsComputationManager", func() {
 
 			// First gain: Complete first lot (20 shares)
 			gain1 := gains[0]
-			Expect(gain1.Symbol).To(Equal("AAPL"))
+			Expect(gain1.Symbol).To(Equal(AAPL))
 			Expect(gain1.BuyDate).To(Equal("2023-01-10"))
 			Expect(gain1.Quantity).To(Equal(20.0))
 			// PNL: (180-150)*20 - commissions
@@ -134,7 +155,7 @@ var _ = Describe("GainsComputationManager", func() {
 
 			// Second gain: Partial second lot (15 out of 30 shares)
 			gain2 := gains[1]
-			Expect(gain2.Symbol).To(Equal("AAPL"))
+			Expect(gain2.Symbol).To(Equal(AAPL))
 			Expect(gain2.BuyDate).To(Equal("2023-07-10"))
 			Expect(gain2.Quantity).To(Equal(15.0))
 			// PNL: (180-165)*15 - commissions
@@ -150,6 +171,7 @@ var _ = Describe("GainsComputationManager", func() {
 		var trades []tax.Trade
 
 		BeforeEach(func() {
+			setupIdentitySplitManager()
 			trades = []tax.Trade{
 				// Less than 2 years - STCG
 				{Symbol: "STCG1", Date: "2023-01-15", Type: "BUY", Quantity: 100, USDPrice: 100.00, Commission: 1.00},
@@ -191,12 +213,16 @@ var _ = Describe("GainsComputationManager", func() {
 	})
 
 	Context("edge cases", func() {
+		BeforeEach(func() {
+			setupIdentitySplitManager()
+		})
+
 		Context("with no sell transactions", func() {
 			var trades []tax.Trade
 
 			BeforeEach(func() {
 				trades = []tax.Trade{
-					{Symbol: "AAPL", Date: "2024-01-15", Type: "BUY", Quantity: 100, USDPrice: 140.00, Commission: 10.00},
+					{Symbol: AAPL, Date: "2024-01-15", Type: "BUY", Quantity: 100, USDPrice: 140.00, Commission: 10.00},
 					{Symbol: "MSFT", Date: "2024-01-16", Type: "BUY", Quantity: 50, USDPrice: 200.00, Commission: 5.00},
 				}
 			})
@@ -213,7 +239,7 @@ var _ = Describe("GainsComputationManager", func() {
 
 			BeforeEach(func() {
 				trades = []tax.Trade{
-					{Symbol: "AAPL", Date: "2024-01-15", Type: "SELL", Quantity: 100, USDPrice: 150.00, Commission: 10.00},
+					{Symbol: AAPL, Date: "2024-01-15", Type: "SELL", Quantity: 100, USDPrice: 150.00, Commission: 10.00},
 				}
 			})
 
@@ -229,8 +255,8 @@ var _ = Describe("GainsComputationManager", func() {
 
 			BeforeEach(func() {
 				trades = []tax.Trade{
-					{Symbol: "AAPL", Date: "2024-01-15", Type: "BUY", Quantity: 50, USDPrice: 140.00, Commission: 5.00},
-					{Symbol: "AAPL", Date: "2024-01-17", Type: "SELL", Quantity: 100, USDPrice: 150.00, Commission: 10.00},
+					{Symbol: AAPL, Date: "2024-01-15", Type: "BUY", Quantity: 50, USDPrice: 140.00, Commission: 5.00},
+					{Symbol: AAPL, Date: "2024-01-17", Type: "SELL", Quantity: 100, USDPrice: 150.00, Commission: 10.00},
 				}
 			})
 
@@ -246,8 +272,8 @@ var _ = Describe("GainsComputationManager", func() {
 
 			BeforeEach(func() {
 				trades = []tax.Trade{
-					{Symbol: "AAPL", Date: "2024-01-15", Type: "BUY", Quantity: 100, USDPrice: 140.00, Commission: 10.00},
-					{Symbol: "AAPL", Date: "2024-01-15", Type: "SELL", Quantity: 100, USDPrice: 150.00, Commission: 10.00},
+					{Symbol: AAPL, Date: "2024-01-15", Type: "BUY", Quantity: 100, USDPrice: 140.00, Commission: 10.00},
+					{Symbol: AAPL, Date: "2024-01-15", Type: "SELL", Quantity: 100, USDPrice: 150.00, Commission: 10.00},
 				}
 			})
 
@@ -257,7 +283,7 @@ var _ = Describe("GainsComputationManager", func() {
 				Expect(gains).To(HaveLen(1))
 
 				gain := gains[0]
-				Expect(gain.Symbol).To(Equal("AAPL"))
+				Expect(gain.Symbol).To(Equal(AAPL))
 				Expect(gain.BuyDate).To(Equal(gain.SellDate))
 				Expect(gain.Type).To(Equal(tax.GAIN_TYPE_STCG)) // Same day = 0 days < 2 years
 				Expect(gain.PNL).To(Equal(980.00))              // (150-140)*100 - 20 commission
@@ -270,7 +296,7 @@ var _ = Describe("GainsComputationManager", func() {
 			BeforeEach(func() {
 				trades = []tax.Trade{
 					// Note: Date validation also occurs in Trade Repository during CSV parsing
-					{Symbol: "AAPL", Date: "invalid-date", Type: "BUY", Quantity: 100, USDPrice: 140.00, Commission: 10.00},
+					{Symbol: AAPL, Date: "invalid-date", Type: "BUY", Quantity: 100, USDPrice: 140.00, Commission: 10.00},
 				}
 			})
 
@@ -286,8 +312,8 @@ var _ = Describe("GainsComputationManager", func() {
 
 			BeforeEach(func() {
 				trades = []tax.Trade{
-					{Symbol: "AAPL", Date: "2024-01-15", Type: "Buy", Quantity: 100, USDPrice: 140.00, Commission: 10.00},
-					{Symbol: "AAPL", Date: "2024-01-17", Type: "Sell", Quantity: 100, USDPrice: 150.00, Commission: 10.00},
+					{Symbol: AAPL, Date: "2024-01-15", Type: "Buy", Quantity: 100, USDPrice: 140.00, Commission: 10.00},
+					{Symbol: AAPL, Date: "2024-01-17", Type: "Sell", Quantity: 100, USDPrice: 150.00, Commission: 10.00},
 				}
 			})
 
@@ -297,7 +323,7 @@ var _ = Describe("GainsComputationManager", func() {
 				Expect(gains).To(HaveLen(1))
 
 				gain := gains[0]
-				Expect(gain.Symbol).To(Equal("AAPL"))
+				Expect(gain.Symbol).To(Equal(AAPL))
 				Expect(gain.PNL).To(Equal(980.00))
 			})
 		})
@@ -308,20 +334,21 @@ var _ = Describe("GainsComputationManager", func() {
 		var trades []tax.Trade
 
 		BeforeEach(func() {
+			setupIdentitySplitManager()
 			// Trades are pre-sorted by BrokerageManager (chronologically, BUY before SELL on same date)
 			trades = []tax.Trade{
 				// MSFT transactions (chronologically first)
 				{Symbol: "MSFT", Date: "2022-01-10", Type: "BUY", Quantity: 50, USDPrice: 200.00, Commission: 5.00},
 
 				// AAPL and MSFT transactions interleaved chronologically
-				{Symbol: "AAPL", Date: "2023-03-15", Type: "BUY", Quantity: 20, USDPrice: 150.00, Commission: 1.00},
+				{Symbol: AAPL, Date: "2023-03-15", Type: "BUY", Quantity: 20, USDPrice: 150.00, Commission: 1.00},
 				{Symbol: "MSFT", Date: "2023-05-01", Type: "BUY", Quantity: 20, USDPrice: 205.00, Commission: 2.00},
-				{Symbol: "AAPL", Date: "2023-07-10", Type: "BUY", Quantity: 30, USDPrice: 165.00, Commission: 1.00},
+				{Symbol: AAPL, Date: "2023-07-10", Type: "BUY", Quantity: 30, USDPrice: 165.00, Commission: 1.00},
 				{Symbol: "MSFT", Date: "2023-09-01", Type: "BUY", Quantity: 30, USDPrice: 215.00, Commission: 3.00},
-				{Symbol: "AAPL", Date: "2023-10-20", Type: "SELL", Quantity: 15, USDPrice: 170.00, Commission: 1.00},
+				{Symbol: AAPL, Date: "2023-10-20", Type: "SELL", Quantity: 15, USDPrice: 170.00, Commission: 1.00},
 
-				{Symbol: "AAPL", Date: "2024-01-15", Type: "BUY", Quantity: 100, USDPrice: 140.00, Commission: 10.00},
-				{Symbol: "AAPL", Date: "2024-01-17", Type: "SELL", Quantity: 100, USDPrice: 150.00, Commission: 10.00},
+				{Symbol: AAPL, Date: "2024-01-15", Type: "BUY", Quantity: 100, USDPrice: 140.00, Commission: 10.00},
+				{Symbol: AAPL, Date: "2024-01-17", Type: "SELL", Quantity: 100, USDPrice: 150.00, Commission: 10.00},
 				{Symbol: "MSFT", Date: "2024-02-15", Type: "SELL", Quantity: 50, USDPrice: 210.00, Commission: 5.00},
 			}
 		})
@@ -337,7 +364,7 @@ var _ = Describe("GainsComputationManager", func() {
 
 			for _, gain := range gains {
 				switch gain.Symbol {
-				case "AAPL":
+				case AAPL:
 					aaplGains = append(aaplGains, gain)
 				case "MSFT":
 					msftGains = append(msftGains, gain)
@@ -350,7 +377,7 @@ var _ = Describe("GainsComputationManager", func() {
 			// All AAPL gains should be STCG (less than 2 years)
 			for _, gain := range aaplGains {
 				Expect(gain.Type).To(Equal(tax.GAIN_TYPE_STCG))
-				Expect(gain.Symbol).To(Equal("AAPL"))
+				Expect(gain.Symbol).To(Equal(AAPL))
 			}
 
 			// Validate MSFT gains (should have 1 gain)
@@ -376,6 +403,7 @@ var _ = Describe("GainsComputationManager", func() {
 		var trades []tax.Trade
 
 		BeforeEach(func() {
+			setupIdentitySplitManager()
 			// Use commission values that create floating point precision issues
 			trades = []tax.Trade{
 				// Partial lot matching will create commission allocation with many decimal places
@@ -397,6 +425,82 @@ var _ = Describe("GainsComputationManager", func() {
 
 			// PNL: (100.50 - 100.00) * 3 - 1.11 = 0.50 * 3 - 1.11 = 1.50 - 1.11 = 0.39
 			Expect(gain.PNL).To(Equal(0.39))
+		})
+	})
+
+	Context("split ownership boundary", func() {
+		Context("normalizes raw trades before FIFO", func() {
+			var (
+				rawTrades        []tax.Trade
+				normalizedTrades []tax.Trade
+				mockSplitManager *mocks.SplitManager
+			)
+
+			BeforeEach(func() {
+				rawTrades = []tax.Trade{
+					{Symbol: AAPL, Date: "2024-01-15", Type: "BUY", Quantity: 10, USDPrice: 100.00, Commission: 10.00},
+					{Symbol: AAPL, Date: "2024-01-17", Type: "SELL", Quantity: 10, USDPrice: 120.00, Commission: 10.00},
+				}
+				// 4:1 forward split: quantity × 4, price ÷ 4, commission unchanged
+				normalizedTrades = []tax.Trade{
+					{Symbol: AAPL, Date: "2024-01-15", Type: "BUY", Quantity: 40, USDPrice: 25.00, Commission: 10.00},
+					{Symbol: AAPL, Date: "2024-01-17", Type: "SELL", Quantity: 40, USDPrice: 30.00, Commission: 10.00},
+				}
+
+				mockSplitManager = mocks.NewSplitManager(GinkgoT())
+				mockSplitManager.EXPECT().
+					NormalizeTrades(ctx, rawTrades).
+					Return(normalizedTrades, nil)
+
+				gainsManager = manager.NewGainsComputationManager(mockSplitManager)
+			})
+
+			It("should compute FIFO gains using split-normalized trades", func() {
+				gains, err := gainsManager.ComputeGainsFromTrades(ctx, rawTrades)
+				Expect(err).ToNot(HaveOccurred())
+				Expect(gains).To(HaveLen(1))
+
+				gain := gains[0]
+				Expect(gain.Symbol).To(Equal(AAPL))
+				Expect(gain.Quantity).To(Equal(40.0))
+				Expect(gain.BuyDate).To(Equal("2024-01-15"))
+				Expect(gain.SellDate).To(Equal("2024-01-17"))
+
+				// PNL = (30-25)*40 - (10+10) = 200 - 20 = 180
+				Expect(gain.PNL).To(Equal(180.00))
+				Expect(gain.Commission).To(Equal(20.00))
+				Expect(gain.Type).To(Equal(tax.GAIN_TYPE_STCG))
+			})
+		})
+
+		Context("returns normalization errors", func() {
+			var (
+				rawTrades        []tax.Trade
+				mockSplitManager *mocks.SplitManager
+				expectedErr      common.HttpError
+			)
+
+			BeforeEach(func() {
+				rawTrades = []tax.Trade{
+					{Symbol: AAPL, Date: "2024-01-15", Type: "BUY", Quantity: 10, USDPrice: 100.00, Commission: 10.00},
+				}
+				expectedErr = common.NewHttpError("split normalization failure", http.StatusBadRequest)
+
+				mockSplitManager = mocks.NewSplitManager(GinkgoT())
+				mockSplitManager.EXPECT().
+					NormalizeTrades(ctx, rawTrades).
+					Return(nil, expectedErr)
+
+				gainsManager = manager.NewGainsComputationManager(mockSplitManager)
+			})
+
+			It("should propagate the error without producing gains", func() {
+				gains, err := gainsManager.ComputeGainsFromTrades(ctx, rawTrades)
+				Expect(err).To(HaveOccurred())
+				Expect(err.Error()).To(Equal("split normalization failure"))
+				Expect(err.Code()).To(Equal(http.StatusBadRequest))
+				Expect(gains).To(BeNil())
+			})
 		})
 	})
 })

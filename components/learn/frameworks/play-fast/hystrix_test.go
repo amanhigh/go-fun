@@ -52,6 +52,7 @@ var _ = Describe("Hystrix", func() {
 		jitterMs       = 5
 		maxRetries     = 3
 		allowedRetries = 20
+		successResult  = "success"
 	)
 
 	// Helper function to create an always failing function
@@ -65,7 +66,7 @@ var _ = Describe("Hystrix", func() {
 	}
 
 	successfulFunction := func() (string, error) {
-		return "success", nil
+		return successResult, nil
 	}
 
 	failingFunction := func() (string, error) {
@@ -92,7 +93,7 @@ var _ = Describe("Hystrix", func() {
 					if attempts <= maxRetries {
 						return "", errors.New("temporary error")
 					}
-					return "success", nil
+					return successResult, nil
 				}
 
 				retryPolicy := retryBuilder.
@@ -103,7 +104,7 @@ var _ = Describe("Hystrix", func() {
 				result, err := failsafe.Get(failingFunction, retryPolicy)
 
 				Expect(err).NotTo(HaveOccurred())
-				Expect(result).To(Equal("success"))
+				Expect(result).To(Equal(successResult))
 				Expect(attempts).To(Equal(maxRetries + 1)) // 1 initial attempt + maxRetries
 			})
 
@@ -197,7 +198,7 @@ var _ = Describe("Hystrix", func() {
 					if attempts <= maxRetries {
 						return "", errors.New("temporary error")
 					}
-					return "success", nil
+					return successResult, nil
 				}
 
 				retryPolicy := retryBuilder.
@@ -213,7 +214,7 @@ var _ = Describe("Hystrix", func() {
 				result, err := failsafe.Get(failingFunction, retryPolicy)
 
 				Expect(err).NotTo(HaveOccurred())
-				Expect(result).To(Equal("success"))
+				Expect(result).To(Equal(successResult))
 				Expect(attempts).To(Equal(maxRetries + 1)) // 1 initial attempt + maxRetries
 				Expect(retryCount).To(Equal(maxRetries))
 			})
@@ -233,7 +234,7 @@ var _ = Describe("Hystrix", func() {
 					case 3:
 						return "", NonRetryableError{errors.New("non-retryable error")}
 					default:
-						return "success", nil
+						return successResult, nil
 					}
 				}
 
@@ -270,7 +271,7 @@ var _ = Describe("Hystrix", func() {
 				for range 10 {
 					result, err := failsafe.Get(successfulFunction, breaker)
 					Expect(err).NotTo(HaveOccurred())
-					Expect(result).To(Equal("success"))
+					Expect(result).To(Equal(successResult))
 				}
 
 				Expect(breaker.State()).To(Equal(circuitbreaker.ClosedState))
@@ -325,7 +326,7 @@ var _ = Describe("Hystrix", func() {
 				for i := range successThreshold {
 					result, err := failsafe.Get(successfulFunction, breaker)
 					Expect(err).NotTo(HaveOccurred())
-					Expect(result).To(Equal("success"))
+					Expect(result).To(Equal(successResult))
 
 					if i == 0 {
 						Expect(breaker.State()).To(Equal(circuitbreaker.HalfOpenState), "Should transition to half-open on first success")
@@ -340,7 +341,7 @@ var _ = Describe("Hystrix", func() {
 				for range 3 {
 					result, err := failsafe.Get(successfulFunction, breaker)
 					Expect(err).NotTo(HaveOccurred())
-					Expect(result).To(Equal("success"))
+					Expect(result).To(Equal(successResult))
 					Expect(breaker.State()).To(Equal(circuitbreaker.ClosedState), "Should remain closed for subsequent successful calls")
 				}
 			})
@@ -364,12 +365,12 @@ var _ = Describe("Hystrix", func() {
 					attempts++
 					// Simulate quick execution that completes before hedge delay
 					time.Sleep(time.Millisecond * 10) // Less than hedgeDelay
-					return "success", nil
+					return successResult, nil
 				}
 
 				result, err := failsafe.Get(failingFunction, hedgePolicy)
 				Expect(err).NotTo(HaveOccurred())
-				Expect(result).To(Equal("success"))
+				Expect(result).To(Equal(successResult))
 				Expect(attempts).To(Equal(1)) // Only one attempt should have been made
 			})
 
@@ -387,14 +388,14 @@ var _ = Describe("Hystrix", func() {
 						time.Sleep(time.Millisecond * 10) // Subsequent attempts are faster
 					}
 					executionTimes = append(executionTimes, time.Since(start))
-					return "success", nil
+					return successResult, nil
 				}
 
 				// Run with hedge policy
 				result, err := failsafe.Get(highLatencyFunction, hedgePolicy)
 
 				Expect(err).NotTo(HaveOccurred())
-				Expect(result).To(Equal("success"))
+				Expect(result).To(Equal(successResult))
 				Expect(attempts).To(BeNumerically(">", 1))  // Should be more than one attempt
 				Expect(attempts).To(BeNumerically("<=", 3)) // But not more than 3 (1 initial + 2 hedges)
 

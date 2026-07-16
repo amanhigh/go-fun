@@ -469,7 +469,7 @@ var _ = Describe("Tax Integration", Label("it"), func() {
 			Expect(saveErr).ToNot(HaveOccurred())
 
 			// Verify that the file was created in Output/Reports/
-			filePath := filepath.Join(kohanConfig.Tax.ReportsDir, fmt.Sprintf("tax_summary_%d.xlsx", testYear))
+			filePath := filepath.Join(kohanConfig.Tax.ReportsDir, fmt.Sprintf("%d_Tax_Summary.xlsx", testYear))
 			defer os.Remove(filePath) // Clean up test artifact
 			Expect(filePath).Should(BeARegularFile())
 
@@ -537,7 +537,7 @@ var _ = Describe("Tax Integration", Label("it"), func() {
 
 		It("should handle fully liquidated positions with zero year-end quantity", func() {
 			// Integration test for year 2023 where ADI is fully liquidated
-			// ADI: Bought 2 shares (Jun 15) → Sold 2 shares (Aug 31) → Zero year-end
+			// ADI: Bought 2 shares (Jun 15) → Sold 4 shares (Aug 31, split-adjusted) → Zero year-end
 			// This tests the critical bug where exchange_manager tries to fetch
 			// exchange rates for positions with USD amount = 0 (unnecessary computation)
 
@@ -566,11 +566,12 @@ var _ = Describe("Tax Integration", Label("it"), func() {
 			Expect(adiGain).ToNot(BeNil(), "ADI should have a capital gain entry")
 			Expect(adiGain.Symbol).To(Equal("ADI"))
 
-			// ADI P&L calculation:
-			// Sell: 2 × $194.75 = $389.50
+			// ADI P&L calculation (2:1 split on 2023-07-01 per ADI.json):
 			// Buy:  2 × $181.90 = $363.80
-			// Commission: $0.00 (both trades have 0 commission)
+			// Sell: 4 × $97.375 = $389.50
+			// Commission: $0.00
 			// P&L: $389.50 - $363.80 = $25.70
+			Expect(adiGain.Quantity).To(Equal(4.0), "split-adjusted quantity from gains.csv")
 			Expect(adiGain.PNL).To(Equal(25.70))
 			Expect(adiGain.Type).To(Equal("STCG")) // Holding period < 730 days
 			Expect(adiGain.BuyDate).To(Equal("2023-06-15"))
@@ -604,10 +605,14 @@ var _ = Describe("Tax Integration", Label("it"), func() {
 			Expect(adiVal.FirstPosition.TTRate).To(Equal(82.10)) // Jun 15 TT Buy rate
 
 			// PeakPosition: Occurs on Jul 10, 2023 (highest INR value from Qty × Price × ExchangeRate)
-			// Note: Price is same (181.90 from backfill), but exchange rate is higher on Jul 10 (82.1 vs 82.0)
-			Expect(adiVal.PeakPosition.Quantity).To(Equal(2.0))
-			Expect(adiVal.PeakPosition.USDPrice).To(Equal(181.90))
+			// After 2:1 split on 2023-07-01 (ADI.json split event), adjusted price is $90.95.
+			// Value preserved: 4 × $90.95 = 2 × $181.90 = $363.80
+			// Jul 10 TT Buy rate (82.50) selects the peak with qty 4.
+			Expect(adiVal.PeakPosition.Quantity).To(Equal(4.0))
+			Expect(adiVal.PeakPosition.USDPrice).To(Equal(90.95))
 			Expect(adiVal.PeakPosition.Date.Format(time.DateOnly)).To(Equal("2023-07-10"))
+			Expect(adiVal.PeakPosition.TTRate).To(Equal(82.50))
+			Expect(adiVal.PeakPosition.TTDate.Format(time.DateOnly)).To(Equal("2023-07-10"))
 
 			// YearEndPosition: ZERO quantity (fully liquidated on Aug 31, 2023)
 			// System does not fetch year-end price for zero quantity (optimization: 0 × anyPrice = 0)

@@ -23,6 +23,8 @@ const (
 	colWidthWide      = 14
 	colWidthExtraWide = 16
 	colWidthMax       = 18
+
+	sheetNameInterest = "Interest"
 )
 
 type ExcelManager interface {
@@ -41,7 +43,7 @@ func NewExcelManager(outputDir string) ExcelManager {
 
 // generateYearlyFilePath creates the year-specific filepath for tax summary
 func (e *ExcelManagerImpl) generateYearlyFilePath(year int) string {
-	filename := fmt.Sprintf("tax_summary_%d.xlsx", year)
+	filename := fmt.Sprintf("%d_Tax_Summary.xlsx", year)
 	return filepath.Join(e.outputDir, filename)
 }
 
@@ -330,7 +332,7 @@ func (e *ExcelManagerImpl) getPositionRowData(pos *tax.INRPosition) []any {
 
 // writeInterestSheet handles the creation and population of the "Interest" sheet.
 func (e *ExcelManagerImpl) writeInterestSheet(ctx context.Context, f *excelize.File, interest []tax.INRInterest) error {
-	sheetName := "Interest"
+	sheetName := sheetNameInterest
 	headers := []string{
 		"Symbol", "Date", "Amount (USD)", "Tax (USD)", "Net (USD)",
 		"TTDate", "TTRate", "Amount (INR)", "Tax (INR)", "Net (INR)",

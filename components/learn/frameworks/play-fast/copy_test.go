@@ -77,6 +77,7 @@ type CoffeeDTO struct {
 }
 
 var _ = Describe("Copy", func() {
+	const modifiedValue = "modified"
 
 	Context("Copier", func() {
 
@@ -358,7 +359,7 @@ var _ = Describe("Copy", func() {
 				Expect(err).ToNot(HaveOccurred())
 
 				By("Verifying no shared references")
-				src.Name = "modified"
+				src.Name = modifiedValue
 				Expect(dst.Name).To(Equal("Ethiopian Yirgacheffe"))
 			})
 		})
@@ -409,7 +410,7 @@ var _ = Describe("Copy", func() {
 			})
 
 			It("should have no shared slice references", func() {
-				src.Flavors[0] = "modified"
+				src.Flavors[0] = modifiedValue
 				Expect(dst.Flavors[0]).To(Equal("floral"))
 			})
 
@@ -462,7 +463,7 @@ var _ = Describe("Copy", func() {
 				Expect(dst).To(Equal([]string{"floral", "citrus", "chocolate", "caramel"}))
 
 				By("Verifying modifications to clone don't affect original")
-				dst[0] = "modified"
+				dst[0] = modifiedValue
 				Expect(src[0]).To(Equal("floral"))
 			})
 		})

@@ -31,7 +31,7 @@ func NewBrokerageManager(
 	ibManager Broker,
 	gainsManager GainsComputationManager,
 	config config.TaxConfig,
-) BrokerageManager {
+) *BrokerageManagerImpl {
 	return &BrokerageManagerImpl{
 		DriveWealth:  dwManager,
 		IB:           ibManager,
@@ -39,6 +39,8 @@ func NewBrokerageManager(
 		Config:       config,
 	}
 }
+
+var _ BrokerageManager = (*BrokerageManagerImpl)(nil)
 
 func (m *BrokerageManagerImpl) ParseAndGenerate(ctx context.Context, year int) error {
 	var merged tax.BrokerageInfo
@@ -70,6 +72,7 @@ func (m *BrokerageManagerImpl) writeCSVs(ctx context.Context, info tax.Brokerage
 	// Sort trades before writing to ensure correct ordering (BUY before SELL on same date)
 	sortedTrades := sortTradesByDate(info.Trades)
 
+	// Persist raw (broker-original) trades
 	if err := m.createTradeFile(sortedTrades); err != nil {
 		return err
 	}

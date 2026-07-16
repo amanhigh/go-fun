@@ -73,7 +73,7 @@ echo ""
 echo "--- Generating accounts_2023.csv (prerequisite for 2024) ---"
 echo "Running: go run ./components/kohan apps tax compute 2023"
 (cd "$PROJECT_ROOT" && go run ./components/kohan apps tax compute 2023) || echo "Warning: 2023 tax computation had issues, continuing..."
-echo "✅ Generated accounts_2023.csv and tax_summary_2023.xlsx"
+echo "✅ Generated accounts_2023.csv and 2023_Tax_Summary.xlsx"
 echo "-----------------------------------"
 echo ""
 
@@ -124,8 +124,8 @@ fi
 echo "-----------------------------------"
 echo ""
 
-if [ -f "$FA_COMPUTE_DIR/Output/Reports/tax_summary_2024.xlsx" ]; then
-  echo "✅ SUCCESS: Tax summary Excel file was created at $FA_COMPUTE_DIR/Output/Reports/tax_summary_2024.xlsx"
+if [ -f "$FA_COMPUTE_DIR/Output/Reports/2024_Tax_Summary.xlsx" ]; then
+  echo "✅ SUCCESS: Tax summary Excel file was created at $FA_COMPUTE_DIR/Output/Reports/2024_Tax_Summary.xlsx"
 else
   echo "❌ FAILURE: Tax summary Excel file was NOT created."
   exit 1
@@ -134,7 +134,7 @@ echo ""
 
 # 8. Validate Excel sheets using read_excel.zsh
 echo "--- Validating Excel Sheets ---"
-EXCEL_OUTPUT=$("$SCRIPT_DIR/read_excel.zsh" "$FA_COMPUTE_DIR/Output/Reports/tax_summary_2024.xlsx" 2>&1)
+EXCEL_OUTPUT=$("$SCRIPT_DIR/read_excel.zsh" "$FA_COMPUTE_DIR/Output/Reports/2024_Tax_Summary.xlsx" 2>&1)
 SHEETS_LINE=$(echo "$EXCEL_OUTPUT" | grep "Available sheets:")
 
 REQUIRED_SHEETS=("Gains" "Dividends" "Valuations" "Interest")

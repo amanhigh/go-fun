@@ -16,6 +16,12 @@ type InteractiveBrokersManagerImpl struct {
 	basePath string
 }
 
+// ibRecordTypeData is the IB CSV record type for data rows (vs header/summary rows).
+const ibRecordTypeData = "Data"
+
+// ibRecordTypeInterest is the IB CSV record type for interest data rows.
+const ibRecordTypeInterest = "Interest"
+
 func NewInteractiveBrokersManagerImpl(basePath string) Broker {
 	return &InteractiveBrokersManagerImpl{
 		basePath: basePath,
@@ -102,7 +108,7 @@ func (m *InteractiveBrokersManagerImpl) parseInterest(records [][]string) ([]tax
 }
 
 func (m *InteractiveBrokersManagerImpl) isValidInterestRecord(record []string) bool {
-	return len(record) >= 6 && record[0] == "Interest" && record[1] == "Data" && record[2] == "USD"
+	return len(record) >= 6 && record[0] == ibRecordTypeInterest && record[1] == ibRecordTypeData && record[2] == "USD"
 }
 
 func (m *InteractiveBrokersManagerImpl) parseTrades(records [][]string) ([]tax.Trade, error) {
@@ -125,7 +131,7 @@ func (m *InteractiveBrokersManagerImpl) parseTrades(records [][]string) ([]tax.T
 }
 
 func (m *InteractiveBrokersManagerImpl) isValidTradeRecord(record []string) bool {
-	return len(record) >= 14 && record[0] == "Trades" && record[1] == "Data"
+	return len(record) >= 14 && record[0] == "Trades" && record[1] == ibRecordTypeData
 }
 
 func (m *InteractiveBrokersManagerImpl) parseTradeRecord(record []string) (tax.Trade, error) {
@@ -190,7 +196,7 @@ func (m *InteractiveBrokersManagerImpl) parseDividends(records [][]string) ([]ta
 }
 
 func (m *InteractiveBrokersManagerImpl) isValidDividendRecord(record []string) bool {
-	return len(record) >= 6 && record[0] == "Dividends" && record[1] == "Data"
+	return len(record) >= 6 && record[0] == "Dividends" && record[1] == ibRecordTypeData
 }
 
 func (m *InteractiveBrokersManagerImpl) parseDividendRecord(record []string, taxMap map[string]map[string]float64) (tax.Dividend, error) {
@@ -222,7 +228,7 @@ func (m *InteractiveBrokersManagerImpl) buildTaxMap(records [][]string) map[stri
 	taxMap := make(map[string]map[string]float64)
 
 	for _, record := range records {
-		if len(record) < 6 || record[0] != "Withholding Tax" || record[1] != "Data" {
+		if len(record) < 6 || record[0] != "Withholding Tax" || record[1] != ibRecordTypeData {
 			continue
 		}
 
