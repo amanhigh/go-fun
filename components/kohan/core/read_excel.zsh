@@ -7,7 +7,7 @@ set -e
 
 if [ $# -eq 0 ]; then
     echo "Usage: $0 <path_to_excel_file>"
-    echo "Example: $0 ~/Downloads/FACompute/tax_summary_2022.xlsx"
+    echo "Example: $0 ~/Downloads/FACompute/2022_Tax_Summary.xlsx"
     exit 1
 fi
 

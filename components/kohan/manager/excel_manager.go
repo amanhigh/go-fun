@@ -43,7 +43,7 @@ func NewExcelManager(outputDir string) ExcelManager {
 
 // generateYearlyFilePath creates the year-specific filepath for tax summary
 func (e *ExcelManagerImpl) generateYearlyFilePath(year int) string {
-	filename := fmt.Sprintf("tax_summary_%d.xlsx", year)
+	filename := fmt.Sprintf("%d_Tax_Summary.xlsx", year)
 	return filepath.Join(e.outputDir, filename)
 }
 

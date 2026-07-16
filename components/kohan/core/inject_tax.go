@@ -138,7 +138,7 @@ func (ki *KohanInjector) provideDividendManager(
 }
 
 func (ki *KohanInjector) provideExcelManager() manager.ExcelManager {
-	// ExcelManager uses Output/Reports/ for tax_summary_YYYY.xlsx files
+	// ExcelManager uses Output/Reports/ for YYYY_Tax_Summary.xlsx files
 	return manager.NewExcelManager(ki.config.Tax.ReportsDir)
 }
 

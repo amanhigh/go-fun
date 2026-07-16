@@ -469,7 +469,7 @@ var _ = Describe("Tax Integration", Label("it"), func() {
 			Expect(saveErr).ToNot(HaveOccurred())
 
 			// Verify that the file was created in Output/Reports/
-			filePath := filepath.Join(kohanConfig.Tax.ReportsDir, fmt.Sprintf("tax_summary_%d.xlsx", testYear))
+			filePath := filepath.Join(kohanConfig.Tax.ReportsDir, fmt.Sprintf("%d_Tax_Summary.xlsx", testYear))
 			defer os.Remove(filePath) // Clean up test artifact
 			Expect(filePath).Should(BeARegularFile())
 
