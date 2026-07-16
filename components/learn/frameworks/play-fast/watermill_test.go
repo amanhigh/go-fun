@@ -1268,19 +1268,16 @@ var _ = Describe("Watermill", func() {
 				relayerCtx, relayerCancel := context.WithCancel(ctx)
 				defer relayerCancel()
 
-				relayerReady := make(chan struct{})
 				go func() {
 					defer GinkgoRecover()
-					close(relayerReady)
 					err := relayer.Run(relayerCtx)
 					if err != nil && !errors.Is(err, context.Canceled) {
 						Fail("Event relayer failed: " + err.Error())
 					}
 				}()
 
-				<-relayerReady
+				<-relayer.Running()
 				relayerRunning = true // Mark relayer as running
-				// Remove unnecessary sleep - relayer is ready immediately
 
 				By("Application (A) publishes multiple events atomically")
 				events := []OrderCreated{
@@ -1436,18 +1433,15 @@ var _ = Describe("Watermill", func() {
 				fanInCtx, fanInCancel := context.WithCancel(ctx)
 				defer fanInCancel()
 
-				fanInReady := make(chan struct{})
 				go func() {
 					defer GinkgoRecover()
-					close(fanInReady)
 					err := fanIn.Run(fanInCtx)
 					if err != nil && !errors.Is(err, context.Canceled) {
 						Fail("FanIn failed: " + err.Error())
 					}
 				}()
 
-				<-fanInReady
-				time.Sleep(100 * time.Millisecond)
+				<-fanIn.Running()
 
 				By("Processing orders from US, EU, and Asia regions")
 				usOrder := OrderCreated{OrderID: "US-order-001", CustomerID: "us-customer-1", Amount: 100, Timestamp: time.Now().Format(time.RFC3339)}
@@ -1501,18 +1495,15 @@ var _ = Describe("Watermill", func() {
 				fanInCtx, fanInCancel := context.WithCancel(ctx)
 				defer fanInCancel()
 
-				fanInReady := make(chan struct{})
 				go func() {
 					defer GinkgoRecover()
-					close(fanInReady)
 					err := fanIn.Run(fanInCtx)
 					if err != nil && !errors.Is(err, context.Canceled) {
 						Fail("FanIn failed: " + err.Error())
 					}
 				}()
 
-				<-fanInReady
-				time.Sleep(100 * time.Millisecond)
+				<-fanIn.Running()
 
 				By("Simulating Asia region outage")
 
