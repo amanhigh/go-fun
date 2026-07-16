@@ -567,6 +567,63 @@ var _ = Describe("ValuationManager", func() {
 					})
 				})
 
+				Context("Scenario 2: Same Qty & Price, Higher Rate WINS (Rate-Only Isolation)", func() {
+					// Prove that exchange rate alone determines peak when quantity and price are identical
+					var trades []tax.Trade
+
+					BeforeEach(func() {
+						trades = []tax.Trade{
+							tax.NewTrade(AAPL, "2024-01-15", "BUY", 10, 100),
+						}
+
+						// Same quantity (10 shares) and same USD price ($100) on both dates
+						aaplDailyPrices := map[string]float64{
+							"2024-01-15": 100.0, // Same price as June
+							"2024-06-15": 100.0, // Same price as January
+						}
+
+						// Rate is the only differentiator
+						aaplDailyRates := map[string]float64{
+							"2024-01-15": 82.0, // Lower rate
+							"2024-06-15": 84.0, // Higher rate — makes June 15 the peak
+						}
+
+						// INR Calculations:
+						// Jan 15: 10 × $100 × 82.0 = 82,000 INR
+						// Jun 15: 10 × $100 × 84.0 = 84,000 INR ← PEAK
+
+						mockTickerManager.EXPECT().
+							GetDailyPrices(ctx, AAPL, year).
+							Return(aaplDailyPrices, nil)
+						mockSBIManager.EXPECT().
+							GetDailyRates(ctx, year).
+							Return(aaplDailyRates, nil)
+						mockTickerManager.EXPECT().
+							GetPrice(ctx, AAPL, yearEndDate).
+							Return(yearEndPrice, nil)
+					})
+
+					It("should identify peak on higher-rate date when quantity and price are identical", func() {
+						valuation, err := valuationManager.AnalyzeValuation(ctx, AAPL, trades, year)
+						Expect(err).ToNot(HaveOccurred())
+
+						// Peak should be Jun 15 (same quantity and price, higher rate)
+						Expect(valuation.PeakPosition.Date).To(Equal(time.Date(2024, 6, 15, 0, 0, 0, 0, time.UTC)))
+						Expect(valuation.PeakPosition.Quantity).To(Equal(10.0))
+						Expect(valuation.PeakPosition.USDPrice).To(Equal(100.0))
+
+						// Verify INR values: Jun 15 > Jan 15
+						jan15INR := 10.0 * 100.0 * 82.0 // = 82,000 INR
+						jun15INR := 10.0 * 100.0 * 84.0 // = 84,000 INR
+						Expect(jun15INR).To(BeNumerically(">", jan15INR))
+
+						// Verify peak is indeed the maximum INR value
+						actualPeakINR := valuation.PeakPosition.Quantity * valuation.PeakPosition.USDPrice * 84.0
+						Expect(actualPeakINR).To(Equal(jun15INR))
+						Expect(actualPeakINR).To(BeNumerically(">", jan15INR))
+					})
+				})
+
 				Context("Scenario 3: Same Qty, Price-Rate Tradeoff (Multi-Factor Optimization)", func() {
 					// Both price and rate vary across 3 dates: tests multi-factor optimization
 					var trades []tax.Trade
@@ -1749,7 +1806,6 @@ var _ = Describe("ValuationManager", func() {
 			// - FirstPosition.Date = 2023-05-01 (preserves original acquisition from 2023)
 			// - YearEndPosition.Quantity = 0 (fully liquidated by Dec 31, 2024)
 			// Tax.md: This is carry-over scenario with full liquidation during current year
-			const MSFT = "MSFT"
 			var (
 				testYear    = 2024
 				yearEndDate = time.Date(testYear, 12, 31, 0, 0, 0, 0, time.UTC)
