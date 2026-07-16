@@ -79,59 +79,85 @@ var _ = Describe("SplitManager", func() {
 				output, err = splitManager.NormalizeTrades(ctx, input)
 			})
 
-			It("should normalize trades across all scenarios preserving input order and invariant fields", func() {
-				Expect(err).ToNot(HaveOccurred())
+			Context("trades around split events", func() {
 
-				// 0. Original input unchanged (immutability guarantee)
-				Expect(input).To(Equal(expectedInput))
+				Context("when a trade occurs before any split event", func() {
+					It("should apply the cumulative split factor to quantity and price while preserving USDValue", func() {
+						// VO 2024-06-01: cumulative factor 3:2 × 4:3 = 2.0
+						Expect(output[0].Quantity).To(Equal(20.0))
+						Expect(output[0].USDPrice).To(Equal(50.0))
+						Expect(output[0].USDValue).To(Equal(1000.0))
+					})
+				})
 
-				// 1. Original input order preserved
-				Expect(output[0].Symbol).To(Equal(VO))
-				Expect(output[1].Symbol).To(Equal(AAPL))
-				Expect(output[2].Symbol).To(Equal(VO))
-				Expect(output[3].Symbol).To(Equal(AAPL))
-				Expect(output[4].Symbol).To(Equal(VO))
+				Context("when a trade occurs on the same day as a split", func() {
+					It("should exclude the same-day split and apply only subsequent splits", func() {
+						// VO 2024-09-01: 3:2 split same day excluded, only 4:3 applies
+						Expect(output[2].Quantity).To(BeNumerically("~", 10.0*4.0/3.0, 1e-9))
+						Expect(output[2].USDPrice).To(Equal(22.5))
+						Expect(output[2].USDValue).To(Equal(300.0))
+					})
+				})
 
-				// 2. VO pre-split (2024-06-01): cumulative factor 3:2 × 4:3 = 2.0
-				Expect(output[0].Quantity).To(Equal(20.0))
-				Expect(output[0].USDPrice).To(Equal(50.0))
-				Expect(output[0].USDValue).To(Equal(1000.0))
-				Expect(output[0].Commission).To(Equal(1.0))
-				Expect(output[0].Date).To(Equal("2024-06-01"))
-				Expect(output[0].Type).To(Equal("BUY"))
+				Context("when a trade occurs after the last split", func() {
+					It("should return the trade unchanged", func() {
+						// VO 2025-06-01: after both splits
+						Expect(output[4].Quantity).To(Equal(5.0))
+						Expect(output[4].USDPrice).To(Equal(60.0))
+						Expect(output[4].USDValue).To(Equal(300.0))
+						Expect(output[4].Commission).To(Equal(0.0))
+						Expect(output[4].Date).To(Equal("2025-06-01"))
+						Expect(output[4].Type).To(Equal("SELL"))
+					})
+				})
+			})
 
-				// 3. AAPL (2024-03-01): no splits — unchanged
-				Expect(output[1].Quantity).To(Equal(100.0))
-				Expect(output[1].USDPrice).To(Equal(150.0))
-				Expect(output[1].USDValue).To(Equal(15000.0))
-				Expect(output[1].Commission).To(Equal(10.0))
-				Expect(output[1].Date).To(Equal("2024-03-01"))
-				Expect(output[1].Type).To(Equal("BUY"))
+			Context("ticker with no split events", func() {
+				It("should return all trades unchanged", func() {
+					// AAPL 2024-03-01: no splits
+					Expect(output[1].Quantity).To(Equal(100.0))
+					Expect(output[1].USDPrice).To(Equal(150.0))
+					Expect(output[1].USDValue).To(Equal(15000.0))
+					Expect(output[1].Commission).To(Equal(10.0))
+					Expect(output[1].Date).To(Equal("2024-03-01"))
+					Expect(output[1].Type).To(Equal("BUY"))
 
-				// 4. VO same-day (2024-09-01): 3:2 split same day does not apply,
-				//    only 4:3 split on 2025-01-15 applies — factor = 4/3
-				Expect(output[2].Quantity).To(BeNumerically("~", 10.0*4.0/3.0, 1e-9))
-				Expect(output[2].USDPrice).To(Equal(22.5))
-				Expect(output[2].USDValue).To(Equal(300.0))
-				Expect(output[2].Commission).To(Equal(0.5))
-				Expect(output[2].Date).To(Equal("2024-09-01"))
-				Expect(output[2].Type).To(Equal("BUY"))
+					// AAPL 2024-10-15: no splits
+					Expect(output[3].Quantity).To(Equal(100.0))
+					Expect(output[3].USDPrice).To(Equal(200.0))
+					Expect(output[3].USDValue).To(Equal(20000.0))
+					Expect(output[3].Commission).To(Equal(5.0))
+					Expect(output[3].Date).To(Equal("2024-10-15"))
+					Expect(output[3].Type).To(Equal("SELL"))
+				})
+			})
 
-				// 5. AAPL (2024-10-15): no splits — unchanged
-				Expect(output[3].Quantity).To(Equal(100.0))
-				Expect(output[3].USDPrice).To(Equal(200.0))
-				Expect(output[3].USDValue).To(Equal(20000.0))
-				Expect(output[3].Commission).To(Equal(5.0))
-				Expect(output[3].Date).To(Equal("2024-10-15"))
-				Expect(output[3].Type).To(Equal("SELL"))
+			Context("result integrity", func() {
+				It("should succeed without error", func() {
+					Expect(err).ToNot(HaveOccurred())
+				})
 
-				// 6. VO post-final (2025-06-01): after both splits — unchanged
-				Expect(output[4].Quantity).To(Equal(5.0))
-				Expect(output[4].USDPrice).To(Equal(60.0))
-				Expect(output[4].USDValue).To(Equal(300.0))
-				Expect(output[4].Commission).To(Equal(0.0))
-				Expect(output[4].Date).To(Equal("2025-06-01"))
-				Expect(output[4].Type).To(Equal("SELL"))
+				It("should not mutate the original input trades", func() {
+					Expect(input).To(Equal(expectedInput))
+				})
+
+				It("should preserve the original input order in the output", func() {
+					Expect(output[0].Symbol).To(Equal(VO))
+					Expect(output[1].Symbol).To(Equal(AAPL))
+					Expect(output[2].Symbol).To(Equal(VO))
+					Expect(output[3].Symbol).To(Equal(AAPL))
+					Expect(output[4].Symbol).To(Equal(VO))
+				})
+
+				It("should preserve invariant fields (Date, Type, Commission) for split-adjusted trades", func() {
+					Expect(output[0].Date).To(Equal("2024-06-01"))
+					Expect(output[0].Type).To(Equal("BUY"))
+					Expect(output[0].Commission).To(Equal(1.0))
+
+					Expect(output[2].Date).To(Equal("2024-09-01"))
+					Expect(output[2].Type).To(Equal("BUY"))
+					Expect(output[2].Commission).To(Equal(0.5))
+				})
 			})
 		})
 
