@@ -1,6 +1,7 @@
 package manager_test
 
 import (
+	"fmt"
 	"os"
 	"path/filepath"
 
@@ -251,6 +252,85 @@ Dividends,Header,Currency,Date,Description,Amount`
 				Expect(info.Dividends).To(BeEmpty())
 				Expect(info.Interests).To(BeEmpty())
 			})
+		})
+	})
+
+	Context("multi-file merge", func() {
+		var info tax.BrokerageInfo
+
+		writeCSV := func(year int, content string) {
+			err := os.WriteFile(
+				fmt.Sprintf("%s_%d.csv", basePath, year),
+				[]byte(content), 0600)
+			Expect(err).ToNot(HaveOccurred())
+		}
+
+		BeforeEach(func() {
+			// 2023 file: AAPL trade, MPC dividend with $1.82 withholding, $1.00 interest
+			writeCSV(2023, `Trades,Header,DataDiscriminator,Asset Category,Currency,Symbol,Date/Time,Quantity,T. Price,C. Price,Proceeds,Comm/Fee,Basis,Realized P/L,Code
+Trades,Data,Order,Stocks,USD,AAPL,"2023-11-15, 10:30:00",5,180.25,180.20,-901.25,-0.50,901.75,0,O
+Dividends,Header,Currency,Date,Description,Amount
+Dividends,Data,USD,2024-12-10,MPC(US56585A1025) Cash Dividend USD 0.91 per Share (Ordinary Dividend),7.28
+Withholding Tax,Header,Currency,Date,Description,Amount,Code
+Withholding Tax,Data,USD,2024-12-10,MPC(US56585A1025) Cash Dividend USD 0.91 per Share - US Tax,-1.82,
+Interest,Header,Currency,Date,Description,Amount
+Interest,Data,USD,2023-12-15,USD Credit Interest for Nov-2023,1.00`)
+
+			// 2024 file: GOOGL trade, MPC dividend with $2.50 withholding (different!), $2.00 interest
+			writeCSV(2024, `Trades,Header,DataDiscriminator,Asset Category,Currency,Symbol,Date/Time,Quantity,T. Price,C. Price,Proceeds,Comm/Fee,Basis,Realized P/L,Code
+Trades,Data,Order,Stocks,USD,GOOGL,"2024-06-20, 09:45:00",3,175.50,175.45,-526.50,-0.30,526.80,0,O
+Dividends,Header,Currency,Date,Description,Amount
+Dividends,Data,USD,2024-12-10,MPC(US56585A1025) Cash Dividend USD 0.91 per Share (Ordinary Dividend),7.28
+Withholding Tax,Header,Currency,Date,Description,Amount,Code
+Withholding Tax,Data,USD,2024-12-10,MPC(US56585A1025) Cash Dividend USD 0.91 per Share - US Tax,-2.50,
+Interest,Header,Currency,Date,Description,Amount
+Interest,Data,USD,2024-12-15,USD Credit Interest for Nov-2024,2.00`)
+
+			// 2026 file: MSFT trade, VTI dividend (no withholding), $3.00 interest
+			writeCSV(2026, `Trades,Header,DataDiscriminator,Asset Category,Currency,Symbol,Date/Time,Quantity,T. Price,C. Price,Proceeds,Comm/Fee,Basis,Realized P/L,Code
+Trades,Data,Order,Stocks,USD,MSFT,"2026-02-10, 11:15:00",2,410.00,409.95,-820.00,-0.40,820.40,0,O
+Dividends,Header,Currency,Date,Description,Amount
+Dividends,Data,USD,2025-01-05,VTI(US9229087690) Cash Dividend USD 0.75 per Share,15.00
+Interest,Header,Currency,Date,Description,Amount
+Interest,Data,USD,2026-01-15,USD Credit Interest for Dec-2025,3.00`)
+
+			ibManager = manager.NewInteractiveBrokersManagerImpl(basePath)
+			var err error
+			info, err = ibManager.Parse(2024)
+			Expect(err).ToNot(HaveOccurred())
+		})
+
+		It("should merge trades, dividends, and interests from all discovered annual files (2023, 2024, 2026)", func() {
+			// Trades from all three years
+			Expect(info.Trades).To(HaveLen(3))
+			var tradeSymbols []string
+			for _, t := range info.Trades {
+				tradeSymbols = append(tradeSymbols, t.Symbol)
+			}
+			Expect(tradeSymbols).To(ConsistOf("AAPL", "GOOGL", "MSFT"))
+
+			// Dividends from all three years
+			Expect(info.Dividends).To(HaveLen(3))
+			var mpcTaxes []float64
+			var vtiFound bool
+			for _, d := range info.Dividends {
+				switch d.Symbol {
+				case "MPC":
+					mpcTaxes = append(mpcTaxes, d.Tax)
+				case "VTI":
+					vtiFound = true
+				}
+			}
+			Expect(mpcTaxes).To(ConsistOf(1.82, 2.50))
+			Expect(vtiFound).To(BeTrue())
+
+			// Interests from all three years
+			Expect(info.Interests).To(HaveLen(3))
+			var interestTotal float64
+			for _, i := range info.Interests {
+				interestTotal += i.Amount
+			}
+			Expect(interestTotal).To(Equal(6.00))
 		})
 	})
 })

@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"math"
 	"os"
+	"path/filepath"
 	"strconv"
 	"strings"
 
@@ -33,38 +34,72 @@ func (m *InteractiveBrokersManagerImpl) GetName() string {
 	return "Interactive Brokers"
 }
 
-func (m *InteractiveBrokersManagerImpl) resolveFilePath(year int) string {
-	return fmt.Sprintf("%s_%d.csv", m.basePath, year)
+// discoverFiles finds every file matching <basePath>_YYYY.csv pattern in deterministic lexical order.
+func (m *InteractiveBrokersManagerImpl) discoverFiles() ([]string, error) {
+	pattern := m.basePath + "_[0-9][0-9][0-9][0-9].csv"
+	files, err := filepath.Glob(pattern)
+	if err != nil {
+		return nil, fmt.Errorf("failed to open CSV file: %w", err)
+	}
+	if len(files) == 0 {
+		return nil, fmt.Errorf("failed to open CSV file")
+	}
+	return files, nil
 }
 
-func (m *InteractiveBrokersManagerImpl) Parse(year int) (info tax.BrokerageInfo, err error) {
-	records, err := m.readCSVRecords(year)
+func (m *InteractiveBrokersManagerImpl) Parse(_ int) (tax.BrokerageInfo, error) {
+	files, err := m.discoverFiles()
 	if err != nil {
-		return info, err
+		return tax.BrokerageInfo{}, err
 	}
 
-	info.Interests, err = m.parseInterest(records)
-	if err != nil {
-		return info, err
+	var merged tax.BrokerageInfo
+	for _, filePath := range files {
+		records, err := m.readCSVRecords(filePath)
+		if err != nil {
+			return tax.BrokerageInfo{}, err
+		}
+
+		info, err := m.parseRecords(records)
+		if err != nil {
+			return tax.BrokerageInfo{}, err
+		}
+
+		merged = mergeBrokerageInfo(merged, info)
 	}
 
-	info.Trades, err = m.parseTrades(records)
-	if err != nil {
-		return info, err
-	}
-
-	info.Dividends, err = m.parseDividends(records)
-	if err != nil {
-		return info, err
-	}
-
-	return info, nil
+	return merged, nil
 }
 
-// readCSVRecords reads and parses all CSV records from the file for the given year.
+// parseRecords parses all record types (interest, trades, dividends) from the given CSV records
+// and returns a complete BrokerageInfo. Each call builds its own withholding-tax map from the
+// records, so per-file tax matching is preserved.
+func (m *InteractiveBrokersManagerImpl) parseRecords(records [][]string) (tax.BrokerageInfo, error) {
+	interests, err := m.parseInterest(records)
+	if err != nil {
+		return tax.BrokerageInfo{}, err
+	}
+
+	trades, err := m.parseTrades(records)
+	if err != nil {
+		return tax.BrokerageInfo{}, err
+	}
+
+	dividends, err := m.parseDividends(records)
+	if err != nil {
+		return tax.BrokerageInfo{}, err
+	}
+
+	return tax.BrokerageInfo{
+		Interests: interests,
+		Trades:    trades,
+		Dividends: dividends,
+	}, nil
+}
+
+// readCSVRecords reads and parses all CSV records from the given file path.
 // Extracted from Parse to keep statement count within funlen limit.
-func (m *InteractiveBrokersManagerImpl) readCSVRecords(year int) ([][]string, error) {
-	filePath := m.resolveFilePath(year)
+func (m *InteractiveBrokersManagerImpl) readCSVRecords(filePath string) ([][]string, error) {
 	file, err := os.Open(filePath)
 	if err != nil {
 		return nil, fmt.Errorf("failed to open CSV file: %w", err)

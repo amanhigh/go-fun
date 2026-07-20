@@ -64,9 +64,13 @@ func init() {
 
 var parseCmd = &cobra.Command{
 	Use:   "parse YEAR",
-	Short: "Parse all broker files and generate CSVs",
-	Long:  `Auto-detects and parses DriveWealth, Interactive Brokers files for the specified year. Merges and generates consolidated CSVs.`,
-	Args:  cobra.ExactArgs(1),
+	Short: "Discover and parse broker source files, then generate consolidated CSVs",
+	Long: `Discovers and parses broker-specific source files (DriveWealth Excel,` +
+		` Interactive Brokers matching <base>_YYYY.csv). The YEAR argument is` +
+		` advisory — Interactive Brokers parses all matching files regardless of` +
+		` year. Downstream FinancialYear managers perform report-specific` +
+		` filtering on the consolidated output.`,
+	Args: cobra.ExactArgs(1),
 	RunE: func(_ *cobra.Command, args []string) error {
 		ctx := context.Background()
 
