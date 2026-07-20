@@ -8,6 +8,7 @@ import (
 	"path/filepath"
 	"strconv"
 	"strings"
+	"time"
 
 	"github.com/amanhigh/go-fun/models/tax"
 )
@@ -22,6 +23,12 @@ const ibRecordTypeData = "Data"
 
 // ibRecordTypeInterest is the IB CSV record type for interest data rows.
 const ibRecordTypeInterest = "Interest"
+
+// ibRecordTypeStatement is the IB CSV record type for statement-level metadata rows.
+const ibRecordTypeStatement = "Statement"
+
+// ibStatementFieldPeriod is the IB CSV statement field name for the statement period.
+const ibStatementFieldPeriod = "Period"
 
 func NewInteractiveBrokersManagerImpl(basePath string) Broker {
 	return &InteractiveBrokersManagerImpl{
@@ -75,6 +82,11 @@ func (m *InteractiveBrokersManagerImpl) Parse(_ int) (tax.BrokerageInfo, error) 
 // and returns a complete BrokerageInfo. Each call builds its own withholding-tax map from the
 // records, so per-file tax matching is preserved.
 func (m *InteractiveBrokersManagerImpl) parseRecords(records [][]string) (tax.BrokerageInfo, error) {
+	periodEnd, err := m.parsePeriod(records)
+	if err != nil {
+		return tax.BrokerageInfo{}, err
+	}
+
 	interests, err := m.parseInterest(records)
 	if err != nil {
 		return tax.BrokerageInfo{}, err
@@ -91,9 +103,10 @@ func (m *InteractiveBrokersManagerImpl) parseRecords(records [][]string) (tax.Br
 	}
 
 	return tax.BrokerageInfo{
-		Interests: interests,
-		Trades:    trades,
-		Dividends: dividends,
+		CoverageThrough: periodEnd,
+		Interests:       interests,
+		Trades:          trades,
+		Dividends:       dividends,
 	}, nil
 }
 
@@ -114,6 +127,27 @@ func (m *InteractiveBrokersManagerImpl) readCSVRecords(filePath string) ([][]str
 	}
 
 	return records, nil
+}
+
+// parsePeriod extracts the Statement,Data,Period row and returns the period end date.
+// Format: January 1, 2024 - December 31, 2024
+func (m *InteractiveBrokersManagerImpl) parsePeriod(records [][]string) (time.Time, error) {
+	for _, record := range records {
+		if len(record) >= 4 && record[0] == ibRecordTypeStatement && record[1] == ibRecordTypeData && record[2] == ibStatementFieldPeriod {
+			periodStr := record[3]
+			parts := strings.Split(periodStr, " - ")
+			if len(parts) != 2 {
+				return time.Time{}, fmt.Errorf("invalid period format: %s", periodStr)
+			}
+			endDateStr := strings.TrimSpace(parts[1])
+			endDate, err := time.Parse("January 2, 2006", endDateStr)
+			if err != nil {
+				return time.Time{}, fmt.Errorf("failed to parse period end date %q: %w", endDateStr, err)
+			}
+			return endDate, nil
+		}
+	}
+	return time.Time{}, fmt.Errorf("period metadata not found")
 }
 
 func (m *InteractiveBrokersManagerImpl) parseInterest(records [][]string) ([]tax.Interest, error) {

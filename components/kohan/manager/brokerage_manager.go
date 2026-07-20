@@ -145,10 +145,15 @@ func (m *BrokerageManagerImpl) createGainsFile(ctx context.Context, trades []tax
 // Gains, Dividends, Interest sheets and Summary all show aggregated values with no per-broker
 // breakdown. Adding a broker field to models would let downstream output show DW vs IBKR splits.
 func mergeBrokerageInfo(a, b tax.BrokerageInfo) tax.BrokerageInfo {
+	coverage := a.CoverageThrough
+	if b.CoverageThrough.After(coverage) {
+		coverage = b.CoverageThrough
+	}
 	return tax.BrokerageInfo{
-		Trades:    append(a.Trades, b.Trades...),
-		Dividends: append(a.Dividends, b.Dividends...),
-		Interests: append(a.Interests, b.Interests...),
+		CoverageThrough: coverage,
+		Trades:          append(a.Trades, b.Trades...),
+		Dividends:       append(a.Dividends, b.Dividends...),
+		Interests:       append(a.Interests, b.Interests...),
 	}
 }
 
