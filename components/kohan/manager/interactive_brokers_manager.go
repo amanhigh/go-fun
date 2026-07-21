@@ -87,20 +87,9 @@ func (m *InteractiveBrokersManagerImpl) parseRecords(records [][]string) (tax.Br
 		return tax.BrokerageInfo{}, err
 	}
 
-	interests, err := m.parseInterest(records)
-	if err != nil {
-		return tax.BrokerageInfo{}, err
-	}
-
-	trades, err := m.parseTrades(records)
-	if err != nil {
-		return tax.BrokerageInfo{}, err
-	}
-
-	dividends, err := m.parseDividends(records)
-	if err != nil {
-		return tax.BrokerageInfo{}, err
-	}
+	interests := m.parseInterest(records)
+	trades := m.parseTrades(records)
+	dividends := m.parseDividends(records)
 
 	return tax.BrokerageInfo{
 		CoverageThrough: periodEnd,
@@ -135,11 +124,11 @@ func (m *InteractiveBrokersManagerImpl) parsePeriod(records [][]string) (time.Ti
 	for _, record := range records {
 		if len(record) >= 4 && record[0] == ibRecordTypeStatement && record[1] == ibRecordTypeData && record[2] == ibStatementFieldPeriod {
 			periodStr := record[3]
-			parts := strings.Split(periodStr, " - ")
-			if len(parts) != 2 {
+			_, endDateStr, ok := strings.Cut(periodStr, " - ")
+			if !ok {
 				return time.Time{}, fmt.Errorf("invalid period format: %s", periodStr)
 			}
-			endDateStr := strings.TrimSpace(parts[1])
+			endDateStr = strings.TrimSpace(endDateStr)
 			endDate, err := time.Parse("January 2, 2006", endDateStr)
 			if err != nil {
 				return time.Time{}, fmt.Errorf("failed to parse period end date %q: %w", endDateStr, err)
@@ -150,7 +139,7 @@ func (m *InteractiveBrokersManagerImpl) parsePeriod(records [][]string) (time.Ti
 	return time.Time{}, fmt.Errorf("period metadata not found")
 }
 
-func (m *InteractiveBrokersManagerImpl) parseInterest(records [][]string) ([]tax.Interest, error) {
+func (m *InteractiveBrokersManagerImpl) parseInterest(records [][]string) []tax.Interest {
 	var interests []tax.Interest
 
 	for _, record := range records {
@@ -173,14 +162,14 @@ func (m *InteractiveBrokersManagerImpl) parseInterest(records [][]string) ([]tax
 		})
 	}
 
-	return interests, nil
+	return interests
 }
 
 func (m *InteractiveBrokersManagerImpl) isValidInterestRecord(record []string) bool {
 	return len(record) >= 6 && record[0] == ibRecordTypeInterest && record[1] == ibRecordTypeData && record[2] == "USD"
 }
 
-func (m *InteractiveBrokersManagerImpl) parseTrades(records [][]string) ([]tax.Trade, error) {
+func (m *InteractiveBrokersManagerImpl) parseTrades(records [][]string) []tax.Trade {
 	var trades []tax.Trade
 
 	for _, record := range records {
@@ -196,7 +185,7 @@ func (m *InteractiveBrokersManagerImpl) parseTrades(records [][]string) ([]tax.T
 		trades = append(trades, trade)
 	}
 
-	return trades, nil
+	return trades
 }
 
 func (m *InteractiveBrokersManagerImpl) isValidTradeRecord(record []string) bool {
@@ -243,7 +232,7 @@ func (m *InteractiveBrokersManagerImpl) parseTradeRecord(record []string) (tax.T
 	}, nil
 }
 
-func (m *InteractiveBrokersManagerImpl) parseDividends(records [][]string) ([]tax.Dividend, error) {
+func (m *InteractiveBrokersManagerImpl) parseDividends(records [][]string) []tax.Dividend {
 	taxMap := m.buildTaxMap(records)
 
 	var dividends []tax.Dividend
@@ -261,7 +250,7 @@ func (m *InteractiveBrokersManagerImpl) parseDividends(records [][]string) ([]ta
 		dividends = append(dividends, dividend)
 	}
 
-	return dividends, nil
+	return dividends
 }
 
 func (m *InteractiveBrokersManagerImpl) isValidDividendRecord(record []string) bool {

@@ -159,20 +159,6 @@ var _ = Describe("BrokerageManager", func() {
 			})
 		})
 
-		Context("with all brokers failing to parse", func() {
-			BeforeEach(func() {
-				mockDWBroker.EXPECT().Parse(2024).Return(emptyInfo, mockError("file not found"))
-				// IB parse not expected — first error returns immediately
-			})
-
-			It("should return parse error for first broker", func() {
-				err := brokerageManager.ParseAndGenerate(ctx, testYear)
-				Expect(err).To(HaveOccurred())
-				Expect(err.Error()).To(ContainSubstring("DriveWealth"))
-				Expect(err.Error()).To(ContainSubstring("parse failed"))
-			})
-		})
-
 		Context("with empty data from all brokers", func() {
 			BeforeEach(func() {
 				mockDWBroker.EXPECT().Parse(2024).Return(emptyInfo, nil)

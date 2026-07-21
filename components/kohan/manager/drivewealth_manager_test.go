@@ -102,7 +102,7 @@ var _ = Describe("DriveWealthManagerImpl", func() {
 		})
 
 		Context("when parsing dividends", func() {
-			It("should extract dividend entries correctly", func() {
+			It("should extract dividend entries correctly and derive coverage through date", func() {
 				info, err := driveWealthManager.Parse(testYear)
 				Expect(err).ToNot(HaveOccurred())
 				Expect(info.Dividends).To(HaveLen(3))
@@ -121,6 +121,8 @@ var _ = Describe("DriveWealthManagerImpl", func() {
 				Expect(info.Dividends[2].Amount).To(Equal(142.07))
 				Expect(info.Dividends[2].Tax).To(Equal(35.52))
 				Expect(info.Dividends[2].Net).To(BeNumerically("~", 106.55, 0.01))
+
+				Expect(info.CoverageThrough).To(BeTemporally("==", time.Date(2024, 6, 30, 0, 0, 0, 0, time.UTC)))
 			})
 		})
 
@@ -147,14 +149,6 @@ var _ = Describe("DriveWealthManagerImpl", func() {
 				Expect(info.Trades[2].USDPrice).To(Equal(91.58))
 				Expect(info.Trades[2].USDValue).To(Equal(91.58))
 				Expect(info.Trades[2].Type).To(Equal("Sell"))
-			})
-		})
-
-		Context("when checking coverage through date", func() {
-			It("should derive CoverageThrough from the latest Dividend date normalized to month-end", func() {
-				info, err := driveWealthManager.Parse(testYear)
-				Expect(err).ToNot(HaveOccurred())
-				Expect(info.CoverageThrough).To(BeTemporally("==", time.Date(2024, 6, 30, 0, 0, 0, 0, time.UTC)))
 			})
 		})
 	})
