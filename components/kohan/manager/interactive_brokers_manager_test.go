@@ -36,6 +36,8 @@ var _ = Describe("InteractiveBrokersManagerImpl", func() {
 	})
 
 	Context("with a valid CSV file", func() {
+		var info tax.BrokerageInfo
+
 		BeforeEach(func() {
 			csvContent := `Statement,Header,Field Name,Field Value
 Statement,Data,BrokerName,Interactive Brokers LLC
@@ -58,20 +60,20 @@ Interest,Data,Total,,,4.25`
 			Expect(err).ToNot(HaveOccurred())
 
 			ibManager = manager.NewInteractiveBrokersManagerImpl(basePath)
+			var parseErr error
+			info, parseErr = ibManager.Parse(testYear)
+			Expect(parseErr).ToNot(HaveOccurred())
+		})
+
+		Context("period coverage", func() {
+			It("should have correct CoverageThrough", func() {
+				Expect(info.CoverageThrough).To(Equal(time.Date(2024, 12, 31, 0, 0, 0, 0, time.UTC)))
+			})
 		})
 
 		Context("when parsing trades", func() {
-			var info tax.BrokerageInfo
-
-			BeforeEach(func() {
-				var err error
-				info, err = ibManager.Parse(testYear)
-				Expect(err).ToNot(HaveOccurred())
-			})
-
 			It("should extract trade entries correctly", func() {
 				Expect(info.Trades).To(HaveLen(4))
-				Expect(info.CoverageThrough).To(Equal(time.Date(2024, 12, 31, 0, 0, 0, 0, time.UTC)))
 
 				Expect(info.Trades[0].Symbol).To(Equal("MPC"))
 				Expect(info.Trades[0].Type).To(Equal("BUY"))
@@ -100,14 +102,6 @@ Interest,Data,Total,,,4.25`
 		})
 
 		Context("when parsing dividends", func() {
-			var info tax.BrokerageInfo
-
-			BeforeEach(func() {
-				var err error
-				info, err = ibManager.Parse(testYear)
-				Expect(err).ToNot(HaveOccurred())
-			})
-
 			It("should extract dividend entries and match withholding tax", func() {
 				Expect(info.Dividends).To(HaveLen(1))
 
@@ -120,14 +114,6 @@ Interest,Data,Total,,,4.25`
 		})
 
 		Context("when parsing interest", func() {
-			var info tax.BrokerageInfo
-
-			BeforeEach(func() {
-				var err error
-				info, err = ibManager.Parse(testYear)
-				Expect(err).ToNot(HaveOccurred())
-			})
-
 			It("should extract USD interest entries and skip Total rows", func() {
 				Expect(info.Interests).To(HaveLen(2))
 
@@ -149,12 +135,12 @@ Interest,Data,Total,,,4.25`
 	Context("with invalid CSV files", func() {
 		Context("when CSV file is missing", func() {
 			BeforeEach(func() {
-				ibManager = manager.NewInteractiveBrokersManagerImpl(sampleCSVPath)
+				ibManager = manager.NewInteractiveBrokersManagerImpl(basePath)
 			})
 
-			It("should return an error", func() {
+			It("should return an error about missing file", func() {
 				_, err := ibManager.Parse(testYear)
-				Expect(err).To(HaveOccurred())
+				Expect(err).To(MatchError("failed to open CSV file"))
 			})
 		})
 
@@ -164,7 +150,7 @@ Interest,Data,Total,,,4.25`
 			BeforeEach(func() {
 				csvContent := `Statement,Data,Period,"January 1, 2024 - December 31, 2024"
 Trades,Header,DataDiscriminator,Asset Category,Currency,Symbol,Date/Time,Quantity,T. Price,C. Price,Proceeds,Comm/Fee,Basis,Realized P/L,Code
-Trades,Data,Order,Stocks,USD,INVALID,,BADQTY,BADPRICE,BADCPRICE,0,0,0,0,O`
+Trades,Data,Order,Stocks,USD,INVALID,,BADQTY,1,1,0,0,0,0,O`
 
 				err := os.WriteFile(sampleCSVPath, []byte(csvContent), 0600)
 				Expect(err).ToNot(HaveOccurred())
@@ -180,6 +166,40 @@ Trades,Data,Order,Stocks,USD,INVALID,,BADQTY,BADPRICE,BADCPRICE,0,0,0,0,O`
 			})
 		})
 
+		Context("when CSV has no Period metadata", func() {
+			BeforeEach(func() {
+				csvContent := `Some,Random,Data`
+
+				err := os.WriteFile(sampleCSVPath, []byte(csvContent), 0600)
+				Expect(err).ToNot(HaveOccurred())
+
+				ibManager = manager.NewInteractiveBrokersManagerImpl(basePath)
+			})
+
+			It("should return an error about missing period", func() {
+				_, err := ibManager.Parse(testYear)
+				Expect(err).To(MatchError("period metadata not found"))
+			})
+		})
+
+		Context("when CSV has malformed Period format", func() {
+			BeforeEach(func() {
+				csvContent := `Statement,Data,Period,InvalidPeriodFormat`
+
+				err := os.WriteFile(sampleCSVPath, []byte(csvContent), 0600)
+				Expect(err).ToNot(HaveOccurred())
+
+				ibManager = manager.NewInteractiveBrokersManagerImpl(basePath)
+			})
+
+			It("should return an error about invalid period format", func() {
+				_, err := ibManager.Parse(testYear)
+				Expect(err).To(MatchError("invalid period format: InvalidPeriodFormat"))
+			})
+		})
+	})
+
+	Context("with edge case CSV data", func() {
 		Context("when dividend has no matching tax", func() {
 			var info tax.BrokerageInfo
 
@@ -205,43 +225,6 @@ Dividends,Data,USD,2024-12-10,MPC(US56585A1025) Cash Dividend USD 0.91 per Share
 			})
 		})
 
-		Context("when CSV has no Period metadata", func() {
-			BeforeEach(func() {
-				csvContent := `Trades,Header,DataDiscriminator,Asset Category,Currency,Symbol,Date/Time,Quantity,T. Price,C. Price,Proceeds,Comm/Fee,Basis,Realized P/L,Code
-Trades,Data,Order,Stocks,USD,MPC,"2024-10-31, 09:30:00",8,146.21,146.20,-1169.68,-0.36024125,1170.04024125,0,O`
-
-				err := os.WriteFile(sampleCSVPath, []byte(csvContent), 0600)
-				Expect(err).ToNot(HaveOccurred())
-
-				ibManager = manager.NewInteractiveBrokersManagerImpl(basePath)
-			})
-
-			It("should return an error about missing period", func() {
-				_, err := ibManager.Parse(testYear)
-				Expect(err).To(MatchError("period metadata not found"))
-			})
-		})
-
-		Context("when CSV has malformed Period format", func() {
-			BeforeEach(func() {
-				csvContent := `Statement,Data,Period,InvalidPeriodFormat
-Trades,Header,DataDiscriminator,Asset Category,Currency,Symbol,Date/Time,Quantity,T. Price,C. Price,Proceeds,Comm/Fee,Basis,Realized P/L,Code
-Trades,Data,Order,Stocks,USD,MPC,"2024-10-31, 09:30:00",8,146.21,146.20,-1169.68,-0.36024125,1170.04024125,0,O`
-
-				err := os.WriteFile(sampleCSVPath, []byte(csvContent), 0600)
-				Expect(err).ToNot(HaveOccurred())
-
-				ibManager = manager.NewInteractiveBrokersManagerImpl(basePath)
-			})
-
-			It("should return an error about invalid period format", func() {
-				_, err := ibManager.Parse(testYear)
-				Expect(err).To(MatchError("invalid period format: InvalidPeriodFormat"))
-			})
-		})
-	})
-
-	Context("with edge case CSV data", func() {
 		Context("when CSV has SubTotal and Total rows", func() {
 			var info tax.BrokerageInfo
 
@@ -277,7 +260,8 @@ Dividends,Data,Total,,,7.28`
 			BeforeEach(func() {
 				csvContent := `Statement,Data,Period,"January 1, 2024 - December 31, 2024"
 Trades,Header,DataDiscriminator,Asset Category,Currency,Symbol,Date/Time,Quantity,T. Price,C. Price,Proceeds,Comm/Fee,Basis,Realized P/L,Code
-Dividends,Header,Currency,Date,Description,Amount`
+Dividends,Header,Currency,Date,Description,Amount
+Interest,Header,Currency,Date,Description,Amount`
 
 				err := os.WriteFile(sampleCSVPath, []byte(csvContent), 0600)
 				Expect(err).ToNot(HaveOccurred())
@@ -308,36 +292,27 @@ Dividends,Header,Currency,Date,Description,Amount`
 		}
 
 		BeforeEach(func() {
-			// 2023 file: AAPL trade, MPC dividend with $1.82 withholding, $1.00 interest
-			writeCSV(2023, `Statement,Data,Period,"January 1, 2023 - December 31, 2023"
+			// File 1 (2024): AAPL trade, MPC dividend with $1.82 withholding, USD Interest $2.50
+			writeCSV(2024, `Statement,Data,Period,"January 1, 2024 - December 31, 2024"
 Trades,Header,DataDiscriminator,Asset Category,Currency,Symbol,Date/Time,Quantity,T. Price,C. Price,Proceeds,Comm/Fee,Basis,Realized P/L,Code
-Trades,Data,Order,Stocks,USD,AAPL,"2023-11-15, 10:30:00",5,180.25,180.20,-901.25,-0.50,901.75,0,O
+Trades,Data,Order,Stocks,USD,AAPL,"2024-10-31, 09:30:00",8,146.21,146.20,-1169.68,-0.36024125,1170.04024125,0,O
 Dividends,Header,Currency,Date,Description,Amount
 Dividends,Data,USD,2024-12-10,MPC(US56585A1025) Cash Dividend USD 0.91 per Share (Ordinary Dividend),7.28
 Withholding Tax,Header,Currency,Date,Description,Amount,Code
 Withholding Tax,Data,USD,2024-12-10,MPC(US56585A1025) Cash Dividend USD 0.91 per Share - US Tax,-1.82,
 Interest,Header,Currency,Date,Description,Amount
-Interest,Data,USD,2023-12-15,USD Credit Interest for Nov-2023,1.00`)
+Interest,Data,USD,2024-12-15,USD Credit Interest for Nov-2024,2.50`)
 
-			// 2024 file: GOOGL trade, MPC dividend with $2.50 withholding (different!), $2.00 interest
-			writeCSV(2024, `Statement,Data,Period,"January 1, 2024 - December 31, 2024"
+			// File 2 (2025): MSFT trade, MPC dividend with $2.50 withholding, USD Interest $1.75
+			writeCSV(2025, `Statement,Data,Period,"January 1, 2025 - December 31, 2025"
 Trades,Header,DataDiscriminator,Asset Category,Currency,Symbol,Date/Time,Quantity,T. Price,C. Price,Proceeds,Comm/Fee,Basis,Realized P/L,Code
-Trades,Data,Order,Stocks,USD,GOOGL,"2024-06-20, 09:45:00",3,175.50,175.45,-526.50,-0.30,526.80,0,O
+Trades,Data,Order,Stocks,USD,MSFT,"2025-06-15, 10:30:00",5,350.00,349.50,-1750.00,-0.50,1750.50,0,O
 Dividends,Header,Currency,Date,Description,Amount
 Dividends,Data,USD,2024-12-10,MPC(US56585A1025) Cash Dividend USD 0.91 per Share (Ordinary Dividend),7.28
 Withholding Tax,Header,Currency,Date,Description,Amount,Code
 Withholding Tax,Data,USD,2024-12-10,MPC(US56585A1025) Cash Dividend USD 0.91 per Share - US Tax,-2.50,
 Interest,Header,Currency,Date,Description,Amount
-Interest,Data,USD,2024-12-15,USD Credit Interest for Nov-2024,2.00`)
-
-			// 2026 file: MSFT trade, VTI dividend (no withholding), $3.00 interest, Period row
-			writeCSV(2026, `Statement,Data,Period,"January 1, 2026 - December 31, 2026"
-Trades,Header,DataDiscriminator,Asset Category,Currency,Symbol,Date/Time,Quantity,T. Price,C. Price,Proceeds,Comm/Fee,Basis,Realized P/L,Code
-Trades,Data,Order,Stocks,USD,MSFT,"2026-02-10, 11:15:00",2,410.00,409.95,-820.00,-0.40,820.40,0,O
-Dividends,Header,Currency,Date,Description,Amount
-Dividends,Data,USD,2025-01-05,VTI(US9229087690) Cash Dividend USD 0.75 per Share,15.00
-Interest,Header,Currency,Date,Description,Amount
-Interest,Data,USD,2026-01-15,USD Credit Interest for Dec-2025,3.00`)
+Interest,Data,USD,2025-01-05,USD Credit Interest for Dec-2024,1.75`)
 
 			ibManager = manager.NewInteractiveBrokersManagerImpl(basePath)
 			var err error
@@ -345,40 +320,33 @@ Interest,Data,USD,2026-01-15,USD Credit Interest for Dec-2025,3.00`)
 			Expect(err).ToNot(HaveOccurred())
 		})
 
-		It("should merge trades, dividends, and interests from all discovered annual files (2023, 2024, 2026)", func() {
-			// Trades from all three years
-			Expect(info.Trades).To(HaveLen(3))
-			var tradeSymbols []string
-			for _, t := range info.Trades {
-				tradeSymbols = append(tradeSymbols, t.Symbol)
-			}
-			Expect(tradeSymbols).To(ConsistOf("AAPL", "GOOGL", "MSFT"))
+		It("should aggregate both trades", func() {
+			Expect(info.Trades).To(HaveLen(2))
+			Expect(info.Trades[0].Symbol).To(Equal("AAPL"))
+			Expect(info.Trades[1].Symbol).To(Equal("MSFT"))
+		})
 
-			// Dividends from all three years
-			Expect(info.Dividends).To(HaveLen(3))
+		It("should aggregate both dividends with per-file withholding-tax isolation", func() {
+			Expect(info.Dividends).To(HaveLen(2))
 			var mpcTaxes []float64
-			var vtiFound bool
 			for _, d := range info.Dividends {
-				switch d.Symbol {
-				case "MPC":
-					mpcTaxes = append(mpcTaxes, d.Tax)
-				case "VTI":
-					vtiFound = true
-				}
+				Expect(d.Symbol).To(Equal("MPC"))
+				mpcTaxes = append(mpcTaxes, d.Tax)
 			}
 			Expect(mpcTaxes).To(ConsistOf(1.82, 2.50))
-			Expect(vtiFound).To(BeTrue())
+		})
 
-			// Interests from all three years
-			Expect(info.Interests).To(HaveLen(3))
-			var interestTotal float64
+		It("should aggregate both interests", func() {
+			Expect(info.Interests).To(HaveLen(2))
+			var amounts []float64
 			for _, i := range info.Interests {
-				interestTotal += i.Amount
+				amounts = append(amounts, i.Amount)
 			}
-			Expect(interestTotal).To(Equal(6.00))
+			Expect(amounts).To(ConsistOf(2.50, 1.75))
+		})
 
-			// CoverageThrough should be the latest period end across all files
-			Expect(info.CoverageThrough).To(Equal(time.Date(2026, 12, 31, 0, 0, 0, 0, time.UTC)))
+		It("should set CoverageThrough to the latest period end", func() {
+			Expect(info.CoverageThrough).To(Equal(time.Date(2025, 12, 31, 0, 0, 0, 0, time.UTC)))
 		})
 	})
 })

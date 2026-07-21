@@ -277,6 +277,7 @@ func (m *InteractiveBrokersManagerImpl) parseDividendRecord(record []string, tax
 		Amount: amount,
 	}
 
+	// FIXME: Decide whether an IBKR dividend without matching withholding tax should fail parsing instead of defaulting tax to zero.
 	MatchDividendWithTax(dividend, taxMap)
 
 	return *dividend, nil
