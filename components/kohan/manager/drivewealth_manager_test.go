@@ -4,12 +4,18 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
+	"time"
 
 	"github.com/amanhigh/go-fun/components/kohan/manager"
 	"github.com/amanhigh/go-fun/models/tax"
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
 	"github.com/xuri/excelize/v2"
+)
+
+const (
+	sheetNameIncome = "Income"
+	sheetNameTrades = "Trades"
 )
 
 var _ = Describe("DriveWealthManagerImpl", func() {
@@ -35,7 +41,7 @@ var _ = Describe("DriveWealthManagerImpl", func() {
 	Context("with a valid Excel file", func() {
 		BeforeEach(func() {
 			f := excelize.NewFile()
-			sheetName := "Income"
+			sheetName := sheetNameIncome
 			_, err := f.NewSheet(sheetName)
 			Expect(err).ToNot(HaveOccurred())
 
@@ -60,7 +66,7 @@ var _ = Describe("DriveWealthManagerImpl", func() {
 
 			Expect(f.DeleteSheet("Sheet1")).To(Succeed())
 
-			tradeSheet := "Trades"
+			tradeSheet := sheetNameTrades
 			_, err = f.NewSheet(tradeSheet)
 			Expect(err).ToNot(HaveOccurred())
 
@@ -143,8 +149,15 @@ var _ = Describe("DriveWealthManagerImpl", func() {
 				Expect(info.Trades[2].Type).To(Equal("Sell"))
 			})
 		})
-	})
 
+		Context("when checking coverage through date", func() {
+			It("should derive CoverageThrough from the latest Dividend date normalized to month-end", func() {
+				info, err := driveWealthManager.Parse(testYear)
+				Expect(err).ToNot(HaveOccurred())
+				Expect(info.CoverageThrough).To(BeTemporally("==", time.Date(2024, 6, 30, 0, 0, 0, 0, time.UTC)))
+			})
+		})
+	})
 	Context("with an invalid or malformed Excel file", func() {
 		Context("when the Excel file is missing", func() {
 			It("should return an error", func() {
@@ -157,10 +170,8 @@ var _ = Describe("DriveWealthManagerImpl", func() {
 		Context("when the 'Income' sheet is missing", func() {
 			It("should return an error", func() {
 				f := excelize.NewFile()
-				_, err := f.NewSheet("OtherSheet")
-				Expect(err).ToNot(HaveOccurred())
 				Expect(f.DeleteSheet("Sheet1")).To(Succeed())
-				err = f.SaveAs(basePath + "_2024.xlsx")
+				err := f.SaveAs(basePath + "_2024.xlsx")
 				Expect(err).ToNot(HaveOccurred())
 
 				driveWealthManager = manager.NewDriveWealthManagerImpl(basePath)
@@ -172,7 +183,7 @@ var _ = Describe("DriveWealthManagerImpl", func() {
 		Context("when the 'Trades' sheet is missing", func() {
 			It("should return an error", func() {
 				f := excelize.NewFile()
-				_, err := f.NewSheet("Income")
+				_, err := f.NewSheet(sheetNameIncome)
 				Expect(err).ToNot(HaveOccurred())
 				Expect(f.DeleteSheet("Sheet1")).To(Succeed())
 				err = f.SaveAs(basePath + "_2024.xlsx")
@@ -183,6 +194,7 @@ var _ = Describe("DriveWealthManagerImpl", func() {
 				Expect(err).To(HaveOccurred())
 			})
 		})
+
 	})
 
 	Context("commission fallback from All Transactions sheet", func() {
@@ -193,7 +205,7 @@ var _ = Describe("DriveWealthManagerImpl", func() {
 				f := excelize.NewFile()
 
 				// Setup Income sheet
-				sheetName := "Income"
+				sheetName := sheetNameIncome
 				_, err := f.NewSheet(sheetName)
 				Expect(err).ToNot(HaveOccurred())
 
@@ -201,10 +213,15 @@ var _ = Describe("DriveWealthManagerImpl", func() {
 				err = f.SetSheetRow(sheetName, "A1", &headers)
 				Expect(err).ToNot(HaveOccurred())
 
+				// Valid Dividend row satisfies coverage-through so that
+				// All Transactions is used only for commission fallback, not coverage.
+				err = f.SetSheetRow(sheetName, "A2", &[]any{"2024-07-01", "05:34:52 AM", "Dividend", "AAPL", 100.00})
+				Expect(err).ToNot(HaveOccurred())
+
 				Expect(f.DeleteSheet("Sheet1")).To(Succeed())
 
 				// Create Trades sheet with MIXED commissions (some zero, some non-zero)
-				tradeSheet := "Trades"
+				tradeSheet := sheetNameTrades
 				_, err = f.NewSheet(tradeSheet)
 				Expect(err).ToNot(HaveOccurred())
 

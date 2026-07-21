@@ -43,17 +43,23 @@ func NewBrokerageManager(
 var _ BrokerageManager = (*BrokerageManagerImpl)(nil)
 
 func (m *BrokerageManagerImpl) ParseAndGenerate(ctx context.Context, year int) error {
-	var merged tax.BrokerageInfo
 	brokers := []Broker{m.DriveWealth, m.IB}
+	requiredDate := time.Date(year+1, tax.COVERAGE_CUTOFF_MONTH, tax.COVERAGE_CUTOFF_DAY, 0, 0, 0, 0, time.UTC)
 
+	var merged tax.BrokerageInfo
 	for _, broker := range brokers {
 		info, err := broker.Parse(year)
 		if err != nil {
-			log.Warn().Str("broker", broker.GetName()).Err(err).Msg("Broker parse failed, skipping")
-			continue
+			return fmt.Errorf("broker '%s': parse failed: %w", broker.GetName(), err)
 		}
-		merged = mergeBrokerageInfo(merged, info)
 		log.Info().Str("broker", broker.GetName()).Msg("Parsed broker successfully")
+
+		if info.CoverageThrough.Before(requiredDate) {
+			return fmt.Errorf("broker '%s': coverage through %s, required %s",
+				broker.GetName(), info.CoverageThrough.Format(time.DateOnly), requiredDate.Format(time.DateOnly))
+		}
+
+		merged = mergeBrokerageInfo(merged, info)
 	}
 
 	hasData := len(merged.Trades) > 0 || len(merged.Dividends) > 0 || len(merged.Interests) > 0

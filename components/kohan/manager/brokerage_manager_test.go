@@ -20,7 +20,7 @@ import (
 
 const testYear = 2024
 
-var cutoffDate = time.Date(2025, time.March, 31, 0, 0, 0, 0, time.UTC)
+var cutoffDate = time.Date(2025, tax.COVERAGE_CUTOFF_MONTH, tax.COVERAGE_CUTOFF_DAY, 0, 0, 0, 0, time.UTC)
 
 func mockError(message string) common.HttpError {
 	return common.NewHttpError(message, http.StatusBadRequest)

@@ -5,6 +5,7 @@ import (
 	"slices"
 	"strconv"
 	"strings"
+	"time"
 
 	"github.com/amanhigh/go-fun/models/tax"
 	"github.com/xuri/excelize/v2"
@@ -73,13 +74,16 @@ func (m *DriveWealthManagerImpl) parseSheets(f *excelize.File) (info tax.Brokera
 		return
 	}
 
-	info.Interests, err = m.parseInterest(rows)
-	if err != nil {
+	if info.Interests, err = m.parseInterest(rows); err != nil {
 		return
 	}
 
-	info.Dividends, err = m.parseDividends(rows)
-	if err != nil {
+	if info.Dividends, err = m.parseDividends(rows); err != nil {
+		return
+	}
+
+	// Derive CoverageThrough from parsed Dividend records only.
+	if info.CoverageThrough, err = deriveCoverageFromDividends(info.Dividends); err != nil {
 		return
 	}
 
@@ -89,15 +93,41 @@ func (m *DriveWealthManagerImpl) parseSheets(f *excelize.File) (info tax.Brokera
 		return
 	}
 
-	// Load commission map from All Transactions sheet if available
+	// Read All Transactions best-effort for commission fallback only.
 	commissionMap := make(map[string]float64)
-	allTransRows, errAT := f.GetRows("All Transactions")
-	if errAT == nil {
+	if allTransRows, sheetErr := f.GetRows("All Transactions"); sheetErr == nil {
 		commissionMap = m.parseCommissions(allTransRows)
 	}
 
 	info.Trades, err = m.parseTrades(tradeRows, commissionMap)
 	return
+}
+
+// deriveCoverageFromDividends computes CoverageThrough from Dividend records.
+// It selects the latest valid dividend date and normalizes it to the final day of that calendar month.
+// Fails immediately if any dividend date is invalid or if no dividends are available.
+func deriveCoverageFromDividends(dividends []tax.Dividend) (time.Time, error) {
+	if len(dividends) == 0 {
+		return time.Time{}, fmt.Errorf("no Dividend records found: coverage through date cannot be derived")
+	}
+
+	latestDate, httpErr := dividends[0].GetDate()
+	if httpErr != nil {
+		return time.Time{}, fmt.Errorf("invalid dividend date: %w", httpErr)
+	}
+
+	for _, dividend := range dividends[1:] {
+		date, httpErr := dividend.GetDate()
+		if httpErr != nil {
+			return time.Time{}, fmt.Errorf("invalid dividend date: %w", httpErr)
+		}
+		if date.After(latestDate) {
+			latestDate = date
+		}
+	}
+
+	// Normalize to the final day of the calendar month.
+	return time.Date(latestDate.Year(), latestDate.Month()+1, 0, 0, 0, 0, 0, time.UTC), nil
 }
 
 func (m *DriveWealthManagerImpl) checkSheetExists(f *excelize.File, sheetName string) error {
