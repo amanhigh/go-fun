@@ -40,13 +40,13 @@ type TickerManager interface {
 }
 
 type TickerManagerImpl struct {
-	client    clients.StockDataClient
+	client    clients.SecurityClient
 	downloads string
 	cache     map[string]tax.StockData
 	cacheLock sync.RWMutex
 }
 
-func NewTickerManager(client clients.StockDataClient, downloads string) *TickerManagerImpl {
+func NewTickerManager(client clients.SecurityClient, downloads string) *TickerManagerImpl {
 	return &TickerManagerImpl{
 		client:    client,
 		downloads: downloads,

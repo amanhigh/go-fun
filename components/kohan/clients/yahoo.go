@@ -13,6 +13,12 @@ import (
 	"github.com/rs/zerolog/log"
 )
 
+// SecurityClient defines the interface for fetching security information and price data.
+type SecurityClient interface {
+	FetchDailyPrices(ctx context.Context, ticker string) (tax.StockData, common.HttpError)
+	GetSecurityInfo(ctx context.Context, query string) ([]tax.SecurityInfo, common.HttpError)
+}
+
 // YahooClient fetches stock prices from Yahoo Finance API
 type YahooClient struct {
 	client              *resty.Client
@@ -28,6 +34,9 @@ func NewYahooClient(client *resty.Client, baseURL string, tickerDataStartYear in
 		tickerDataStartYear: tickerDataStartYear,
 	}
 }
+
+// Compile-time assertion: YahooClient implements SecurityClient
+var _ SecurityClient = (*YahooClient)(nil)
 
 // FetchDailyPrices fetches daily closing prices from Yahoo Finance
 // Uses period1 and period2 parameters instead of "range" to get daily granularity
@@ -125,6 +134,65 @@ func (y *YahooClient) extractSplits(response *tax.YahooChartResponse) []tax.Yaho
 	})
 
 	return splits
+}
+
+// GetSecurityInfo searches for securities by query string using Yahoo Finance /v1/finance/search.
+// Returns all matching equity and ETF candidates without selecting one, or an empty non-nil slice.
+func (y *YahooClient) GetSecurityInfo(ctx context.Context, query string) ([]tax.SecurityInfo, common.HttpError) {
+	var response tax.YahooSearchResponse
+
+	resp, resErr := y.client.R().
+		SetContext(ctx).
+		SetQueryParams(map[string]string{
+			"q":           query,
+			"quotesCount": "20",
+			"newsCount":   "0",
+		}).
+		SetHeader("User-Agent", "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36").
+		SetResult(&response).
+		Get(y.getSearchURL())
+
+	if err := util.ResponseProcessor(resp, resErr); err != nil {
+		return nil, err
+	}
+
+	return y.extractSecurityInfo(&response), nil
+}
+
+// extractSecurityInfo parses Yahoo search quotes into SecurityInfo records.
+// Filters to equity and ETF quote types, uses long name with short-name fallback.
+// Returns an empty non-nil slice when there are no matching candidates.
+func (y *YahooClient) extractSecurityInfo(response *tax.YahooSearchResponse) []tax.SecurityInfo {
+	if len(response.Quotes) == 0 {
+		return []tax.SecurityInfo{}
+	}
+
+	results := make([]tax.SecurityInfo, 0, len(response.Quotes))
+	for _, quote := range response.Quotes {
+		if quote.QuoteType != "EQUITY" && quote.QuoteType != "ETF" {
+			continue
+		}
+		name := quote.LongName
+		if name == "" {
+			name = quote.ShortName
+		}
+		results = append(results, tax.SecurityInfo{
+			Symbol:   quote.Symbol,
+			Name:     name,
+			Exchange: quote.Exchange,
+			Type:     quote.QuoteType,
+		})
+	}
+
+	if len(results) == 0 {
+		return []tax.SecurityInfo{}
+	}
+	return results
+}
+
+// getSearchURL builds the search URL using the configured base URL
+func (y *YahooClient) getSearchURL() string {
+	return fmt.Sprintf("%s/v1/finance/search", y.baseURL)
 }
 
 // getChartURL builds the chart URL using the configured base URL

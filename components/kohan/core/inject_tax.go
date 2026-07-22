@@ -14,7 +14,7 @@ import (
 
 // ---- Client Providers ----
 
-func (ki *KohanInjector) provideYahooClient(client *resty.Client) clients.StockDataClient {
+func (ki *KohanInjector) provideYahooClient(client *resty.Client) clients.SecurityClient {
 	return clients.NewYahooClient(client, ki.config.Tax.YahooBaseURL, ki.config.Tax.TickerDataStartYear)
 }
 
@@ -51,7 +51,7 @@ func (ki *KohanInjector) provideTradeRepository() repository.TradeRepository {
 
 // ---- Manager Providers ----
 
-func (ki *KohanInjector) provideTickerManager(client clients.StockDataClient) manager.TickerManager {
+func (ki *KohanInjector) provideTickerManager(client clients.SecurityClient) manager.TickerManager {
 	return manager.NewTickerManager(client, ki.config.Tax.TickerCacheDir)
 }
 
@@ -192,7 +192,7 @@ func (ki *KohanInjector) registerClients() {
 	var client *resty.Client
 	container.MustResolve(ki.di, &client)
 
-	container.MustSingleton(ki.di, func() clients.StockDataClient {
+	container.MustSingleton(ki.di, func() clients.SecurityClient {
 		return ki.provideYahooClient(client)
 	})
 	container.MustSingleton(ki.di, func() clients.SBIClient {
@@ -217,11 +217,11 @@ func (ki *KohanInjector) registerCoreManagers() {
 	container.MustSingleton(ki.di, ki.provideExchangeManager)
 	container.MustSingleton(ki.di, ki.provideAccountManager)
 
-	// Register TickerManager (depends on StockDataClient)
-	var stockDataClient clients.StockDataClient
-	container.MustResolve(ki.di, &stockDataClient)
+	// Register TickerManager (depends on SecurityClient)
+	var securityClient clients.SecurityClient
+	container.MustResolve(ki.di, &securityClient)
 	container.MustSingleton(ki.di, func() manager.TickerManager {
-		return ki.provideTickerManager(stockDataClient)
+		return ki.provideTickerManager(securityClient)
 	})
 
 	// Register SplitManager (depends on TickerManager)

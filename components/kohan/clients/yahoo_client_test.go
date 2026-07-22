@@ -429,6 +429,198 @@ var _ = Describe("YahooClient", func() {
 			})
 		})
 
+		Context("GetSecurityInfo", func() {
+			var (
+				query   string
+				results []tax.SecurityInfo
+				httpErr error
+			)
+
+			Context("ISIN resolves to FISV equity candidate", func() {
+				BeforeEach(func() {
+					query = "US...FISV"
+					responseBody := `{
+						"quotes": [
+							{
+								"symbol": "FISV",
+								"longname": "Fiserv Inc.",
+								"shortname": "Fiserv",
+								"exchange": "NMS",
+								"quoteType": "EQUITY"
+							}
+						]
+					}`
+
+					server = httptest.NewServer(
+						http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+							Expect(r.URL.Path).To(Equal("/v1/finance/search"))
+							Expect(r.URL.Query().Get("q")).To(Equal(query))
+							Expect(r.URL.Query().Get("quotesCount")).To(Equal("20"))
+							Expect(r.URL.Query().Get("newsCount")).To(Equal("0"))
+							w.Header().Set("Content-Type", "application/json")
+							w.WriteHeader(http.StatusOK)
+							_, _ = w.Write([]byte(responseBody))
+						}),
+					)
+
+					client := resty.NewWithClient(&http.Client{})
+					yahooClient = clients.NewYahooClient(client, server.URL, tickerDataStartYear)
+					results, httpErr = yahooClient.GetSecurityInfo(ctx, query)
+				})
+
+				It("should return no error", func() {
+					Expect(httpErr).ToNot(HaveOccurred())
+				})
+
+				It("should return exactly one candidate", func() {
+					Expect(results).To(HaveLen(1))
+				})
+
+				It("should use long name", func() {
+					Expect(results[0].Name).To(Equal("Fiserv Inc."))
+				})
+
+				It("should have correct symbol and type", func() {
+					Expect(results[0].Symbol).To(Equal("FISV"))
+					Expect(results[0].Type).To(Equal("EQUITY"))
+				})
+			})
+
+			Context("ETF classification for VTI", func() {
+				BeforeEach(func() {
+					query = "VTI"
+					responseBody := `{
+						"quotes": [
+							{
+								"symbol": "VTI",
+								"longname": "Vanguard Total Stock Market ETF",
+								"shortname": "Vanguard Total Stock Market",
+								"exchange": "NMS",
+								"quoteType": "ETF"
+							}
+						]
+					}`
+
+					server = httptest.NewServer(
+						http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+							Expect(r.URL.Path).To(Equal("/v1/finance/search"))
+							w.Header().Set("Content-Type", "application/json")
+							w.WriteHeader(http.StatusOK)
+							_, _ = w.Write([]byte(responseBody))
+						}),
+					)
+
+					client := resty.NewWithClient(&http.Client{})
+					yahooClient = clients.NewYahooClient(client, server.URL, tickerDataStartYear)
+					results, httpErr = yahooClient.GetSecurityInfo(ctx, query)
+				})
+
+				It("should return no error", func() {
+					Expect(httpErr).ToNot(HaveOccurred())
+				})
+
+				It("should return exactly one candidate", func() {
+					Expect(results).To(HaveLen(1))
+				})
+
+				It("should classify as ETF", func() {
+					Expect(results[0].Type).To(Equal("ETF"))
+				})
+
+				It("should have correct symbol and name", func() {
+					Expect(results[0].Symbol).To(Equal("VTI"))
+					Expect(results[0].Name).To(Equal("Vanguard Total Stock Market ETF"))
+				})
+			})
+
+			Context("multiple candidates without selection", func() {
+				BeforeEach(func() {
+					query = "BRK"
+					responseBody := `{
+						"quotes": [
+							{
+								"symbol": "BRK-A",
+								"longname": "Berkshire Hathaway Inc.",
+								"shortname": "Berkshire Hathaway",
+								"exchange": "NYSE",
+								"quoteType": "EQUITY"
+							},
+							{
+								"symbol": "BRK-B",
+								"longname": "",
+								"shortname": "Berkshire Hathaway B",
+								"exchange": "NYSE",
+								"quoteType": "EQUITY"
+							}
+						]
+					}`
+
+					server = httptest.NewServer(
+						http.HandlerFunc(func(w http.ResponseWriter, _ *http.Request) {
+							w.Header().Set("Content-Type", "application/json")
+							w.WriteHeader(http.StatusOK)
+							_, _ = w.Write([]byte(responseBody))
+						}),
+					)
+
+					client := resty.NewWithClient(&http.Client{})
+					yahooClient = clients.NewYahooClient(client, server.URL, tickerDataStartYear)
+					results, httpErr = yahooClient.GetSecurityInfo(ctx, query)
+				})
+
+				It("should return no error", func() {
+					Expect(httpErr).ToNot(HaveOccurred())
+				})
+
+				It("should return both candidates", func() {
+					Expect(results).To(HaveLen(2))
+				})
+
+				It("should use long name when available", func() {
+					Expect(results[0].Name).To(Equal("Berkshire Hathaway Inc."))
+				})
+
+				It("should fall back to short name when long name is empty", func() {
+					Expect(results[1].Name).To(Equal("Berkshire Hathaway B"))
+				})
+
+				It("should not select one over the other", func() {
+					Expect(results[0].Symbol).To(Equal("BRK-A"))
+					Expect(results[1].Symbol).To(Equal("BRK-B"))
+				})
+			})
+
+			Context("empty results return non-nil empty slice", func() {
+				BeforeEach(func() {
+					query = "ZZXXYYZZ"
+					responseBody := `{
+						"quotes": []
+					}`
+
+					server = httptest.NewServer(
+						http.HandlerFunc(func(w http.ResponseWriter, _ *http.Request) {
+							w.Header().Set("Content-Type", "application/json")
+							w.WriteHeader(http.StatusOK)
+							_, _ = w.Write([]byte(responseBody))
+						}),
+					)
+
+					client := resty.NewWithClient(&http.Client{})
+					yahooClient = clients.NewYahooClient(client, server.URL, tickerDataStartYear)
+					results, httpErr = yahooClient.GetSecurityInfo(ctx, query)
+				})
+
+				It("should return no error", func() {
+					Expect(httpErr).ToNot(HaveOccurred())
+				})
+
+				It("should return empty non-nil slice", func() {
+					Expect(results).ToNot(BeNil())
+					Expect(results).To(BeEmpty())
+				})
+			})
+		})
+
 		Context("multiple different tickers", func() {
 			var aaplData tax.StockData
 			var msftData tax.StockData

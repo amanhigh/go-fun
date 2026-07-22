@@ -130,3 +130,17 @@ type YahooQuote struct {
 	Volume   []int64   `json:"volume"`
 	AdjClose []float64 `json:"adjclose,omitempty"`
 }
+
+// YahooSearchResponse represents the response from Yahoo Finance /v1/finance/search
+type YahooSearchResponse struct {
+	Quotes []YahooSearchQuote `json:"quotes"`
+}
+
+// YahooSearchQuote represents a single quote candidate from Yahoo Finance search
+type YahooSearchQuote struct {
+	Symbol    string `json:"symbol"`
+	LongName  string `json:"longname"`
+	ShortName string `json:"shortname"`
+	Exchange  string `json:"exchange"`
+	QuoteType string `json:"quoteType"`
+}

@@ -19,7 +19,7 @@ import (
 
 var _ = Describe("TickerManager", func() {
 	var (
-		mockClient    *mocks.StockDataClient
+		mockClient    *mocks.SecurityClient
 		tickerManager *manager.TickerManagerImpl
 		testDir       string
 		ctx           = context.Background()
@@ -27,7 +27,7 @@ var _ = Describe("TickerManager", func() {
 	)
 
 	BeforeEach(func() {
-		mockClient = mocks.NewStockDataClient(GinkgoT())
+		mockClient = mocks.NewSecurityClient(GinkgoT())
 
 		var err error
 		testDir, err = os.MkdirTemp("", "ticker-test-*")
