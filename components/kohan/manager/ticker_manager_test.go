@@ -53,7 +53,7 @@ var _ = Describe("TickerManager", func() {
 				Prices: map[string]float64{
 					"2024-01-23": 100.00,
 				},
-				Splits: []tax.YahooSplit{},
+				Splits: []tax.SplitInfo{},
 			}
 
 			filePath = filepath.Join(testDir, "TEST.json")
@@ -114,7 +114,7 @@ var _ = Describe("TickerManager", func() {
 					"2024-01-16": 101.00,
 					"2024-01-17": 102.00,
 				},
-				Splits: []tax.YahooSplit{},
+				Splits: []tax.SplitInfo{},
 			}
 
 			// Save test data
@@ -186,7 +186,7 @@ var _ = Describe("TickerManager", func() {
 						"2024-01-10": 100.00, // Pre-split price
 						"2024-03-01": 50.00,  // On split date (post-split trading price)
 					},
-					Splits: []tax.YahooSplit{
+					Splits: []tax.SplitInfo{
 						{Date: 1709251200, Numerator: 2, Denominator: 1}, // 2024-03-01 2:1 split
 					},
 				}
@@ -233,7 +233,7 @@ var _ = Describe("TickerManager", func() {
 				BeforeEach(func() {
 					stockData = tax.StockData{
 						Prices: map[string]float64{"2024-01-10": 100.00},
-						Splits: []tax.YahooSplit{
+						Splits: []tax.SplitInfo{
 							{Date: 1709251200, Numerator: 0, Denominator: 1},
 						},
 					}
@@ -263,7 +263,7 @@ var _ = Describe("TickerManager", func() {
 							"2024-01-10": 100.00,
 							"2024-03-01": 80.00,
 						},
-						Splits: []tax.YahooSplit{
+						Splits: []tax.SplitInfo{
 							{Date: 1709251300, Numerator: 2, Denominator: 1}, // 2024-03-01 00:01:40 UTC
 						},
 					}
@@ -313,7 +313,7 @@ var _ = Describe("TickerManager", func() {
 					"2024-01-15": 158.00,
 					"2024-12-31": 159.00,
 				},
-				Splits: []tax.YahooSplit{},
+				Splits: []tax.SplitInfo{},
 			}
 
 			// Save test data to file
@@ -375,7 +375,7 @@ var _ = Describe("TickerManager", func() {
 					Prices: map[string]float64{
 						"2023-06-15": 120.00,
 					},
-					Splits: []tax.YahooSplit{},
+					Splits: []tax.SplitInfo{},
 				}
 
 				singleYearPath := filepath.Join(testDir, "SINGLE.json")
@@ -424,7 +424,7 @@ var _ = Describe("TickerManager", func() {
 						"2023-12-31": 111.00,
 						"2024-01-01": 112.00,
 					},
-					Splits: []tax.YahooSplit{},
+					Splits: []tax.SplitInfo{},
 				}
 
 				boundaryPath := filepath.Join(testDir, "BOUNDARY.json")
@@ -462,7 +462,7 @@ var _ = Describe("TickerManager", func() {
 						"2024-01-10": 100.00, // Pre-split price
 						"2024-03-01": 50.00,  // On split date
 					},
-					Splits: []tax.YahooSplit{
+					Splits: []tax.SplitInfo{
 						{Date: 1709251200, Numerator: 2, Denominator: 1}, // 2024-03-01 2:1 split
 					},
 				}
@@ -495,7 +495,7 @@ var _ = Describe("TickerManager", func() {
 						Prices: map[string]float64{
 							"2024-01-10": 100.00, // Pre-split price only; no exact price on split date
 						},
-						Splits: []tax.YahooSplit{
+						Splits: []tax.SplitInfo{
 							{Date: 1709251200, Numerator: 2, Denominator: 1}, // 2024-03-01 2:1 split
 						},
 					}
@@ -522,7 +522,7 @@ var _ = Describe("TickerManager", func() {
 							"2024-01-10": 100.00, // Current year pre-split price
 							"2024-03-01": 50.00,  // Current year on split date
 						},
-						Splits: []tax.YahooSplit{
+						Splits: []tax.SplitInfo{
 							{Date: 1709251200, Numerator: 2, Denominator: 1}, // 2024-03-01 2:1 split
 						},
 					}
@@ -553,7 +553,7 @@ var _ = Describe("TickerManager", func() {
 			ticker    = "SPLIT"
 			stockData tax.StockData
 			from, to  time.Time
-			splits    []tax.YahooSplit
+			splits    []tax.SplitInfo
 			getErr    common.HttpError
 		)
 
@@ -563,7 +563,7 @@ var _ = Describe("TickerManager", func() {
 				Prices: map[string]float64{
 					"2024-01-10": 100.00,
 				},
-				Splits: []tax.YahooSplit{
+				Splits: []tax.SplitInfo{
 					{Date: 1705276800, Numerator: 2, Denominator: 1}, // 2024-01-15
 					{Date: 1709251200, Numerator: 3, Denominator: 1}, // 2024-03-01
 					{Date: 1714521600, Numerator: 1, Denominator: 4}, // 2024-05-01 (reverse)
@@ -599,7 +599,7 @@ var _ = Describe("TickerManager", func() {
 			BeforeEach(func() {
 				stockData = tax.StockData{
 					Prices: map[string]float64{"2024-01-10": 100.00},
-					Splits: []tax.YahooSplit{},
+					Splits: []tax.SplitInfo{},
 				}
 				filePath := filepath.Join(testDir, ticker+".json")
 				data, err := json.Marshal(stockData)
@@ -632,7 +632,7 @@ var _ = Describe("TickerManager", func() {
 			BeforeEach(func() {
 				stockData = tax.StockData{
 					Prices: map[string]float64{"2024-01-10": 100.00},
-					Splits: []tax.YahooSplit{
+					Splits: []tax.SplitInfo{
 						{Date: 1705276800, Numerator: 0, Denominator: 1}, // zero numerator
 					},
 				}
@@ -654,7 +654,7 @@ var _ = Describe("TickerManager", func() {
 
 		Context("defensive copy behavior", func() {
 			var (
-				secondSplits []tax.YahooSplit
+				secondSplits []tax.SplitInfo
 				secondErr    common.HttpError
 			)
 
@@ -669,7 +669,7 @@ var _ = Describe("TickerManager", func() {
 
 				// Mutate first-call result to test defensive copy independence
 				if len(splits) > 0 {
-					splits[0] = tax.YahooSplit{}
+					splits[0] = tax.SplitInfo{}
 				}
 			})
 
@@ -722,7 +722,7 @@ var _ = Describe("TickerManager", func() {
 			BeforeEach(func() {
 				stockData = tax.StockData{
 					Prices: map[string]float64{"2024-01-10": 100.00},
-					Splits: []tax.YahooSplit{
+					Splits: []tax.SplitInfo{
 						{Date: 1714521600, Numerator: 1, Denominator: 4}, // 2024-05-01 (reverse)
 						{Date: 1705276800, Numerator: 2, Denominator: 1}, // 2024-01-15
 						{Date: 1709251200, Numerator: 3, Denominator: 1}, // 2024-03-01
@@ -750,7 +750,7 @@ var _ = Describe("TickerManager", func() {
 			BeforeEach(func() {
 				stockData = tax.StockData{
 					Prices: map[string]float64{"2024-01-10": 100.00},
-					Splits: []tax.YahooSplit{
+					Splits: []tax.SplitInfo{
 						{Date: 1705276800, Numerator: 2, Denominator: 1}, // 2024-01-15 00:00 UTC
 						{Date: 1709251300, Numerator: 3, Denominator: 1}, // 2024-03-01 00:01:40 UTC
 					},

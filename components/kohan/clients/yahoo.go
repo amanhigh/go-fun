@@ -112,18 +112,18 @@ func (y *YahooClient) extractPrices(response *tax.YahooChartResponse, ticker str
 
 // extractSplits parses Yahoo's nested events.splits map into a chronologically ordered slice.
 // Returns a non-nil empty slice when no split events exist.
-func (y *YahooClient) extractSplits(response *tax.YahooChartResponse) []tax.YahooSplit {
+func (y *YahooClient) extractSplits(response *tax.YahooChartResponse) []tax.SplitInfo {
 	if len(response.Chart.Result) == 0 {
-		return []tax.YahooSplit{}
+		return []tax.SplitInfo{}
 	}
 
 	result := response.Chart.Result[0]
 	splitsMap := result.Events.Splits
 	if splitsMap == nil {
-		return []tax.YahooSplit{}
+		return []tax.SplitInfo{}
 	}
 
-	splits := make([]tax.YahooSplit, 0, len(splitsMap))
+	splits := make([]tax.SplitInfo, 0, len(splitsMap))
 	for _, split := range splitsMap {
 		splits = append(splits, split)
 	}

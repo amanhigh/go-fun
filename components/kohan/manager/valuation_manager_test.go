@@ -33,7 +33,7 @@ var assertValuationPositions = func(valuation tax.Valuation, expectedFirst tax.P
 }
 
 // Helper for precise GetSplits expectations with concrete ticker, Jan 1–Dec 31 UTC, and .Once()
-var expectGetSplits = func(mgr *mocks.TickerManager, ctx context.Context, ticker string, year int, splits []tax.YahooSplit) {
+var expectGetSplits = func(mgr *mocks.TickerManager, ctx context.Context, ticker string, year int, splits []tax.SplitInfo) {
 	mgr.EXPECT().
 		GetSplits(ctx, ticker,
 			time.Date(year, 1, 1, 0, 0, 0, 0, time.UTC),
@@ -81,7 +81,7 @@ var _ = Describe("ValuationManager", func() {
 					GetRecord(ctx, AAPL, year-1).
 					Return(tax.Account{}, common.ErrNotFound)
 				// All Fresh Start children use AAPL/year — exact empty-split expectation
-				expectGetSplits(mockTickerManager, ctx, AAPL, year, []tax.YahooSplit{})
+				expectGetSplits(mockTickerManager, ctx, AAPL, year, []tax.SplitInfo{})
 			})
 
 			Context("Basic Position Tracking", func() {
@@ -861,7 +861,7 @@ var _ = Describe("ValuationManager", func() {
 				mockAccountManager.EXPECT().
 					GetRecord(ctx, AAPL, year-1).
 					Return(tax.Account{}, common.ErrNotFound) // Fresh start
-				expectGetSplits(mockTickerManager, ctx, AAPL, year, []tax.YahooSplit{})
+				expectGetSplits(mockTickerManager, ctx, AAPL, year, []tax.SplitInfo{})
 
 				mockTickerManager.EXPECT().
 					GetDailyPrices(ctx, AAPL, year).
@@ -946,7 +946,7 @@ var _ = Describe("ValuationManager", func() {
 					mockAccountManager.EXPECT().
 						GetRecord(ctx, AAPL, year-1).
 						Return(tax.Account{}, common.ErrNotFound)
-					expectGetSplits(mockTickerManager, ctx, AAPL, year, []tax.YahooSplit{})
+					expectGetSplits(mockTickerManager, ctx, AAPL, year, []tax.SplitInfo{})
 					mockTickerManager.EXPECT().
 						GetDailyPrices(ctx, AAPL, year).
 						Return(aaplDailyPrices, nil)
@@ -1049,7 +1049,7 @@ var _ = Describe("ValuationManager", func() {
 						Return(tax.Account{}, common.ErrNotFound)
 
 					// GetSplits inclusive Jan 1–Dec 31 once per ticker
-					expectGetSplits(mockTickerManager, ctx, vo, testYear, []tax.YahooSplit{})
+					expectGetSplits(mockTickerManager, ctx, vo, testYear, []tax.SplitInfo{})
 
 					mockTickerManager.EXPECT().
 						GetDailyPrices(ctx, vo, testYear).
@@ -1096,7 +1096,7 @@ var _ = Describe("ValuationManager", func() {
 						Return(carryOverAccount, nil)
 
 					// Returns a 4:1 Yahoo split event on 2026-04-21
-					expectGetSplits(mockTickerManager, ctx, vo, testYear, []tax.YahooSplit{
+					expectGetSplits(mockTickerManager, ctx, vo, testYear, []tax.SplitInfo{
 						{
 							Date:        time.Date(2026, 4, 21, 0, 0, 0, 0, time.UTC).Unix(),
 							Numerator:   4,
@@ -1168,7 +1168,7 @@ var _ = Describe("ValuationManager", func() {
 						Return(carryOverAccount, nil)
 
 					// Same 4:1 split event as Contract 2
-					expectGetSplits(mockTickerManager, ctx, vo, testYear, []tax.YahooSplit{
+					expectGetSplits(mockTickerManager, ctx, vo, testYear, []tax.SplitInfo{
 						{
 							Date:        time.Date(2026, 4, 21, 0, 0, 0, 0, time.UTC).Unix(),
 							Numerator:   4,
@@ -1262,7 +1262,7 @@ var _ = Describe("ValuationManager", func() {
 
 			// Mock dependencies needed by AnalyzeValuation for AAPL
 			mockAccountManager.EXPECT().GetRecord(ctx, AAPL, year-1).Return(tax.Account{}, common.ErrNotFound).Once() // Fresh start for AAPL
-			expectGetSplits(mockTickerManager, ctx, AAPL, year, []tax.YahooSplit{})
+			expectGetSplits(mockTickerManager, ctx, AAPL, year, []tax.SplitInfo{})
 			mockTickerManager.EXPECT().GetDailyPrices(ctx, AAPL, year).Return(aaplDailyPrices, nil).Once()
 			mockTickerManager.EXPECT().GetPrice(ctx, AAPL, yearEndDate).Return(150.0, nil).Once() // AAPL year end price
 
@@ -1275,7 +1275,7 @@ var _ = Describe("ValuationManager", func() {
 				OriginQty:   10,
 				OriginPrice: 180.0,
 			}, nil).Once()
-			expectGetSplits(mockTickerManager, ctx, "MSFT", year, []tax.YahooSplit{})
+			expectGetSplits(mockTickerManager, ctx, "MSFT", year, []tax.SplitInfo{})
 			mockTickerManager.EXPECT().GetDailyPrices(ctx, "MSFT", year).Return(msftDailyPrices, nil).Once()
 			mockTickerManager.EXPECT().GetPrice(ctx, "MSFT", yearEndDate).Return(210.0, nil).Once() // MSFT year end price
 
@@ -1381,7 +1381,7 @@ var _ = Describe("ValuationManager", func() {
 
 			// Mock dependencies for AAPL (price fetch fails)
 			mockAccountManager.EXPECT().GetRecord(ctx, AAPL, year-1).Return(tax.Account{}, common.ErrNotFound).Once()
-			expectGetSplits(mockTickerManager, ctx, AAPL, year, []tax.YahooSplit{})
+			expectGetSplits(mockTickerManager, ctx, AAPL, year, []tax.SplitInfo{})
 			mockTickerManager.EXPECT().GetDailyPrices(ctx, AAPL, year).Return(aaplDailyPrices, nil).Once()
 			mockSBIManager.EXPECT().GetDailyRates(ctx, year).Return(mergedDailyRates, nil).Once() // Called once for AAPL
 			expectedErr := common.NewServerError(errors.New("price fetch failed"))
@@ -1453,13 +1453,13 @@ var _ = Describe("ValuationManager", func() {
 
 				// Mock: AAPL dependencies (fresh start in current year)
 				mockAccountManager.EXPECT().GetRecord(ctx, tickerWithTrades, year-1).Return(tax.Account{}, common.ErrNotFound).Once()
-				expectGetSplits(mockTickerManager, ctx, tickerWithTrades, year, []tax.YahooSplit{})
+				expectGetSplits(mockTickerManager, ctx, tickerWithTrades, year, []tax.SplitInfo{})
 				mockTickerManager.EXPECT().GetDailyPrices(ctx, tickerWithTrades, year).Return(aaplDailyPrices, nil).Once()
 				mockTickerManager.EXPECT().GetPrice(ctx, tickerWithTrades, yearEndDate).Return(160.0, nil).Once()
 
 				// Mock: MSFT dependencies (carry-over, no trades)
 				mockAccountManager.EXPECT().GetRecord(ctx, tickerWithoutTrades, year-1).Return(prevYearAccount, nil).Once()
-				expectGetSplits(mockTickerManager, ctx, tickerWithoutTrades, year, []tax.YahooSplit{})
+				expectGetSplits(mockTickerManager, ctx, tickerWithoutTrades, year, []tax.SplitInfo{})
 				mockTickerManager.EXPECT().GetDailyPrices(ctx, tickerWithoutTrades, year).Return(msftDailyPrices, nil).Once()
 				mockTickerManager.EXPECT().GetPrice(ctx, tickerWithoutTrades, yearEndDate).Return(210.0, nil).Once()
 
@@ -1593,7 +1593,7 @@ var _ = Describe("ValuationManager", func() {
 				mockAccountManager.EXPECT().
 					GetRecord(ctx, AAPL, testYear-1).
 					Return(carryOverAccount, nil).Once()
-				expectGetSplits(mockTickerManager, ctx, AAPL, testYear, []tax.YahooSplit{})
+				expectGetSplits(mockTickerManager, ctx, AAPL, testYear, []tax.SplitInfo{})
 
 				mockTickerManager.EXPECT().
 					GetDailyPrices(ctx, AAPL, testYear).
@@ -1671,7 +1671,7 @@ var _ = Describe("ValuationManager", func() {
 				mockAccountManager.EXPECT().
 					GetRecord(ctx, AAPL, testYear-1).
 					Return(carryOverAccount, nil).Once()
-				expectGetSplits(mockTickerManager, ctx, AAPL, testYear, []tax.YahooSplit{})
+				expectGetSplits(mockTickerManager, ctx, AAPL, testYear, []tax.SplitInfo{})
 
 				mockTickerManager.EXPECT().
 					GetDailyPrices(ctx, AAPL, testYear).
@@ -1757,7 +1757,7 @@ var _ = Describe("ValuationManager", func() {
 				mockAccountManager.EXPECT().
 					GetRecord(ctx, AAPL, testYear-1).
 					Return(carryOverAccount, nil).Once()
-				expectGetSplits(mockTickerManager, ctx, AAPL, testYear, []tax.YahooSplit{})
+				expectGetSplits(mockTickerManager, ctx, AAPL, testYear, []tax.SplitInfo{})
 
 				mockTickerManager.EXPECT().
 					GetDailyPrices(ctx, AAPL, testYear).
@@ -1845,7 +1845,7 @@ var _ = Describe("ValuationManager", func() {
 				mockAccountManager.EXPECT().
 					GetRecord(ctx, MSFT, testYear-1).
 					Return(carryOverAccount, nil).Once()
-				expectGetSplits(mockTickerManager, ctx, MSFT, testYear, []tax.YahooSplit{})
+				expectGetSplits(mockTickerManager, ctx, MSFT, testYear, []tax.SplitInfo{})
 
 				mockTickerManager.EXPECT().
 					GetDailyPrices(ctx, MSFT, testYear).
@@ -1947,7 +1947,7 @@ var _ = Describe("ValuationManager", func() {
 				}
 
 				mockAccountManager.EXPECT().GetRecord(ctx, AAPL, testYear-1).Return(carryOverAccount, nil).Once()
-				expectGetSplits(mockTickerManager, ctx, AAPL, testYear, []tax.YahooSplit{})
+				expectGetSplits(mockTickerManager, ctx, AAPL, testYear, []tax.SplitInfo{})
 				mockTickerManager.EXPECT().GetDailyPrices(ctx, AAPL, testYear).Return(aaplDailyPrices, nil).Once()
 				mockSBIManager.EXPECT().GetDailyRates(ctx, testYear).Return(aaplDailyRates, nil).Once()
 				mockTickerManager.EXPECT().GetPrice(ctx, AAPL, yearEndDate).Return(yearEndPrice, nil).Once()

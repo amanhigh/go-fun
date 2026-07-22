@@ -5,5 +5,5 @@ package tax
 // This is the minimal format required for all tax calculations
 type StockData struct {
 	Prices map[string]float64 `json:"prices"` // Date (YYYY-MM-DD) -> Closing Price
-	Splits []YahooSplit       `json:"splits"` // Chronologically ordered stock split events
+	Splits []SplitInfo        `json:"splits"` // Chronologically ordered stock split events
 }

@@ -36,7 +36,7 @@ type TickerManager interface {
 
 	// GetSplits returns split events within the given date range (inclusive).
 	// Returns chronologically ordered defensive copy and non-nil empty slice.
-	GetSplits(ctx context.Context, ticker string, from, to time.Time) ([]tax.YahooSplit, common.HttpError)
+	GetSplits(ctx context.Context, ticker string, from, to time.Time) ([]tax.SplitInfo, common.HttpError)
 }
 
 type TickerManagerImpl struct {
@@ -116,7 +116,7 @@ func (t *TickerManagerImpl) GetPrice(ctx context.Context, ticker string, date ti
 // adjustPriceForSplits returns the historical date's price expressed on the historical date's share basis
 // by multiplying the raw cached price by cumulative split ratios
 // for all split events on strictly later calendar dates.
-func (t *TickerManagerImpl) adjustPriceForSplits(price float64, date time.Time, splits []tax.YahooSplit, ticker string) (float64, common.HttpError) {
+func (t *TickerManagerImpl) adjustPriceForSplits(price float64, date time.Time, splits []tax.SplitInfo, ticker string) (float64, common.HttpError) {
 	if vErr := validateSplits(splits, ticker); vErr != nil {
 		return 0, vErr
 	}
@@ -205,7 +205,7 @@ func (t *TickerManagerImpl) saveTickerData(data tax.StockData, ticker string) co
 
 // GetSplits returns split events within the given date range (inclusive).
 // Returns chronologically ordered defensive copy and non-nil empty slice.
-func (t *TickerManagerImpl) GetSplits(ctx context.Context, ticker string, from, to time.Time) ([]tax.YahooSplit, common.HttpError) {
+func (t *TickerManagerImpl) GetSplits(ctx context.Context, ticker string, from, to time.Time) ([]tax.SplitInfo, common.HttpError) {
 	if from.After(to) {
 		return nil, common.NewHttpError("from date must be before or equal to to date", http.StatusBadRequest)
 	}
@@ -222,7 +222,7 @@ func (t *TickerManagerImpl) GetSplits(ctx context.Context, ticker string, from, 
 	fromDay := from.UTC().Truncate(24 * time.Hour).Unix() //nolint:mnd
 	toDay := to.UTC().Truncate(24 * time.Hour).Unix()     //nolint:mnd
 
-	result := make([]tax.YahooSplit, 0)
+	result := make([]tax.SplitInfo, 0)
 	for _, split := range data.Splits {
 		splitDay := split.EffectiveDate().Unix()
 		if splitDay >= fromDay && splitDay <= toDay {

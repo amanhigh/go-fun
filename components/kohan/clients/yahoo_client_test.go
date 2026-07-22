@@ -438,7 +438,7 @@ var _ = Describe("YahooClient", func() {
 
 			Context("ISIN resolves to FISV equity candidate", func() {
 				BeforeEach(func() {
-					query = "US...FISV"
+					query = "US3377381088"
 					responseBody := `{
 						"quotes": [
 							{

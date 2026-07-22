@@ -150,7 +150,7 @@ func (s *SplitManagerImpl) normalizeTickerTrades(ctx context.Context, ticker str
 // USDValue, Commission, Symbol, Date and Type are preserved from the
 // original.  refDay must be the pre-parsed calendar-day time.Time of
 // the trade's date (caller validates the date before calling this).
-func (s *SplitManagerImpl) applySplitsToTrade(trade tax.Trade, splits []tax.YahooSplit, refDay time.Time) tax.Trade {
+func (s *SplitManagerImpl) applySplitsToTrade(trade tax.Trade, splits []tax.SplitInfo, refDay time.Time) tax.Trade {
 	factor := cumulativeSplitFactor(splits, refDay)
 
 	if factor == 1 {
@@ -177,9 +177,9 @@ func (s *SplitManagerImpl) applySplitsToTrade(trade tax.Trade, splits []tax.Yaho
 // Helpers
 // ---------------------------------------------------------------------------
 
-// validateSplits validates every YahooSplit event in the slice for the given
+// validateSplits validates every SplitInfo event in the slice for the given
 // ticker. Returns the first validation error, or nil if all splits are valid.
-func validateSplits(splits []tax.YahooSplit, ticker string) common.HttpError {
+func validateSplits(splits []tax.SplitInfo, ticker string) common.HttpError {
 	for _, split := range splits {
 		if vErr := split.Validate(ticker); vErr != nil {
 			return vErr
@@ -191,7 +191,7 @@ func validateSplits(splits []tax.YahooSplit, ticker string) common.HttpError {
 // cumulativeSplitFactor returns the product of all split ratios for events
 // whose UTC calendar date is strictly later than refDay. The reference day
 // is normalized to UTC midnight before comparison.
-func cumulativeSplitFactor(splits []tax.YahooSplit, refDay time.Time) float64 {
+func cumulativeSplitFactor(splits []tax.SplitInfo, refDay time.Time) float64 {
 	normalizedDay := refDay.UTC().Truncate(24 * time.Hour) //nolint:mnd
 	factor := 1.0
 	for _, split := range splits {

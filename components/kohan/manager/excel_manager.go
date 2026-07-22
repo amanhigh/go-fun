@@ -85,6 +85,7 @@ func (e *ExcelManagerImpl) GenerateTaxSummaryExcel(ctx context.Context, year int
 	return
 }
 
+// FIXME: Add a Security Info sheet to the final workbook with resolved security metadata.
 // FIXME: Apply a default sort (e.g., by date/symbol) to each slice before writing its sheet so row order is deterministic.
 func (e *ExcelManagerImpl) writeSheets(ctx context.Context, f *excelize.File, summary tax.Summary) (err error) {
 	if err = e.writeGainsSheet(ctx, f, summary.INRGains); err != nil {
