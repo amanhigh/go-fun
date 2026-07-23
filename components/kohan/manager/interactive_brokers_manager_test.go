@@ -232,6 +232,8 @@ Trades,SubTotal,,Stocks,USD,MPC,,0,,,-74.88,-0.74443794,0.00000125,-75.624437,
 Trades,Total,,Stocks,USD,,,,,,-129.958,-2.097372693,0.000001215,-132.055372,
 Dividends,Header,Currency,Date,Description,Amount
 Dividends,Data,USD,2024-12-10,MPC(US56585A1025) Cash Dividend,7.28
+Withholding Tax,Header,Currency,Date,Description,Amount,Code
+Withholding Tax,Data,USD,2024-12-10,MPC(US56585A1025) Cash Dividend - US Tax,-1.82,
 Dividends,Data,Total,,,7.28`
 
 				err := os.WriteFile(sampleCSVPath, []byte(csvContent), 0600)
@@ -273,6 +275,37 @@ Interest,Header,Currency,Date,Description,Amount`
 				Expect(info.Trades).To(BeEmpty())
 				Expect(info.Dividends).To(BeEmpty())
 				Expect(info.Interests).To(BeEmpty())
+			})
+		})
+
+		Context("when CSV has malformed dividend rows", func() {
+			var info tax.BrokerageInfo
+
+			BeforeEach(func() {
+				csvContent := `Statement,Data,Period,"January 1, 2024 - December 31, 2024"
+Dividends,Header,Currency,Date,Description,Amount
+Dividends,Data,USD,2024-12-10,MPC(US56585A1025) Cash Dividend USD 0.91 per Share (Ordinary Dividend),7.28
+Dividends,Data,USD,2024-12-11,UnparseableDescription,1.00
+Dividends,Data,USD,2024-12-12,INVALID(US123),NOT_A_NUMBER
+Withholding Tax,Header,Currency,Date,Description,Amount,Code
+Withholding Tax,Data,USD,2024-12-10,MPC(US56585A1025) Cash Dividend USD 0.91 per Share - US Tax,-1.82,`
+
+				err := os.WriteFile(sampleCSVPath, []byte(csvContent), 0600)
+				Expect(err).ToNot(HaveOccurred())
+
+				ibManager = manager.NewInteractiveBrokersManagerImpl(basePath)
+				var parseErr error
+				info, parseErr = ibManager.Parse(testYear)
+				Expect(parseErr).ToNot(HaveOccurred())
+			})
+
+			It("should skip them and only parse valid dividend rows", func() {
+				Expect(info.Dividends).To(HaveLen(1))
+				Expect(info.Dividends[0].Symbol).To(Equal("MPC"))
+				Expect(info.Dividends[0].Date).To(Equal("2024-12-10"))
+				Expect(info.Dividends[0].Amount).To(Equal(7.28))
+				Expect(info.Dividends[0].Tax).To(Equal(1.82))
+				Expect(info.Dividends[0].Net).To(Equal(5.46))
 			})
 		})
 	})

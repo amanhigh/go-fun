@@ -3,6 +3,7 @@ package manager
 import (
 	"context"
 	"encoding/csv"
+	"errors"
 	"fmt"
 	"math"
 	"os"
@@ -195,7 +196,10 @@ func (m *InteractiveBrokersManagerImpl) parseRecords(records [][]string) (tax.Br
 
 	interests := m.parseInterest(records)
 	trades := m.parseTrades(records)
-	dividends := m.parseDividends(records)
+	dividends, err := m.parseDividends(records)
+	if err != nil {
+		return tax.BrokerageInfo{}, err
+	}
 
 	return tax.BrokerageInfo{
 		CoverageThrough: periodEnd,
@@ -338,7 +342,19 @@ func (m *InteractiveBrokersManagerImpl) parseTradeRecord(record []string) (tax.T
 	}, nil
 }
 
-func (m *InteractiveBrokersManagerImpl) parseDividends(records [][]string) []tax.Dividend {
+// missingWithholdingTaxError is a private typed error for missing withholding tax
+// on a dividend row. parseDividends treats this as a fatal atomic error that stops
+// parsing, while other parse errors (empty symbol, invalid amount) are skipped.
+type missingWithholdingTaxError struct {
+	symbol string
+	date   string
+}
+
+func (e *missingWithholdingTaxError) Error() string {
+	return fmt.Sprintf("no matching withholding tax for %s on %s", e.symbol, e.date)
+}
+
+func (m *InteractiveBrokersManagerImpl) parseDividends(records [][]string) ([]tax.Dividend, error) {
 	taxMap := m.buildTaxMap(records)
 
 	var dividends []tax.Dividend
@@ -348,15 +364,24 @@ func (m *InteractiveBrokersManagerImpl) parseDividends(records [][]string) []tax
 			continue
 		}
 
+		// Skip summary rows (SubTotal/Total) that have Data type but an empty date field.
+		if record[3] == "" {
+			continue
+		}
+
 		dividend, err := m.parseDividendRecord(record, taxMap)
 		if err != nil {
+			var missingTaxErr *missingWithholdingTaxError
+			if errors.As(err, &missingTaxErr) {
+				return nil, err
+			}
 			continue
 		}
 
 		dividends = append(dividends, dividend)
 	}
 
-	return dividends
+	return dividends, nil
 }
 
 func (m *InteractiveBrokersManagerImpl) isValidDividendRecord(record []string) bool {
@@ -383,8 +408,9 @@ func (m *InteractiveBrokersManagerImpl) parseDividendRecord(record []string, tax
 		Amount: amount,
 	}
 
-	// FIXME: Decide whether an IBKR dividend without matching withholding tax should fail parsing instead of defaulting tax to zero.
-	MatchDividendWithTax(dividend, taxMap)
+	if !MatchDividendWithTax(dividend, taxMap) {
+		return tax.Dividend{}, &missingWithholdingTaxError{symbol: symbol, date: date}
+	}
 
 	return *dividend, nil
 }
