@@ -203,8 +203,6 @@ Trades,Data,Order,Stocks,USD,INVALID,,BADQTY,1,1,0,0,0,0,O`
 
 	Context("with edge case CSV data", func() {
 		Context("when dividend has no matching tax", func() {
-			var info tax.BrokerageInfo
-
 			BeforeEach(func() {
 				csvContent := `Statement,Data,Period,"January 1, 2024 - December 31, 2024"
 Dividends,Header,Currency,Date,Description,Amount
@@ -215,15 +213,11 @@ Dividends,Data,USD,2024-12-10,MPC(US56585A1025) Cash Dividend USD 0.91 per Share
 
 				// Use basePath so Parse(year) resolves basePath_YYYY.csv
 				ibManager = manager.NewInteractiveBrokersManagerImpl(basePath)
-				var parseErr error
-				info, parseErr = ibManager.Parse(testYear)
-				Expect(parseErr).ToNot(HaveOccurred())
 			})
 
-			It("should set tax to 0", func() {
-				Expect(info.Dividends).To(HaveLen(1))
-				Expect(info.Dividends[0].Tax).To(Equal(0.0))
-				Expect(info.Dividends[0].Net).To(Equal(7.28))
+			It("should return a parse error with symbol and date", func() {
+				_, err := ibManager.Parse(testYear)
+				Expect(err).To(MatchError("no matching withholding tax for MPC on 2024-12-10"))
 			})
 		})
 
@@ -349,6 +343,41 @@ Interest,Data,USD,2025-01-05,USD Credit Interest for Dec-2024,1.75`)
 
 		It("should set CoverageThrough to the latest period end", func() {
 			Expect(info.CoverageThrough).To(Equal(time.Date(2025, 12, 31, 0, 0, 0, 0, time.UTC)))
+		})
+	})
+
+	Context("multi-file atomicity: unmatched dividend in later file discards prior results", func() {
+		writeCSV := func(year int, content string) {
+			err := os.WriteFile(
+				fmt.Sprintf("%s_%d.csv", basePath, year),
+				[]byte(content), 0600)
+			Expect(err).ToNot(HaveOccurred())
+		}
+
+		BeforeEach(func() {
+			// File 1 (2024): Valid file with MPC dividend and matching withholding
+			writeCSV(2024, `Statement,Data,Period,"January 1, 2024 - December 31, 2024"
+Trades,Header,DataDiscriminator,Asset Category,Currency,Symbol,Date/Time,Quantity,T. Price,C. Price,Proceeds,Comm/Fee,Basis,Realized P/L,Code
+Trades,Data,Order,Stocks,USD,AAPL,"2024-10-31, 09:30:00",8,146.21,146.20,-1169.68,-0.36024125,1170.04024125,0,O
+Dividends,Header,Currency,Date,Description,Amount
+Dividends,Data,USD,2024-12-10,MPC(US56585A1025) Cash Dividend USD 0.91 per Share (Ordinary Dividend),7.28
+Withholding Tax,Header,Currency,Date,Description,Amount,Code
+Withholding Tax,Data,USD,2024-12-10,MPC(US56585A1025) Cash Dividend USD 0.91 per Share - US Tax,-1.82,
+Interest,Header,Currency,Date,Description,Amount
+Interest,Data,USD,2024-12-15,USD Credit Interest for Nov-2024,2.50`)
+
+			// File 2 (2025): Valid statement but dividend with no matching withholding tax
+			writeCSV(2025, `Statement,Data,Period,"January 1, 2025 - December 31, 2025"
+Dividends,Header,Currency,Date,Description,Amount
+Dividends,Data,USD,2025-06-15,MSFT(US5949181045) Cash Dividend,12.34`)
+
+			ibManager = manager.NewInteractiveBrokersManagerImpl(basePath)
+		})
+
+		It("should return error and empty BrokerageInfo, discarding prior file results", func() {
+			info, err := ibManager.Parse(2024)
+			Expect(err).To(MatchError("no matching withholding tax for MSFT on 2025-06-15"))
+			Expect(info).To(Equal(tax.BrokerageInfo{}))
 		})
 	})
 
