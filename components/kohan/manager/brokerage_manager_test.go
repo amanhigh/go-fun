@@ -5,6 +5,7 @@ import (
 	"net/http"
 	"os"
 	"path/filepath"
+	"time"
 
 	"github.com/amanhigh/go-fun/components/kohan/manager"
 	"github.com/amanhigh/go-fun/components/kohan/manager/mocks"
@@ -18,6 +19,8 @@ import (
 )
 
 const testYear = 2024
+
+var cutoffDate = time.Date(2025, tax.COVERAGE_CUTOFF_MONTH, tax.COVERAGE_CUTOFF_DAY, 0, 0, 0, 0, time.UTC)
 
 func mockError(message string) common.HttpError {
 	return common.NewHttpError(message, http.StatusBadRequest)
@@ -54,7 +57,7 @@ var _ = Describe("BrokerageManager", func() {
 		mockDWBroker.EXPECT().GetName().Return("DriveWealth").Maybe()
 		mockIBBroker.EXPECT().GetName().Return("InteractiveBrokers").Maybe()
 
-		emptyInfo = tax.BrokerageInfo{}
+		emptyInfo = tax.BrokerageInfo{CoverageThrough: cutoffDate}
 
 		brokerageManager = manager.NewBrokerageManager(mockDWBroker, mockIBBroker, mockGainsManager, taxConfig)
 	})
@@ -68,6 +71,7 @@ var _ = Describe("BrokerageManager", func() {
 		Context("with both DriveWealth and IB returning data", func() {
 			BeforeEach(func() {
 				dwInfo := tax.BrokerageInfo{
+					CoverageThrough: cutoffDate,
 					Interests: []tax.Interest{
 						{Symbol: "CASH", Date: "2024-01-15", Amount: 10.50, Tax: 0, Net: 10.50},
 					},
@@ -80,6 +84,7 @@ var _ = Describe("BrokerageManager", func() {
 				}
 
 				ibInfo := tax.BrokerageInfo{
+					CoverageThrough: cutoffDate,
 					Interests: []tax.Interest{
 						{Symbol: "CASH", Date: "2024-02-15", Amount: 5.25, Tax: 0, Net: 5.25},
 					},
@@ -132,9 +137,10 @@ var _ = Describe("BrokerageManager", func() {
 			})
 		})
 
-		Context("with one broker failing and one succeeding", func() {
+		Context("with one broker failing to parse", func() {
 			BeforeEach(func() {
 				dwInfo := tax.BrokerageInfo{
+					CoverageThrough: cutoffDate,
 					Trades: []tax.Trade{
 						{Symbol: "AAPL", Date: "2024-01-10", Type: "BUY", Quantity: 10, USDPrice: 150.0, USDValue: 1500, Commission: 1.0},
 					},
@@ -142,31 +148,14 @@ var _ = Describe("BrokerageManager", func() {
 
 				mockDWBroker.EXPECT().Parse(2024).Return(dwInfo, nil)
 				mockIBBroker.EXPECT().Parse(2024).Return(emptyInfo, mockError("file not found"))
-
-				expectedGains := []tax.Gains{}
-				mockGainsManager.EXPECT().ComputeGainsFromTrades(ctx, dwInfo.Trades).Return(expectedGains, nil)
-
-				err := brokerageManager.ParseAndGenerate(ctx, 2024)
-				Expect(err).ToNot(HaveOccurred())
+				// Gains computation not expected — operation must fail before that point
 			})
 
-			It("should only use data from successful broker", func() {
-				data, err := os.ReadFile(taxConfig.TradesPath)
-				Expect(err).ToNot(HaveOccurred())
-				Expect(string(data)).To(ContainSubstring("AAPL,2024-01-10,BUY"))
-			})
-		})
-
-		Context("with all brokers failing", func() {
-			BeforeEach(func() {
-				mockDWBroker.EXPECT().Parse(2024).Return(emptyInfo, mockError("file not found"))
-				mockIBBroker.EXPECT().Parse(2024).Return(emptyInfo, mockError("file not found"))
-			})
-
-			It("should return error for no data", func() {
+			It("should return parse error for failing broker before writing any files", func() {
 				err := brokerageManager.ParseAndGenerate(ctx, testYear)
 				Expect(err).To(HaveOccurred())
-				Expect(err.Error()).To(ContainSubstring("no data found"))
+				Expect(err.Error()).To(ContainSubstring("InteractiveBrokers"))
+				Expect(err.Error()).To(ContainSubstring("parse failed"))
 			})
 		})
 
@@ -186,6 +175,7 @@ var _ = Describe("BrokerageManager", func() {
 		Context("when gains computation fails", func() {
 			BeforeEach(func() {
 				dwInfo := tax.BrokerageInfo{
+					CoverageThrough: cutoffDate,
 					Trades: []tax.Trade{
 						{Symbol: "AAPL", Date: "2024-01-10", Type: "SELL", Quantity: 10, USDPrice: 150.0, USDValue: 1500, Commission: 1.0},
 					},
@@ -201,6 +191,36 @@ var _ = Describe("BrokerageManager", func() {
 				Expect(err).To(HaveOccurred())
 			})
 		})
+
+		Context("with one broker coverage before cutoff", func() {
+			BeforeEach(func() {
+				earlyInfo := tax.BrokerageInfo{
+					CoverageThrough: time.Date(2025, time.January, 15, 0, 0, 0, 0, time.UTC),
+					Trades: []tax.Trade{
+						{Symbol: "AAPL", Date: "2024-01-10", Type: "SELL", Quantity: 10, USDPrice: 150.0, USDValue: 1500, Commission: 1.0},
+					},
+				}
+
+				mockDWBroker.EXPECT().Parse(2024).Return(emptyInfo, nil)
+				mockIBBroker.EXPECT().Parse(2024).Return(earlyInfo, nil)
+				// No gains manager expectation — must fail before computation
+			})
+
+			It("should return coverage error with broker name, actual coverage, and required date", func() {
+				err := brokerageManager.ParseAndGenerate(ctx, testYear)
+				Expect(err).To(HaveOccurred())
+				Expect(err.Error()).To(ContainSubstring("InteractiveBrokers"))
+				Expect(err.Error()).To(ContainSubstring("2025-01-15"))
+				Expect(err.Error()).To(ContainSubstring("2025-03-31"))
+
+				// Assert no output files were created — validation occurs before writing
+				Expect(taxConfig.TradesPath).ToNot(BeAnExistingFile())
+				Expect(taxConfig.DividendFilePath).ToNot(BeAnExistingFile())
+				Expect(taxConfig.InterestFilePath).ToNot(BeAnExistingFile())
+				Expect(taxConfig.GainsFilePath).ToNot(BeAnExistingFile())
+			})
+		})
+
 	})
 
 	Context("Trade Ordering", func() {
@@ -211,6 +231,7 @@ var _ = Describe("BrokerageManager", func() {
 		BeforeEach(func() {
 			// Trades in wrong order: SELL before BUY on same date
 			unorderedTrades = tax.BrokerageInfo{
+				CoverageThrough: cutoffDate,
 				Trades: []tax.Trade{
 					{Symbol: "AAPL", Date: "2024-08-05", Type: "SELL", Quantity: 6, USDPrice: 209, USDValue: 1254},
 					{Symbol: "AAPL", Date: "2024-08-05", Type: "BUY", Quantity: 6, USDPrice: 199, USDValue: 1194},

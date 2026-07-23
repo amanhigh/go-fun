@@ -36,21 +36,23 @@ type TickerManager interface {
 
 	// GetSplits returns split events within the given date range (inclusive).
 	// Returns chronologically ordered defensive copy and non-nil empty slice.
-	GetSplits(ctx context.Context, ticker string, from, to time.Time) ([]tax.YahooSplit, common.HttpError)
+	GetSplits(ctx context.Context, ticker string, from, to time.Time) ([]tax.SplitInfo, common.HttpError)
 }
 
 type TickerManagerImpl struct {
-	client    clients.StockDataClient
-	downloads string
-	cache     map[string]tax.StockData
-	cacheLock sync.RWMutex
+	client             clients.SecurityClient
+	securityIDProvider SecurityIDProvider
+	downloads          string
+	cache              map[string]tax.StockData
+	cacheLock          sync.RWMutex
 }
 
-func NewTickerManager(client clients.StockDataClient, downloads string) *TickerManagerImpl {
+func NewTickerManager(client clients.SecurityClient, securityIDProvider SecurityIDProvider, downloads string) *TickerManagerImpl {
 	return &TickerManagerImpl{
-		client:    client,
-		downloads: downloads,
-		cache:     make(map[string]tax.StockData),
+		client:             client,
+		securityIDProvider: securityIDProvider,
+		downloads:          downloads,
+		cache:              make(map[string]tax.StockData),
 	}
 }
 
@@ -69,9 +71,9 @@ func (t *TickerManagerImpl) DownloadTicker(ctx context.Context, ticker string) (
 		return common.NewServerError(err1)
 	}
 
-	// Fetch data using AlphaClient
+	// Fetch data using the private helper (tries direct fetch, then fallback resolution)
 	var data tax.StockData
-	if data, err = t.client.FetchDailyPrices(ctx, ticker); err != nil {
+	if data, err = t.fetchTickerData(ctx, ticker); err != nil {
 		return err
 	}
 
@@ -116,7 +118,7 @@ func (t *TickerManagerImpl) GetPrice(ctx context.Context, ticker string, date ti
 // adjustPriceForSplits returns the historical date's price expressed on the historical date's share basis
 // by multiplying the raw cached price by cumulative split ratios
 // for all split events on strictly later calendar dates.
-func (t *TickerManagerImpl) adjustPriceForSplits(price float64, date time.Time, splits []tax.YahooSplit, ticker string) (float64, common.HttpError) {
+func (t *TickerManagerImpl) adjustPriceForSplits(price float64, date time.Time, splits []tax.SplitInfo, ticker string) (float64, common.HttpError) {
 	if vErr := validateSplits(splits, ticker); vErr != nil {
 		return 0, vErr
 	}
@@ -203,9 +205,42 @@ func (t *TickerManagerImpl) saveTickerData(data tax.StockData, ticker string) co
 	return nil
 }
 
+// fetchTickerData tries the requested ticker first; on failure, resolves via
+// SecurityIDProvider, returns common.ErrNotFound for zero candidates and
+// common.ErrEntityExists for multiple candidates, and retries the sole candidate.
+// Provider/search/retry errors are returned unchanged.
+func (t *TickerManagerImpl) fetchTickerData(ctx context.Context, ticker string) (tax.StockData, common.HttpError) {
+	// Try direct fetch first
+	data, err := t.client.FetchDailyPrices(ctx, ticker)
+	if err == nil {
+		return data, nil
+	}
+
+	// Direct fetch failed — attempt fallback resolution via SecurityIDProvider
+	securityID, secErr := t.securityIDProvider.GetSecurityID(ctx, ticker)
+	if secErr != nil {
+		return tax.StockData{}, secErr
+	}
+
+	candidates, searchErr := t.client.GetSecurityInfo(ctx, securityID)
+	if searchErr != nil {
+		return tax.StockData{}, searchErr
+	}
+
+	if len(candidates) == 0 {
+		return tax.StockData{}, common.ErrNotFound
+	}
+	if len(candidates) > 1 {
+		return tax.StockData{}, common.ErrEntityExists
+	}
+
+	// Exactly one candidate — retry with its symbol (unchanged, no trim/validation)
+	return t.client.FetchDailyPrices(ctx, candidates[0].Symbol)
+}
+
 // GetSplits returns split events within the given date range (inclusive).
 // Returns chronologically ordered defensive copy and non-nil empty slice.
-func (t *TickerManagerImpl) GetSplits(ctx context.Context, ticker string, from, to time.Time) ([]tax.YahooSplit, common.HttpError) {
+func (t *TickerManagerImpl) GetSplits(ctx context.Context, ticker string, from, to time.Time) ([]tax.SplitInfo, common.HttpError) {
 	if from.After(to) {
 		return nil, common.NewHttpError("from date must be before or equal to to date", http.StatusBadRequest)
 	}
@@ -222,7 +257,7 @@ func (t *TickerManagerImpl) GetSplits(ctx context.Context, ticker string, from, 
 	fromDay := from.UTC().Truncate(24 * time.Hour).Unix() //nolint:mnd
 	toDay := to.UTC().Truncate(24 * time.Hour).Unix()     //nolint:mnd
 
-	result := make([]tax.YahooSplit, 0)
+	result := make([]tax.SplitInfo, 0)
 	for _, split := range data.Splits {
 		splitDay := split.EffectiveDate().Unix()
 		if splitDay >= fromDay && splitDay <= toDay {

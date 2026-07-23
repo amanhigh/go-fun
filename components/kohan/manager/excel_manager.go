@@ -2,13 +2,16 @@
 package manager
 
 import (
+	"cmp"
 	"context"
 	"fmt"
 	"os"
 	"path/filepath"
+	"slices"
 	"strings"
 	"time"
 
+	"github.com/amanhigh/go-fun/common/util"
 	"github.com/amanhigh/go-fun/models/tax"
 	"github.com/rs/zerolog/log"
 	"github.com/xuri/excelize/v2"
@@ -39,6 +42,55 @@ func NewExcelManager(outputDir string) ExcelManager {
 	return &ExcelManagerImpl{
 		outputDir: outputDir,
 	}
+}
+
+// sortedCopy returns a defensive clone of s sorted stably by cmpFn.
+// cmpFn must return -1 if a < b, 0 if a == b, +1 if a > b (cmp.Compare convention).
+func sortedCopy[S ~[]E, E any](s S, cmpFn func(a, b E) int) S {
+	result := slices.Clone(s)
+	slices.SortStableFunc(result, cmpFn)
+	return result
+}
+
+// --- Local typed comparators (ExcelManager-private) ---
+
+func compareGainsBySellDateSymbol(a, b tax.INRGains) int {
+	// SellDate descending (newest first), then Symbol ascending
+	if c := cmp.Compare(a.SellDate, b.SellDate); c != 0 {
+		return -c
+	}
+	return cmp.Compare(a.Symbol, b.Symbol)
+}
+
+func compareDividendsByDateSymbol(a, b tax.INRDividend) int {
+	// Date descending (newest first), then Symbol ascending
+	if c := cmp.Compare(a.Date, b.Date); c != 0 {
+		return -c
+	}
+	return cmp.Compare(a.Symbol, b.Symbol)
+}
+
+func compareInterestByDateSymbol(a, b tax.INRInterest) int {
+	// Date descending (newest first), then Symbol ascending
+	if c := cmp.Compare(a.Date, b.Date); c != 0 {
+		return -c
+	}
+	return cmp.Compare(a.Symbol, b.Symbol)
+}
+
+func compareValuationsByTicker(a, b tax.INRValuation) int {
+	return cmp.Compare(a.Ticker, b.Ticker)
+}
+
+func compareTTRatesByActualDate(a, b tax.MonthEndRate) int {
+	// ActualDate descending (newest first)
+	if a.ActualDate.Before(b.ActualDate) {
+		return 1
+	}
+	if a.ActualDate.After(b.ActualDate) {
+		return -1
+	}
+	return 0
 }
 
 // generateYearlyFilePath creates the year-specific filepath for tax summary
@@ -85,25 +137,33 @@ func (e *ExcelManagerImpl) GenerateTaxSummaryExcel(ctx context.Context, year int
 	return
 }
 
+// FIXME: Add a Security Info sheet to the final workbook with resolved security metadata.
 func (e *ExcelManagerImpl) writeSheets(ctx context.Context, f *excelize.File, summary tax.Summary) (err error) {
-	if err = e.writeGainsSheet(ctx, f, summary.INRGains); err != nil {
+	// Defensive sorted copies preserve caller's original slices
+	gains := sortedCopy(summary.INRGains, compareGainsBySellDateSymbol)
+	dividends := sortedCopy(summary.INRDividends, compareDividendsByDateSymbol)
+	valuations := sortedCopy(summary.INRValuations, compareValuationsByTicker)
+	interest := sortedCopy(summary.INRInterest, compareInterestByDateSymbol)
+	rates := sortedCopy(summary.TTMonthEndRates, compareTTRatesByActualDate)
+
+	if err = e.writeGainsSheet(ctx, f, gains); err != nil {
 		return
 	}
 
-	if err = e.writeDividendsSheet(ctx, f, summary.INRDividends); err != nil {
+	if err = e.writeDividendsSheet(ctx, f, dividends); err != nil {
 		return
 	}
 
-	if err = e.writeValuationsSheet(ctx, f, summary.INRValuations); err != nil {
+	if err = e.writeValuationsSheet(ctx, f, valuations); err != nil {
 		return
 	}
 
-	if err = e.writeInterestSheet(ctx, f, summary.INRInterest); err != nil {
+	if err = e.writeInterestSheet(ctx, f, interest); err != nil {
 		return
 	}
 
 	// Write TT Rates sheet with FY month-end data
-	if err = e.writeTTRatesSheet(ctx, f, summary.Year, summary.TTMonthEndRates); err != nil {
+	if err = e.writeTTRatesSheet(ctx, f, summary.Year, rates); err != nil {
 		return
 	}
 
@@ -168,16 +228,16 @@ func (e *ExcelManagerImpl) writeGainsSheet(ctx context.Context, f *excelize.File
 			gainRecord.TTRate,                       // Column I
 			"",                                      // Placeholder for PNL (INR) - will be formula
 		}
-		if err := e.writeRow(f, sheetName, rowNum, rowData); err != nil {
-			return err
+		if err := util.WriteRow(f, sheetName, rowNum, rowData); err != nil {
+			return fmt.Errorf("failed to write row %d in sheet %s: %w", rowNum, sheetName, err)
 		}
 
 		// Write formula for PNL (INR) column
 		// J: PNL (INR) = E * I
 		const pnlINRColumn = 10 // Column J
 		formula := fmt.Sprintf("=E%d*I%d", rowNum, rowNum)
-		if err := e.writeFormulaCell(f, sheetName, rowNum, pnlINRColumn, formula); err != nil {
-			return err
+		if err := util.WriteFormulaCell(f, sheetName, rowNum, pnlINRColumn, formula); err != nil {
+			return fmt.Errorf("failed to write formula cell at col %d row %d in sheet %s: %w", pnlINRColumn, rowNum, sheetName, err)
 		}
 	}
 
@@ -193,6 +253,9 @@ func (e *ExcelManagerImpl) writeGainsSheet(ctx context.Context, f *excelize.File
 		"A": colWidthNarrow, "B": colWidthMedium, "C": colWidthMedium, "D": colWidthSemi, "E": colWidthMedium,
 		"F": colWidthExtraWide, "G": colWidthNarrow, "H": colWidthMedium, "I": colWidthSemi, "J": colWidthMedium,
 	})
+	if err := util.ApplyAutoFilter(f, sheetName, "J", len(gains)+1); err != nil {
+		return fmt.Errorf("failed to apply auto filter on sheet %s: %w", sheetName, err)
+	}
 	return nil
 }
 
@@ -222,8 +285,8 @@ func (e *ExcelManagerImpl) writeDividendsSheet(ctx context.Context, f *excelize.
 			"", // Placeholder for Tax (INR) - will be formula
 			"", // Placeholder for Net (INR) - will be formula
 		}
-		if err := e.writeRow(f, sheetName, rowNum, rowData); err != nil {
-			return err
+		if err := util.WriteRow(f, sheetName, rowNum, rowData); err != nil {
+			return fmt.Errorf("failed to write row %d in sheet %s: %w", rowNum, sheetName, err)
 		}
 
 		// Write formulas for INR columns (Amount, Tax, Net all converted to INR)
@@ -244,6 +307,9 @@ func (e *ExcelManagerImpl) writeDividendsSheet(ctx context.Context, f *excelize.
 		"A": colWidthNarrow, "B": colWidthMedium, "C": colWidthWide, "D": colWidthMedium, "E": colWidthMedium,
 		"F": colWidthMedium, "G": colWidthSemi, "H": colWidthWide, "I": colWidthMedium, "J": colWidthMedium,
 	})
+	if err := util.ApplyAutoFilter(f, sheetName, "J", len(dividends)+1); err != nil {
+		return fmt.Errorf("failed to apply auto filter on sheet %s: %w", sheetName, err)
+	}
 	return nil
 }
 
@@ -257,8 +323,8 @@ func (e *ExcelManagerImpl) writeValuationsSheet(ctx context.Context, f *excelize
 	for idx, valuationRecord := range valuations {
 		rowNum := idx + 2 // Data starts from row 2
 		rowData := e.buildValuationRow(valuationRecord)
-		if err := e.writeRow(f, sheetName, rowNum, rowData); err != nil {
-			return err
+		if err := util.WriteRow(f, sheetName, rowNum, rowData); err != nil {
+			return fmt.Errorf("failed to write row %d in sheet %s: %w", rowNum, sheetName, err)
 		}
 
 		// Write formulas for all 3 positions (6 formulas total)
@@ -276,8 +342,8 @@ func (e *ExcelManagerImpl) writeValuationsSheet(ctx context.Context, f *excelize
 			19: fmt.Sprintf("=Q%d*R%d", rowNum, rowNum), // S: ValUSD = Qty * Price
 			22: fmt.Sprintf("=S%d*U%d", rowNum, rowNum), // V: ValINR = ValUSD * TTRate (uses S!)
 		}
-		if err := e.writeFormulaRange(f, sheetName, rowNum, formulas); err != nil {
-			return err
+		if err := util.WriteFormulaRange(f, sheetName, rowNum, formulas); err != nil {
+			return fmt.Errorf("failed to write formula range at row %d in sheet %s: %w", rowNum, sheetName, err)
 		}
 	}
 
@@ -296,6 +362,9 @@ func (e *ExcelManagerImpl) writeValuationsSheet(ctx context.Context, f *excelize
 		"P": colWidthExtraWide, "Q": colWidthNarrow, "R": colWidthSemi, "S": colWidthSemi, "T": colWidthMedium, "U": colWidthSemi, "V": colWidthSemi,
 		"W": colWidthExtraWide,
 	})
+	if err := util.ApplyAutoFilter(f, sheetName, "W", len(valuations)+1); err != nil {
+		return fmt.Errorf("failed to apply auto filter on sheet %s: %w", sheetName, err)
+	}
 	return nil
 }
 
@@ -355,8 +424,8 @@ func (e *ExcelManagerImpl) writeInterestSheet(ctx context.Context, f *excelize.F
 			"", // Placeholder for Tax (INR) - will be formula
 			"", // Placeholder for Net (INR) - will be formula
 		}
-		if err := e.writeRow(f, sheetName, rowNum, rowData); err != nil {
-			return err
+		if err := util.WriteRow(f, sheetName, rowNum, rowData); err != nil {
+			return fmt.Errorf("failed to write row %d in sheet %s: %w", rowNum, sheetName, err)
 		}
 
 		// Write formulas for INR columns (Amount, Tax, Net all converted to INR)
@@ -377,6 +446,9 @@ func (e *ExcelManagerImpl) writeInterestSheet(ctx context.Context, f *excelize.F
 		"A": colWidthNarrow, "B": colWidthMedium, "C": colWidthWide, "D": colWidthMedium, "E": colWidthMedium,
 		"F": colWidthMedium, "G": colWidthSemi, "H": colWidthWide, "I": colWidthMedium, "J": colWidthMedium,
 	})
+	if err := util.ApplyAutoFilter(f, sheetName, "J", len(interest)+1); err != nil {
+		return fmt.Errorf("failed to apply auto filter on sheet %s: %w", sheetName, err)
+	}
 	return nil
 }
 
@@ -401,20 +473,6 @@ func (e *ExcelManagerImpl) writeHeaders(f *excelize.File, sheetName string, head
 	return nil
 }
 
-// writeRow writes a slice of interface{} data to a specific row.
-func (e *ExcelManagerImpl) writeRow(f *excelize.File, sheetName string, rowNum int, data []any) error {
-	for i, val := range data {
-		cellName, err := excelize.CoordinatesToCellName(i+1, rowNum)
-		if err != nil {
-			return fmt.Errorf("failed to get cell name for data col %d, row %d: %w", i+1, rowNum, err)
-		}
-		if err := f.SetCellValue(sheetName, cellName, val); err != nil {
-			return fmt.Errorf("failed to set cell value at %s: %w", cellName, err)
-		}
-	}
-	return nil
-}
-
 // formatDateForExcel formats a time.Time for Excel.
 // If time.Time is zero, return an empty string.
 func (e *ExcelManagerImpl) formatDateForExcel(t time.Time) any {
@@ -422,30 +480,6 @@ func (e *ExcelManagerImpl) formatDateForExcel(t time.Time) any {
 		return "" // Return empty string for zero/uninitialized dates
 	}
 	return t.Format(time.DateOnly) // "2006-01-02"
-}
-
-// writeFormulaCell writes a formula to a specific cell
-func (e *ExcelManagerImpl) writeFormulaCell(f *excelize.File, sheetName string, rowNum, colNum int, formula string) error {
-	cellName, err := excelize.CoordinatesToCellName(colNum, rowNum)
-	if err != nil {
-		return fmt.Errorf("failed to get cell name for col %d, row %d: %w", colNum, rowNum, err)
-	}
-
-	if err := f.SetCellFormula(sheetName, cellName, formula); err != nil {
-		return fmt.Errorf("failed to set formula at %s: %w", cellName, err)
-	}
-	return nil
-}
-
-// writeFormulaRange writes multiple formulas for a single row
-// formulas is a map of columnIndex -> formulaString
-func (e *ExcelManagerImpl) writeFormulaRange(f *excelize.File, sheetName string, rowNum int, formulas map[int]string) error {
-	for colNum, formula := range formulas {
-		if err := e.writeFormulaCell(f, sheetName, rowNum, colNum, formula); err != nil {
-			return err
-		}
-	}
-	return nil
 }
 
 // writeTaxWithheldINRFormulas writes three formulas for tax-withheld items (Dividends/Interest)
@@ -459,7 +493,10 @@ func (e *ExcelManagerImpl) writeTaxWithheldINRFormulas(f *excelize.File, sheetNa
 		9:  fmt.Sprintf("=D%d*G%d", rowNum, rowNum), // Column I: Tax(INR) = Tax(USD) * TTRate
 		10: fmt.Sprintf("=E%d*G%d", rowNum, rowNum), // Column J: Net(INR) = Net(USD) * TTRate
 	}
-	return e.writeFormulaRange(f, sheetName, rowNum, formulas)
+	if err := util.WriteFormulaRange(f, sheetName, rowNum, formulas); err != nil {
+		return fmt.Errorf("failed to write formula range at row %d in sheet %s: %w", rowNum, sheetName, err)
+	}
+	return nil
 }
 
 // writeTotalsLabel writes "TOTALS", "STCG", "LTCG" etc. to column A with bold styling
@@ -505,7 +542,10 @@ func (e *ExcelManagerImpl) writeSimpleTotals(
 		formulas[colIdx] = fmt.Sprintf("=SUM(%s2:%s%d)", colLetter, colLetter, lastDataRow)
 	}
 
-	return e.writeFormulaRange(f, sheetName, totalsRow, formulas)
+	if err := util.WriteFormulaRange(f, sheetName, totalsRow, formulas); err != nil {
+		return fmt.Errorf("failed to write formula range at row %d in sheet %s: %w", totalsRow, sheetName, err)
+	}
+	return nil
 }
 
 // writeGainsTotals writes TOTALS row and STCG/LTCG breakdown for Gains sheet
@@ -528,8 +568,8 @@ func (e *ExcelManagerImpl) writeGainsTotals(f *excelize.File, sheetName string, 
 		6:  fmt.Sprintf("=SUM(F2:F%d)", lastDataRow), // Column F: Commission USD
 		10: fmt.Sprintf("=SUM(J2:J%d)", lastDataRow), // Column J: PNL INR
 	}
-	if err := e.writeFormulaRange(f, sheetName, totalsRow, totalsFormulas); err != nil {
-		return err
+	if err := util.WriteFormulaRange(f, sheetName, totalsRow, totalsFormulas); err != nil {
+		return fmt.Errorf("failed to write formula range at row %d in sheet %s: %w", totalsRow, sheetName, err)
 	}
 
 	// Write STCG row
@@ -542,8 +582,8 @@ func (e *ExcelManagerImpl) writeGainsTotals(f *excelize.File, sheetName string, 
 		5:  fmt.Sprintf("=SUMIF(G2:G%d,\"STCG\",E2:E%d)", lastDataRow, lastDataRow), // Column E: PNL USD
 		10: fmt.Sprintf("=SUMIF(G2:G%d,\"STCG\",J2:J%d)", lastDataRow, lastDataRow), // Column J: PNL INR
 	}
-	if err := e.writeFormulaRange(f, sheetName, stcgRow, stcgFormulas); err != nil {
-		return err
+	if err := util.WriteFormulaRange(f, sheetName, stcgRow, stcgFormulas); err != nil {
+		return fmt.Errorf("failed to write formula range at row %d in sheet %s: %w", stcgRow, sheetName, err)
 	}
 
 	// Write LTCG row
@@ -556,7 +596,10 @@ func (e *ExcelManagerImpl) writeGainsTotals(f *excelize.File, sheetName string, 
 		5:  fmt.Sprintf("=SUMIF(G2:G%d,\"LTCG\",E2:E%d)", lastDataRow, lastDataRow), // Column E: PNL USD
 		10: fmt.Sprintf("=SUMIF(G2:G%d,\"LTCG\",J2:J%d)", lastDataRow, lastDataRow), // Column J: PNL INR
 	}
-	return e.writeFormulaRange(f, sheetName, ltcgRow, ltcgFormulas)
+	if err := util.WriteFormulaRange(f, sheetName, ltcgRow, ltcgFormulas); err != nil {
+		return fmt.Errorf("failed to write formula range at row %d in sheet %s: %w", ltcgRow, sheetName, err)
+	}
+	return nil
 }
 
 // writeDividendsTotals writes TOTALS row for Dividends sheet
@@ -597,8 +640,10 @@ func (e *ExcelManagerImpl) setColumnWidths(f *excelize.File, sheetName string, w
 }
 
 // writeTTRatesSheet creates the "TT Rates" sheet with FY month-end rate reference data.
-// It contains 12 rows (Apr→Mar) with month/year labels, the actual SBI rate date, the TT buy rate,
-// a clickable PDF link when available, and the day of the week.
+// Rows are sorted by ActualDate descending (latest rates first). Month/Year labels are derived
+// from each rate's ActualDate.AddDate(0, 1, 0), so the applicable month follows the SBI rate date.
+// Each row shows the actual rate date, the TT buy rate, a clickable PDF link when available,
+// and the day of the week.
 func (e *ExcelManagerImpl) writeTTRatesSheet(ctx context.Context, f *excelize.File, year int, rates []tax.MonthEndRate) error {
 	sheetName := "TT Rates"
 	headers := []string{"Month", "Year", "TTDate", "TTRate", "PDF Link", "DayOfWeek"}
@@ -609,10 +654,18 @@ func (e *ExcelManagerImpl) writeTTRatesSheet(ctx context.Context, f *excelize.Fi
 	for idx, rate := range rates {
 		rowNum := idx + 2 // Data starts from row 2
 
-		// Compute FY month label (index 0=APR through index 11=MAR)
-		fyMonth := time.Date(year, time.April, 1, 0, 0, 0, 0, time.UTC).AddDate(0, idx, 0)
-		monthLabel := strings.ToUpper(fyMonth.Format("Jan"))
-		fyYear := fyMonth.Year()
+		// Derive Month/Year label from ActualDate's next month.
+		// This ensures the latest rate correctly reflects its applicable month
+		// (e.g., a Feb 20 rate is labeled MAR).
+		// Fall back to index-based Apr→Mar order for zero ActualDate values.
+		var labelDate time.Time
+		if rate.ActualDate.IsZero() {
+			labelDate = time.Date(year, time.April, 1, 0, 0, 0, 0, time.UTC).AddDate(0, idx, 0)
+		} else {
+			labelDate = rate.ActualDate.AddDate(0, 1, 0)
+		}
+		monthLabel := strings.ToUpper(labelDate.Format("Jan"))
+		fyYear := labelDate.Year()
 
 		// Compute day of week from the actual SBI rate date
 		dayOfWeek := rate.ActualDate.Format("Monday")
@@ -625,8 +678,8 @@ func (e *ExcelManagerImpl) writeTTRatesSheet(ctx context.Context, f *excelize.Fi
 			"", // Placeholder for PDF Link - written with hyperlink below
 			dayOfWeek,
 		}
-		if err := e.writeRow(f, sheetName, rowNum, rowData); err != nil {
-			return err
+		if err := util.WriteRow(f, sheetName, rowNum, rowData); err != nil {
+			return fmt.Errorf("failed to write row %d in sheet %s: %w", rowNum, sheetName, err)
 		}
 
 		// Write PDF Link in column E with clickable hyperlink if URL is present
@@ -638,6 +691,9 @@ func (e *ExcelManagerImpl) writeTTRatesSheet(ctx context.Context, f *excelize.Fi
 	e.setColumnWidths(f, sheetName, map[string]float64{
 		"A": colWidthNarrow, "B": colWidthNarrow, "C": colWidthWide, "D": colWidthSemi, "E": colWidthMedium, "F": colWidthWide,
 	})
+	if err := util.ApplyAutoFilter(f, sheetName, "F", len(rates)+1); err != nil {
+		return fmt.Errorf("failed to apply auto filter on sheet %s: %w", sheetName, err)
+	}
 	return nil
 }
 
@@ -784,8 +840,8 @@ func (e *ExcelManagerImpl) writeDividendsSection(f *excelize.File, sheetName str
 		"Amount (USD)", "Tax (USD)", "Net (USD)",
 		"Amount (INR)", "Tax (INR)", "Net (INR)",
 	}
-	if err := e.writeRow(f, sheetName, headerRow, headers); err != nil {
-		return err
+	if err := util.WriteRow(f, sheetName, headerRow, headers); err != nil {
+		return fmt.Errorf("failed to write row %d in sheet %s: %w", headerRow, sheetName, err)
 	}
 
 	// Apply bold style to headers
@@ -804,7 +860,10 @@ func (e *ExcelManagerImpl) writeDividendsSection(f *excelize.File, sheetName str
 		6: fmt.Sprintf("=Dividends!J%d", dividendsTotalsRow), // F: Net INR
 	}
 
-	return e.writeFormulaRange(f, sheetName, valuesRow, formulas)
+	if err := util.WriteFormulaRange(f, sheetName, valuesRow, formulas); err != nil {
+		return fmt.Errorf("failed to write formula range at row %d in sheet %s: %w", valuesRow, sheetName, err)
+	}
+	return nil
 }
 
 // writeGainsSection writes the Gains section with Short Term and Long Term subsections
@@ -834,8 +893,8 @@ func (e *ExcelManagerImpl) writeGainsCategorySection(f *excelize.File, sheetName
 
 	// Row startRow+1: Column headers (bold)
 	headerRow := startRow + 1
-	if err := e.writeRow(f, sheetName, headerRow, headers); err != nil {
-		return err
+	if err := util.WriteRow(f, sheetName, headerRow, headers); err != nil {
+		return fmt.Errorf("failed to write row %d in sheet %s: %w", headerRow, sheetName, err)
 	}
 	if err := e.applyBoldStyle(f, sheetName, headerRow); err != nil {
 		return err
@@ -848,7 +907,10 @@ func (e *ExcelManagerImpl) writeGainsCategorySection(f *excelize.File, sheetName
 		2: fmt.Sprintf("=Gains!F%d", totalsRow), // B: Commission from TOTALS
 		3: fmt.Sprintf("=Gains!J%d", gainsRow),  // C: PNL INR
 	}
-	return e.writeFormulaRange(f, sheetName, valuesRow, formulas)
+	if err := util.WriteFormulaRange(f, sheetName, valuesRow, formulas); err != nil {
+		return fmt.Errorf("failed to write formula range at row %d in sheet %s: %w", valuesRow, sheetName, err)
+	}
+	return nil
 }
 
 // writeInterestSection writes the Interest Income section with cross-referenced formulas
@@ -866,8 +928,8 @@ func (e *ExcelManagerImpl) writeInterestSection(f *excelize.File, sheetName stri
 		"Amount (USD)", "Tax (USD)", "Net (USD)",
 		"Amount (INR)", "Tax (INR)", "Net (INR)",
 	}
-	if err := e.writeRow(f, sheetName, headerRow, headers); err != nil {
-		return err
+	if err := util.WriteRow(f, sheetName, headerRow, headers); err != nil {
+		return fmt.Errorf("failed to write row %d in sheet %s: %w", headerRow, sheetName, err)
 	}
 	if err := e.applyBoldStyle(f, sheetName, headerRow); err != nil {
 		return err
@@ -884,5 +946,8 @@ func (e *ExcelManagerImpl) writeInterestSection(f *excelize.File, sheetName stri
 		6: fmt.Sprintf("=Interest!J%d", interestTotalsRow), // F: Net INR
 	}
 
-	return e.writeFormulaRange(f, sheetName, valuesRow, formulas)
+	if err := util.WriteFormulaRange(f, sheetName, valuesRow, formulas); err != nil {
+		return fmt.Errorf("failed to write formula range at row %d in sheet %s: %w", valuesRow, sheetName, err)
+	}
+	return nil
 }

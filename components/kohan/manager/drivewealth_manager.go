@@ -5,6 +5,7 @@ import (
 	"slices"
 	"strconv"
 	"strings"
+	"time"
 
 	"github.com/amanhigh/go-fun/models/tax"
 	"github.com/xuri/excelize/v2"
@@ -73,13 +74,11 @@ func (m *DriveWealthManagerImpl) parseSheets(f *excelize.File) (info tax.Brokera
 		return
 	}
 
-	info.Interests, err = m.parseInterest(rows)
-	if err != nil {
-		return
-	}
+	info.Interests = m.parseInterest(rows)
+	info.Dividends = m.parseDividends(rows)
 
-	info.Dividends, err = m.parseDividends(rows)
-	if err != nil {
+	// Derive CoverageThrough from parsed Dividend records only.
+	if info.CoverageThrough, err = deriveCoverageFromDividends(info.Dividends); err != nil {
 		return
 	}
 
@@ -89,15 +88,37 @@ func (m *DriveWealthManagerImpl) parseSheets(f *excelize.File) (info tax.Brokera
 		return
 	}
 
-	// Load commission map from All Transactions sheet if available
+	// Read All Transactions best-effort for commission fallback only.
 	commissionMap := make(map[string]float64)
-	allTransRows, errAT := f.GetRows("All Transactions")
-	if errAT == nil {
+	if allTransRows, sheetErr := f.GetRows("All Transactions"); sheetErr == nil {
 		commissionMap = m.parseCommissions(allTransRows)
 	}
 
 	info.Trades, err = m.parseTrades(tradeRows, commissionMap)
 	return
+}
+
+// deriveCoverageFromDividends computes CoverageThrough from Dividend records.
+// It selects the latest valid dividend date and normalizes it to the final day of that calendar month.
+// Fails immediately if any dividend date is invalid or if no dividends are available.
+func deriveCoverageFromDividends(dividends []tax.Dividend) (time.Time, error) {
+	if len(dividends) == 0 {
+		return time.Time{}, fmt.Errorf("no Dividend records found: coverage through date cannot be derived")
+	}
+
+	var latestDate time.Time
+	for _, dividend := range dividends {
+		date, httpErr := dividend.GetDate()
+		if httpErr != nil {
+			return time.Time{}, fmt.Errorf("invalid dividend date: %w", httpErr)
+		}
+		if date.After(latestDate) {
+			latestDate = date
+		}
+	}
+
+	// Normalize to the final day of the calendar month.
+	return time.Date(latestDate.Year(), latestDate.Month()+1, 0, 0, 0, 0, 0, time.UTC), nil
 }
 
 func (m *DriveWealthManagerImpl) checkSheetExists(f *excelize.File, sheetName string) error {
@@ -168,7 +189,7 @@ func (m *DriveWealthManagerImpl) parseTradeRow(row []string, commissionMap map[s
 }
 
 // parseInterest extracts interest entries from the "Income" sheet rows.
-func (m *DriveWealthManagerImpl) parseInterest(rows [][]string) ([]tax.Interest, error) {
+func (m *DriveWealthManagerImpl) parseInterest(rows [][]string) []tax.Interest {
 	var interestEntries []tax.Interest
 
 	if len(rows) > 0 {
@@ -192,14 +213,11 @@ func (m *DriveWealthManagerImpl) parseInterest(rows [][]string) ([]tax.Interest,
 		}
 	}
 
-	return interestEntries, nil
+	return interestEntries
 }
 
-func (m *DriveWealthManagerImpl) parseDividends(rows [][]string) ([]tax.Dividend, error) {
-	taxMap, err := m.buildTaxMap(rows)
-	if err != nil {
-		return nil, err
-	}
+func (m *DriveWealthManagerImpl) parseDividends(rows [][]string) []tax.Dividend {
+	taxMap := m.buildTaxMap(rows)
 
 	var dividendEntries []tax.Dividend
 	for _, row := range rows[1:] {
@@ -220,16 +238,14 @@ func (m *DriveWealthManagerImpl) parseDividends(rows [][]string) ([]tax.Dividend
 		}
 	}
 
-	return dividendEntries, nil
+	return dividendEntries
 }
 
-func (m *DriveWealthManagerImpl) buildTaxMap(rows [][]string) (map[string]map[string]float64, error) {
+func (m *DriveWealthManagerImpl) buildTaxMap(rows [][]string) map[string]map[string]float64 {
 	// taxMap stores tax amounts keyed by symbol, then by date.
 	// This allows for efficient lookup of taxes for a given dividend.
 	taxMap := make(map[string]map[string]float64) // symbol -> date -> taxAmount
 
-	// First pass: Iterate through all rows to aggregate tax entries.
-	// This is done first because taxes may not appear immediately after dividends.
 	for _, row := range rows[1:] { // Skip header
 		if len(row) >= 5 && row[2] == "Tax" {
 			symbol := row[3]
@@ -247,7 +263,7 @@ func (m *DriveWealthManagerImpl) buildTaxMap(rows [][]string) (map[string]map[st
 			taxMap[symbol][date] += -taxAmount
 		}
 	}
-	return taxMap, nil
+	return taxMap
 }
 
 // parseCommissions extracts commission data from "All Transactions" sheet.

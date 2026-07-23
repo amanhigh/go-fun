@@ -20,6 +20,10 @@ const (
 	GAIN_TYPE_STCG = "STCG"
 	GAIN_TYPE_LTCG = "LTCG"
 
+	// Coverage Cutoff Date
+	COVERAGE_CUTOFF_MONTH = 3 // March
+	COVERAGE_CUTOFF_DAY   = 31
+
 	// Rounding factor for 2 decimal places
 	ROUNDING_FACTOR_2_DECIMALS = 100.0
 )

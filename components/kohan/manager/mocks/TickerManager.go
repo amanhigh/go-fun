@@ -250,23 +250,23 @@ func (_c *TickerManager_GetPrice_Call) RunAndReturn(run func(ctx context.Context
 }
 
 // GetSplits provides a mock function for the type TickerManager
-func (_mock *TickerManager) GetSplits(ctx context.Context, ticker string, from time.Time, to time.Time) ([]tax.YahooSplit, common.HttpError) {
+func (_mock *TickerManager) GetSplits(ctx context.Context, ticker string, from time.Time, to time.Time) ([]tax.SplitInfo, common.HttpError) {
 	ret := _mock.Called(ctx, ticker, from, to)
 
 	if len(ret) == 0 {
 		panic("no return value specified for GetSplits")
 	}
 
-	var r0 []tax.YahooSplit
+	var r0 []tax.SplitInfo
 	var r1 common.HttpError
-	if returnFunc, ok := ret.Get(0).(func(context.Context, string, time.Time, time.Time) ([]tax.YahooSplit, common.HttpError)); ok {
+	if returnFunc, ok := ret.Get(0).(func(context.Context, string, time.Time, time.Time) ([]tax.SplitInfo, common.HttpError)); ok {
 		return returnFunc(ctx, ticker, from, to)
 	}
-	if returnFunc, ok := ret.Get(0).(func(context.Context, string, time.Time, time.Time) []tax.YahooSplit); ok {
+	if returnFunc, ok := ret.Get(0).(func(context.Context, string, time.Time, time.Time) []tax.SplitInfo); ok {
 		r0 = returnFunc(ctx, ticker, from, to)
 	} else {
 		if ret.Get(0) != nil {
-			r0 = ret.Get(0).([]tax.YahooSplit)
+			r0 = ret.Get(0).([]tax.SplitInfo)
 		}
 	}
 	if returnFunc, ok := ret.Get(1).(func(context.Context, string, time.Time, time.Time) common.HttpError); ok {
@@ -321,12 +321,12 @@ func (_c *TickerManager_GetSplits_Call) Run(run func(ctx context.Context, ticker
 	return _c
 }
 
-func (_c *TickerManager_GetSplits_Call) Return(yahooSplits []tax.YahooSplit, httpError common.HttpError) *TickerManager_GetSplits_Call {
-	_c.Call.Return(yahooSplits, httpError)
+func (_c *TickerManager_GetSplits_Call) Return(splitInfos []tax.SplitInfo, httpError common.HttpError) *TickerManager_GetSplits_Call {
+	_c.Call.Return(splitInfos, httpError)
 	return _c
 }
 
-func (_c *TickerManager_GetSplits_Call) RunAndReturn(run func(ctx context.Context, ticker string, from time.Time, to time.Time) ([]tax.YahooSplit, common.HttpError)) *TickerManager_GetSplits_Call {
+func (_c *TickerManager_GetSplits_Call) RunAndReturn(run func(ctx context.Context, ticker string, from time.Time, to time.Time) ([]tax.SplitInfo, common.HttpError)) *TickerManager_GetSplits_Call {
 	_c.Call.Return(run)
 	return _c
 }

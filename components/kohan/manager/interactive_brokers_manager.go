@@ -1,13 +1,18 @@
 package manager
 
 import (
+	"context"
 	"encoding/csv"
+	"errors"
 	"fmt"
 	"math"
 	"os"
+	"path/filepath"
 	"strconv"
 	"strings"
+	"time"
 
+	"github.com/amanhigh/go-fun/models/common"
 	"github.com/amanhigh/go-fun/models/tax"
 )
 
@@ -16,16 +21,126 @@ type InteractiveBrokersManagerImpl struct {
 	basePath string
 }
 
+// SecurityIDProvider defines a narrow lookup for ticker-to-Security-ID from IBKR files.
+type SecurityIDProvider interface {
+	GetSecurityID(ctx context.Context, ticker string) (string, common.HttpError)
+}
+
 // ibRecordTypeData is the IB CSV record type for data rows (vs header/summary rows).
 const ibRecordTypeData = "Data"
 
 // ibRecordTypeInterest is the IB CSV record type for interest data rows.
 const ibRecordTypeInterest = "Interest"
 
-func NewInteractiveBrokersManagerImpl(basePath string) Broker {
+// ibRecordTypeStatement is the IB CSV record type for statement-level metadata rows.
+const ibRecordTypeStatement = "Statement"
+
+// ibStatementFieldPeriod is the IB CSV statement field name for the statement period.
+const ibStatementFieldPeriod = "Period"
+
+func NewInteractiveBrokersManagerImpl(basePath string) *InteractiveBrokersManagerImpl {
 	return &InteractiveBrokersManagerImpl{
 		basePath: basePath,
 	}
+}
+
+var _ Broker = (*InteractiveBrokersManagerImpl)(nil)
+var _ SecurityIDProvider = (*InteractiveBrokersManagerImpl)(nil)
+
+const (
+	ibSectionFI        = "Financial Instrument Information"
+	ibFIDataTypeStocks = "Stocks"
+	ibFIColSymbol      = 3
+	ibFIColSecurityID  = 6
+	ibMinFIELength     = 7
+)
+
+// GetSecurityID looks up the Security ID (CUSIP/ISIN) for the given ticker from IBKR
+// Financial Instrument Information files. Returns a not-found error when the ticker
+// has no entry, and a conflict error when multiple non-empty Security IDs disagree.
+func (m *InteractiveBrokersManagerImpl) GetSecurityID(ctx context.Context, ticker string) (string, common.HttpError) {
+	files, err := m.discoverFiles()
+	if err != nil {
+		return "", common.NewServerError(fmt.Errorf("failed to discover IBKR files: %w", err))
+	}
+
+	if err := m.checkContext(ctx); err != nil {
+		return "", err
+	}
+
+	var foundID string
+	for _, filePath := range files {
+		fileID, conflict, err := m.readFileAndScanFI(ctx, filePath, ticker, foundID)
+		if err != nil {
+			return "", err
+		}
+		if conflict {
+			return "", common.ErrEntityExists
+		}
+		if fileID != "" {
+			foundID = fileID
+		}
+	}
+
+	if foundID == "" {
+		return "", common.ErrNotFound
+	}
+	return foundID, nil
+}
+
+// checkContext returns a server error wrapping ctx.Err() if the context is done.
+func (m *InteractiveBrokersManagerImpl) checkContext(ctx context.Context) common.HttpError {
+	select {
+	case <-ctx.Done():
+		return common.NewServerError(ctx.Err())
+	default:
+		return nil
+	}
+}
+
+// readFileAndScanFI reads a CSV file and scans its FI records for the ticker.
+// Returns the Security ID found, a conflict flag, or an error.
+func (m *InteractiveBrokersManagerImpl) readFileAndScanFI(ctx context.Context, filePath, ticker, existingID string) (string, bool, common.HttpError) {
+	if err := m.checkContext(ctx); err != nil {
+		return "", false, err
+	}
+
+	records, err := m.readCSVRecords(filePath)
+	if err != nil {
+		return "", false, common.NewServerError(fmt.Errorf("failed to read IBKR file %s: %w", filePath, err))
+	}
+
+	fileID, conflict := m.scanFIRecords(records, ticker, existingID)
+	return fileID, conflict, nil
+}
+
+// scanFIRecords scans Financial Instrument Information records for the given ticker.
+// Returns the Security ID if found, and a conflict flag if a different non-empty ID
+// is found compared to the existingID.
+func (m *InteractiveBrokersManagerImpl) scanFIRecords(records [][]string, ticker, existingID string) (string, bool) {
+	for _, record := range records {
+		if len(record) < ibMinFIELength {
+			continue
+		}
+		if record[0] != ibSectionFI || record[1] != ibRecordTypeData || record[2] != ibFIDataTypeStocks {
+			continue
+		}
+		if record[ibFIColSymbol] != ticker {
+			continue
+		}
+
+		secID := strings.TrimSpace(record[ibFIColSecurityID])
+		if secID == "" {
+			continue
+		}
+
+		if existingID == "" {
+			existingID = secID
+		} else if existingID != secID {
+			return "", true
+		}
+	}
+	return existingID, false
 }
 
 // GetName returns the broker name.
@@ -33,38 +148,70 @@ func (m *InteractiveBrokersManagerImpl) GetName() string {
 	return "Interactive Brokers"
 }
 
-func (m *InteractiveBrokersManagerImpl) resolveFilePath(year int) string {
-	return fmt.Sprintf("%s_%d.csv", m.basePath, year)
+// discoverFiles finds every file matching <basePath>_YYYY.csv pattern in deterministic lexical order.
+func (m *InteractiveBrokersManagerImpl) discoverFiles() ([]string, error) {
+	pattern := m.basePath + "_[0-9][0-9][0-9][0-9].csv"
+	files, err := filepath.Glob(pattern)
+	if err != nil {
+		return nil, fmt.Errorf("failed to open CSV file: %w", err)
+	}
+	if len(files) == 0 {
+		return nil, fmt.Errorf("failed to open CSV file")
+	}
+	return files, nil
 }
 
-func (m *InteractiveBrokersManagerImpl) Parse(year int) (info tax.BrokerageInfo, err error) {
-	records, err := m.readCSVRecords(year)
+func (m *InteractiveBrokersManagerImpl) Parse(_ int) (tax.BrokerageInfo, error) {
+	files, err := m.discoverFiles()
 	if err != nil {
-		return info, err
+		return tax.BrokerageInfo{}, err
 	}
 
-	info.Interests, err = m.parseInterest(records)
-	if err != nil {
-		return info, err
+	var merged tax.BrokerageInfo
+	for _, filePath := range files {
+		records, err := m.readCSVRecords(filePath)
+		if err != nil {
+			return tax.BrokerageInfo{}, err
+		}
+
+		info, err := m.parseRecords(records)
+		if err != nil {
+			return tax.BrokerageInfo{}, err
+		}
+
+		merged = mergeBrokerageInfo(merged, info)
 	}
 
-	info.Trades, err = m.parseTrades(records)
-	if err != nil {
-		return info, err
-	}
-
-	info.Dividends, err = m.parseDividends(records)
-	if err != nil {
-		return info, err
-	}
-
-	return info, nil
+	return merged, nil
 }
 
-// readCSVRecords reads and parses all CSV records from the file for the given year.
+// parseRecords parses all record types (interest, trades, dividends) from the given CSV records
+// and returns a complete BrokerageInfo. Each call builds its own withholding-tax map from the
+// records, so per-file tax matching is preserved.
+func (m *InteractiveBrokersManagerImpl) parseRecords(records [][]string) (tax.BrokerageInfo, error) {
+	periodEnd, err := m.parsePeriod(records)
+	if err != nil {
+		return tax.BrokerageInfo{}, err
+	}
+
+	interests := m.parseInterest(records)
+	trades := m.parseTrades(records)
+	dividends, err := m.parseDividends(records)
+	if err != nil {
+		return tax.BrokerageInfo{}, err
+	}
+
+	return tax.BrokerageInfo{
+		CoverageThrough: periodEnd,
+		Interests:       interests,
+		Trades:          trades,
+		Dividends:       dividends,
+	}, nil
+}
+
+// readCSVRecords reads and parses all CSV records from the given file path.
 // Extracted from Parse to keep statement count within funlen limit.
-func (m *InteractiveBrokersManagerImpl) readCSVRecords(year int) ([][]string, error) {
-	filePath := m.resolveFilePath(year)
+func (m *InteractiveBrokersManagerImpl) readCSVRecords(filePath string) ([][]string, error) {
 	file, err := os.Open(filePath)
 	if err != nil {
 		return nil, fmt.Errorf("failed to open CSV file: %w", err)
@@ -81,7 +228,28 @@ func (m *InteractiveBrokersManagerImpl) readCSVRecords(year int) ([][]string, er
 	return records, nil
 }
 
-func (m *InteractiveBrokersManagerImpl) parseInterest(records [][]string) ([]tax.Interest, error) {
+// parsePeriod extracts the Statement,Data,Period row and returns the period end date.
+// Format: January 1, 2024 - December 31, 2024
+func (m *InteractiveBrokersManagerImpl) parsePeriod(records [][]string) (time.Time, error) {
+	for _, record := range records {
+		if len(record) >= 4 && record[0] == ibRecordTypeStatement && record[1] == ibRecordTypeData && record[2] == ibStatementFieldPeriod {
+			periodStr := record[3]
+			_, endDateStr, ok := strings.Cut(periodStr, " - ")
+			if !ok {
+				return time.Time{}, fmt.Errorf("invalid period format: %s", periodStr)
+			}
+			endDateStr = strings.TrimSpace(endDateStr)
+			endDate, err := time.Parse("January 2, 2006", endDateStr)
+			if err != nil {
+				return time.Time{}, fmt.Errorf("failed to parse period end date %q: %w", endDateStr, err)
+			}
+			return endDate, nil
+		}
+	}
+	return time.Time{}, fmt.Errorf("period metadata not found")
+}
+
+func (m *InteractiveBrokersManagerImpl) parseInterest(records [][]string) []tax.Interest {
 	var interests []tax.Interest
 
 	for _, record := range records {
@@ -104,14 +272,14 @@ func (m *InteractiveBrokersManagerImpl) parseInterest(records [][]string) ([]tax
 		})
 	}
 
-	return interests, nil
+	return interests
 }
 
 func (m *InteractiveBrokersManagerImpl) isValidInterestRecord(record []string) bool {
 	return len(record) >= 6 && record[0] == ibRecordTypeInterest && record[1] == ibRecordTypeData && record[2] == "USD"
 }
 
-func (m *InteractiveBrokersManagerImpl) parseTrades(records [][]string) ([]tax.Trade, error) {
+func (m *InteractiveBrokersManagerImpl) parseTrades(records [][]string) []tax.Trade {
 	var trades []tax.Trade
 
 	for _, record := range records {
@@ -127,7 +295,7 @@ func (m *InteractiveBrokersManagerImpl) parseTrades(records [][]string) ([]tax.T
 		trades = append(trades, trade)
 	}
 
-	return trades, nil
+	return trades
 }
 
 func (m *InteractiveBrokersManagerImpl) isValidTradeRecord(record []string) bool {
@@ -174,6 +342,18 @@ func (m *InteractiveBrokersManagerImpl) parseTradeRecord(record []string) (tax.T
 	}, nil
 }
 
+// missingWithholdingTaxError is a private typed error for missing withholding tax
+// on a dividend row. parseDividends treats this as a fatal atomic error that stops
+// parsing, while other parse errors (empty symbol, invalid amount) are skipped.
+type missingWithholdingTaxError struct {
+	symbol string
+	date   string
+}
+
+func (e *missingWithholdingTaxError) Error() string {
+	return fmt.Sprintf("no matching withholding tax for %s on %s", e.symbol, e.date)
+}
+
 func (m *InteractiveBrokersManagerImpl) parseDividends(records [][]string) ([]tax.Dividend, error) {
 	taxMap := m.buildTaxMap(records)
 
@@ -184,8 +364,17 @@ func (m *InteractiveBrokersManagerImpl) parseDividends(records [][]string) ([]ta
 			continue
 		}
 
+		// Skip summary rows (SubTotal/Total) that have Data type but an empty date field.
+		if record[3] == "" {
+			continue
+		}
+
 		dividend, err := m.parseDividendRecord(record, taxMap)
 		if err != nil {
+			var missingTaxErr *missingWithholdingTaxError
+			if errors.As(err, &missingTaxErr) {
+				return nil, err
+			}
 			continue
 		}
 
@@ -219,7 +408,9 @@ func (m *InteractiveBrokersManagerImpl) parseDividendRecord(record []string, tax
 		Amount: amount,
 	}
 
-	MatchDividendWithTax(dividend, taxMap)
+	if !MatchDividendWithTax(dividend, taxMap) {
+		return tax.Dividend{}, &missingWithholdingTaxError{symbol: symbol, date: date}
+	}
 
 	return *dividend, nil
 }
