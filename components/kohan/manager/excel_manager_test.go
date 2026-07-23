@@ -196,6 +196,7 @@ var _ = Describe("ExcelManagerImpl", func() {
 			var (
 				sampleSummary tax.Summary
 				sheetName     = "Gains"
+				f             *excelize.File
 			)
 
 			BeforeEach(func() {
@@ -216,6 +217,12 @@ var _ = Describe("ExcelManagerImpl", func() {
 				sampleSummary.INRGains = []tax.INRGains{gain1, gain2, gain3WithZeroTTDate}
 			})
 
+			AfterEach(func() {
+				if f != nil {
+					Expect(f.Close()).To(Succeed())
+				}
+			})
+
 			It("should write all INRGains records with correct data contract to the sheet", func() {
 				// Capture original caller order before generation
 				originalGains := slices.Clone(sampleSummary.INRGains)
@@ -226,9 +233,8 @@ var _ = Describe("ExcelManagerImpl", func() {
 				// Verify caller's original slice order is unchanged after generation
 				Expect(sampleSummary.INRGains).To(Equal(originalGains))
 
-				f, err := excelize.OpenFile(tempOutputFilePath)
+				f, err = excelize.OpenFile(tempOutputFilePath)
 				Expect(err).ToNot(HaveOccurred())
-				defer func() { Expect(f.Close()).To(Succeed()) }()
 
 				// Verify headers
 				rows, errGetRows := f.GetRows(sheetName)
@@ -315,9 +321,8 @@ var _ = Describe("ExcelManagerImpl", func() {
 				err := excelManager.GenerateTaxSummaryExcel(ctx, testYear, sampleSummary)
 				Expect(err).ToNot(HaveOccurred())
 
-				f, err := excelize.OpenFile(tempOutputFilePath)
+				f, err = excelize.OpenFile(tempOutputFilePath)
 				Expect(err).ToNot(HaveOccurred())
-				defer func() { Expect(f.Close()).To(Succeed()) }()
 
 				lastDataRow := len(sampleSummary.INRGains) + 1 // Row 4 (3 data rows: rows 2-4)
 				totalsRow := lastDataRow + 2                   // Row 6 (skip empty row 5)
@@ -371,9 +376,8 @@ var _ = Describe("ExcelManagerImpl", func() {
 				err := excelManager.GenerateTaxSummaryExcel(ctx, testYear, sampleSummary)
 				Expect(err).ToNot(HaveOccurred())
 
-				f, err := excelize.OpenFile(tempOutputFilePath)
+				f, err = excelize.OpenFile(tempOutputFilePath)
 				Expect(err).ToNot(HaveOccurred())
-				defer func() { Expect(f.Close()).To(Succeed()) }()
 
 				widthA, err := f.GetColWidth(sheetName, "A")
 				Expect(err).ToNot(HaveOccurred())
@@ -530,6 +534,7 @@ var _ = Describe("ExcelManagerImpl", func() {
 			var (
 				sampleSummary tax.Summary
 				sheetName     = "Valuations"
+				f             *excelize.File
 			)
 
 			BeforeEach(func() {
@@ -561,13 +566,18 @@ var _ = Describe("ExcelManagerImpl", func() {
 				sampleSummary.INRValuations = []tax.INRValuation{val1}
 			})
 
+			AfterEach(func() {
+				if f != nil {
+					Expect(f.Close()).To(Succeed())
+				}
+			})
+
 			It("should create the 'Valuations' sheet with correct headers and data for all positions", func() {
 				err := excelManager.GenerateTaxSummaryExcel(ctx, testYear, sampleSummary)
 				Expect(err).ToNot(HaveOccurred())
 
-				f, err := excelize.OpenFile(tempOutputFilePath)
+				f, err = excelize.OpenFile(tempOutputFilePath)
 				Expect(err).ToNot(HaveOccurred())
-				defer func() { Expect(f.Close()).To(Succeed()) }()
 
 				rows, err := f.GetRows(sheetName)
 				Expect(err).ToNot(HaveOccurred())
@@ -699,9 +709,8 @@ var _ = Describe("ExcelManagerImpl", func() {
 				err := excelManager.GenerateTaxSummaryExcel(ctx, testYear, nonZeroSummary)
 				Expect(err).ToNot(HaveOccurred())
 
-				f, err := excelize.OpenFile(tempOutputFilePath)
+				f, err = excelize.OpenFile(tempOutputFilePath)
 				Expect(err).ToNot(HaveOccurred())
-				defer func() { Expect(f.Close()).To(Succeed()) }()
 
 				// Calculate expected totals using lo.SumBy (2 valuations)
 				totalAmountPaidINR := lo.SumBy(nonZeroSummary.INRValuations, func(v tax.INRValuation) float64 {
@@ -741,6 +750,7 @@ var _ = Describe("ExcelManagerImpl", func() {
 			var (
 				sampleSummary tax.Summary
 				sheetName     = "Interest"
+				f             *excelize.File
 			)
 
 			BeforeEach(func() {
@@ -777,13 +787,18 @@ var _ = Describe("ExcelManagerImpl", func() {
 				sampleSummary.INRInterest = []tax.INRInterest{interest1, interest2}
 			})
 
+			AfterEach(func() {
+				if f != nil {
+					Expect(f.Close()).To(Succeed())
+				}
+			})
+
 			It("should create the 'Interest' sheet with correct headers and data", func() {
 				err := excelManager.GenerateTaxSummaryExcel(ctx, testYear, sampleSummary)
 				Expect(err).ToNot(HaveOccurred())
 
-				f, err := excelize.OpenFile(tempOutputFilePath)
+				f, err = excelize.OpenFile(tempOutputFilePath)
 				Expect(err).ToNot(HaveOccurred())
-				defer func() { Expect(f.Close()).To(Succeed()) }()
 
 				rows, err := f.GetRows(sheetName)
 				Expect(err).ToNot(HaveOccurred())
@@ -848,9 +863,8 @@ var _ = Describe("ExcelManagerImpl", func() {
 				err := excelManager.GenerateTaxSummaryExcel(ctx, testYear, sampleSummary)
 				Expect(err).ToNot(HaveOccurred())
 
-				f, err := excelize.OpenFile(tempOutputFilePath)
+				f, err = excelize.OpenFile(tempOutputFilePath)
 				Expect(err).ToNot(HaveOccurred())
-				defer func() { Expect(f.Close()).To(Succeed()) }()
 
 				// Calculate expected values using lo.SumBy
 				totalAmountUSD := lo.SumBy(sampleSummary.INRInterest, func(i tax.INRInterest) float64 {
@@ -903,6 +917,7 @@ var _ = Describe("ExcelManagerImpl", func() {
 			var (
 				sampleSummary tax.Summary
 				sheetName     = "TT Rates"
+				f             *excelize.File
 			)
 
 			BeforeEach(func() {
@@ -922,13 +937,18 @@ var _ = Describe("ExcelManagerImpl", func() {
 				}
 			})
 
+			AfterEach(func() {
+				if f != nil {
+					Expect(f.Close()).To(Succeed())
+				}
+			})
+
 			It("should write all rows with correct headers, sorted order, labels, data, and hyperlinks", func() {
 				err := excelManager.GenerateTaxSummaryExcel(ctx, testYear, sampleSummary)
 				Expect(err).ToNot(HaveOccurred())
 
-				f, err := excelize.OpenFile(tempOutputFilePath)
+				f, err = excelize.OpenFile(tempOutputFilePath)
 				Expect(err).ToNot(HaveOccurred())
-				defer func() { Expect(f.Close()).To(Succeed()) }()
 
 				rows, err := f.GetRows(sheetName)
 				Expect(err).ToNot(HaveOccurred())
@@ -1009,9 +1029,8 @@ var _ = Describe("ExcelManagerImpl", func() {
 				err := excelManager.GenerateTaxSummaryExcel(ctx, testYear, summary)
 				Expect(err).ToNot(HaveOccurred())
 
-				f, err := excelize.OpenFile(tempOutputFilePath)
+				f, err = excelize.OpenFile(tempOutputFilePath)
 				Expect(err).ToNot(HaveOccurred())
-				defer func() { Expect(f.Close()).To(Succeed()) }()
 
 				rows, err := f.GetRows(sheetName)
 				Expect(err).ToNot(HaveOccurred())
