@@ -2,12 +2,16 @@
 package manager_test
 
 import (
+	"archive/zip"
 	"context"
 	"fmt"
+	"io"
 	"os"
 	"path/filepath"
+	"regexp"
 	"slices"
 	"strconv"
+	"strings"
 	"time"
 
 	"github.com/amanhigh/go-fun/components/kohan/manager"
@@ -58,6 +62,13 @@ var _ = Describe("ExcelManagerImpl", func() {
 		return floatVal, nil
 	}
 
+	// mustParseDate parses a fixture date using time.DateOnly, failing the test immediately on error.
+	mustParseDate := func(dateStr string) time.Time {
+		t, err := time.Parse(time.DateOnly, dateStr)
+		Expect(err).ToNot(HaveOccurred(), "mustParseDate(%q)", dateStr)
+		return t
+	}
+
 	// expectFormulaCell verifies both the formula string and calculated value
 	expectFormulaCell := func(f *excelize.File, sheetName, axis, expectedFormula string, expectedValue float64) {
 		// Verify formula string
@@ -104,6 +115,82 @@ var _ = Describe("ExcelManagerImpl", func() {
 		Expect(sourceVal).To(BeNumerically("~", targetVal, 0.01))
 	}
 
+	// readAutoFilterRanges inspects the raw workbook XML to extract autoFilter
+	// ranges for each detail sheet. It maps sheet names to files via workbook.xml
+	// relationships to avoid fragile assumptions about sheet XML numbering.
+	readAutoFilterRanges := func(xlsxPath string) map[string]string {
+		zr, zErr := zip.OpenReader(xlsxPath)
+		Expect(zErr).ToNot(HaveOccurred())
+		defer func() { Expect(zr.Close()).To(Succeed()) }()
+
+		readZipEntry := func(name string) []byte {
+			for _, zf := range zr.File {
+				if zf.Name == name {
+					rc, oErr := zf.Open()
+					Expect(oErr).ToNot(HaveOccurred())
+					defer func() { Expect(rc.Close()).To(Succeed()) }()
+					data, rErr := io.ReadAll(rc)
+					Expect(rErr).ToNot(HaveOccurred())
+					return data
+				}
+			}
+			Fail(fmt.Sprintf("zip entry not found: %s", name))
+			return nil
+		}
+
+		// Parse workbook.xml to get sheet name ↔ rId mapping
+		wbXML := string(readZipEntry("xl/workbook.xml"))
+		sheetRe := regexp.MustCompile(`<sheet[^>]*name="([^"]+)"[^>]*r:id="([^"]+)"`)
+		sheetMatches := sheetRe.FindAllStringSubmatch(wbXML, -1)
+
+		// Parse workbook.xml.rels to get rId ↔ target (path) mapping
+		relsXML := string(readZipEntry("xl/_rels/workbook.xml.rels"))
+		relRe := regexp.MustCompile(`<Relationship[^>]*Id="([^"]+)"[^>]*Target="([^"]+)"`)
+		relMatches := relRe.FindAllStringSubmatch(relsXML, -1)
+
+		rIDToTarget := make(map[string]string)
+		for _, m := range relMatches {
+			target := m[2]
+			// Normalize target path: remove leading "/" and ensure "xl/" prefix
+			target = strings.TrimPrefix(target, "/")
+			if !strings.HasPrefix(target, "xl/") {
+				target = "xl/" + target
+			}
+			rIDToTarget[m[1]] = target
+		}
+
+		sheetToTarget := make(map[string]string)
+		for _, m := range sheetMatches {
+			if target, ok := rIDToTarget[m[2]]; ok {
+				sheetToTarget[m[1]] = target
+			}
+		}
+
+		// Read each worksheet XML and extract autoFilter ref
+		afRe := regexp.MustCompile(`<autoFilter[^>]*ref="([^"]+)"`)
+		sheetRanges := make(map[string]string)
+		for sName, target := range sheetToTarget {
+			if sName == "Summary" {
+				continue
+			}
+			wsXML := string(readZipEntry(target))
+			if m := afRe.FindStringSubmatch(wsXML); len(m) > 1 {
+				// Normalize ref: ensure absolute (A1:J3 → $A$1:$J$3),
+				// preserve already-absolute refs ($A$1:$J$3) without $$ doubling.
+				parts := strings.Split(m[1], ":")
+				Expect(parts).To(HaveLen(2), "autoFilter ref should have two parts")
+				makeAbsolute := func(ref string) string {
+					if strings.Contains(ref, "$") {
+						return ref
+					}
+					return "$" + ref
+				}
+				sheetRanges[sName] = makeAbsolute(parts[0]) + ":" + makeAbsolute(parts[1])
+			}
+		}
+		return sheetRanges
+	}
+
 	Describe("GenerateTaxSummaryExcel", func() {
 		Context("when generating the 'Gains' sheet with data", func() {
 			var (
@@ -112,12 +199,12 @@ var _ = Describe("ExcelManagerImpl", func() {
 			)
 
 			BeforeEach(func() {
-				gain1TTDate, _ := time.Parse(time.DateOnly, "2023-01-15")
+				gain1TTDate := mustParseDate("2023-01-15")
 				gain1 := tax.INRGains{
 					Gains:  tax.Gains{Symbol: "AAPL", BuyDate: "2022-10-01", SellDate: "2023-01-20", Quantity: 10.5, PNL: 100.75, Commission: 5.25, Type: "STCG"},
 					TTDate: gain1TTDate, TTRate: 82.50,
 				}
-				gain2TTDate, _ := time.Parse(time.DateOnly, "2023-02-10")
+				gain2TTDate := mustParseDate("2023-02-10")
 				gain2 := tax.INRGains{
 					Gains:  tax.Gains{Symbol: "MSFT", BuyDate: "2020-05-01", SellDate: "2023-02-15", Quantity: 5, PNL: -50.20, Commission: 0, Type: "LTCG"},
 					TTDate: gain2TTDate, TTRate: 83.10,
@@ -171,59 +258,128 @@ var _ = Describe("ExcelManagerImpl", func() {
 				expectedRowCount := 1 + len(sampleSummary.INRGains) + 5
 				Expect(rows).To(HaveLen(expectedRowCount), "Number of rows should be headers + data records + totals section")
 
-				// Verify gain1 (row 2 in Excel, index 1 in `rows` slice)
-				gain1 := sampleSummary.INRGains[0]
-				Expect(rows[1][0]).To(Equal(gain1.Symbol))
-				Expect(rows[1][1]).To(Equal(gain1.BuyDate))
-				Expect(rows[1][2]).To(Equal(gain1.SellDate))
-				qty1, _ := getCellFloat(f, sheetName, "D2")
-				Expect(qty1).To(BeNumerically("~", gain1.Quantity, 0.001))
-				pnlUSD1, _ := getCellFloat(f, sheetName, "E2")
-				Expect(pnlUSD1).To(BeNumerically("~", gain1.PNL, 0.001))
-				comm1, _ := getCellFloat(f, sheetName, "F2")
-				Expect(comm1).To(BeNumerically("~", gain1.Commission, 0.001))
-				Expect(rows[1][6]).To(Equal(gain1.Type))
-				Expect(rows[1][7]).To(Equal(gain1.TTDate.Format(time.DateOnly)))
-				rate1, _ := getCellFloat(f, sheetName, "I2")
-				Expect(rate1).To(BeNumerically("~", gain1.TTRate, 0.001))
+				// Sorted by SellDate descending: GOOG (2023-03-10), MSFT (2023-02-15), AAPL (2023-01-20)
+				// Verify GOOG (row 2 in Excel, index 1 in `rows` slice) — latest sell first
+				gain3 := sampleSummary.INRGains[2]
+				Expect(rows[1][0]).To(Equal(gain3.Symbol))
+				Expect(rows[1][1]).To(Equal(gain3.BuyDate))
+				Expect(rows[1][2]).To(Equal(gain3.SellDate))
+				qty1, err := getCellFloat(f, sheetName, "D2")
+				Expect(err).ToNot(HaveOccurred())
+				Expect(qty1).To(BeNumerically("~", gain3.Quantity, 0.001))
+				pnlUSD1, err := getCellFloat(f, sheetName, "E2")
+				Expect(err).ToNot(HaveOccurred())
+				Expect(pnlUSD1).To(BeNumerically("~", gain3.PNL, 0.001))
+				comm1, err := getCellFloat(f, sheetName, "F2")
+				Expect(err).ToNot(HaveOccurred())
+				Expect(comm1).To(BeNumerically("~", gain3.Commission, 0.001))
+				Expect(rows[1][6]).To(Equal(gain3.Type))
+				Expect(rows[1][7]).To(Equal(""), "TTDate for zero time should be an empty string")
+				rate1, err := getCellFloat(f, sheetName, "I2")
+				Expect(err).ToNot(HaveOccurred())
+				Expect(rate1).To(BeNumerically("~", gain3.TTRate, 0.001))
 				// Column J has formula =E2*I2 and calculates PNL (INR)
-				expectFormulaCell(f, sheetName, "J2", "=E2*I2", gain1.PNL*gain1.TTRate)
+				expectFormulaCell(f, sheetName, "J2", "=E2*I2", gain3.PNL*gain3.TTRate)
 
-				// Verify gain2 (row 3 in Excel, index 2 in `rows` slice)
+				// Verify MSFT (row 3 in Excel, index 2 in `rows` slice)
 				gain2 := sampleSummary.INRGains[1]
 				Expect(rows[2][0]).To(Equal(gain2.Symbol))
 				Expect(rows[2][1]).To(Equal(gain2.BuyDate))
 				Expect(rows[2][2]).To(Equal(gain2.SellDate))
-				qty2, _ := getCellFloat(f, sheetName, "D3")
+				qty2, err := getCellFloat(f, sheetName, "D3")
+				Expect(err).ToNot(HaveOccurred())
 				Expect(qty2).To(BeNumerically("~", gain2.Quantity, 0.001))
-				pnlUSD2, _ := getCellFloat(f, sheetName, "E3")
+				pnlUSD2, err := getCellFloat(f, sheetName, "E3")
+				Expect(err).ToNot(HaveOccurred())
 				Expect(pnlUSD2).To(BeNumerically("~", gain2.PNL, 0.001))
-				comm2, _ := getCellFloat(f, sheetName, "F3")
+				comm2, err := getCellFloat(f, sheetName, "F3")
+				Expect(err).ToNot(HaveOccurred())
 				Expect(comm2).To(BeNumerically("~", gain2.Commission, 0.001))
 				Expect(rows[2][6]).To(Equal(gain2.Type))
 				Expect(rows[2][7]).To(Equal(gain2.TTDate.Format(time.DateOnly)))
-				rate2, _ := getCellFloat(f, sheetName, "I3")
+				rate2, err := getCellFloat(f, sheetName, "I3")
+				Expect(err).ToNot(HaveOccurred())
 				Expect(rate2).To(BeNumerically("~", gain2.TTRate, 0.001))
 				// Column J has formula =E3*I3 and calculates PNL (INR)
 				expectFormulaCell(f, sheetName, "J3", "=E3*I3", gain2.PNL*gain2.TTRate)
 
-				// Verify gain3WithZeroTTDate (row 4 in Excel, index 3 in `rows` slice)
-				gain3 := sampleSummary.INRGains[2]
-				Expect(rows[3][0]).To(Equal(gain3.Symbol))
-				Expect(rows[3][1]).To(Equal(gain3.BuyDate))
-				Expect(rows[3][2]).To(Equal(gain3.SellDate))
-				qty3, _ := getCellFloat(f, sheetName, "D4")
-				Expect(qty3).To(BeNumerically("~", gain3.Quantity, 0.001))
-				pnlUSD3, _ := getCellFloat(f, sheetName, "E4")
-				Expect(pnlUSD3).To(BeNumerically("~", gain3.PNL, 0.001))
-				comm3, _ := getCellFloat(f, sheetName, "F4")
-				Expect(comm3).To(BeNumerically("~", gain3.Commission, 0.001))
-				Expect(rows[3][6]).To(Equal(gain3.Type))
-				Expect(rows[3][7]).To(Equal(""), "TTDate for zero time should be an empty string")
-				rate3, _ := getCellFloat(f, sheetName, "I4")
-				Expect(rate3).To(BeNumerically("~", gain3.TTRate, 0.001))
+				// Verify AAPL (row 4 in Excel, index 3 in `rows` slice) — earliest sell last
+				gain1 := sampleSummary.INRGains[0]
+				Expect(rows[3][0]).To(Equal(gain1.Symbol))
+				Expect(rows[3][1]).To(Equal(gain1.BuyDate))
+				Expect(rows[3][2]).To(Equal(gain1.SellDate))
+				qty3, err := getCellFloat(f, sheetName, "D4")
+				Expect(err).ToNot(HaveOccurred())
+				Expect(qty3).To(BeNumerically("~", gain1.Quantity, 0.001))
+				pnlUSD3, err := getCellFloat(f, sheetName, "E4")
+				Expect(err).ToNot(HaveOccurred())
+				Expect(pnlUSD3).To(BeNumerically("~", gain1.PNL, 0.001))
+				comm3, err := getCellFloat(f, sheetName, "F4")
+				Expect(err).ToNot(HaveOccurred())
+				Expect(comm3).To(BeNumerically("~", gain1.Commission, 0.001))
+				Expect(rows[3][6]).To(Equal(gain1.Type))
+				Expect(rows[3][7]).To(Equal(gain1.TTDate.Format(time.DateOnly)))
+				rate3, err := getCellFloat(f, sheetName, "I4")
+				Expect(err).ToNot(HaveOccurred())
+				Expect(rate3).To(BeNumerically("~", gain1.TTRate, 0.001))
 				// Column J has formula =E4*I4 and calculates PNL (INR)
-				expectFormulaCell(f, sheetName, "J4", "=E4*I4", gain3.PNL*gain3.TTRate)
+				expectFormulaCell(f, sheetName, "J4", "=E4*I4", gain1.PNL*gain1.TTRate)
+			})
+
+			It("should write TOTALS, STCG, and LTCG rows with correct labels and formulas", func() {
+				err := excelManager.GenerateTaxSummaryExcel(ctx, testYear, sampleSummary)
+				Expect(err).ToNot(HaveOccurred())
+
+				f, err := excelize.OpenFile(tempOutputFilePath)
+				Expect(err).ToNot(HaveOccurred())
+				defer func() { Expect(f.Close()).To(Succeed()) }()
+
+				lastDataRow := len(sampleSummary.INRGains) + 1 // Row 4 (3 data rows: rows 2-4)
+				totalsRow := lastDataRow + 2                   // Row 6 (skip empty row 5)
+				stcgRow := totalsRow + 2                       // Row 8 (skip empty row 7)
+				ltcgRow := stcgRow + 1                         // Row 9
+
+				// Compute expected totals from the fixture data
+				// gain1 (AAPL, STCG): PNL=100.75, Commission=5.25, TTRate=82.50
+				// gain2 (MSFT, LTCG): PNL=-50.20, Commission=0, TTRate=83.10
+				// gain3 (GOOG, LTCG): PNL=200.00, Commission=1.50, TTRate=81.75
+				gains := sampleSummary.INRGains
+				totalPNLUSD := lo.SumBy(gains, func(g tax.INRGains) float64 { return g.PNL })
+				totalCommissionUSD := lo.SumBy(gains, func(g tax.INRGains) float64 { return g.Commission })
+				totalPNLINR := lo.SumBy(gains, func(g tax.INRGains) float64 { return g.PNL * g.TTRate })
+				stcgPNLUSD := gains[0].PNL // AAPL is the only STCG
+				stcgPNLINR := gains[0].PNL * gains[0].TTRate
+				ltcgPNLUSD := gains[1].PNL + gains[2].PNL
+				ltcgPNLINR := gains[1].PNL*gains[1].TTRate + gains[2].PNL*gains[2].TTRate
+
+				// Verify TOTALS label and formulas
+				totalsLabel, err := f.GetCellValue(sheetName, fmt.Sprintf("A%d", totalsRow))
+				Expect(err).ToNot(HaveOccurred())
+				Expect(totalsLabel).To(Equal("TOTALS"))
+				expectFormulaCell(f, sheetName, fmt.Sprintf("E%d", totalsRow),
+					fmt.Sprintf("=SUM(E2:E%d)", lastDataRow), totalPNLUSD)
+				expectFormulaCell(f, sheetName, fmt.Sprintf("F%d", totalsRow),
+					fmt.Sprintf("=SUM(F2:F%d)", lastDataRow), totalCommissionUSD)
+				expectFormulaCell(f, sheetName, fmt.Sprintf("J%d", totalsRow),
+					fmt.Sprintf("=SUM(J2:J%d)", lastDataRow), totalPNLINR)
+
+				// Verify STCG label and SUMIF formulas
+				stcgLabel, err := f.GetCellValue(sheetName, fmt.Sprintf("A%d", stcgRow))
+				Expect(err).ToNot(HaveOccurred())
+				Expect(stcgLabel).To(Equal("STCG"))
+				expectFormulaCell(f, sheetName, fmt.Sprintf("E%d", stcgRow),
+					fmt.Sprintf("=SUMIF(G2:G%d,\"STCG\",E2:E%d)", lastDataRow, lastDataRow), stcgPNLUSD)
+				expectFormulaCell(f, sheetName, fmt.Sprintf("J%d", stcgRow),
+					fmt.Sprintf("=SUMIF(G2:G%d,\"STCG\",J2:J%d)", lastDataRow, lastDataRow), stcgPNLINR)
+
+				// Verify LTCG label and SUMIF formulas
+				ltcgLabel, err := f.GetCellValue(sheetName, fmt.Sprintf("A%d", ltcgRow))
+				Expect(err).ToNot(HaveOccurred())
+				Expect(ltcgLabel).To(Equal("LTCG"))
+				expectFormulaCell(f, sheetName, fmt.Sprintf("E%d", ltcgRow),
+					fmt.Sprintf("=SUMIF(G2:G%d,\"LTCG\",E2:E%d)", lastDataRow, lastDataRow), ltcgPNLUSD)
+				expectFormulaCell(f, sheetName, fmt.Sprintf("J%d", ltcgRow),
+					fmt.Sprintf("=SUMIF(G2:G%d,\"LTCG\",J2:J%d)", lastDataRow, lastDataRow), ltcgPNLINR)
 			})
 
 			It("should set custom column widths for Gains sheet", func() {
@@ -232,7 +388,7 @@ var _ = Describe("ExcelManagerImpl", func() {
 
 				f, err := excelize.OpenFile(tempOutputFilePath)
 				Expect(err).ToNot(HaveOccurred())
-				defer f.Close()
+				defer func() { Expect(f.Close()).To(Succeed()) }()
 
 				widthA, err := f.GetColWidth(sheetName, "A")
 				Expect(err).ToNot(HaveOccurred())
@@ -244,107 +400,100 @@ var _ = Describe("ExcelManagerImpl", func() {
 			})
 		})
 
-		Context("when INRGains slice is empty", func() {
-			var (
-				emptySummary tax.Summary
-			)
-			BeforeEach(func() {
-				emptySummary = tax.Summary{INRGains: []tax.INRGains{}}
-			})
-
-			It("should create the 'Gains' sheet with only headers", func() {
-				err := excelManager.GenerateTaxSummaryExcel(ctx, testYear, emptySummary)
-				Expect(err).ToNot(HaveOccurred())
-				Expect(tempOutputFilePath).Should(BeARegularFile())
-
-				f, err := excelize.OpenFile(tempOutputFilePath)
-				Expect(err).ToNot(HaveOccurred())
-				defer f.Close()
-
-				sheetName := "Gains"
-				sheetFound := slices.Contains(f.GetSheetList(), sheetName)
-				Expect(sheetFound).To(BeTrue(), "Sheet 'Gains' should exist")
-
-				rows, err := f.GetRows(sheetName)
-				Expect(err).ToNot(HaveOccurred())
-				Expect(rows).To(HaveLen(1), "Sheet should only contain the header row")
-
-				expectedHeaders := []string{
-					"Symbol", "BuyDate", "SellDate", "Quantity", "PNL (USD)",
-					"Commission (USD)", "Type", "TTDate", "TTRate", "PNL (INR)",
-				}
-				Expect(rows[0]).To(Equal(expectedHeaders))
-			})
-		})
-
 		Context("when generating the 'Dividends' sheet with data", func() {
 			var (
 				sampleSummary tax.Summary
 				sheetName     = "Dividends"
+				f             *excelize.File
 			)
 
 			BeforeEach(func() {
-				div1TTDate, _ := time.Parse(time.DateOnly, "2023-04-05")
+				div1TTDate := mustParseDate("2023-04-05")
 				div1 := tax.INRDividend{
 					Dividend: tax.Dividend{Symbol: "AAPL", Date: "2023-04-10", Amount: 50.25, Tax: 7.54, Net: 42.71},
 					TTDate:   div1TTDate, TTRate: 82.10,
 				}
-				div2TTDate, _ := time.Parse(time.DateOnly, "2023-05-12")
+				div2TTDate := mustParseDate("2023-05-12")
 				div2 := tax.INRDividend{
 					Dividend: tax.Dividend{Symbol: "GOOG", Date: "2023-05-15", Amount: 75.50, Tax: 11.33, Net: 64.17},
 					TTDate:   div2TTDate, TTRate: 82.50,
 				}
 				sampleSummary.INRDividends = []tax.INRDividend{div1, div2}
-			})
 
-			It("should create the 'Dividends' sheet with correct headers and data", func() {
 				err := excelManager.GenerateTaxSummaryExcel(ctx, testYear, sampleSummary)
 				Expect(err).ToNot(HaveOccurred())
 
-				f, err := excelize.OpenFile(tempOutputFilePath)
+				f, err = excelize.OpenFile(tempOutputFilePath)
 				Expect(err).ToNot(HaveOccurred())
-				defer f.Close()
+			})
 
+			AfterEach(func() {
+				if f != nil {
+					Expect(f.Close()).To(Succeed())
+				}
+			})
+
+			It("should create the 'Dividends' sheet with correct headers and data", func() {
 				rows, err := f.GetRows(sheetName)
 				Expect(err).ToNot(HaveOccurred())
 				// Rows include: headers + data records + empty row + TOTALS row
 				expectedRowCount := 1 + len(sampleSummary.INRDividends) + 2
-				Expect(rows).To(HaveLen(expectedRowCount))
+				Expect(rows).To(HaveLen(expectedRowCount), "unexpected row count for Dividends sheet")
 
 				// Verify Headers
 				expectedHeaders := []string{
 					"Symbol", "Date", "Amount (USD)", "Tax (USD)", "Net (USD)", "TTDate", "TTRate",
 					"Amount (INR)", "Tax (INR)", "Net (INR)",
 				}
-				Expect(rows[0]).To(Equal(expectedHeaders))
+				Expect(rows[0]).To(Equal(expectedHeaders), "Dividends headers incorrect")
 
-				// Verify first data row for accuracy (basic check)
+				// Sorted by Date descending: GOOG (2023-05-15) → row 2, AAPL (2023-04-10) → row 3
+				// Verify GOOG (row 2 in Excel, index 1 in `rows` slice) — latest date first
+				div2 := sampleSummary.INRDividends[1]
+				Expect(rows[1][0]).To(Equal(div2.Symbol))
+				Expect(rows[1][1]).To(Equal(div2.Date))
+				amount2, err := getCellFloat(f, sheetName, "C2")
+				Expect(err).ToNot(HaveOccurred())
+				Expect(amount2).To(BeNumerically("~", div2.Amount, 0.001))
+				tax2, err := getCellFloat(f, sheetName, "D2")
+				Expect(err).ToNot(HaveOccurred())
+				Expect(tax2).To(BeNumerically("~", div2.Tax, 0.001))
+				net2, err := getCellFloat(f, sheetName, "E2")
+				Expect(err).ToNot(HaveOccurred())
+				Expect(net2).To(BeNumerically("~", div2.Net, 0.001))
+				Expect(rows[1][5]).To(Equal(div2.TTDate.Format(time.DateOnly)))
+				rate2, err := getCellFloat(f, sheetName, "G2")
+				Expect(err).ToNot(HaveOccurred())
+				Expect(rate2).To(BeNumerically("~", div2.TTRate, 0.001))
+				// Verify INR formulas for GOOG
+				expectFormulaCell(f, sheetName, "H2", "=C2*G2", div2.Amount*div2.TTRate) // Amount (INR)
+				expectFormulaCell(f, sheetName, "I2", "=D2*G2", div2.Tax*div2.TTRate)    // Tax (INR)
+				expectFormulaCell(f, sheetName, "J2", "=E2*G2", div2.Net*div2.TTRate)    // Net (INR)
+
+				// Verify AAPL (row 3 in Excel, index 2 in `rows` slice) — earliest date last
 				div1 := sampleSummary.INRDividends[0]
-				Expect(rows[1][0]).To(Equal(div1.Symbol))
-				Expect(rows[1][1]).To(Equal(div1.Date))
-				amountUSD1, _ := getCellFloat(f, sheetName, "C2")
-				Expect(amountUSD1).To(BeNumerically("~", div1.Amount, 0.001))
-				taxUSD1, _ := getCellFloat(f, sheetName, "D2")
-				Expect(taxUSD1).To(BeNumerically("~", div1.Tax, 0.001))
-				netUSD1, _ := getCellFloat(f, sheetName, "E2")
-				Expect(netUSD1).To(BeNumerically("~", div1.Net, 0.001))
-				Expect(rows[1][5]).To(Equal(div1.TTDate.Format(time.DateOnly)))
-				rate1, _ := getCellFloat(f, sheetName, "G2")
+				Expect(rows[2][0]).To(Equal(div1.Symbol))
+				Expect(rows[2][1]).To(Equal(div1.Date))
+				amount1, err := getCellFloat(f, sheetName, "C3")
+				Expect(err).ToNot(HaveOccurred())
+				Expect(amount1).To(BeNumerically("~", div1.Amount, 0.001))
+				tax1, err := getCellFloat(f, sheetName, "D3")
+				Expect(err).ToNot(HaveOccurred())
+				Expect(tax1).To(BeNumerically("~", div1.Tax, 0.001))
+				net1, err := getCellFloat(f, sheetName, "E3")
+				Expect(err).ToNot(HaveOccurred())
+				Expect(net1).To(BeNumerically("~", div1.Net, 0.001))
+				Expect(rows[2][5]).To(Equal(div1.TTDate.Format(time.DateOnly)))
+				rate1, err := getCellFloat(f, sheetName, "G3")
+				Expect(err).ToNot(HaveOccurred())
 				Expect(rate1).To(BeNumerically("~", div1.TTRate, 0.001))
-				// Verify formulas for INR columns
-				expectFormulaCell(f, sheetName, "H2", "=C2*G2", div1.Amount*div1.TTRate) // Amount (INR)
-				expectFormulaCell(f, sheetName, "I2", "=D2*G2", div1.Tax*div1.TTRate)    // Tax (INR)
-				expectFormulaCell(f, sheetName, "J2", "=E2*G2", div1.Net*div1.TTRate)    // Net (INR)
+				// Verify INR formulas for AAPL
+				expectFormulaCell(f, sheetName, "H3", "=C3*G3", div1.Amount*div1.TTRate) // Amount (INR)
+				expectFormulaCell(f, sheetName, "I3", "=D3*G3", div1.Tax*div1.TTRate)    // Tax (INR)
+				expectFormulaCell(f, sheetName, "J3", "=E3*G3", div1.Net*div1.TTRate)    // Net (INR)
 			})
 
 			It("should write TOTALS row with correct formulas and calculated values", func() {
-				err := excelManager.GenerateTaxSummaryExcel(ctx, testYear, sampleSummary)
-				Expect(err).ToNot(HaveOccurred())
-
-				f, err := excelize.OpenFile(tempOutputFilePath)
-				Expect(err).ToNot(HaveOccurred())
-				defer f.Close()
-
 				// Calculate expected values using lo.SumBy
 				totalAmountUSD := lo.SumBy(sampleSummary.INRDividends, func(d tax.INRDividend) float64 {
 					return d.Amount
@@ -392,29 +541,6 @@ var _ = Describe("ExcelManagerImpl", func() {
 			})
 		})
 
-		Context("when INRDividends slice is empty", func() {
-			It("should create the 'Dividends' sheet with only headers", func() {
-				emptySummary := tax.Summary{INRDividends: []tax.INRDividend{}}
-				err := excelManager.GenerateTaxSummaryExcel(ctx, testYear, emptySummary)
-				Expect(err).ToNot(HaveOccurred())
-
-				f, err := excelize.OpenFile(tempOutputFilePath)
-				Expect(err).ToNot(HaveOccurred())
-				defer f.Close()
-
-				sheetName := "Dividends"
-				rows, err := f.GetRows(sheetName)
-				Expect(err).ToNot(HaveOccurred())
-				Expect(rows).To(HaveLen(1))
-
-				expectedHeaders := []string{
-					"Symbol", "Date", "Amount (USD)", "Tax (USD)", "Net (USD)", "TTDate", "TTRate",
-					"Amount (INR)", "Tax (INR)", "Net (INR)",
-				}
-				Expect(rows[0]).To(Equal(expectedHeaders))
-			})
-		})
-
 		Context("when generating the 'Valuations' sheet with data", func() {
 			var (
 				sampleSummary tax.Summary
@@ -423,10 +549,10 @@ var _ = Describe("ExcelManagerImpl", func() {
 
 			BeforeEach(func() {
 				// Define dates
-				firstDate, _ := time.Parse(time.DateOnly, "2022-01-10")
-				firstTTDate, _ := time.Parse(time.DateOnly, "2022-01-11")
-				peakDate, _ := time.Parse(time.DateOnly, "2022-11-25")
-				yearEndDate, _ := time.Parse(time.DateOnly, "2023-03-31")
+				firstDate := mustParseDate("2022-01-10")
+				firstTTDate := mustParseDate("2022-01-11")
+				peakDate := mustParseDate("2022-11-25")
+				yearEndDate := mustParseDate("2023-03-31")
 
 				// Create a full valuation object
 				val1 := tax.INRValuation{
@@ -456,7 +582,7 @@ var _ = Describe("ExcelManagerImpl", func() {
 
 				f, err := excelize.OpenFile(tempOutputFilePath)
 				Expect(err).ToNot(HaveOccurred())
-				defer f.Close()
+				defer func() { Expect(f.Close()).To(Succeed()) }()
 
 				rows, err := f.GetRows(sheetName)
 				Expect(err).ToNot(HaveOccurred())
