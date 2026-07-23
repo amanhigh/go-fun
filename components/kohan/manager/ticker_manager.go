@@ -40,17 +40,19 @@ type TickerManager interface {
 }
 
 type TickerManagerImpl struct {
-	client    clients.SecurityClient
-	downloads string
-	cache     map[string]tax.StockData
-	cacheLock sync.RWMutex
+	client             clients.SecurityClient
+	securityIDProvider SecurityIDProvider
+	downloads          string
+	cache              map[string]tax.StockData
+	cacheLock          sync.RWMutex
 }
 
-func NewTickerManager(client clients.SecurityClient, downloads string) *TickerManagerImpl {
+func NewTickerManager(client clients.SecurityClient, securityIDProvider SecurityIDProvider, downloads string) *TickerManagerImpl {
 	return &TickerManagerImpl{
-		client:    client,
-		downloads: downloads,
-		cache:     make(map[string]tax.StockData),
+		client:             client,
+		securityIDProvider: securityIDProvider,
+		downloads:          downloads,
+		cache:              make(map[string]tax.StockData),
 	}
 }
 
@@ -69,9 +71,9 @@ func (t *TickerManagerImpl) DownloadTicker(ctx context.Context, ticker string) (
 		return common.NewServerError(err1)
 	}
 
-	// Fetch data using AlphaClient
+	// Fetch data using the private helper (tries direct fetch, then fallback resolution)
 	var data tax.StockData
-	if data, err = t.client.FetchDailyPrices(ctx, ticker); err != nil {
+	if data, err = t.fetchTickerData(ctx, ticker); err != nil {
 		return err
 	}
 
@@ -201,6 +203,39 @@ func (t *TickerManagerImpl) saveTickerData(data tax.StockData, ticker string) co
 		return common.NewServerError(marshalErr)
 	}
 	return nil
+}
+
+// fetchTickerData tries the requested ticker first; on failure, resolves via
+// SecurityIDProvider, returns common.ErrNotFound for zero candidates and
+// common.ErrEntityExists for multiple candidates, and retries the sole candidate.
+// Provider/search/retry errors are returned unchanged.
+func (t *TickerManagerImpl) fetchTickerData(ctx context.Context, ticker string) (tax.StockData, common.HttpError) {
+	// Try direct fetch first
+	data, err := t.client.FetchDailyPrices(ctx, ticker)
+	if err == nil {
+		return data, nil
+	}
+
+	// Direct fetch failed — attempt fallback resolution via SecurityIDProvider
+	securityID, secErr := t.securityIDProvider.GetSecurityID(ctx, ticker)
+	if secErr != nil {
+		return tax.StockData{}, secErr
+	}
+
+	candidates, searchErr := t.client.GetSecurityInfo(ctx, securityID)
+	if searchErr != nil {
+		return tax.StockData{}, searchErr
+	}
+
+	if len(candidates) == 0 {
+		return tax.StockData{}, common.ErrNotFound
+	}
+	if len(candidates) > 1 {
+		return tax.StockData{}, common.ErrEntityExists
+	}
+
+	// Exactly one candidate — retry with its symbol (unchanged, no trim/validation)
+	return t.client.FetchDailyPrices(ctx, candidates[0].Symbol)
 }
 
 // GetSplits returns split events within the given date range (inclusive).
