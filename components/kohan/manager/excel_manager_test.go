@@ -315,6 +315,10 @@ var _ = Describe("ExcelManagerImpl", func() {
 				Expect(rate3).To(BeNumerically("~", gain1.TTRate, 0.001))
 				// Column J has formula =E4*I4 and calculates PNL (INR)
 				expectFormulaCell(f, sheetName, "J4", "=E4*I4", gain1.PNL*gain1.TTRate)
+
+				// Verify AutoFilter range covers header + data rows only (excludes totals)
+				ranges := readAutoFilterRanges(tempOutputFilePath)
+				Expect(ranges).To(HaveKeyWithValue(sheetName, "$A$1:$J$4"))
 			})
 
 			It("should write TOTALS, STCG, and LTCG rows with correct labels and formulas", func() {
@@ -480,6 +484,10 @@ var _ = Describe("ExcelManagerImpl", func() {
 				expectFormulaCell(f, sheetName, "H3", "=C3*G3", div1.Amount*div1.TTRate) // Amount (INR)
 				expectFormulaCell(f, sheetName, "I3", "=D3*G3", div1.Tax*div1.TTRate)    // Tax (INR)
 				expectFormulaCell(f, sheetName, "J3", "=E3*G3", div1.Net*div1.TTRate)    // Net (INR)
+
+				// Verify AutoFilter range covers header + data rows only (excludes totals)
+				ranges := readAutoFilterRanges(tempOutputFilePath)
+				Expect(ranges).To(HaveKeyWithValue(sheetName, "$A$1:$J$3"))
 			})
 
 			It("should write TOTALS row with correct formulas and calculated values", func() {
@@ -649,6 +657,10 @@ var _ = Describe("ExcelManagerImpl", func() {
 				// Verify YearEnd Position formulas
 				expectFormulaCell(f, sheetName, "S2", "=Q2*R2", posYearEnd.USDValue())
 				expectFormulaCell(f, sheetName, "V2", "=S2*U2", posYearEnd.INRValue())
+
+				// Verify AutoFilter range covers header + data rows only (excludes totals)
+				ranges := readAutoFilterRanges(tempOutputFilePath)
+				Expect(ranges).To(HaveKeyWithValue(sheetName, "$A$1:$W$2"))
 			})
 
 			It("should write TOTALS row for AmountPaid with non-zero value", func() {
@@ -857,6 +869,10 @@ var _ = Describe("ExcelManagerImpl", func() {
 				expectFormulaCell(f, sheetName, "H3", "=C3*G3", int1.Amount*int1.TTRate) // Amount (INR)
 				expectFormulaCell(f, sheetName, "I3", "=D3*G3", int1.Tax*int1.TTRate)    // Tax (INR)
 				expectFormulaCell(f, sheetName, "J3", "=E3*G3", int1.Net*int1.TTRate)    // Net (INR)
+
+				// Verify AutoFilter range covers header + data rows only (excludes totals)
+				ranges := readAutoFilterRanges(tempOutputFilePath)
+				Expect(ranges).To(HaveKeyWithValue(sheetName, "$A$1:$J$3"))
 			})
 
 			It("should write TOTALS row with correct formulas and calculated values", func() {
@@ -1013,6 +1029,10 @@ var _ = Describe("ExcelManagerImpl", func() {
 				val, err = f.GetCellValue(sheetName, "E5")
 				Expect(err).ToNot(HaveOccurred())
 				Expect(val).To(Equal("-"), "non-URL PDFFile cell value should be the raw string")
+
+				// Verify AutoFilter range covers header + data rows only (excludes totals)
+				ranges := readAutoFilterRanges(tempOutputFilePath)
+				Expect(ranges).To(HaveKeyWithValue(sheetName, "$A$1:$F$5"))
 			})
 
 			It("should fall back to APR→Mar index-based labels for zero ActualDate rows with empty TTDate", func() {
@@ -1134,6 +1154,17 @@ var _ = Describe("ExcelManagerImpl", func() {
 			It("should create a file with exactly 6 sheets and no 'Sheet1'", func() {
 				sheets := f.GetSheetList()
 				Expect(sheets).To(Equal([]string{"Summary", "Gains", "Dividends", "Valuations", "Interest", "TT Rates"}))
+			})
+
+			It("should apply AutoFilter to all detail sheets with header-only ranges", func() {
+				ranges := readAutoFilterRanges(tempOutputFilePath)
+				Expect(ranges).To(Equal(map[string]string{
+					"Gains":      "$A$1:$J$1",
+					"Dividends":  "$A$1:$J$1",
+					"Valuations": "$A$1:$W$1",
+					"Interest":   "$A$1:$J$1",
+					"TT Rates":   "$A$1:$F$1",
+				}))
 			})
 		})
 
