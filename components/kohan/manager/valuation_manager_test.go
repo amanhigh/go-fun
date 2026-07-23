@@ -428,7 +428,7 @@ var _ = Describe("ValuationManager", func() {
 				Context("Multiple Position Peaks", func() {
 					var trades []tax.Trade
 					BeforeEach(func() {
-						// TODO: #A Multiple Peaks with Same Value (Take Second higher TBBR Rate) or Throw Error.
+						// FIXME: #A Multiple Peaks with Same Value (Take Second higher TBBR Rate) or Throw Error.
 						// Test validates that when multiple position peaks exist with SAME quantity,
 						// the second peak wins because it has HIGHER USD price AND HIGHER TBBR rate.
 						// Mar 15 fully liquidates (SELL 15 to bring 15→0), then Apr 15 re-acquires fully (BUY 15→15).
