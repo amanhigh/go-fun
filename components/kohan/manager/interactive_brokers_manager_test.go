@@ -1,12 +1,14 @@
 package manager_test
 
 import (
+	"context"
 	"fmt"
 	"os"
 	"path/filepath"
 	"time"
 
 	"github.com/amanhigh/go-fun/components/kohan/manager"
+	"github.com/amanhigh/go-fun/models/common"
 	"github.com/amanhigh/go-fun/models/tax"
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
@@ -347,6 +349,105 @@ Interest,Data,USD,2025-01-05,USD Credit Interest for Dec-2024,1.75`)
 
 		It("should set CoverageThrough to the latest period end", func() {
 			Expect(info.CoverageThrough).To(Equal(time.Date(2025, 12, 31, 0, 0, 0, 0, time.UTC)))
+		})
+	})
+
+	Context("SecurityIDProvider", func() {
+		var (
+			secIDProvider manager.SecurityIDProvider
+			ctx           context.Context
+		)
+
+		BeforeEach(func() {
+			ctx = context.Background()
+			secIDProvider = manager.NewInteractiveBrokersManagerImpl(basePath)
+		})
+
+		Context("when FI ticker maps to a Security ID", func() {
+			var secID string
+
+			BeforeEach(func() {
+				csvContent := `Financial Instrument Information,Data,Stocks,FI,Description,123456789,US3377381088`
+				err := os.WriteFile(sampleCSVPath, []byte(csvContent), 0600)
+				Expect(err).ToNot(HaveOccurred())
+
+				var httpErr common.HttpError
+				secID, httpErr = secIDProvider.GetSecurityID(ctx, "FI")
+				Expect(httpErr).ToNot(HaveOccurred())
+			})
+
+			It("should return US3377381088", func() {
+				Expect(secID).To(Equal("US3377381088"))
+			})
+		})
+
+		Context("when the same Security ID appears across multiple files", func() {
+			var secID string
+
+			writeFICSV := func(year int, id string) {
+				content := fmt.Sprintf(`Statement,Data,Period,"January 1, %d - December 31, %d"
+Financial Instrument Information,Data,Stocks,FI,Description,123456789,%s`, year, year, id)
+				err := os.WriteFile(
+					fmt.Sprintf("%s_%d.csv", basePath, year),
+					[]byte(content), 0600)
+				Expect(err).ToNot(HaveOccurred())
+			}
+
+			BeforeEach(func() {
+				// Two files with identical Security ID for FI
+				writeFICSV(2024, "US3377381088")
+				writeFICSV(2025, "US3377381088")
+
+				var httpErr common.HttpError
+				secID, httpErr = secIDProvider.GetSecurityID(ctx, "FI")
+				Expect(httpErr).ToNot(HaveOccurred())
+			})
+
+			It("should accept the repeated identical ID", func() {
+				Expect(secID).To(Equal("US3377381088"))
+			})
+		})
+
+		Context("when ticker is missing from FI records", func() {
+			var httpErr common.HttpError
+
+			BeforeEach(func() {
+				csvContent := `Statement,Data,Period,"January 1, 2024 - December 31, 2024"
+Financial Instrument Information,Data,Stocks,SOMEOTHER,Description,123456789,US1234567890`
+				err := os.WriteFile(sampleCSVPath, []byte(csvContent), 0600)
+				Expect(err).ToNot(HaveOccurred())
+
+				_, httpErr = secIDProvider.GetSecurityID(ctx, "MISSING")
+			})
+
+			It("should return a not-found error", func() {
+				Expect(httpErr).To(Equal(common.ErrNotFound))
+			})
+		})
+
+		Context("when conflicting Security IDs exist across files", func() {
+			var httpErr common.HttpError
+
+			writeFICSV := func(year int, id string) {
+				content := fmt.Sprintf(`Statement,Data,Period,"January 1, %d - December 31, %d"
+Financial Instrument Information,Data,Stocks,FI,Description,123456789,%s`, year, year, id)
+				err := os.WriteFile(
+					fmt.Sprintf("%s_%d.csv", basePath, year),
+					[]byte(content), 0600)
+				Expect(err).ToNot(HaveOccurred())
+			}
+
+			BeforeEach(func() {
+				// Two files with different Security IDs for FI
+				writeFICSV(2024, "US3377381088")
+				writeFICSV(2025, "US1111111111")
+
+				_, httpErr = secIDProvider.GetSecurityID(ctx, "FI")
+			})
+
+			It("should return a conflict error", func() {
+				Expect(httpErr).To(Equal(common.ErrEntityExists))
+			})
 		})
 	})
 })

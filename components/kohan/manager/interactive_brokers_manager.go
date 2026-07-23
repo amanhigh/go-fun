@@ -1,6 +1,7 @@
 package manager
 
 import (
+	"context"
 	"encoding/csv"
 	"fmt"
 	"math"
@@ -10,12 +11,18 @@ import (
 	"strings"
 	"time"
 
+	"github.com/amanhigh/go-fun/models/common"
 	"github.com/amanhigh/go-fun/models/tax"
 )
 
 // InteractiveBrokersManagerImpl handles parsing of IB reports and implements Broker interface.
 type InteractiveBrokersManagerImpl struct {
 	basePath string
+}
+
+// SecurityIDProvider defines a narrow lookup for ticker-to-Security-ID from IBKR files.
+type SecurityIDProvider interface {
+	GetSecurityID(ctx context.Context, ticker string) (string, common.HttpError)
 }
 
 // ibRecordTypeData is the IB CSV record type for data rows (vs header/summary rows).
@@ -30,10 +37,109 @@ const ibRecordTypeStatement = "Statement"
 // ibStatementFieldPeriod is the IB CSV statement field name for the statement period.
 const ibStatementFieldPeriod = "Period"
 
-func NewInteractiveBrokersManagerImpl(basePath string) Broker {
+func NewInteractiveBrokersManagerImpl(basePath string) *InteractiveBrokersManagerImpl {
 	return &InteractiveBrokersManagerImpl{
 		basePath: basePath,
 	}
+}
+
+var _ Broker = (*InteractiveBrokersManagerImpl)(nil)
+var _ SecurityIDProvider = (*InteractiveBrokersManagerImpl)(nil)
+
+const (
+	ibSectionFI        = "Financial Instrument Information"
+	ibFIDataTypeStocks = "Stocks"
+	ibFIColSymbol      = 3
+	ibFIColSecurityID  = 6
+	ibMinFIELength     = 7
+)
+
+// GetSecurityID looks up the Security ID (CUSIP/ISIN) for the given ticker from IBKR
+// Financial Instrument Information files. Returns a not-found error when the ticker
+// has no entry, and a conflict error when multiple non-empty Security IDs disagree.
+func (m *InteractiveBrokersManagerImpl) GetSecurityID(ctx context.Context, ticker string) (string, common.HttpError) {
+	files, err := m.discoverFiles()
+	if err != nil {
+		return "", common.NewServerError(fmt.Errorf("failed to discover IBKR files: %w", err))
+	}
+
+	if err := m.checkContext(ctx); err != nil {
+		return "", err
+	}
+
+	var foundID string
+	for _, filePath := range files {
+		fileID, conflict, err := m.readFileAndScanFI(ctx, filePath, ticker, foundID)
+		if err != nil {
+			return "", err
+		}
+		if conflict {
+			return "", common.ErrEntityExists
+		}
+		if fileID != "" {
+			foundID = fileID
+		}
+	}
+
+	if foundID == "" {
+		return "", common.ErrNotFound
+	}
+	return foundID, nil
+}
+
+// checkContext returns a server error wrapping ctx.Err() if the context is done.
+func (m *InteractiveBrokersManagerImpl) checkContext(ctx context.Context) common.HttpError {
+	select {
+	case <-ctx.Done():
+		return common.NewServerError(ctx.Err())
+	default:
+		return nil
+	}
+}
+
+// readFileAndScanFI reads a CSV file and scans its FI records for the ticker.
+// Returns the Security ID found, a conflict flag, or an error.
+func (m *InteractiveBrokersManagerImpl) readFileAndScanFI(ctx context.Context, filePath, ticker, existingID string) (string, bool, common.HttpError) {
+	if err := m.checkContext(ctx); err != nil {
+		return "", false, err
+	}
+
+	records, err := m.readCSVRecords(filePath)
+	if err != nil {
+		return "", false, common.NewServerError(fmt.Errorf("failed to read IBKR file %s: %w", filePath, err))
+	}
+
+	fileID, conflict := m.scanFIRecords(records, ticker, existingID)
+	return fileID, conflict, nil
+}
+
+// scanFIRecords scans Financial Instrument Information records for the given ticker.
+// Returns the Security ID if found, and a conflict flag if a different non-empty ID
+// is found compared to the existingID.
+func (m *InteractiveBrokersManagerImpl) scanFIRecords(records [][]string, ticker, existingID string) (string, bool) {
+	for _, record := range records {
+		if len(record) < ibMinFIELength {
+			continue
+		}
+		if record[0] != ibSectionFI || record[1] != ibRecordTypeData || record[2] != ibFIDataTypeStocks {
+			continue
+		}
+		if record[ibFIColSymbol] != ticker {
+			continue
+		}
+
+		secID := strings.TrimSpace(record[ibFIColSecurityID])
+		if secID == "" {
+			continue
+		}
+
+		if existingID == "" {
+			existingID = secID
+		} else if existingID != secID {
+			return "", true
+		}
+	}
+	return existingID, false
 }
 
 // GetName returns the broker name.
