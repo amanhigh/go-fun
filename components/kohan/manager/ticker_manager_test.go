@@ -11,6 +11,7 @@ import (
 	"github.com/amanhigh/go-fun/common/util"
 	"github.com/amanhigh/go-fun/components/kohan/clients/mocks"
 	"github.com/amanhigh/go-fun/components/kohan/manager"
+	managerMocks "github.com/amanhigh/go-fun/components/kohan/manager/mocks"
 	"github.com/amanhigh/go-fun/models/common"
 	"github.com/amanhigh/go-fun/models/tax"
 	. "github.com/onsi/ginkgo/v2"
@@ -19,25 +20,26 @@ import (
 
 var _ = Describe("TickerManager", func() {
 	var (
-		mockClient    *mocks.SecurityClient
-		tickerManager *manager.TickerManagerImpl
-		testDir       string
-		ctx           = context.Background()
-		err           common.HttpError
+		mockClient        *mocks.SecurityClient
+		mockSecIDProvider *managerMocks.SecurityIDProvider
+		tickerManager     *manager.TickerManagerImpl
+		testDir           string
+		ctx               = context.Background()
+		err               common.HttpError
 	)
 
 	BeforeEach(func() {
 		mockClient = mocks.NewSecurityClient(GinkgoT())
+		mockSecIDProvider = managerMocks.NewSecurityIDProvider(GinkgoT())
 
 		var err error
 		testDir, err = os.MkdirTemp("", "ticker-test-*")
 		Expect(err).NotTo(HaveOccurred())
 
-		tickerManager = manager.NewTickerManager(mockClient, testDir)
+		tickerManager = manager.NewTickerManager(mockClient, mockSecIDProvider, testDir)
 	})
 
 	AfterEach(func() {
-		mockClient.AssertExpectations(GinkgoT())
 		os.RemoveAll(testDir)
 	})
 
@@ -89,16 +91,6 @@ var _ = Describe("TickerManager", func() {
 			Expect(err).ToNot(HaveOccurred())
 		})
 
-		It("should handle API errors", func() {
-			expectedErr := common.NewHttpError("API Error", http.StatusInternalServerError)
-
-			mockClient.EXPECT().
-				FetchDailyPrices(ctx, ticker).
-				Return(tax.StockData{}, expectedErr)
-
-			err = tickerManager.DownloadTicker(ctx, ticker)
-			Expect(err).To(Equal(expectedErr))
-		})
 	})
 
 	Context("GetPrice", func() {
@@ -127,7 +119,8 @@ var _ = Describe("TickerManager", func() {
 		Context("without split adjustments", func() {
 			It("should return exact date price", func() {
 				date := time.Date(2024, 1, 15, 0, 0, 0, 0, time.UTC)
-				price, err := tickerManager.GetPrice(ctx, ticker, date)
+				var price float64
+				price, err = tickerManager.GetPrice(ctx, ticker, date)
 				Expect(err).ToNot(HaveOccurred())
 				Expect(price).To(Equal(100.00))
 			})
@@ -135,7 +128,8 @@ var _ = Describe("TickerManager", func() {
 			It("should return closest previous date price", func() {
 				// Request price for Jan 18 (not in data)
 				date := time.Date(2024, 1, 18, 0, 0, 0, 0, time.UTC)
-				price, err := tickerManager.GetPrice(ctx, ticker, date)
+				var price float64
+				price, err = tickerManager.GetPrice(ctx, ticker, date)
 				Expect(err).ToNot(HaveOccurred())
 				// Should return Jan 17 price
 				Expect(price).To(Equal(102.00))
@@ -145,7 +139,8 @@ var _ = Describe("TickerManager", func() {
 				date := time.Date(2024, 1, 15, 0, 0, 0, 0, time.UTC)
 
 				// First request - loads from file
-				price1, err := tickerManager.GetPrice(ctx, ticker, date)
+				var price1 float64
+				price1, err = tickerManager.GetPrice(ctx, ticker, date)
 				Expect(err).ToNot(HaveOccurred())
 
 				// Modify file to verify cache is used
@@ -156,14 +151,15 @@ var _ = Describe("TickerManager", func() {
 				Expect(writeErr).ToNot(HaveOccurred())
 
 				// Second request - should use cache
-				price2, err := tickerManager.GetPrice(ctx, ticker, date)
+				var price2 float64
+				price2, err = tickerManager.GetPrice(ctx, ticker, date)
 				Expect(err).ToNot(HaveOccurred())
 				Expect(price2).To(Equal(price1)) // Should return cached value
 			})
 
 			It("should handle missing data errors", func() {
 				date := time.Date(2023, 1, 1, 0, 0, 0, 0, time.UTC)
-				_, err := tickerManager.GetPrice(ctx, ticker, date)
+				_, err = tickerManager.GetPrice(ctx, ticker, date)
 				Expect(err).To(HaveOccurred())
 				Expect(err.Error()).To(ContainSubstring("No price data found"))
 				Expect(err.Code()).To(Equal(http.StatusNotFound))
@@ -325,7 +321,8 @@ var _ = Describe("TickerManager", func() {
 
 		Context("without split adjustments", func() {
 			It("should return all prices for requested year", func() {
-				prices, err := tickerManager.GetDailyPrices(ctx, ticker, year)
+				var prices map[string]float64
+				prices, err = tickerManager.GetDailyPrices(ctx, ticker, year)
 
 				Expect(err).ToNot(HaveOccurred())
 				Expect(prices).NotTo(BeNil())
@@ -349,7 +346,8 @@ var _ = Describe("TickerManager", func() {
 			})
 
 			It("should return error when no prices found for year", func() {
-				prices, err := tickerManager.GetDailyPrices(ctx, ticker, 2025)
+				var prices map[string]float64
+				prices, err = tickerManager.GetDailyPrices(ctx, ticker, 2025)
 
 				Expect(err).To(HaveOccurred())
 				Expect(prices).To(BeNil())
@@ -359,15 +357,24 @@ var _ = Describe("TickerManager", func() {
 			})
 
 			It("should handle file not found error", func() {
-				// Mock the client to return error when trying to fetch missing data
+				notFoundErr := common.NewHttpError("File not found", http.StatusNotFound)
+
+				// Direct fetch failure triggers fallback resolution
 				mockClient.EXPECT().
 					FetchDailyPrices(ctx, "NONEXISTENT").
-					Return(tax.StockData{}, common.NewHttpError("File not found", http.StatusNotFound))
+					Return(tax.StockData{}, notFoundErr)
 
-				prices, err := tickerManager.GetDailyPrices(ctx, "NONEXISTENT", year)
+				mockSecIDProvider.EXPECT().
+					GetSecurityID(ctx, "NONEXISTENT").
+					Return("", notFoundErr).Once()
+
+				var prices map[string]float64
+				prices, err = tickerManager.GetDailyPrices(ctx, "NONEXISTENT", year)
 
 				Expect(err).To(HaveOccurred())
 				Expect(prices).To(BeNil())
+				Expect(err.Error()).To(ContainSubstring("failed to auto-download ticker NONEXISTENT"))
+				Expect(err.Code()).To(Equal(http.StatusInternalServerError))
 			})
 
 			It("should return prices for single entry year", func() {
@@ -774,4 +781,106 @@ var _ = Describe("TickerManager", func() {
 		})
 	})
 
+	Context("Fallback Resolution", func() {
+		var (
+			fiTicker       = "FI"
+			resolvedTicker = "FISV"
+			securityID     = "US3377381088"
+			fiStockData    tax.StockData
+			failedErr      common.HttpError
+		)
+
+		BeforeEach(func() {
+			fiStockData = tax.StockData{
+				Prices: map[string]float64{"2024-01-23": 100.00},
+				Splits: []tax.SplitInfo{},
+			}
+			failedErr = common.NewHttpError("not found", http.StatusNotFound)
+		})
+
+		Context("direct download fails", func() {
+			BeforeEach(func() {
+				mockSecIDProvider.EXPECT().
+					GetSecurityID(ctx, fiTicker).
+					Return(securityID, nil).Once()
+
+				mockClient.EXPECT().
+					FetchDailyPrices(ctx, fiTicker).
+					Return(tax.StockData{}, failedErr)
+			})
+
+			JustBeforeEach(func() {
+				err = tickerManager.DownloadTicker(ctx, fiTicker)
+			})
+
+			Context("with successful FI resolution", func() {
+				BeforeEach(func() {
+					mockClient.EXPECT().
+						GetSecurityInfo(ctx, securityID).
+						Return([]tax.SecurityInfo{{Symbol: resolvedTicker}}, nil)
+
+					mockClient.EXPECT().
+						FetchDailyPrices(ctx, resolvedTicker).
+						Return(fiStockData, nil)
+				})
+
+				It("should resolve and save under original ticker", func() {
+					Expect(err).ToNot(HaveOccurred())
+
+					filePath := filepath.Join(testDir, fiTicker+".json")
+					content, readErr := os.ReadFile(filePath)
+					Expect(readErr).ToNot(HaveOccurred())
+					var saved tax.StockData
+					Expect(json.Unmarshal(content, &saved)).ToNot(HaveOccurred())
+					Expect(saved).To(Equal(fiStockData))
+				})
+			})
+
+			Context("zero candidates from security search", func() {
+				BeforeEach(func() {
+					mockClient.EXPECT().
+						GetSecurityInfo(ctx, securityID).
+						Return([]tax.SecurityInfo{}, nil)
+				})
+
+				It("should return error for zero candidates", func() {
+					Expect(err).To(HaveOccurred())
+					Expect(err).To(Equal(common.ErrNotFound))
+				})
+			})
+
+			Context("multiple candidates from security search", func() {
+				BeforeEach(func() {
+					mockClient.EXPECT().
+						GetSecurityInfo(ctx, securityID).
+						Return([]tax.SecurityInfo{
+							{Symbol: "FISV"},
+							{Symbol: "FISV2"},
+						}, nil)
+				})
+
+				It("should return error for multiple candidates", func() {
+					Expect(err).To(HaveOccurred())
+					Expect(err).To(Equal(common.ErrEntityExists))
+				})
+			})
+
+			Context("fallback fetch fails", func() {
+				BeforeEach(func() {
+					mockClient.EXPECT().
+						GetSecurityInfo(ctx, securityID).
+						Return([]tax.SecurityInfo{{Symbol: resolvedTicker}}, nil)
+
+					mockClient.EXPECT().
+						FetchDailyPrices(ctx, resolvedTicker).
+						Return(tax.StockData{}, failedErr)
+				})
+
+				It("should return the fallback fetch error", func() {
+					Expect(err).To(HaveOccurred())
+					Expect(err).To(Equal(failedErr))
+				})
+			})
+		})
+	})
 })

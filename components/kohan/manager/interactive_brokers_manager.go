@@ -426,7 +426,6 @@ func (m *InteractiveBrokersManagerImpl) determineTradeType(quantity float64) str
 	return tax.TRADE_TYPE_SELL
 }
 
-// FIXME: Map ticker renames (e.g., FI -> FISV in 2025) so holdings across years resolve to the same security.
 func extractSymbol(description string) string {
 	if before, _, ok := strings.Cut(description, "("); ok {
 		return before
