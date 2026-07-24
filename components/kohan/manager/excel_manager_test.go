@@ -202,16 +202,16 @@ var _ = Describe("ExcelManagerImpl", func() {
 			BeforeEach(func() {
 				gain1TTDate := mustParseDate("2023-01-15")
 				gain1 := tax.INRGains{
-					Gains:  tax.Gains{Symbol: "AAPL", BuyDate: "2022-10-01", SellDate: "2023-01-20", Quantity: 10.5, PNL: 100.75, Commission: 5.25, Type: "STCG"},
+					Gains:  tax.Gains{Symbol: "AAPL", BuyDate: "2022-10-01", SellDate: "2023-01-20", Quantity: 10.5, PNL: 100.75, Commission: 5.25, Type: "STCG", Broker: "DriveWealth"},
 					TTDate: gain1TTDate, TTRate: 82.50,
 				}
 				gain2TTDate := mustParseDate("2023-02-10")
 				gain2 := tax.INRGains{
-					Gains:  tax.Gains{Symbol: "MSFT", BuyDate: "2020-05-01", SellDate: "2023-02-15", Quantity: 5, PNL: -50.20, Commission: 0, Type: "LTCG"},
+					Gains:  tax.Gains{Symbol: "MSFT", BuyDate: "2020-05-01", SellDate: "2023-02-15", Quantity: 5, PNL: -50.20, Commission: 0, Type: "LTCG", Broker: "Interactive Brokers"},
 					TTDate: gain2TTDate, TTRate: 83.10,
 				}
 				gain3WithZeroTTDate := tax.INRGains{
-					Gains:  tax.Gains{Symbol: "GOOG", BuyDate: "2021-01-01", SellDate: "2023-03-10", Quantity: 20, PNL: 200.00, Commission: 1.50, Type: "LTCG"},
+					Gains:  tax.Gains{Symbol: "GOOG", BuyDate: "2021-01-01", SellDate: "2023-03-10", Quantity: 20, PNL: 200.00, Commission: 1.50, Type: "LTCG", Broker: "DriveWealth"},
 					TTDate: time.Time{}, TTRate: 81.75,
 				}
 				sampleSummary.INRGains = []tax.INRGains{gain1, gain2, gain3WithZeroTTDate}
@@ -241,7 +241,7 @@ var _ = Describe("ExcelManagerImpl", func() {
 				Expect(errGetRows).ToNot(HaveOccurred())
 				expectedHeaders := []string{
 					"Symbol", "BuyDate", "SellDate", "Quantity", "PNL (USD)",
-					"Commission (USD)", "Type", "TTDate", "TTRate", "PNL (INR)",
+					"Commission (USD)", "Type", "TTDate", "TTRate", "PNL (INR)", "Broker",
 				}
 				Expect(rows[0]).To(Equal(expectedHeaders), "Headers in 'Gains' sheet are incorrect")
 
@@ -271,6 +271,8 @@ var _ = Describe("ExcelManagerImpl", func() {
 				Expect(rate1).To(BeNumerically("~", gain3.TTRate, 0.001))
 				// Column J has formula =E2*I2 and calculates PNL (INR)
 				expectFormulaCell(f, sheetName, "J2", "=E2*I2", gain3.PNL*gain3.TTRate)
+				// Column K: Broker
+				Expect(rows[1][10]).To(Equal(gain3.Broker))
 
 				// Verify MSFT (row 3 in Excel, index 2 in `rows` slice)
 				gain2 := sampleSummary.INRGains[1]
@@ -293,6 +295,8 @@ var _ = Describe("ExcelManagerImpl", func() {
 				Expect(rate2).To(BeNumerically("~", gain2.TTRate, 0.001))
 				// Column J has formula =E3*I3 and calculates PNL (INR)
 				expectFormulaCell(f, sheetName, "J3", "=E3*I3", gain2.PNL*gain2.TTRate)
+				// Column K: Broker
+				Expect(rows[2][10]).To(Equal(gain2.Broker))
 
 				// Verify AAPL (row 4 in Excel, index 3 in `rows` slice) — earliest sell last
 				gain1 := sampleSummary.INRGains[0]
@@ -315,10 +319,12 @@ var _ = Describe("ExcelManagerImpl", func() {
 				Expect(rate3).To(BeNumerically("~", gain1.TTRate, 0.001))
 				// Column J has formula =E4*I4 and calculates PNL (INR)
 				expectFormulaCell(f, sheetName, "J4", "=E4*I4", gain1.PNL*gain1.TTRate)
+				// Column K: Broker
+				Expect(rows[3][10]).To(Equal(gain1.Broker))
 
 				// Verify AutoFilter range covers header + data rows only (excludes totals)
 				ranges := readAutoFilterRanges(tempOutputFilePath)
-				Expect(ranges).To(HaveKeyWithValue(sheetName, "$A$1:$J$4"))
+				Expect(ranges).To(HaveKeyWithValue(sheetName, "$A$1:$K$4"))
 			})
 
 			It("should write TOTALS, STCG, and LTCG rows with correct labels and formulas", func() {
@@ -390,6 +396,10 @@ var _ = Describe("ExcelManagerImpl", func() {
 				widthF, err := f.GetColWidth(sheetName, "F")
 				Expect(err).ToNot(HaveOccurred())
 				Expect(widthF).To(BeNumerically("==", 16.0), "Column F (Commission) should be width 16")
+
+				widthK, err := f.GetColWidth(sheetName, "K")
+				Expect(err).ToNot(HaveOccurred())
+				Expect(widthK).To(BeNumerically("==", 18.0), "Column K (Broker) should be width 18")
 			})
 		})
 
@@ -403,12 +413,12 @@ var _ = Describe("ExcelManagerImpl", func() {
 			BeforeEach(func() {
 				div1TTDate := mustParseDate("2023-04-05")
 				div1 := tax.INRDividend{
-					Dividend: tax.Dividend{Symbol: "AAPL", Date: "2023-04-10", Amount: 50.25, Tax: 7.54, Net: 42.71},
+					Dividend: tax.Dividend{Symbol: "AAPL", Date: "2023-04-10", Amount: 50.25, Tax: 7.54, Net: 42.71, Broker: "DriveWealth"},
 					TTDate:   div1TTDate, TTRate: 82.10,
 				}
 				div2TTDate := mustParseDate("2023-05-12")
 				div2 := tax.INRDividend{
-					Dividend: tax.Dividend{Symbol: "GOOG", Date: "2023-05-15", Amount: 75.50, Tax: 11.33, Net: 64.17},
+					Dividend: tax.Dividend{Symbol: "GOOG", Date: "2023-05-15", Amount: 75.50, Tax: 11.33, Net: 64.17, Broker: "Interactive Brokers"},
 					TTDate:   div2TTDate, TTRate: 82.50,
 				}
 				sampleSummary.INRDividends = []tax.INRDividend{div1, div2}
@@ -436,7 +446,7 @@ var _ = Describe("ExcelManagerImpl", func() {
 				// Verify Headers
 				expectedHeaders := []string{
 					"Symbol", "Date", "Amount (USD)", "Tax (USD)", "Net (USD)", "TTDate", "TTRate",
-					"Amount (INR)", "Tax (INR)", "Net (INR)",
+					"Amount (INR)", "Tax (INR)", "Net (INR)", "Broker",
 				}
 				Expect(rows[0]).To(Equal(expectedHeaders), "Dividends headers incorrect")
 
@@ -462,6 +472,8 @@ var _ = Describe("ExcelManagerImpl", func() {
 				expectFormulaCell(f, sheetName, "H2", "=C2*G2", div2.Amount*div2.TTRate) // Amount (INR)
 				expectFormulaCell(f, sheetName, "I2", "=D2*G2", div2.Tax*div2.TTRate)    // Tax (INR)
 				expectFormulaCell(f, sheetName, "J2", "=E2*G2", div2.Net*div2.TTRate)    // Net (INR)
+				// Column K: Broker
+				Expect(rows[1][10]).To(Equal(div2.Broker))
 
 				// Verify AAPL (row 3 in Excel, index 2 in `rows` slice) — earliest date last
 				div1 := sampleSummary.INRDividends[0]
@@ -484,10 +496,12 @@ var _ = Describe("ExcelManagerImpl", func() {
 				expectFormulaCell(f, sheetName, "H3", "=C3*G3", div1.Amount*div1.TTRate) // Amount (INR)
 				expectFormulaCell(f, sheetName, "I3", "=D3*G3", div1.Tax*div1.TTRate)    // Tax (INR)
 				expectFormulaCell(f, sheetName, "J3", "=E3*G3", div1.Net*div1.TTRate)    // Net (INR)
+				// Column K: Broker
+				Expect(rows[2][10]).To(Equal(div1.Broker))
 
 				// Verify AutoFilter range covers header + data rows only (excludes totals)
 				ranges := readAutoFilterRanges(tempOutputFilePath)
-				Expect(ranges).To(HaveKeyWithValue(sheetName, "$A$1:$J$3"))
+				Expect(ranges).To(HaveKeyWithValue(sheetName, "$A$1:$K$3"))
 			})
 
 			It("should write TOTALS row with correct formulas and calculated values", func() {
@@ -780,6 +794,7 @@ var _ = Describe("ExcelManagerImpl", func() {
 						Amount: 100.0,
 						Tax:    10.0,
 						Net:    90.0,
+						Broker: "DriveWealth",
 					},
 					TTDate: juneTTDate,
 					TTRate: 82.5,
@@ -792,6 +807,7 @@ var _ = Describe("ExcelManagerImpl", func() {
 						Amount: 200.0,
 						Tax:    20.0,
 						Net:    180.0,
+						Broker: "Interactive Brokers",
 					},
 					TTDate: julyTTDate,
 					TTRate: 83.0,
@@ -821,7 +837,7 @@ var _ = Describe("ExcelManagerImpl", func() {
 				// Verify Headers
 				expectedHeaders := []string{
 					"Symbol", "Date", "Amount (USD)", "Tax (USD)", "Net (USD)",
-					"TTDate", "TTRate", "Amount (INR)", "Tax (INR)", "Net (INR)",
+					"TTDate", "TTRate", "Amount (INR)", "Tax (INR)", "Net (INR)", "Broker",
 				}
 				Expect(rows[0]).To(Equal(expectedHeaders), "Interest headers incorrect")
 
@@ -847,6 +863,8 @@ var _ = Describe("ExcelManagerImpl", func() {
 				expectFormulaCell(f, sheetName, "H2", "=C2*G2", int2.Amount*int2.TTRate) // Amount (INR)
 				expectFormulaCell(f, sheetName, "I2", "=D2*G2", int2.Tax*int2.TTRate)    // Tax (INR)
 				expectFormulaCell(f, sheetName, "J2", "=E2*G2", int2.Net*int2.TTRate)    // Net (INR)
+				// Column K: Broker
+				Expect(rows[1][10]).To(Equal(int2.Broker))
 
 				// Verify US-TBILL (row 3 in Excel, index 2 in `rows` slice) — earliest date last
 				int1 := sampleSummary.INRInterest[0]
@@ -869,10 +887,12 @@ var _ = Describe("ExcelManagerImpl", func() {
 				expectFormulaCell(f, sheetName, "H3", "=C3*G3", int1.Amount*int1.TTRate) // Amount (INR)
 				expectFormulaCell(f, sheetName, "I3", "=D3*G3", int1.Tax*int1.TTRate)    // Tax (INR)
 				expectFormulaCell(f, sheetName, "J3", "=E3*G3", int1.Net*int1.TTRate)    // Net (INR)
+				// Column K: Broker
+				Expect(rows[2][10]).To(Equal(int1.Broker))
 
 				// Verify AutoFilter range covers header + data rows only (excludes totals)
 				ranges := readAutoFilterRanges(tempOutputFilePath)
-				Expect(ranges).To(HaveKeyWithValue(sheetName, "$A$1:$J$3"))
+				Expect(ranges).To(HaveKeyWithValue(sheetName, "$A$1:$K$3"))
 			})
 
 			It("should write TOTALS row with correct formulas and calculated values", func() {
@@ -1099,7 +1119,7 @@ var _ = Describe("ExcelManagerImpl", func() {
 				Expect(gainsRows).To(HaveLen(1), "Gains sheet should only contain the header row")
 				Expect(gainsRows[0]).To(Equal([]string{
 					"Symbol", "BuyDate", "SellDate", "Quantity", "PNL (USD)",
-					"Commission (USD)", "Type", "TTDate", "TTRate", "PNL (INR)",
+					"Commission (USD)", "Type", "TTDate", "TTRate", "PNL (INR)", "Broker",
 				}))
 
 				// Dividends
@@ -1108,7 +1128,7 @@ var _ = Describe("ExcelManagerImpl", func() {
 				Expect(divRows).To(HaveLen(1), "Dividends sheet should only contain the header row")
 				Expect(divRows[0]).To(Equal([]string{
 					"Symbol", "Date", "Amount (USD)", "Tax (USD)", "Net (USD)", "TTDate", "TTRate",
-					"Amount (INR)", "Tax (INR)", "Net (INR)",
+					"Amount (INR)", "Tax (INR)", "Net (INR)", "Broker",
 				}))
 
 				// Valuations
@@ -1129,7 +1149,7 @@ var _ = Describe("ExcelManagerImpl", func() {
 				Expect(intRows).To(HaveLen(1), "Interest sheet should only contain the header row")
 				Expect(intRows[0]).To(Equal([]string{
 					"Symbol", "Date", "Amount (USD)", "Tax (USD)", "Net (USD)",
-					"TTDate", "TTRate", "Amount (INR)", "Tax (INR)", "Net (INR)",
+					"TTDate", "TTRate", "Amount (INR)", "Tax (INR)", "Net (INR)", "Broker",
 				}))
 
 				// TT Rates
@@ -1159,10 +1179,10 @@ var _ = Describe("ExcelManagerImpl", func() {
 			It("should apply AutoFilter to all detail sheets with header-only ranges", func() {
 				ranges := readAutoFilterRanges(tempOutputFilePath)
 				Expect(ranges).To(Equal(map[string]string{
-					"Gains":      "$A$1:$J$1",
-					"Dividends":  "$A$1:$J$1",
+					"Gains":      "$A$1:$K$1",
+					"Dividends":  "$A$1:$K$1",
 					"Valuations": "$A$1:$W$1",
-					"Interest":   "$A$1:$J$1",
+					"Interest":   "$A$1:$K$1",
 					"TT Rates":   "$A$1:$F$1",
 				}))
 			})
@@ -1180,31 +1200,31 @@ var _ = Describe("ExcelManagerImpl", func() {
 			It("should sort Gains, Dividends, and Interest by Symbol when dates are equal and leave caller slices unchanged", func() {
 				// Gains: same SellDate, reversed Symbol input order (MSFT before AAPL)
 				gainA := tax.INRGains{
-					Gains:  tax.Gains{Symbol: "AAPL", BuyDate: "2022-10-01", SellDate: "2023-01-20", Quantity: 10, PNL: 50, Commission: 1, Type: "STCG"},
+					Gains:  tax.Gains{Symbol: "AAPL", BuyDate: "2022-10-01", SellDate: "2023-01-20", Quantity: 10, PNL: 50, Commission: 1, Type: "STCG", Broker: "DriveWealth"},
 					TTDate: mustParseDate("2023-01-15"), TTRate: 82.0,
 				}
 				gainB := tax.INRGains{
-					Gains:  tax.Gains{Symbol: "MSFT", BuyDate: "2022-10-01", SellDate: "2023-01-20", Quantity: 5, PNL: 30, Commission: 0.5, Type: "STCG"},
+					Gains:  tax.Gains{Symbol: "MSFT", BuyDate: "2022-10-01", SellDate: "2023-01-20", Quantity: 5, PNL: 30, Commission: 0.5, Type: "STCG", Broker: "Interactive Brokers"},
 					TTDate: mustParseDate("2023-01-15"), TTRate: 82.0,
 				}
 
 				// Dividends: same Date, reversed Symbol input order (GOOG before AAPL)
 				divA := tax.INRDividend{
-					Dividend: tax.Dividend{Symbol: "AAPL", Date: "2023-04-10", Amount: 50, Tax: 5, Net: 45},
+					Dividend: tax.Dividend{Symbol: "AAPL", Date: "2023-04-10", Amount: 50, Tax: 5, Net: 45, Broker: "DriveWealth"},
 					TTDate:   mustParseDate("2023-04-05"), TTRate: 82.0,
 				}
 				divB := tax.INRDividend{
-					Dividend: tax.Dividend{Symbol: "GOOG", Date: "2023-04-10", Amount: 60, Tax: 6, Net: 54},
+					Dividend: tax.Dividend{Symbol: "GOOG", Date: "2023-04-10", Amount: 60, Tax: 6, Net: 54, Broker: "Interactive Brokers"},
 					TTDate:   mustParseDate("2023-04-05"), TTRate: 82.0,
 				}
 
 				// Interest: same Date, reversed Symbol input order (US-TBILL before US-BOND)
 				intA := tax.INRInterest{
-					Interest: tax.Interest{Symbol: "US-BOND", Date: "2023-06-01", Amount: 200, Tax: 20, Net: 180},
+					Interest: tax.Interest{Symbol: "US-BOND", Date: "2023-06-01", Amount: 200, Tax: 20, Net: 180, Broker: "DriveWealth"},
 					TTDate:   mustParseDate("2023-06-02"), TTRate: 82.5,
 				}
 				intB := tax.INRInterest{
-					Interest: tax.Interest{Symbol: "US-TBILL", Date: "2023-06-01", Amount: 100, Tax: 10, Net: 90},
+					Interest: tax.Interest{Symbol: "US-TBILL", Date: "2023-06-01", Amount: 100, Tax: 10, Net: 90, Broker: "Interactive Brokers"},
 					TTDate:   mustParseDate("2023-06-02"), TTRate: 82.5,
 				}
 
@@ -1314,16 +1334,16 @@ var _ = Describe("ExcelManagerImpl", func() {
 				// Create Gains data (3 records: 1 STCG, 2 LTCG)
 				gain1TTDate := mustParseDate("2023-01-15")
 				gain1 := tax.INRGains{
-					Gains:  tax.Gains{Symbol: "AAPL", BuyDate: "2022-10-01", SellDate: "2023-01-20", Quantity: 10.5, PNL: 100.75, Commission: 5.25, Type: "STCG"},
+					Gains:  tax.Gains{Symbol: "AAPL", BuyDate: "2022-10-01", SellDate: "2023-01-20", Quantity: 10.5, PNL: 100.75, Commission: 5.25, Type: "STCG", Broker: "DriveWealth"},
 					TTDate: gain1TTDate, TTRate: 82.50,
 				}
 				gain2TTDate := mustParseDate("2023-02-10")
 				gain2 := tax.INRGains{
-					Gains:  tax.Gains{Symbol: "MSFT", BuyDate: "2020-05-01", SellDate: "2023-02-15", Quantity: 5, PNL: -50.20, Commission: 0, Type: "LTCG"},
+					Gains:  tax.Gains{Symbol: "MSFT", BuyDate: "2020-05-01", SellDate: "2023-02-15", Quantity: 5, PNL: -50.20, Commission: 0, Type: "LTCG", Broker: "Interactive Brokers"},
 					TTDate: gain2TTDate, TTRate: 83.10,
 				}
 				gain3WithZeroTTDate := tax.INRGains{
-					Gains:  tax.Gains{Symbol: "GOOG", BuyDate: "2021-01-01", SellDate: "2023-03-10", Quantity: 20, PNL: 200.00, Commission: 1.50, Type: "LTCG"},
+					Gains:  tax.Gains{Symbol: "GOOG", BuyDate: "2021-01-01", SellDate: "2023-03-10", Quantity: 20, PNL: 200.00, Commission: 1.50, Type: "LTCG", Broker: "DriveWealth"},
 					TTDate: time.Time{}, TTRate: 81.75,
 				}
 
@@ -1332,7 +1352,7 @@ var _ = Describe("ExcelManagerImpl", func() {
 				div1 := tax.INRDividend{
 					Dividend: tax.Dividend{
 						Symbol: "AAPL", Date: "2023-03-15",
-						Amount: 50.25, Tax: 7.54, Net: 42.71,
+						Amount: 50.25, Tax: 7.54, Net: 42.71, Broker: "DriveWealth",
 					},
 					TTDate: div1TTDate, TTRate: 82.10,
 				}
@@ -1340,7 +1360,7 @@ var _ = Describe("ExcelManagerImpl", func() {
 				div2 := tax.INRDividend{
 					Dividend: tax.Dividend{
 						Symbol: "GOOG", Date: "2023-03-20",
-						Amount: 75.50, Tax: 11.33, Net: 64.17,
+						Amount: 75.50, Tax: 11.33, Net: 64.17, Broker: "Interactive Brokers",
 					},
 					TTDate: div2TTDate, TTRate: 82.50,
 				}
@@ -1351,7 +1371,7 @@ var _ = Describe("ExcelManagerImpl", func() {
 				interest1 := tax.INRInterest{
 					Interest: tax.Interest{
 						Symbol: "US-TBILL", Date: interestDate.Format(time.DateOnly),
-						Amount: 100.0, Tax: 10.0, Net: 90.0,
+						Amount: 100.0, Tax: 10.0, Net: 90.0, Broker: "DriveWealth",
 					},
 					TTDate: ttDate, TTRate: 82.5,
 				}
@@ -1528,15 +1548,15 @@ var _ = Describe("ExcelManagerImpl", func() {
 
 			// Minimal fixtures
 			gain1 := tax.INRGains{
-				Gains:  tax.Gains{Symbol: "AAPL", BuyDate: "2022-10-01", SellDate: "2023-01-20", Quantity: 10, PNL: 100.75, Commission: 5.25, Type: "STCG"},
+				Gains:  tax.Gains{Symbol: "AAPL", BuyDate: "2022-10-01", SellDate: "2023-01-20", Quantity: 10, PNL: 100.75, Commission: 5.25, Type: "STCG", Broker: "DriveWealth"},
 				TTDate: mustParseDate("2023-01-15"), TTRate: 82.50,
 			}
 			div1 := tax.INRDividend{
-				Dividend: tax.Dividend{Symbol: "AAPL", Date: "2023-03-15", Amount: 50.25, Tax: 7.54, Net: 42.71},
+				Dividend: tax.Dividend{Symbol: "AAPL", Date: "2023-03-15", Amount: 50.25, Tax: 7.54, Net: 42.71, Broker: "DriveWealth"},
 				TTDate:   mustParseDate("2023-03-01"), TTRate: 82.10,
 			}
 			interest1 := tax.INRInterest{
-				Interest: tax.Interest{Symbol: "US-TBILL", Date: "2023-06-15", Amount: 100.0, Tax: 10.0, Net: 90.0},
+				Interest: tax.Interest{Symbol: "US-TBILL", Date: "2023-06-15", Amount: 100.0, Tax: 10.0, Net: 90.0, Broker: "DriveWealth"},
 				TTDate:   mustParseDate("2023-06-30"), TTRate: 82.5,
 			}
 

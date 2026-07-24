@@ -16,6 +16,7 @@ type Gains struct {
 	PNL        float64 `csv:"PNL"`
 	Commission float64 `csv:"Commission"`
 	Type       string  `csv:"Type"`
+	Broker     string  `csv:"Broker"`
 }
 
 func (g Gains) GetKey() string {

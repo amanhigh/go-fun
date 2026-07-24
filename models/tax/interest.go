@@ -14,6 +14,7 @@ type Interest struct {
 	Amount float64 `csv:"Amount"`
 	Tax    float64 `csv:"Tax"`
 	Net    float64 `csv:"Net"`
+	Broker string  `csv:"Broker"`
 }
 
 // CSVRecord interface implementation

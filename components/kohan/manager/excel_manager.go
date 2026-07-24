@@ -207,6 +207,7 @@ func (e *ExcelManagerImpl) writeGainsSheet(ctx context.Context, f *excelize.File
 	headers := []string{
 		"Symbol", "BuyDate", "SellDate", "Quantity", "PNL (USD)",
 		"Commission (USD)", "Type", "TTDate", "TTRate", "PNL (INR)",
+		"Broker",
 	}
 	if err := e.createSheetWithHeaders(ctx, f, sheetName, headers); err != nil {
 		return err
@@ -227,6 +228,7 @@ func (e *ExcelManagerImpl) writeGainsSheet(ctx context.Context, f *excelize.File
 			e.formatDateForExcel(gainRecord.TTDate), // Format date
 			gainRecord.TTRate,                       // Column I
 			"",                                      // Placeholder for PNL (INR) - will be formula
+			gainRecord.Broker,                       // Column K: Broker
 		}
 		if err := util.WriteRow(f, sheetName, rowNum, rowData); err != nil {
 			return fmt.Errorf("failed to write row %d in sheet %s: %w", rowNum, sheetName, err)
@@ -252,20 +254,22 @@ func (e *ExcelManagerImpl) writeGainsSheet(ctx context.Context, f *excelize.File
 	e.setColumnWidths(f, sheetName, map[string]float64{
 		"A": colWidthNarrow, "B": colWidthMedium, "C": colWidthMedium, "D": colWidthSemi, "E": colWidthMedium,
 		"F": colWidthExtraWide, "G": colWidthNarrow, "H": colWidthMedium, "I": colWidthSemi, "J": colWidthMedium,
+		"K": colWidthMax,
 	})
-	if err := util.ApplyAutoFilter(f, sheetName, "J", len(gains)+1); err != nil {
+	if err := util.ApplyAutoFilter(f, sheetName, "K", len(gains)+1); err != nil {
 		return fmt.Errorf("failed to apply auto filter on sheet %s: %w", sheetName, err)
 	}
 	return nil
 }
 
 // writeDividendsSheet handles the creation and population of the "Dividends" sheet.
-// It assumes tax.INRDividend has fields: Symbol, Date, Amount, TTDate, TTRate.
+// It assumes tax.INRDividend has fields: Symbol, Date, Amount, Tax, Net, TTDate, TTRate, Broker.
 func (e *ExcelManagerImpl) writeDividendsSheet(ctx context.Context, f *excelize.File, dividends []tax.INRDividend) error {
 	sheetName := "Dividends"
 	headers := []string{
 		"Symbol", "Date", "Amount (USD)", "Tax (USD)", "Net (USD)", "TTDate", "TTRate",
 		"Amount (INR)", "Tax (INR)", "Net (INR)",
+		"Broker",
 	}
 	if err := e.createSheetWithHeaders(ctx, f, sheetName, headers); err != nil {
 		return err
@@ -281,9 +285,10 @@ func (e *ExcelManagerImpl) writeDividendsSheet(ctx context.Context, f *excelize.
 			dividendRecord.Net,
 			e.formatDateForExcel(dividendRecord.TTDate),
 			dividendRecord.TTRate,
-			"", // Placeholder for Amount (INR) - will be formula
-			"", // Placeholder for Tax (INR) - will be formula
-			"", // Placeholder for Net (INR) - will be formula
+			"",                    // Placeholder for Amount (INR) - will be formula
+			"",                    // Placeholder for Tax (INR) - will be formula
+			"",                    // Placeholder for Net (INR) - will be formula
+			dividendRecord.Broker, // Column K: Broker
 		}
 		if err := util.WriteRow(f, sheetName, rowNum, rowData); err != nil {
 			return fmt.Errorf("failed to write row %d in sheet %s: %w", rowNum, sheetName, err)
@@ -306,8 +311,9 @@ func (e *ExcelManagerImpl) writeDividendsSheet(ctx context.Context, f *excelize.
 	e.setColumnWidths(f, sheetName, map[string]float64{
 		"A": colWidthNarrow, "B": colWidthMedium, "C": colWidthWide, "D": colWidthMedium, "E": colWidthMedium,
 		"F": colWidthMedium, "G": colWidthSemi, "H": colWidthWide, "I": colWidthMedium, "J": colWidthMedium,
+		"K": colWidthMax,
 	})
-	if err := util.ApplyAutoFilter(f, sheetName, "J", len(dividends)+1); err != nil {
+	if err := util.ApplyAutoFilter(f, sheetName, "K", len(dividends)+1); err != nil {
 		return fmt.Errorf("failed to apply auto filter on sheet %s: %w", sheetName, err)
 	}
 	return nil
@@ -405,6 +411,7 @@ func (e *ExcelManagerImpl) writeInterestSheet(ctx context.Context, f *excelize.F
 	headers := []string{
 		"Symbol", "Date", "Amount (USD)", "Tax (USD)", "Net (USD)",
 		"TTDate", "TTRate", "Amount (INR)", "Tax (INR)", "Net (INR)",
+		"Broker",
 	}
 	if err := e.createSheetWithHeaders(ctx, f, sheetName, headers); err != nil {
 		return err
@@ -420,9 +427,10 @@ func (e *ExcelManagerImpl) writeInterestSheet(ctx context.Context, f *excelize.F
 			interestRecord.Net,
 			e.formatDateForExcel(interestRecord.TTDate),
 			interestRecord.TTRate,
-			"", // Placeholder for Amount (INR) - will be formula
-			"", // Placeholder for Tax (INR) - will be formula
-			"", // Placeholder for Net (INR) - will be formula
+			"",                    // Placeholder for Amount (INR) - will be formula
+			"",                    // Placeholder for Tax (INR) - will be formula
+			"",                    // Placeholder for Net (INR) - will be formula
+			interestRecord.Broker, // Column K: Broker
 		}
 		if err := util.WriteRow(f, sheetName, rowNum, rowData); err != nil {
 			return fmt.Errorf("failed to write row %d in sheet %s: %w", rowNum, sheetName, err)
@@ -445,8 +453,9 @@ func (e *ExcelManagerImpl) writeInterestSheet(ctx context.Context, f *excelize.F
 	e.setColumnWidths(f, sheetName, map[string]float64{
 		"A": colWidthNarrow, "B": colWidthMedium, "C": colWidthWide, "D": colWidthMedium, "E": colWidthMedium,
 		"F": colWidthMedium, "G": colWidthSemi, "H": colWidthWide, "I": colWidthMedium, "J": colWidthMedium,
+		"K": colWidthMax,
 	})
-	if err := util.ApplyAutoFilter(f, sheetName, "J", len(interest)+1); err != nil {
+	if err := util.ApplyAutoFilter(f, sheetName, "K", len(interest)+1); err != nil {
 		return fmt.Errorf("failed to apply auto filter on sheet %s: %w", sheetName, err)
 	}
 	return nil

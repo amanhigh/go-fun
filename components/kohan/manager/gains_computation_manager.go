@@ -171,6 +171,7 @@ func (g *GainsComputationManagerImpl) createGainFromLot(sellTrade tax.Trade, sel
 		PNL:        pnl,
 		Commission: totalCommission,
 		Type:       gainType,
+		Broker:     sellTrade.Broker,
 	}
 }
 
