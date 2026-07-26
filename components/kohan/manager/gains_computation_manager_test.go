@@ -428,6 +428,31 @@ var _ = Describe("GainsComputationManager", func() {
 		})
 	})
 
+	Context("gain inherits selling broker, not buying broker", func() {
+		var trades []tax.Trade
+
+		BeforeEach(func() {
+			setupIdentitySplitManager()
+			trades = []tax.Trade{
+				{Symbol: AAPL, Date: "2024-01-15", Type: "BUY", Quantity: 100, USDPrice: 140.00, Commission: 10.00, Broker: tax.BROKER_DRIVE_WEALTH},
+				{Symbol: AAPL, Date: "2024-06-20", Type: "SELL", Quantity: 100, USDPrice: 190.00, Commission: 10.00, Broker: tax.BROKER_INTERACTIVE_BROKERS},
+			}
+		})
+
+		It("should set gain broker to the selling broker", func() {
+			gains, err := gainsManager.ComputeGainsFromTrades(ctx, trades)
+			Expect(err).ToNot(HaveOccurred())
+			Expect(gains).To(HaveLen(1))
+
+			gain := gains[0]
+			Expect(gain.Symbol).To(Equal(AAPL))
+			Expect(gain.BuyDate).To(Equal("2024-01-15"))
+			Expect(gain.SellDate).To(Equal("2024-06-20"))
+			Expect(gain.Quantity).To(Equal(100.0))
+			Expect(gain.Broker).To(Equal(tax.BROKER_INTERACTIVE_BROKERS))
+		})
+	})
+
 	Context("split ownership boundary", func() {
 		Context("normalizes raw trades before FIFO", func() {
 			var (

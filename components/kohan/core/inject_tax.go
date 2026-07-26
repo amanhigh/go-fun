@@ -14,7 +14,7 @@ import (
 
 // ---- Client Providers ----
 
-func (ki *KohanInjector) provideYahooClient(client *resty.Client) clients.StockDataClient {
+func (ki *KohanInjector) provideYahooClient(client *resty.Client) clients.SecurityClient {
 	return clients.NewYahooClient(client, ki.config.Tax.YahooBaseURL, ki.config.Tax.TickerDataStartYear)
 }
 
@@ -51,8 +51,8 @@ func (ki *KohanInjector) provideTradeRepository() repository.TradeRepository {
 
 // ---- Manager Providers ----
 
-func (ki *KohanInjector) provideTickerManager(client clients.StockDataClient) manager.TickerManager {
-	return manager.NewTickerManager(client, ki.config.Tax.TickerCacheDir)
+func (ki *KohanInjector) provideTickerManager(client clients.SecurityClient, securityIDProvider manager.SecurityIDProvider) manager.TickerManager {
+	return manager.NewTickerManager(client, securityIDProvider, ki.config.Tax.TickerCacheDir)
 }
 
 func (ki *KohanInjector) provideSBIManager(client clients.SBIClient, exchangeRepo repository.ExchangeRepository) manager.SBIManager {
@@ -164,11 +164,21 @@ func (ki *KohanInjector) provideDriveWealthManager() manager.Broker {
 	return manager.NewDriveWealthManagerImpl(ki.config.Tax.DriveWealthBase)
 }
 
-func (ki *KohanInjector) provideInteractiveBrokersManager() manager.Broker {
+func (ki *KohanInjector) provideInteractiveBrokersManager() *manager.InteractiveBrokersManagerImpl {
 	return manager.NewInteractiveBrokersManagerImpl(ki.config.Tax.IBKRBase)
 }
 
-//nolint:revive // argument-limit: 7 params matches existing pattern
+// provideSecurityIDProvider is a narrow adapter that reuses the IB singleton as a SecurityIDProvider.
+func (ki *KohanInjector) provideSecurityIDProvider(ibManager *manager.InteractiveBrokersManagerImpl) manager.SecurityIDProvider {
+	return ibManager
+}
+
+// provideIBBroker is a narrow adapter that reuses the IB singleton as a Broker, registered named "IBKR".
+func (ki *KohanInjector) provideIBBroker(ibManager *manager.InteractiveBrokersManagerImpl) manager.Broker {
+	return ibManager
+}
+
+//nolint:revive // argument-limit: 8 params matches existing pattern
 func (ki *KohanInjector) provideTaxManager(
 	gainMgr manager.CapitalGainManager,
 	dividendManager manager.DividendManager,
@@ -177,8 +187,9 @@ func (ki *KohanInjector) provideTaxManager(
 	excelMgr manager.ExcelManager,
 	accountMgr manager.AccountManager,
 	sbiMgr manager.SBIManager,
+	tickerMgr manager.TickerManager,
 ) manager.TaxManager {
-	return manager.NewTaxManager(gainMgr, dividendManager, interestManager, taxValuationManager, excelMgr, accountMgr, sbiMgr)
+	return manager.NewTaxManager(gainMgr, dividendManager, interestManager, taxValuationManager, excelMgr, accountMgr, sbiMgr, tickerMgr)
 }
 
 // ---- Tax Dependency Registration ----
@@ -192,7 +203,7 @@ func (ki *KohanInjector) registerClients() {
 	var client *resty.Client
 	container.MustResolve(ki.di, &client)
 
-	container.MustSingleton(ki.di, func() clients.StockDataClient {
+	container.MustSingleton(ki.di, func() clients.SecurityClient {
 		return ki.provideYahooClient(client)
 	})
 	container.MustSingleton(ki.di, func() clients.SBIClient {
@@ -212,17 +223,19 @@ func (ki *KohanInjector) registerRepositories() {
 
 // registerCoreManagers registers managers that depend on clients or repositories.
 func (ki *KohanInjector) registerCoreManagers() {
+	// Register InteractiveBrokersManagerImpl as concrete singleton for dual use:
+	// 1. SecurityIDProvider for TickerManager fallback resolution
+	// 2. Named "IBKR" Broker for BrokerageManager
+	container.MustSingleton(ki.di, ki.provideInteractiveBrokersManager)
+	container.MustSingleton(ki.di, ki.provideSecurityIDProvider)
+
 	// Register managers that depend on clients or repositories
 	container.MustSingleton(ki.di, ki.provideSBIManager)
 	container.MustSingleton(ki.di, ki.provideExchangeManager)
 	container.MustSingleton(ki.di, ki.provideAccountManager)
 
-	// Register TickerManager (depends on StockDataClient)
-	var stockDataClient clients.StockDataClient
-	container.MustResolve(ki.di, &stockDataClient)
-	container.MustSingleton(ki.di, func() manager.TickerManager {
-		return ki.provideTickerManager(stockDataClient)
-	})
+	// Register TickerManager (dependencies auto-injected: SecurityClient, SecurityIDProvider)
+	container.MustSingleton(ki.di, ki.provideTickerManager)
 
 	// Register SplitManager (depends on TickerManager)
 	container.MustSingleton(ki.di, ki.provideSplitManager)
@@ -249,9 +262,9 @@ func (ki *KohanInjector) registerTaxComponents() {
 	container.MustSingleton(ki.di, ki.provideTaxManager)
 	container.MustSingleton(ki.di, ki.provideGainsComputationManager)
 
-	// Register brokers with names to avoid collision (names match struct field names)
-	container.MustNamedSingleton(ki.di, "DriveWealth", ki.provideDriveWealthManager)
-	container.MustNamedSingleton(ki.di, "IB", ki.provideInteractiveBrokersManager)
+	// Register brokers with names to avoid collision (names match struct field names: DW, IBKR)
+	container.MustNamedSingleton(ki.di, taxmodels.BROKER_DRIVE_WEALTH, ki.provideDriveWealthManager)
+	container.MustNamedSingleton(ki.di, taxmodels.BROKER_INTERACTIVE_BROKERS, ki.provideIBBroker)
 
 	container.MustSingleton(ki.di, ki.provideBrokerageManager)
 }

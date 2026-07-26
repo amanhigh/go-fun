@@ -441,6 +441,39 @@ var _ = Describe("Tax Integration", Label("it"), func() {
 		})
 	})
 
+	Context("Security Metadata Resolution", func() {
+		It("should resolve fixture securities for each valuation ticker", func() {
+			summary, err := taxManager.GetTaxSummary(ctx, testYear)
+			Expect(err).ToNot(HaveOccurred())
+
+			// 4 unique valuation tickers: AAPL, ADI, GOOGL, MSFT
+			Expect(summary.Securities).To(HaveLen(4))
+
+			// Build a map for order-agnostic lookup; verify each has correct metadata
+			bySymbol := make(map[string]tax.SecurityInfo, len(summary.Securities))
+			for _, s := range summary.Securities {
+				bySymbol[s.Symbol] = s
+			}
+
+			for sym, want := range map[string]struct {
+				Name     string
+				Exchange string
+				Type     string
+			}{
+				"AAPL":  {"Apple Inc.", "NMS", "EQUITY"},
+				"ADI":   {"Analog Devices Inc.", "NMS", "EQUITY"},
+				"GOOGL": {"Alphabet Inc.", "NMS", "EQUITY"},
+				"MSFT":  {"Microsoft Corporation", "NMS", "EQUITY"},
+			} {
+				s, ok := bySymbol[sym]
+				Expect(ok).To(BeTrue(), "missing security for %s", sym)
+				Expect(s.Name).To(Equal(want.Name))
+				Expect(s.Exchange).To(Equal(want.Exchange))
+				Expect(s.Type).To(Equal(want.Type))
+			}
+		})
+	})
+
 	Context("Fail-Fast Ticker Download", func() {
 		It("should fail fast when ticker data missing for positive positions", func() {
 			// Validates proper fail-fast behavior for tax systems
@@ -479,11 +512,21 @@ var _ = Describe("Tax Integration", Label("it"), func() {
 			defer f.Close()
 
 			// Check for the presence of all required sheets
-			expectedSheets := []string{"Gains", "Dividends", "Valuations", "Interest", "TT Rates"}
+			expectedSheets := []string{"Gains", "Dividends", "Valuations", "Interest", "TT Rates", "Security Info"}
 			for _, sheetName := range expectedSheets {
 				_, sheetErr := f.GetRows(sheetName)
 				Expect(sheetErr).ToNot(HaveOccurred(), "Sheet '%s' should exist and be readable", sheetName)
 			}
+
+			// Verify Security Info sheet has data rows for all valuation tickers
+			secRows, secErr := f.GetRows("Security Info")
+			Expect(secErr).ToNot(HaveOccurred())
+			Expect(len(secRows)).To(BeNumerically(">=", 2), "Security Info should have header + at least one data row")
+			// First data row should have the expected columns
+			Expect(secRows[0][0]).To(Equal("Sr No"))
+			Expect(secRows[0][1]).To(Equal("Symbol"))
+			// Verify one representative row has correct entity name format
+			Expect(secRows[1][3]).To(ContainSubstring("("), "Entity name should contain parenthesized symbol")
 		})
 	})
 

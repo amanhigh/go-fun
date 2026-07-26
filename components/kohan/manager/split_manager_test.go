@@ -65,7 +65,7 @@ var _ = Describe("SplitManager", func() {
 				// Exact GetSplits range: 2024-06-01 through 2025-06-01
 				mockTicker.EXPECT().
 					GetSplits(ctx, VO, time.Date(2024, 6, 1, 0, 0, 0, 0, time.UTC), time.Date(2025, 6, 1, 0, 0, 0, 0, time.UTC)).
-					Return([]tax.YahooSplit{
+					Return([]tax.SplitInfo{
 						{Date: time.Date(2024, 9, 1, 0, 0, 0, 0, time.UTC).Unix(), Numerator: 3, Denominator: 2},
 						{Date: time.Date(2025, 1, 15, 0, 0, 0, 0, time.UTC).Unix(), Numerator: 4, Denominator: 3},
 					}, nil).Once()
@@ -74,7 +74,7 @@ var _ = Describe("SplitManager", func() {
 				// Exact GetSplits range: 2024-03-01 through 2024-10-15
 				mockTicker.EXPECT().
 					GetSplits(ctx, AAPL, time.Date(2024, 3, 1, 0, 0, 0, 0, time.UTC), time.Date(2024, 10, 15, 0, 0, 0, 0, time.UTC)).
-					Return([]tax.YahooSplit{}, nil).Once()
+					Return([]tax.SplitInfo{}, nil).Once()
 
 				output, err = splitManager.NormalizeTrades(ctx, input)
 			})
@@ -195,7 +195,7 @@ var _ = Describe("SplitManager", func() {
 				// (Denominator=0) — SplitManager must validate.
 				mockTicker.EXPECT().
 					GetSplits(ctx, BAD, time.Date(2024, 6, 1, 0, 0, 0, 0, time.UTC), time.Date(2024, 6, 1, 0, 0, 0, 0, time.UTC)).
-					Return([]tax.YahooSplit{
+					Return([]tax.SplitInfo{
 						{Date: time.Date(2024, 6, 1, 0, 0, 0, 0, time.UTC).Unix(), Numerator: 4, Denominator: 0},
 					}, nil).Once()
 				_, err = splitManager.NormalizeTrades(ctx, []tax.Trade{

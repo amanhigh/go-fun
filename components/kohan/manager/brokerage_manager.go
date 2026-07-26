@@ -19,8 +19,8 @@ type BrokerageManager interface {
 }
 
 type BrokerageManagerImpl struct {
-	DriveWealth  Broker                  `container:"name"`
-	IB           Broker                  `container:"name"`
+	DW           Broker                  `container:"name"`
+	IBKR         Broker                  `container:"name"`
 	GainsManager GainsComputationManager `container:"type"`
 	Config       config.TaxConfig
 }
@@ -33,8 +33,8 @@ func NewBrokerageManager(
 	config config.TaxConfig,
 ) *BrokerageManagerImpl {
 	return &BrokerageManagerImpl{
-		DriveWealth:  dwManager,
-		IB:           ibManager,
+		DW:           dwManager,
+		IBKR:         ibManager,
 		GainsManager: gainsManager,
 		Config:       config,
 	}
@@ -43,17 +43,26 @@ func NewBrokerageManager(
 var _ BrokerageManager = (*BrokerageManagerImpl)(nil)
 
 func (m *BrokerageManagerImpl) ParseAndGenerate(ctx context.Context, year int) error {
-	var merged tax.BrokerageInfo
-	brokers := []Broker{m.DriveWealth, m.IB}
+	brokers := []Broker{m.DW, m.IBKR}
+	requiredDate := time.Date(year+1, tax.COVERAGE_CUTOFF_MONTH, tax.COVERAGE_CUTOFF_DAY, 0, 0, 0, 0, time.UTC)
 
+	var merged tax.BrokerageInfo
 	for _, broker := range brokers {
+		brokerName := broker.GetName()
+
 		info, err := broker.Parse(year)
 		if err != nil {
-			log.Warn().Str("broker", broker.GetName()).Err(err).Msg("Broker parse failed, skipping")
-			continue
+			return fmt.Errorf("broker '%s': parse failed: %w", brokerName, err)
 		}
+		log.Info().Str("broker", brokerName).Msg("Parsed broker successfully")
+
+		if info.CoverageThrough.Before(requiredDate) {
+			return fmt.Errorf("broker '%s': coverage through %s, required %s",
+				brokerName, info.CoverageThrough.Format(time.DateOnly), requiredDate.Format(time.DateOnly))
+		}
+
+		info = withBroker(info, brokerName)
 		merged = mergeBrokerageInfo(merged, info)
-		log.Info().Str("broker", broker.GetName()).Msg("Parsed broker successfully")
 	}
 
 	hasData := len(merged.Trades) > 0 || len(merged.Dividends) > 0 || len(merged.Interests) > 0
@@ -141,14 +150,16 @@ func (m *BrokerageManagerImpl) createGainsFile(ctx context.Context, trades []tax
 	return nil
 }
 
-// FIXME: Broker source is lost after merge — append does not tag which broker contributed each row.
-// Gains, Dividends, Interest sheets and Summary all show aggregated values with no per-broker
-// breakdown. Adding a broker field to models would let downstream output show DW vs IBKR splits.
 func mergeBrokerageInfo(a, b tax.BrokerageInfo) tax.BrokerageInfo {
+	coverage := a.CoverageThrough
+	if b.CoverageThrough.After(coverage) {
+		coverage = b.CoverageThrough
+	}
 	return tax.BrokerageInfo{
-		Trades:    append(a.Trades, b.Trades...),
-		Dividends: append(a.Dividends, b.Dividends...),
-		Interests: append(a.Interests, b.Interests...),
+		CoverageThrough: coverage,
+		Trades:          append(a.Trades, b.Trades...),
+		Dividends:       append(a.Dividends, b.Dividends...),
+		Interests:       append(a.Interests, b.Interests...),
 	}
 }
 
@@ -185,4 +196,32 @@ func sortTradesByDate(trades []tax.Trade) []tax.Trade {
 	})
 
 	return sortedTrades
+}
+
+// withBroker returns a copy of info with Broker set on every record, without mutating the input.
+func withBroker(info tax.BrokerageInfo, brokerName string) tax.BrokerageInfo {
+	trades := make([]tax.Trade, len(info.Trades))
+	for i, t := range info.Trades {
+		t.Broker = brokerName
+		trades[i] = t
+	}
+
+	dividends := make([]tax.Dividend, len(info.Dividends))
+	for i, d := range info.Dividends {
+		d.Broker = brokerName
+		dividends[i] = d
+	}
+
+	interests := make([]tax.Interest, len(info.Interests))
+	for i, intr := range info.Interests {
+		intr.Broker = brokerName
+		interests[i] = intr
+	}
+
+	return tax.BrokerageInfo{
+		CoverageThrough: info.CoverageThrough,
+		Trades:          trades,
+		Dividends:       dividends,
+		Interests:       interests,
+	}
 }

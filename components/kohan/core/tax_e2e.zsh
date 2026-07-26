@@ -137,7 +137,7 @@ echo "--- Validating Excel Sheets ---"
 EXCEL_OUTPUT=$("$SCRIPT_DIR/read_excel.zsh" "$FA_COMPUTE_DIR/Output/Reports/2024_Tax_Summary.xlsx" 2>&1)
 SHEETS_LINE=$(echo "$EXCEL_OUTPUT" | grep "Available sheets:")
 
-REQUIRED_SHEETS=("Gains" "Dividends" "Valuations" "Interest")
+REQUIRED_SHEETS=("Gains" "Dividends" "Valuations" "Interest" "Security Info")
 MISSING_SHEETS=()
 
 for sheet in "${REQUIRED_SHEETS[@]}"; do

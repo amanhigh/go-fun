@@ -12,6 +12,7 @@ var _ = Describe("Tax Utils", func() {
 		var (
 			taxMap   map[string]map[string]float64
 			dividend *tax.Dividend
+			found    bool
 		)
 
 		BeforeEach(func() {
@@ -33,7 +34,11 @@ var _ = Describe("Tax Utils", func() {
 					Date:   "2024-01-20",
 					Amount: 50.0,
 				}
-				manager.MatchDividendWithTax(dividend, taxMap)
+				found = manager.MatchDividendWithTax(dividend, taxMap)
+			})
+
+			It("should return true", func() {
+				Expect(found).To(BeTrue())
 			})
 
 			It("should match tax correctly", func() {
@@ -62,7 +67,11 @@ var _ = Describe("Tax Utils", func() {
 					Date:   "2024-01-20",
 					Amount: 100.0,
 				}
-				manager.MatchDividendWithTax(dividend, taxMap)
+				found = manager.MatchDividendWithTax(dividend, taxMap)
+			})
+
+			It("should return false", func() {
+				Expect(found).To(BeFalse())
 			})
 
 			It("should set tax to 0", func() {
@@ -85,7 +94,11 @@ var _ = Describe("Tax Utils", func() {
 					Date:   "2024-03-20",
 					Amount: 50.0,
 				}
-				manager.MatchDividendWithTax(dividend, taxMap)
+				found = manager.MatchDividendWithTax(dividend, taxMap)
+			})
+
+			It("should return false", func() {
+				Expect(found).To(BeFalse())
 			})
 
 			It("should set tax to 0", func() {
@@ -102,7 +115,10 @@ var _ = Describe("Tax Utils", func() {
 		})
 
 		Context("when multiple dividends share same tax pool", func() {
-			var dividend2 *tax.Dividend
+			var (
+				dividend2 *tax.Dividend
+				found2    bool
+			)
 
 			BeforeEach(func() {
 				dividend = &tax.Dividend{
@@ -115,8 +131,8 @@ var _ = Describe("Tax Utils", func() {
 					Date:   "2024-01-20",
 					Amount: 20.0,
 				}
-				manager.MatchDividendWithTax(dividend, taxMap)
-				manager.MatchDividendWithTax(dividend2, taxMap)
+				found = manager.MatchDividendWithTax(dividend, taxMap)
+				found2 = manager.MatchDividendWithTax(dividend2, taxMap)
 			})
 
 			It("should match first dividend with tax", func() {
@@ -124,9 +140,17 @@ var _ = Describe("Tax Utils", func() {
 				Expect(dividend.Net).To(Equal(22.5))
 			})
 
+			It("should return true for first match", func() {
+				Expect(found).To(BeTrue())
+			})
+
 			It("should not match second dividend (tax already consumed)", func() {
 				Expect(dividend2.Tax).To(Equal(0.0))
 				Expect(dividend2.Net).To(Equal(20.0))
+			})
+
+			It("should return false for consumed duplicate tax", func() {
+				Expect(found2).To(BeFalse())
 			})
 
 			It("should have removed tax from pool after first match", func() {
@@ -143,7 +167,11 @@ var _ = Describe("Tax Utils", func() {
 					Date:   "2024-01-20",
 					Amount: 50.0,
 				}
-				manager.MatchDividendWithTax(dividend, taxMap)
+				found = manager.MatchDividendWithTax(dividend, taxMap)
+			})
+
+			It("should return false", func() {
+				Expect(found).To(BeFalse())
 			})
 
 			It("should set tax to 0", func() {
@@ -165,7 +193,11 @@ var _ = Describe("Tax Utils", func() {
 					Date:   "2024-01-20",
 					Amount: 50.0,
 				}
-				manager.MatchDividendWithTax(dividend, taxMap)
+				found = manager.MatchDividendWithTax(dividend, taxMap)
+			})
+
+			It("should return false", func() {
+				Expect(found).To(BeFalse())
 			})
 
 			It("should handle gracefully and set tax to 0", func() {
@@ -177,19 +209,21 @@ var _ = Describe("Tax Utils", func() {
 			})
 		})
 
-		It("should handle floating-point precision errors: 142.07 - 35.52 = 106.55", func() {
+		It("should return true for matching floating-point test: 142.07 - 35.52 = 106.55", func() {
 			// Without rounding: 142.07 - 35.52 = 106.54999999999998
 			taxMap["BIL"] = map[string]float64{"2025-06-06": 35.52}
 			dividend = &tax.Dividend{Symbol: "BIL", Date: "2025-06-06", Amount: 142.07}
-			manager.MatchDividendWithTax(dividend, taxMap)
+			found = manager.MatchDividendWithTax(dividend, taxMap)
+			Expect(found).To(BeTrue())
 			Expect(dividend.Net).To(Equal(106.55))
 		})
 
-		It("should round negative net correctly: 1.38 - 16.77 = -15.39", func() {
+		It("should return true and round negative net correctly: 1.38 - 16.77 = -15.39", func() {
 			// Without rounding: 1.38 - 16.77 = -15.390000000000004
 			taxMap["IVV"] = map[string]float64{"2025-03-24": 16.77}
 			dividend = &tax.Dividend{Symbol: "IVV", Date: "2025-03-24", Amount: 1.38}
-			manager.MatchDividendWithTax(dividend, taxMap)
+			found = manager.MatchDividendWithTax(dividend, taxMap)
+			Expect(found).To(BeTrue())
 			Expect(dividend.Net).To(Equal(-15.39))
 		})
 	})

@@ -468,7 +468,7 @@ func (v *ValuationManagerImpl) buildDailyQuantityTimeline(
 	year int,
 	openingPosition tax.Position,
 	trades []tax.Trade,
-	splits []tax.YahooSplit,
+	splits []tax.SplitInfo,
 ) map[string]float64 {
 	timeline := make(map[string]float64)
 	currentQuantity := openingPosition.Quantity
@@ -523,8 +523,8 @@ func groupTradesByDate(trades []tax.Trade, year int) map[string][]tax.Trade {
 
 // groupSplitsByDate partitions Yahoo split events by calendar date, filtering
 // out entries whose timestamp falls outside the given year.
-func groupSplitsByDate(splits []tax.YahooSplit, year int) map[string][]tax.YahooSplit {
-	splitsByDate := make(map[string][]tax.YahooSplit)
+func groupSplitsByDate(splits []tax.SplitInfo, year int) map[string][]tax.SplitInfo {
+	splitsByDate := make(map[string][]tax.SplitInfo)
 	for _, split := range splits {
 		splitDate := split.EffectiveDate()
 		if splitDate.Year() != year {
@@ -538,7 +538,7 @@ func groupSplitsByDate(splits []tax.YahooSplit, year int) map[string][]tax.Yahoo
 
 // collectEventDates returns a chronologically sorted slice of unique dates
 // present in either the trade-by-date or split-by-date maps.
-func collectEventDates(tradesByDate map[string][]tax.Trade, splitsByDate map[string][]tax.YahooSplit) []string {
+func collectEventDates(tradesByDate map[string][]tax.Trade, splitsByDate map[string][]tax.SplitInfo) []string {
 	dates := make([]string, 0, len(tradesByDate)+len(splitsByDate))
 	for dateStr := range tradesByDate {
 		dates = append(dates, dateStr)
