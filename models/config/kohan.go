@@ -116,7 +116,7 @@ func NewKohanConfig() (config KohanConfig, err error) {
 }
 
 func applyTaxPaths(tax *TaxConfig, homeDir string) {
-	// TODO: #C Remove this Hack.
+	// HACK: #C Remove this Hack.
 	tax.TaxDir = replaceHome(tax.TaxDir, homeDir)
 	tax.DriveWealthBase = replaceHome(tax.DriveWealthBase, homeDir)
 	tax.IBKRBase = replaceHome(tax.IBKRBase, homeDir)

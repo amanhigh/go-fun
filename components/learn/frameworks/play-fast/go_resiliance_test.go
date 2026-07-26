@@ -15,7 +15,7 @@ import (
 	"github.com/slok/goresilience/timeout"
 )
 
-// TODO: Merge into Hystrix Test
+// FIXME: Merge into Hystrix Test
 var _ = Describe("GoResiliance", func() {
 
 	var (
