@@ -434,8 +434,8 @@ var _ = Describe("GainsComputationManager", func() {
 		BeforeEach(func() {
 			setupIdentitySplitManager()
 			trades = []tax.Trade{
-				{Symbol: AAPL, Date: "2024-01-15", Type: "BUY", Quantity: 100, USDPrice: 140.00, Commission: 10.00, Broker: "DriveWealth"},
-				{Symbol: AAPL, Date: "2024-06-20", Type: "SELL", Quantity: 100, USDPrice: 190.00, Commission: 10.00, Broker: "Interactive Brokers"},
+				{Symbol: AAPL, Date: "2024-01-15", Type: "BUY", Quantity: 100, USDPrice: 140.00, Commission: 10.00, Broker: tax.BROKER_DRIVE_WEALTH},
+				{Symbol: AAPL, Date: "2024-06-20", Type: "SELL", Quantity: 100, USDPrice: 190.00, Commission: 10.00, Broker: tax.BROKER_INTERACTIVE_BROKERS},
 			}
 		})
 
@@ -449,7 +449,7 @@ var _ = Describe("GainsComputationManager", func() {
 			Expect(gain.BuyDate).To(Equal("2024-01-15"))
 			Expect(gain.SellDate).To(Equal("2024-06-20"))
 			Expect(gain.Quantity).To(Equal(100.0))
-			Expect(gain.Broker).To(Equal("Interactive Brokers"))
+			Expect(gain.Broker).To(Equal(tax.BROKER_INTERACTIVE_BROKERS))
 		})
 	})
 

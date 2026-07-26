@@ -33,7 +33,7 @@ func NewDriveWealthManagerImpl(basePath string) Broker {
 
 // GetName returns the broker name.
 func (m *DriveWealthManagerImpl) GetName() string {
-	return "DriveWealth"
+	return tax.BROKER_DRIVE_WEALTH
 }
 
 // resolveFilePath constructs the year-specific file path

@@ -173,7 +173,7 @@ func (ki *KohanInjector) provideSecurityIDProvider(ibManager *manager.Interactiv
 	return ibManager
 }
 
-// provideIBBroker is a narrow adapter that reuses the IB singleton as a Broker, registered named "IB".
+// provideIBBroker is a narrow adapter that reuses the IB singleton as a Broker, registered named "IBKR".
 func (ki *KohanInjector) provideIBBroker(ibManager *manager.InteractiveBrokersManagerImpl) manager.Broker {
 	return ibManager
 }
@@ -224,7 +224,7 @@ func (ki *KohanInjector) registerRepositories() {
 func (ki *KohanInjector) registerCoreManagers() {
 	// Register InteractiveBrokersManagerImpl as concrete singleton for dual use:
 	// 1. SecurityIDProvider for TickerManager fallback resolution
-	// 2. Named "IB" Broker for BrokerageManager
+	// 2. Named "IBKR" Broker for BrokerageManager
 	container.MustSingleton(ki.di, ki.provideInteractiveBrokersManager)
 	container.MustSingleton(ki.di, ki.provideSecurityIDProvider)
 
@@ -261,9 +261,9 @@ func (ki *KohanInjector) registerTaxComponents() {
 	container.MustSingleton(ki.di, ki.provideTaxManager)
 	container.MustSingleton(ki.di, ki.provideGainsComputationManager)
 
-	// Register brokers with names to avoid collision (names match struct field names)
-	container.MustNamedSingleton(ki.di, "DriveWealth", ki.provideDriveWealthManager)
-	container.MustNamedSingleton(ki.di, "IB", ki.provideIBBroker)
+	// Register brokers with names to avoid collision (names match struct field names: DW, IBKR)
+	container.MustNamedSingleton(ki.di, taxmodels.BROKER_DRIVE_WEALTH, ki.provideDriveWealthManager)
+	container.MustNamedSingleton(ki.di, taxmodels.BROKER_INTERACTIVE_BROKERS, ki.provideIBBroker)
 
 	container.MustSingleton(ki.di, ki.provideBrokerageManager)
 }

@@ -54,8 +54,8 @@ var _ = Describe("BrokerageManager", func() {
 		mockDWBroker = mocks.NewBroker(GinkgoT())
 		mockIBBroker = mocks.NewBroker(GinkgoT())
 
-		mockDWBroker.EXPECT().GetName().Return("DriveWealth").Maybe()
-		mockIBBroker.EXPECT().GetName().Return("Interactive Brokers").Maybe()
+		mockDWBroker.EXPECT().GetName().Return(tax.BROKER_DRIVE_WEALTH).Maybe()
+		mockIBBroker.EXPECT().GetName().Return(tax.BROKER_INTERACTIVE_BROKERS).Maybe()
 
 		emptyInfo = tax.BrokerageInfo{CoverageThrough: cutoffDate}
 
@@ -100,11 +100,11 @@ var _ = Describe("BrokerageManager", func() {
 				mockIBBroker.EXPECT().Parse(2024).Return(ibInfo, nil)
 
 				expectedTrades := []tax.Trade{
-					{Symbol: "AAPL", Date: "2024-01-10", Type: "BUY", Quantity: 10, USDPrice: 150.0, USDValue: 1500, Commission: 1.0, Broker: "DriveWealth"},
-					{Symbol: "GOOGL", Date: "2024-02-10", Type: "BUY", Quantity: 5, USDPrice: 120.0, USDValue: 600, Commission: 0.5, Broker: "Interactive Brokers"},
+					{Symbol: "AAPL", Date: "2024-01-10", Type: "BUY", Quantity: 10, USDPrice: 150.0, USDValue: 1500, Commission: 1.0, Broker: tax.BROKER_DRIVE_WEALTH},
+					{Symbol: "GOOGL", Date: "2024-02-10", Type: "BUY", Quantity: 5, USDPrice: 120.0, USDValue: 600, Commission: 0.5, Broker: tax.BROKER_INTERACTIVE_BROKERS},
 				}
 				expectedGains := []tax.Gains{
-					{Symbol: "AAPL", BuyDate: "2024-01-10", SellDate: "2024-02-10", Type: "STCG", Quantity: 10, PNL: 98, Commission: 1.5, Broker: "DriveWealth"},
+					{Symbol: "AAPL", BuyDate: "2024-01-10", SellDate: "2024-02-10", Type: "STCG", Quantity: 10, PNL: 98, Commission: 1.5, Broker: tax.BROKER_DRIVE_WEALTH},
 				}
 				mockGainsManager.EXPECT().ComputeGainsFromTrades(ctx, expectedTrades).Return(expectedGains, nil)
 
@@ -115,28 +115,28 @@ var _ = Describe("BrokerageManager", func() {
 			It("should merge and write interest data from both brokers", func() {
 				data, err := os.ReadFile(taxConfig.InterestFilePath)
 				Expect(err).ToNot(HaveOccurred())
-				Expect(string(data)).To(ContainSubstring("CASH,2024-01-15,10.5,0,10.5,DriveWealth"))
-				Expect(string(data)).To(ContainSubstring("CASH,2024-02-15,5.25,0,5.25,Interactive Brokers"))
+				Expect(string(data)).To(ContainSubstring("CASH,2024-01-15,10.5,0,10.5," + tax.BROKER_DRIVE_WEALTH))
+				Expect(string(data)).To(ContainSubstring("CASH,2024-02-15,5.25,0,5.25," + tax.BROKER_INTERACTIVE_BROKERS))
 			})
 
 			It("should merge and write trade data from both brokers", func() {
 				data, err := os.ReadFile(taxConfig.TradesPath)
 				Expect(err).ToNot(HaveOccurred())
-				Expect(string(data)).To(ContainSubstring("AAPL,2024-01-10,BUY,10,150,1500,1,DriveWealth"))
-				Expect(string(data)).To(ContainSubstring("GOOGL,2024-02-10,BUY,5,120,600,0.5,Interactive Brokers"))
+				Expect(string(data)).To(ContainSubstring("AAPL,2024-01-10,BUY,10,150,1500,1," + tax.BROKER_DRIVE_WEALTH))
+				Expect(string(data)).To(ContainSubstring("GOOGL,2024-02-10,BUY,5,120,600,0.5," + tax.BROKER_INTERACTIVE_BROKERS))
 			})
 
 			It("should merge and write dividend data from both brokers", func() {
 				data, err := os.ReadFile(taxConfig.DividendFilePath)
 				Expect(err).ToNot(HaveOccurred())
-				Expect(string(data)).To(ContainSubstring("MSFT,2024-01-20,50,7.5,42.5,DriveWealth"))
-				Expect(string(data)).To(ContainSubstring("TSLA,2024-02-20,30,4.5,25.5,Interactive Brokers"))
+				Expect(string(data)).To(ContainSubstring("MSFT,2024-01-20,50,7.5,42.5," + tax.BROKER_DRIVE_WEALTH))
+				Expect(string(data)).To(ContainSubstring("TSLA,2024-02-20,30,4.5,25.5," + tax.BROKER_INTERACTIVE_BROKERS))
 			})
 
 			It("should create gains file with merged trades", func() {
 				data, err := os.ReadFile(taxConfig.GainsFilePath)
 				Expect(err).ToNot(HaveOccurred())
-				Expect(string(data)).To(ContainSubstring("AAPL,2024-01-10,2024-02-10,10,98,1.5,STCG,DriveWealth"))
+				Expect(string(data)).To(ContainSubstring("AAPL,2024-01-10,2024-02-10,10,98,1.5,STCG," + tax.BROKER_DRIVE_WEALTH))
 			})
 		})
 
@@ -157,7 +157,7 @@ var _ = Describe("BrokerageManager", func() {
 			It("should return parse error for failing broker before writing any files", func() {
 				err := brokerageManager.ParseAndGenerate(ctx, testYear)
 				Expect(err).To(HaveOccurred())
-				Expect(err.Error()).To(ContainSubstring("Interactive Brokers"))
+				Expect(err.Error()).To(ContainSubstring(tax.BROKER_INTERACTIVE_BROKERS))
 				Expect(err.Error()).To(ContainSubstring("parse failed"))
 			})
 		})
@@ -187,7 +187,7 @@ var _ = Describe("BrokerageManager", func() {
 				mockDWBroker.EXPECT().Parse(2024).Return(dwInfo, nil)
 				mockIBBroker.EXPECT().Parse(2024).Return(emptyInfo, nil)
 				expectedTrades := []tax.Trade{
-					{Symbol: "AAPL", Date: "2024-01-10", Type: "SELL", Quantity: 10, USDPrice: 150.0, USDValue: 1500, Commission: 1.0, Broker: "DriveWealth"},
+					{Symbol: "AAPL", Date: "2024-01-10", Type: "SELL", Quantity: 10, USDPrice: 150.0, USDValue: 1500, Commission: 1.0, Broker: tax.BROKER_DRIVE_WEALTH},
 				}
 				mockGainsManager.EXPECT().ComputeGainsFromTrades(ctx, expectedTrades).Return(nil, mockError("no buy positions"))
 			})
@@ -215,7 +215,7 @@ var _ = Describe("BrokerageManager", func() {
 			It("should return coverage error with broker name, actual coverage, and required date", func() {
 				err := brokerageManager.ParseAndGenerate(ctx, testYear)
 				Expect(err).To(HaveOccurred())
-				Expect(err.Error()).To(ContainSubstring("Interactive Brokers"))
+				Expect(err.Error()).To(ContainSubstring(tax.BROKER_INTERACTIVE_BROKERS))
 				Expect(err.Error()).To(ContainSubstring("2025-01-15"))
 				Expect(err.Error()).To(ContainSubstring("2025-03-31"))
 

@@ -145,7 +145,7 @@ func (m *InteractiveBrokersManagerImpl) scanFIRecords(records [][]string, ticker
 
 // GetName returns the broker name.
 func (m *InteractiveBrokersManagerImpl) GetName() string {
-	return "Interactive Brokers"
+	return tax.BROKER_INTERACTIVE_BROKERS
 }
 
 // discoverFiles finds every file matching <basePath>_YYYY.csv pattern in deterministic lexical order.

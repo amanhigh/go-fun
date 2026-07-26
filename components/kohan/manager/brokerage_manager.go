@@ -19,8 +19,8 @@ type BrokerageManager interface {
 }
 
 type BrokerageManagerImpl struct {
-	DriveWealth  Broker                  `container:"name"`
-	IB           Broker                  `container:"name"`
+	DW           Broker                  `container:"name"`
+	IBKR         Broker                  `container:"name"`
 	GainsManager GainsComputationManager `container:"type"`
 	Config       config.TaxConfig
 }
@@ -33,8 +33,8 @@ func NewBrokerageManager(
 	config config.TaxConfig,
 ) *BrokerageManagerImpl {
 	return &BrokerageManagerImpl{
-		DriveWealth:  dwManager,
-		IB:           ibManager,
+		DW:           dwManager,
+		IBKR:         ibManager,
 		GainsManager: gainsManager,
 		Config:       config,
 	}
@@ -43,7 +43,7 @@ func NewBrokerageManager(
 var _ BrokerageManager = (*BrokerageManagerImpl)(nil)
 
 func (m *BrokerageManagerImpl) ParseAndGenerate(ctx context.Context, year int) error {
-	brokers := []Broker{m.DriveWealth, m.IB}
+	brokers := []Broker{m.DW, m.IBKR}
 	requiredDate := time.Date(year+1, tax.COVERAGE_CUTOFF_MONTH, tax.COVERAGE_CUTOFF_DAY, 0, 0, 0, 0, time.UTC)
 
 	var merged tax.BrokerageInfo

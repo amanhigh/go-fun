@@ -26,4 +26,8 @@ const (
 
 	// Rounding factor for 2 decimal places
 	ROUNDING_FACTOR_2_DECIMALS = 100.0
+
+	// Broker Names
+	BROKER_DRIVE_WEALTH        = "DW"
+	BROKER_INTERACTIVE_BROKERS = "IBKR"
 )
