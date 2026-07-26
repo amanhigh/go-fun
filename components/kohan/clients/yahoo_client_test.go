@@ -46,7 +46,10 @@ var _ = Describe("YahooClient", func() {
 								"meta": {
 									"currency": "USD",
 									"symbol": "AAPL",
-									"exchangeName": "NMS"
+									"exchangeName": "NMS",
+									"longName": "Apple Inc.",
+									"shortName": "Apple",
+									"instrumentType": "EQUITY"
 								},
 								"timestamp": [1705276800, 1705363200, 1705449600],
 								"indicators": {
@@ -106,6 +109,13 @@ var _ = Describe("YahooClient", func() {
 			It("should return non-nil empty splits when no events present", func() {
 				Expect(stockData.Splits).ToNot(BeNil())
 				Expect(stockData.Splits).To(BeEmpty())
+			})
+
+			It("should populate security metadata from chart meta", func() {
+				Expect(stockData.Security.Symbol).To(Equal("AAPL"))
+				Expect(stockData.Security.Name).To(Equal("Apple Inc."))
+				Expect(stockData.Security.Exchange).To(Equal("NMS"))
+				Expect(stockData.Security.Type).To(Equal("EQUITY"))
 			})
 		})
 

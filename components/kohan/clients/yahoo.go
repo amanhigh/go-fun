@@ -73,6 +73,7 @@ func (y *YahooClient) FetchDailyPrices(ctx context.Context, ticker string) (tax.
 	}
 
 	splits := y.extractSplits(&response)
+	security := y.extractSecurityFromMeta(&response)
 
 	log.Info().
 		Str("Ticker", ticker).
@@ -80,7 +81,7 @@ func (y *YahooClient) FetchDailyPrices(ctx context.Context, ticker string) (tax.
 		Int("Splits", len(splits)).
 		Msg("Successfully fetched ticker data from Yahoo Finance")
 
-	return tax.StockData{Prices: prices, Splits: splits}, nil
+	return tax.StockData{Prices: prices, Splits: splits, Security: security}, nil
 }
 
 // extractPrices validates response and builds prices map from timestamps and closing prices
@@ -134,6 +135,27 @@ func (y *YahooClient) extractSplits(response *tax.YahooChartResponse) []tax.Spli
 	})
 
 	return splits
+}
+
+// extractSecurityFromMeta resolves SecurityInfo from Yahoo chart metadata.
+// Uses long name with short-name fallback for the security name.
+func (y *YahooClient) extractSecurityFromMeta(response *tax.YahooChartResponse) tax.SecurityInfo {
+	if len(response.Chart.Result) == 0 {
+		return tax.SecurityInfo{}
+	}
+
+	meta := response.Chart.Result[0].Meta
+	name := meta.LongName
+	if name == "" {
+		name = meta.ShortName
+	}
+
+	return tax.SecurityInfo{
+		Symbol:   meta.Symbol,
+		Name:     name,
+		Exchange: meta.ExchangeName,
+		Type:     meta.InstrumentType,
+	}
 }
 
 // GetSecurityInfo searches for securities by query string using Yahoo Finance /v1/finance/search.

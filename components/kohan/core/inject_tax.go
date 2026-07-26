@@ -178,7 +178,7 @@ func (ki *KohanInjector) provideIBBroker(ibManager *manager.InteractiveBrokersMa
 	return ibManager
 }
 
-//nolint:revive // argument-limit: 7 params matches existing pattern
+//nolint:revive // argument-limit: 8 params matches existing pattern
 func (ki *KohanInjector) provideTaxManager(
 	gainMgr manager.CapitalGainManager,
 	dividendManager manager.DividendManager,
@@ -187,8 +187,9 @@ func (ki *KohanInjector) provideTaxManager(
 	excelMgr manager.ExcelManager,
 	accountMgr manager.AccountManager,
 	sbiMgr manager.SBIManager,
+	tickerMgr manager.TickerManager,
 ) manager.TaxManager {
-	return manager.NewTaxManager(gainMgr, dividendManager, interestManager, taxValuationManager, excelMgr, accountMgr, sbiMgr)
+	return manager.NewTaxManager(gainMgr, dividendManager, interestManager, taxValuationManager, excelMgr, accountMgr, sbiMgr, tickerMgr)
 }
 
 // ---- Tax Dependency Registration ----
