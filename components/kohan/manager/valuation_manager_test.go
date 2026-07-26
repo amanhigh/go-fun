@@ -428,9 +428,8 @@ var _ = Describe("ValuationManager", func() {
 				Context("Multiple Position Peaks", func() {
 					var trades []tax.Trade
 					BeforeEach(func() {
-						// FIXME: #A Multiple Peaks with Same Value (Take Second higher TBBR Rate) or Throw Error.
 						// Test validates that when multiple position peaks exist with SAME quantity,
-						// the second peak wins because it has HIGHER USD price AND HIGHER TBBR rate.
+						// the peak with the strictly higher INR value (Qty × Price × Rate) wins.
 						// Mar 15 fully liquidates (SELL 15 to bring 15→0), then Apr 15 re-acquires fully (BUY 15→15).
 						trades = []tax.Trade{
 							tax.NewTrade(AAPL, "2024-01-15", "BUY", 10, 100),  // Initial 10 shares
@@ -686,6 +685,59 @@ var _ = Describe("ValuationManager", func() {
 						Expect(actualPeakINR).To(Equal(jan15INR))
 						Expect(actualPeakINR).To(BeNumerically(">", jun15INR))
 					})
+				})
+			})
+
+			Context("Exact INR Tie Retains Earliest Date", func() {
+				// When two dates produce exactly equal INR values (Qty × Price × Rate),
+				// the earliest date wins because the comparison uses strict > (not >=).
+				// This is not a floating-point approximation — both products are exactly equal.
+				var trades []tax.Trade
+
+				BeforeEach(func() {
+					trades = []tax.Trade{
+						tax.NewTrade(AAPL, "2024-01-15", "BUY", 10, 100),
+					}
+
+					// Constant 10-share holding across both dates
+					// INR Calculations (both exactly 90,000):
+					// Jan 15: 10 × 100 × 90 = 90,000 INR (earlier date)
+					// Jun 15: 10 × 125 × 72 = 90,000 INR (later date)
+					aaplDailyPrices := map[string]float64{
+						"2024-01-15": 100.0,
+						"2024-06-15": 125.0,
+					}
+
+					aaplDailyRates := map[string]float64{
+						"2024-01-15": 90.0,
+						"2024-06-15": 72.0,
+					}
+
+					mockTickerManager.EXPECT().
+						GetDailyPrices(ctx, AAPL, year).
+						Return(aaplDailyPrices, nil)
+					mockSBIManager.EXPECT().
+						GetDailyRates(ctx, year).
+						Return(aaplDailyRates, nil)
+					mockTickerManager.EXPECT().
+						GetPrice(ctx, AAPL, yearEndDate).
+						Return(yearEndPrice, nil)
+				})
+
+				It("should retain earliest date as peak when INR values are exactly equal", func() {
+					valuation, err := valuationManager.AnalyzeValuation(ctx, AAPL, trades, year)
+					Expect(err).ToNot(HaveOccurred())
+
+					// Peak should be Jan 15 (earlier date), NOT Jun 15
+					peakDate, _ := trades[0].GetDate()
+					Expect(valuation.PeakPosition.Date).To(Equal(peakDate))
+					Expect(valuation.PeakPosition.Quantity).To(Equal(10.0))
+					Expect(valuation.PeakPosition.USDPrice).To(Equal(100.0))
+
+					// Verify both dates produce exactly equal INR values
+					jan15INR := 10.0 * 100.0 * 90.0 // = 90,000 INR
+					jun15INR := 10.0 * 125.0 * 72.0 // = 90,000 INR
+					Expect(jan15INR).To(Equal(jun15INR))
 				})
 			})
 
