@@ -21,13 +21,3 @@ func SendInput(input string) error {
 	}
 	return nil
 }
-
-func ClipCopy(text string) (err error) {
-	err = script.Echo(text).Exec("wl-copy").Error()
-	return
-}
-
-func ClipPaste() (text string, err error) {
-	text, err = script.Exec("wl-paste -n").String()
-	return
-}

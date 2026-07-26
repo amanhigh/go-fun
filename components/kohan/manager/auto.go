@@ -87,9 +87,9 @@ func (a *OSManagerImpl) Screenshot(_ context.Context, directoryType kohan.Screen
 	case kohan.ScreenshotTypeRegion:
 		screenshotErr = tools.NamedRegionScreenshot(dir, fileName)
 	case kohan.ScreenshotTypeFull:
-		screenshotErr = tools.NamedScreenshot(dir, fileName)
+		screenshotErr = tools.Screenshot(dir, fileName)
 	default:
-		screenshotErr = tools.NamedScreenshot(dir, fileName)
+		screenshotErr = tools.Screenshot(dir, fileName)
 	}
 	return fullPath, a.mapScreenshotError(screenshotErr)
 }
@@ -151,7 +151,7 @@ func (a *OSManagerImpl) takeScreenshots(ticker, path string) (err error) {
 			name := fmt.Sprintf("%s__%s.png", ticker, time.Now().Format(DATE_FORMAT))
 			log.Debug().Str("Ticker", ticker).Str("Name", name).Int("Count", i).Msg("Attempting Screenshot")
 			time.Sleep(1 * time.Second)
-			if err = tools.NamedScreenshot(path, name); err != nil {
+			if err = tools.Screenshot(path, name); err != nil {
 				return
 			}
 		}
@@ -234,15 +234,15 @@ func (a *OSManagerImpl) openTicker(ticker string) (err error) {
 	if err = tools.FocusWindow("TradingView"); err == nil {
 		// Focus Input Box
 		if err = tools.SendKey("-M Ctrl b -m Ctrl"); err == nil {
-			// TASK: Copy Ticker once Clipboard Library is Fixed
-			// Copy runs into doom loop with wl-paste Watch
-			if err = tools.SendKey("-M Ctrl v -m Ctrl"); err == nil {
-				time.Sleep(UI_INTERACTION_DELAY)
-				// Bang ! to Open
-				err = tools.SendInput("xox ")
-				// Return Focus Back
-				if focusErr := tools.FocusLastWindow(); focusErr != nil {
-					log.Error().Err(focusErr).Msg("Failed to return focus")
+			if err = tools.ClipCopy(ticker); err == nil {
+				if err = tools.SendKey("-M Ctrl v -m Ctrl"); err == nil {
+					time.Sleep(UI_INTERACTION_DELAY)
+					// Bang ! to Open
+					err = tools.SendInput("xox ")
+					// Return Focus Back
+					if focusErr := tools.FocusLastWindow(); focusErr != nil {
+						log.Error().Err(focusErr).Msg("Failed to return focus")
+					}
 				}
 			}
 		}
