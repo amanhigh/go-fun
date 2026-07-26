@@ -1163,6 +1163,20 @@ var _ = Describe("ExcelManagerImpl", func() {
 				Expect(ranges).To(HaveKeyWithValue(sheetName, "$A$1:$G$4"))
 			})
 
+			It("should set custom column widths for Security Info sheet", func() {
+				widthA, err := f.GetColWidth(sheetName, "A")
+				Expect(err).ToNot(HaveOccurred())
+				Expect(widthA).To(BeNumerically("==", 8.0), "Column A (Sr No) should be width 8")
+
+				widthD, err := f.GetColWidth(sheetName, "D")
+				Expect(err).ToNot(HaveOccurred())
+				Expect(widthD).To(BeNumerically("==", 16.0), "Column D (Name of entity) should be width 16")
+
+				widthG, err := f.GetColWidth(sheetName, "G")
+				Expect(err).ToNot(HaveOccurred())
+				Expect(widthG).To(BeNumerically("==", 12.0), "Column G (Nature of entity) should be width 12")
+			})
+
 		})
 
 		Context("when the tax summary is completely empty", func() {

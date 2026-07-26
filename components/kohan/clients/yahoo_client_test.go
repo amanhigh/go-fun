@@ -119,6 +119,66 @@ var _ = Describe("YahooClient", func() {
 			})
 		})
 
+		Context("partial metadata returns available fields without fallback", func() {
+			var stockData tax.StockData
+			var err error
+
+			BeforeEach(func() {
+				responseBody := `{
+					"chart": {
+						"result": [
+							{
+								"meta": {
+									"currency": "USD",
+									"symbol": "BRK-B",
+									"exchangeName": "NYSE",
+									"longName": "",
+									"shortName": "Berkshire Hathaway B",
+									"instrumentType": "EQUITY"
+								},
+								"timestamp": [1705276800],
+								"indicators": {
+									"quote": [
+										{
+											"open": [360.0],
+											"high": [362.0],
+											"low": [358.0],
+											"close": [361.0],
+											"volume": [3000000]
+										}
+									]
+								}
+							}
+						],
+						"error": null
+					}
+				}`
+
+				server = httptest.NewServer(
+					http.HandlerFunc(func(w http.ResponseWriter, _ *http.Request) {
+						w.Header().Set("Content-Type", "application/json")
+						w.WriteHeader(http.StatusOK)
+						_, _ = w.Write([]byte(responseBody))
+					}),
+				)
+
+				client := resty.NewWithClient(&http.Client{})
+				yahooClient = clients.NewYahooClient(client, server.URL, tickerDataStartYear)
+				stockData, err = yahooClient.FetchDailyPrices(ctx, "BRK-B")
+			})
+
+			It("should return no error", func() {
+				Expect(err).ToNot(HaveOccurred())
+			})
+
+			It("should return available fields and leave Name empty (no ShortName fallback)", func() {
+				Expect(stockData.Security.Symbol).To(Equal("BRK-B"))
+				Expect(stockData.Security.Name).To(Equal(""))
+				Expect(stockData.Security.Exchange).To(Equal("NYSE"))
+				Expect(stockData.Security.Type).To(Equal("EQUITY"))
+			})
+		})
+
 		Context("empty chart result", func() {
 			var err error
 
@@ -259,7 +319,10 @@ var _ = Describe("YahooClient", func() {
 							{
 								"meta": {
 									"currency": "USD",
-									"symbol": "AAPL"
+									"symbol": "AAPL",
+									"longName": "Apple Inc.",
+									"exchangeName": "NMS",
+									"instrumentType": "EQUITY"
 								},
 								"timestamp": [1705276800, 1705363200, 1705449600],
 								"indicators": {
@@ -321,7 +384,10 @@ var _ = Describe("YahooClient", func() {
 							{
 								"meta": {
 									"currency": "USD",
-									"symbol": "AAPL"
+									"symbol": "AAPL",
+									"longName": "Apple Inc.",
+									"exchangeName": "NMS",
+									"instrumentType": "EQUITY"
 								},
 								"timestamp": [1705276800],
 								"indicators": {
@@ -380,7 +446,7 @@ var _ = Describe("YahooClient", func() {
 					"chart": {
 						"result": [
 							{
-								"meta": {"currency": "USD", "symbol": "AAPL"},
+								"meta": {"currency": "USD", "symbol": "AAPL", "longName": "Apple Inc.", "exchangeName": "NMS", "instrumentType": "EQUITY"},
 								"timestamp": [1705276800],
 								"indicators": {
 									"quote": [{"open": [190.0], "high": [192.0], "low": [189.0], "close": [191.5], "volume": [50000000]}]
@@ -651,7 +717,7 @@ var _ = Describe("YahooClient", func() {
 								"chart": {
 									"result": [
 										{
-											"meta": {"currency": "USD", "symbol": "AAPL"},
+											"meta": {"currency": "USD", "symbol": "AAPL", "longName": "Apple Inc.", "exchangeName": "NMS", "instrumentType": "EQUITY"},
 											"timestamp": [1705276800],
 											"indicators": {
 												"quote": [{"open": [190.0], "high": [192.0], "low": [189.0], "close": [191.5], "volume": [50000000]}]
@@ -666,7 +732,7 @@ var _ = Describe("YahooClient", func() {
 								"chart": {
 									"result": [
 										{
-											"meta": {"currency": "USD", "symbol": "MSFT"},
+											"meta": {"currency": "USD", "symbol": "MSFT", "longName": "Microsoft Corporation", "exchangeName": "NMS", "instrumentType": "EQUITY"},
 											"timestamp": [1705276800],
 											"indicators": {
 												"quote": [{"open": [380.0], "high": [385.0], "low": [378.0], "close": [382.5], "volume": [20000000]}]
