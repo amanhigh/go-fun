@@ -26,6 +26,7 @@ require (
 	github.com/swaggo/gin-swagger v1.6.0
 	github.com/templui/templui v1.9.1
 	github.com/xuri/excelize/v2 v2.9.1
+	golang.design/x/clipboard v0.8.0
 	gorm.io/gorm v1.25.7-0.20240204074919-46816ad31dde
 )
 

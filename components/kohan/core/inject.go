@@ -8,6 +8,7 @@ import (
 	"github.com/amanhigh/go-fun/models/config"
 
 	"github.com/golobby/container/v3"
+	"golang.design/x/clipboard"
 )
 
 // =============================================================================
@@ -36,6 +37,11 @@ type KohanInjector struct {
 }
 
 func SetupKohanInjector(config config.KohanConfig) {
+	// Initialize the clipboard library once at startup.
+	if err := clipboard.Init(); err != nil {
+		panic(fmt.Errorf("failed to initialize clipboard: %w", err))
+	}
+
 	globalInjector = &KohanInjector{
 		di:     container.New(),
 		config: config,
