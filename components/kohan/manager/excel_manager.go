@@ -657,6 +657,44 @@ func (e *ExcelManagerImpl) setColumnWidths(f *excelize.File, sheetName string, w
 	}
 }
 
+// contentWidths returns column widths based on the longest rendered value in each
+// column, considering both headers and data rows. Each column uses minW as a
+// floor and adds padding for readability.
+func contentWidths(headers []string, rows [][]any, minW float64) map[string]float64 {
+	const widthPadding = 2.0
+
+	widths := make(map[string]float64, len(headers))
+	for i, h := range headers {
+		col := colLetter(i)
+		w := float64(len(h)) + widthPadding
+		if w < minW {
+			w = minW
+		}
+		widths[col] = w
+	}
+	for _, row := range rows {
+		for i := range min(len(headers), len(row)) {
+			col := colLetter(i)
+			s := fmt.Sprintf("%v", row[i])
+			if w := float64(len(s)) + widthPadding; w > widths[col] {
+				widths[col] = w
+			}
+		}
+	}
+	// Enforce minimum width floor.
+	for col, w := range widths {
+		if w < minW {
+			widths[col] = minW
+		}
+	}
+	return widths
+}
+
+// colLetter converts a 0-based column index to its Excel letter (A, B, ... Z).
+func colLetter(i int) string {
+	return string(rune('A' + i)) //nolint:gosec // safe: caller range is 0–25
+}
+
 // writeTTRatesSheet creates the "TT Rates" sheet with FY month-end rate reference data.
 // Rows are sorted by ActualDate descending (latest rates first). Month/Year labels are derived
 // from each rate's ActualDate.AddDate(0, 1, 0), so the applicable month follows the SBI rate date.
@@ -747,6 +785,8 @@ func (e *ExcelManagerImpl) writePDFLink(f *excelize.File, sheetName string, rowN
 // writeSecurityInfoSheet creates the "Security Info" sheet with resolved security metadata.
 // Rows are sorted by Symbol ascending. Country Name, Address, and Zip code use
 // hardcoded Vested-compatible values. Entity name renders as "<Name> (<Symbol>)".
+// Column widths are computed from the actual content (headers + data) so long
+// entity names do not overlap.
 func (e *ExcelManagerImpl) writeSecurityInfoSheet(ctx context.Context, f *excelize.File, securities []tax.SecurityInfo) error {
 	sheetName := "Security Info"
 	headers := []string{"Sr No", "Symbol", "Country Name", "Name of entity", "Address", "Zip code", "Nature of entity"}
@@ -754,9 +794,9 @@ func (e *ExcelManagerImpl) writeSecurityInfoSheet(ctx context.Context, f *exceli
 		return err
 	}
 
+	rows := make([][]any, 0, len(securities))
 	for idx, sec := range securities {
-		rowNum := idx + 2 // Data starts from row 2
-		rowData := []any{
+		rows = append(rows, []any{
 			idx + 1,    // Sr No (1-indexed)
 			sec.Symbol, // Symbol
 			"USA",      // Country Name (hardcoded Vested-compatible)
@@ -764,16 +804,16 @@ func (e *ExcelManagerImpl) writeSecurityInfoSheet(ctx context.Context, f *exceli
 			"USA",      // Address (hardcoded Vested-compatible)
 			"99999999", // Zip code (hardcoded Vested-compatible)
 			sec.Type,   // Nature of entity (resolved SecurityInfo.Type)
-		}
-		if err := util.WriteRow(f, sheetName, rowNum, rowData); err != nil {
-			return fmt.Errorf("failed to write row %d in sheet %s: %w", rowNum, sheetName, err)
+		})
+	}
+
+	for idx, rowData := range rows {
+		if err := util.WriteRow(f, sheetName, idx+2, rowData); err != nil {
+			return fmt.Errorf("failed to write row %d in sheet %s: %w", idx+2, sheetName, err)
 		}
 	}
 
-	e.setColumnWidths(f, sheetName, map[string]float64{
-		"A": colWidthNarrow, "B": colWidthSemi, "C": colWidthMedium,
-		"D": colWidthExtraWide, "E": colWidthMedium, "F": colWidthMedium, "G": colWidthMedium,
-	})
+	e.setColumnWidths(f, sheetName, contentWidths(headers, rows, colWidthNarrow))
 	if err := util.ApplyAutoFilter(f, sheetName, "G", len(securities)+1); err != nil {
 		return fmt.Errorf("failed to apply auto filter on sheet %s: %w", sheetName, err)
 	}

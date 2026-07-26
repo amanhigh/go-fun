@@ -1163,18 +1163,18 @@ var _ = Describe("ExcelManagerImpl", func() {
 				Expect(ranges).To(HaveKeyWithValue(sheetName, "$A$1:$G$4"))
 			})
 
-			It("should set custom column widths for Security Info sheet", func() {
+			It("should set content-based column widths for Security Info sheet", func() {
 				widthA, err := f.GetColWidth(sheetName, "A")
 				Expect(err).ToNot(HaveOccurred())
-				Expect(widthA).To(BeNumerically("==", 8.0), "Column A (Sr No) should be width 8")
+				Expect(widthA).To(BeNumerically(">=", 8.0), "Column A (Sr No) should have minimum usable width")
 
 				widthD, err := f.GetColWidth(sheetName, "D")
 				Expect(err).ToNot(HaveOccurred())
-				Expect(widthD).To(BeNumerically("==", 16.0), "Column D (Name of entity) should be width 16")
+				Expect(widthD).To(BeNumerically(">", 16.0), "Column D (Name of entity) should be wider than old fixed 16 to fit long entity names like 'Microsoft Corporation (MSFT)'")
 
 				widthG, err := f.GetColWidth(sheetName, "G")
 				Expect(err).ToNot(HaveOccurred())
-				Expect(widthG).To(BeNumerically("==", 12.0), "Column G (Nature of entity) should be width 12")
+				Expect(widthG).To(BeNumerically(">=", 12.0), "Column G (Nature of entity) should have minimum usable width")
 			})
 
 		})
