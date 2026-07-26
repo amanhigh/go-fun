@@ -260,15 +260,11 @@ func (e *ExcelManagerImpl) writeGainsSheet(ctx context.Context, f *excelize.File
 		}
 	}
 
-	e.setColumnWidths(f, sheetName, map[string]float64{
+	return e.finalizeSheetWithFilter(f, sheetName, map[string]float64{
 		"A": colWidthNarrow, "B": colWidthMedium, "C": colWidthMedium, "D": colWidthSemi, "E": colWidthMedium,
 		"F": colWidthExtraWide, "G": colWidthNarrow, "H": colWidthMedium, "I": colWidthSemi, "J": colWidthMedium,
 		"K": colWidthMax,
-	})
-	if err := util.ApplyAutoFilter(f, sheetName, "K", len(gains)+1); err != nil {
-		return fmt.Errorf("failed to apply auto filter on sheet %s: %w", sheetName, err)
-	}
-	return nil
+	}, "K", len(gains))
 }
 
 // writeDividendsSheet handles the creation and population of the "Dividends" sheet.
@@ -283,7 +279,6 @@ func (e *ExcelManagerImpl) writeDividendsSheet(ctx context.Context, f *excelize.
 	if err := e.createSheetWithHeaders(ctx, f, sheetName, headers); err != nil {
 		return err
 	}
-
 	for idx, dividendRecord := range dividends {
 		rowNum := idx + 2 // Data starts from row 2
 		rowData := []any{
@@ -317,15 +312,11 @@ func (e *ExcelManagerImpl) writeDividendsSheet(ctx context.Context, f *excelize.
 		}
 	}
 
-	e.setColumnWidths(f, sheetName, map[string]float64{
+	return e.finalizeSheetWithFilter(f, sheetName, map[string]float64{
 		"A": colWidthNarrow, "B": colWidthMedium, "C": colWidthWide, "D": colWidthMedium, "E": colWidthMedium,
 		"F": colWidthMedium, "G": colWidthSemi, "H": colWidthWide, "I": colWidthMedium, "J": colWidthMedium,
 		"K": colWidthMax,
-	})
-	if err := util.ApplyAutoFilter(f, sheetName, "K", len(dividends)+1); err != nil {
-		return fmt.Errorf("failed to apply auto filter on sheet %s: %w", sheetName, err)
-	}
-	return nil
+	}, "K", len(dividends))
 }
 
 // writeValuationsSheet handles the creation and population of the "Valuations" sheet.
@@ -425,7 +416,6 @@ func (e *ExcelManagerImpl) writeInterestSheet(ctx context.Context, f *excelize.F
 	if err := e.createSheetWithHeaders(ctx, f, sheetName, headers); err != nil {
 		return err
 	}
-
 	for idx, interestRecord := range interest {
 		rowNum := idx + 2 // Data starts from row 2
 		rowData := []any{
@@ -459,15 +449,11 @@ func (e *ExcelManagerImpl) writeInterestSheet(ctx context.Context, f *excelize.F
 		}
 	}
 
-	e.setColumnWidths(f, sheetName, map[string]float64{
+	return e.finalizeSheetWithFilter(f, sheetName, map[string]float64{
 		"A": colWidthNarrow, "B": colWidthMedium, "C": colWidthWide, "D": colWidthMedium, "E": colWidthMedium,
 		"F": colWidthMedium, "G": colWidthSemi, "H": colWidthWide, "I": colWidthMedium, "J": colWidthMedium,
 		"K": colWidthMax,
-	})
-	if err := util.ApplyAutoFilter(f, sheetName, "K", len(interest)+1); err != nil {
-		return fmt.Errorf("failed to apply auto filter on sheet %s: %w", sheetName, err)
-	}
-	return nil
+	}, "K", len(interest))
 }
 
 // writeHeaders writes the header row and applies basic styling.
@@ -657,6 +643,17 @@ func (e *ExcelManagerImpl) setColumnWidths(f *excelize.File, sheetName string, w
 	}
 }
 
+// finalizeSheetWithFilter sets column widths and applies an auto-filter covering
+// the header row through the last data row (dataLen+1). This consolidates the
+// repeated two-step pattern across sheet writers.
+func (e *ExcelManagerImpl) finalizeSheetWithFilter(f *excelize.File, sheetName string, widths map[string]float64, filterCol string, dataLen int) error {
+	e.setColumnWidths(f, sheetName, widths)
+	if err := util.ApplyAutoFilter(f, sheetName, filterCol, dataLen+1); err != nil {
+		return fmt.Errorf("failed to apply auto filter on sheet %s: %w", sheetName, err)
+	}
+	return nil
+}
+
 // contentWidths returns column widths based on the longest rendered value in each
 // column, considering both headers and data rows. Each column uses minW as a
 // floor and adds padding for readability.
@@ -744,13 +741,9 @@ func (e *ExcelManagerImpl) writeTTRatesSheet(ctx context.Context, f *excelize.Fi
 		}
 	}
 
-	e.setColumnWidths(f, sheetName, map[string]float64{
+	return e.finalizeSheetWithFilter(f, sheetName, map[string]float64{
 		"A": colWidthNarrow, "B": colWidthNarrow, "C": colWidthWide, "D": colWidthSemi, "E": colWidthMedium, "F": colWidthWide,
-	})
-	if err := util.ApplyAutoFilter(f, sheetName, "F", len(rates)+1); err != nil {
-		return fmt.Errorf("failed to apply auto filter on sheet %s: %w", sheetName, err)
-	}
-	return nil
+	}, "F", len(rates))
 }
 
 // writePDFLink writes the PDF Link cell value and sets an external hyperlink if the
