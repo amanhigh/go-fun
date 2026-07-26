@@ -18,6 +18,7 @@ type Trade struct {
 	USDPrice   float64 `csv:"Price"`
 	USDValue   float64 `csv:"Value"`
 	Commission float64 `csv:"Commission"`
+	Broker     string  `csv:"Broker"`
 }
 
 func NewTrade(symbol, date, tradeType string, quantity, price float64) Trade {

@@ -249,24 +249,92 @@ func (_c *TickerManager_GetPrice_Call) RunAndReturn(run func(ctx context.Context
 	return _c
 }
 
+// GetSecurityInfo provides a mock function for the type TickerManager
+func (_mock *TickerManager) GetSecurityInfo(ctx context.Context, ticker string) (tax.SecurityInfo, common.HttpError) {
+	ret := _mock.Called(ctx, ticker)
+
+	if len(ret) == 0 {
+		panic("no return value specified for GetSecurityInfo")
+	}
+
+	var r0 tax.SecurityInfo
+	var r1 common.HttpError
+	if returnFunc, ok := ret.Get(0).(func(context.Context, string) (tax.SecurityInfo, common.HttpError)); ok {
+		return returnFunc(ctx, ticker)
+	}
+	if returnFunc, ok := ret.Get(0).(func(context.Context, string) tax.SecurityInfo); ok {
+		r0 = returnFunc(ctx, ticker)
+	} else {
+		r0 = ret.Get(0).(tax.SecurityInfo)
+	}
+	if returnFunc, ok := ret.Get(1).(func(context.Context, string) common.HttpError); ok {
+		r1 = returnFunc(ctx, ticker)
+	} else {
+		if ret.Get(1) != nil {
+			r1 = ret.Get(1).(common.HttpError)
+		}
+	}
+	return r0, r1
+}
+
+// TickerManager_GetSecurityInfo_Call is a *mock.Call that shadows Run/Return methods with type explicit version for method 'GetSecurityInfo'
+type TickerManager_GetSecurityInfo_Call struct {
+	*mock.Call
+}
+
+// GetSecurityInfo is a helper method to define mock.On call
+//   - ctx context.Context
+//   - ticker string
+func (_e *TickerManager_Expecter) GetSecurityInfo(ctx interface{}, ticker interface{}) *TickerManager_GetSecurityInfo_Call {
+	return &TickerManager_GetSecurityInfo_Call{Call: _e.mock.On("GetSecurityInfo", ctx, ticker)}
+}
+
+func (_c *TickerManager_GetSecurityInfo_Call) Run(run func(ctx context.Context, ticker string)) *TickerManager_GetSecurityInfo_Call {
+	_c.Call.Run(func(args mock.Arguments) {
+		var arg0 context.Context
+		if args[0] != nil {
+			arg0 = args[0].(context.Context)
+		}
+		var arg1 string
+		if args[1] != nil {
+			arg1 = args[1].(string)
+		}
+		run(
+			arg0,
+			arg1,
+		)
+	})
+	return _c
+}
+
+func (_c *TickerManager_GetSecurityInfo_Call) Return(securityInfo tax.SecurityInfo, httpError common.HttpError) *TickerManager_GetSecurityInfo_Call {
+	_c.Call.Return(securityInfo, httpError)
+	return _c
+}
+
+func (_c *TickerManager_GetSecurityInfo_Call) RunAndReturn(run func(ctx context.Context, ticker string) (tax.SecurityInfo, common.HttpError)) *TickerManager_GetSecurityInfo_Call {
+	_c.Call.Return(run)
+	return _c
+}
+
 // GetSplits provides a mock function for the type TickerManager
-func (_mock *TickerManager) GetSplits(ctx context.Context, ticker string, from time.Time, to time.Time) ([]tax.YahooSplit, common.HttpError) {
+func (_mock *TickerManager) GetSplits(ctx context.Context, ticker string, from time.Time, to time.Time) ([]tax.SplitInfo, common.HttpError) {
 	ret := _mock.Called(ctx, ticker, from, to)
 
 	if len(ret) == 0 {
 		panic("no return value specified for GetSplits")
 	}
 
-	var r0 []tax.YahooSplit
+	var r0 []tax.SplitInfo
 	var r1 common.HttpError
-	if returnFunc, ok := ret.Get(0).(func(context.Context, string, time.Time, time.Time) ([]tax.YahooSplit, common.HttpError)); ok {
+	if returnFunc, ok := ret.Get(0).(func(context.Context, string, time.Time, time.Time) ([]tax.SplitInfo, common.HttpError)); ok {
 		return returnFunc(ctx, ticker, from, to)
 	}
-	if returnFunc, ok := ret.Get(0).(func(context.Context, string, time.Time, time.Time) []tax.YahooSplit); ok {
+	if returnFunc, ok := ret.Get(0).(func(context.Context, string, time.Time, time.Time) []tax.SplitInfo); ok {
 		r0 = returnFunc(ctx, ticker, from, to)
 	} else {
 		if ret.Get(0) != nil {
-			r0 = ret.Get(0).([]tax.YahooSplit)
+			r0 = ret.Get(0).([]tax.SplitInfo)
 		}
 	}
 	if returnFunc, ok := ret.Get(1).(func(context.Context, string, time.Time, time.Time) common.HttpError); ok {
@@ -321,12 +389,12 @@ func (_c *TickerManager_GetSplits_Call) Run(run func(ctx context.Context, ticker
 	return _c
 }
 
-func (_c *TickerManager_GetSplits_Call) Return(yahooSplits []tax.YahooSplit, httpError common.HttpError) *TickerManager_GetSplits_Call {
-	_c.Call.Return(yahooSplits, httpError)
+func (_c *TickerManager_GetSplits_Call) Return(splitInfos []tax.SplitInfo, httpError common.HttpError) *TickerManager_GetSplits_Call {
+	_c.Call.Return(splitInfos, httpError)
 	return _c
 }
 
-func (_c *TickerManager_GetSplits_Call) RunAndReturn(run func(ctx context.Context, ticker string, from time.Time, to time.Time) ([]tax.YahooSplit, common.HttpError)) *TickerManager_GetSplits_Call {
+func (_c *TickerManager_GetSplits_Call) RunAndReturn(run func(ctx context.Context, ticker string, from time.Time, to time.Time) ([]tax.SplitInfo, common.HttpError)) *TickerManager_GetSplits_Call {
 	_c.Call.Return(run)
 	return _c
 }

@@ -11,5 +11,11 @@
             "numerator": 2,
             "denominator": 1
         }
-    ]
+    ],
+    "security": {
+        "symbol": "ADI",
+        "name": "Analog Devices Inc.",
+        "exchange": "NMS",
+        "type": "EQUITY"
+    }
 }

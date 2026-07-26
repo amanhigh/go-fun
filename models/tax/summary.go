@@ -8,4 +8,5 @@ type Summary struct {
 	INRInterest     []INRInterest
 	INRValuations   []INRValuation
 	TTMonthEndRates []MonthEndRate // SBI TT Buy rates for each FY month (Apr→Mar)
+	Securities      []SecurityInfo // Security metadata for each unique valuation ticker (valuation order)
 }

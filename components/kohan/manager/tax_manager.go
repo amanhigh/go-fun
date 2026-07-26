@@ -23,9 +23,10 @@ type TaxManagerImpl struct {
 	excelManager        ExcelManager
 	accountManager      AccountManager
 	sbiManager          SBIManager
+	tickerManager       TickerManager
 }
 
-//nolint:revive // argument-limit: 7 params matches existing pattern
+//nolint:revive // argument-limit: 8 params matches existing pattern
 func NewTaxManager(
 	capitalGainManager CapitalGainManager,
 	dividendManager DividendManager,
@@ -34,6 +35,7 @@ func NewTaxManager(
 	excelManager ExcelManager,
 	accountManager AccountManager,
 	sbiManager SBIManager,
+	tickerManager TickerManager,
 ) TaxManager {
 	return &TaxManagerImpl{
 		capitalGainManager:  capitalGainManager,
@@ -43,6 +45,7 @@ func NewTaxManager(
 		excelManager:        excelManager,
 		accountManager:      accountManager,
 		sbiManager:          sbiManager,
+		tickerManager:       tickerManager,
 	}
 }
 
@@ -66,6 +69,11 @@ func (t *TaxManagerImpl) GetTaxSummary(ctx context.Context, year int) (summary t
 
 	// Process valuations
 	if summary.INRValuations, err = t.processValuations(ctx, year); err != nil {
+		return
+	}
+
+	// Resolve security metadata for valuation tickers
+	if summary.Securities, err = t.resolveSecurities(ctx, summary.INRValuations); err != nil {
 		return
 	}
 
@@ -146,6 +154,28 @@ func (t *TaxManagerImpl) processTTMonthEndRates(ctx context.Context, year int) (
 	}
 
 	return rates, nil
+}
+
+// resolveSecurities returns security metadata for each unique valuation ticker in valuation order.
+// Lookup errors are propagated rather than silently emitting incomplete data.
+func (t *TaxManagerImpl) resolveSecurities(ctx context.Context, valuations []tax.INRValuation) ([]tax.SecurityInfo, common.HttpError) {
+	seen := make(map[string]struct{}, len(valuations))
+	securities := make([]tax.SecurityInfo, 0, len(valuations))
+
+	for _, v := range valuations {
+		if _, dup := seen[v.Ticker]; dup {
+			continue
+		}
+		seen[v.Ticker] = struct{}{}
+
+		info, err := t.tickerManager.GetSecurityInfo(ctx, v.Ticker)
+		if err != nil {
+			return nil, err
+		}
+		securities = append(securities, info)
+	}
+
+	return securities, nil
 }
 
 func (t *TaxManagerImpl) SaveTaxSummaryToExcel(ctx context.Context, year int, summary tax.Summary) error {

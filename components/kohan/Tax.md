@@ -140,6 +140,28 @@ This component is crucial for reporting in **Schedule FA (Foreign Assets)** of t
     *   The INR values for "Initial Value," "Peak Balance Value," "Closing Balance Value," and "Total gross amount paid/credited" for each U.S. asset are reported in Schedule FA.
     *   Other details like country name, entity name, etc., are also required.
 
+### 5. Security Info (Generated Workbook Tab)
+
+The final Excel report (`tax_summary_YYYY.xlsx`) includes a **"Security Info"** worksheet that lists each foreign security held during the reporting year, providing the metadata fields required for Schedule FA compliance. This tab is generated automatically during the report-generation phase.
+
+*   **Source Data:** The sheet is derived from the **unique valuation tickers** (`INRValuation.Ticker`). For each distinct ticker, the system resolves security metadata via `TickerManager.GetSecurityInfo`, which queries Yahoo Finance for the entity's official name, exchange, and security type (e.g., `EQUITY`).
+
+*   **Columns:**
+
+    | Column | Description |
+    |--------|-------------|
+    | Sr No | 1-indexed row number |
+    | Symbol | Ticker symbol (e.g., `AAPL`) |
+    | Country Name | `USA` — hardcoded Vested-compatible constant |
+    | Name of entity | Resolved entity name with symbol suffix, e.g., `Apple Inc. (AAPL)` |
+    | Address | `USA` — hardcoded Vested-compatible constant |
+    | Zip code | `99999999` — hardcoded Vested-compatible constant |
+    | Nature of entity | Security type from Yahoo metadata (e.g., `EQUITY`) |
+
+*   **Sorting:** Rows are deterministic — sorted by **Symbol ascending**.
+
+*   **Vested Compatibility:** `Country Name`, `Address`, and `Zip code` use fixed constants (`USA`, `USA`, `99999999`) that match the Vested brokerage report format expected by the ITR filing workflow.
+
 ## Data Organization & Directory Structure
 
 The tax system organizes data into three immutable layers (Input, Data, Output) within **FARoot** (`~/Downloads/FACompute/`) at runtime. This structure ensures data integrity, reproducibility, and clear separation of concerns.
