@@ -37,6 +37,10 @@ type TickerManager interface {
 	// GetSplits returns split events within the given date range (inclusive).
 	// Returns chronologically ordered defensive copy and non-nil empty slice.
 	GetSplits(ctx context.Context, ticker string, from, to time.Time) ([]tax.SplitInfo, common.HttpError)
+
+	// GetSecurityInfo returns security metadata for the given ticker.
+	// Uses complete metadata already present in StockData/cache without a network call.
+	GetSecurityInfo(ctx context.Context, ticker string) (tax.SecurityInfo, common.HttpError)
 }
 
 type TickerManagerImpl struct {
@@ -236,6 +240,21 @@ func (t *TickerManagerImpl) fetchTickerData(ctx context.Context, ticker string) 
 
 	// Exactly one candidate — retry with its symbol (unchanged, no trim/validation)
 	return t.client.FetchDailyPrices(ctx, candidates[0].Symbol)
+}
+
+// GetSecurityInfo returns security metadata for the given ticker.
+// Uses complete metadata already present in StockData/cache without a network call.
+func (t *TickerManagerImpl) GetSecurityInfo(ctx context.Context, ticker string) (tax.SecurityInfo, common.HttpError) {
+	data, err := t.getTickerData(ctx, ticker)
+	if err != nil {
+		return tax.SecurityInfo{}, err
+	}
+
+	if data.Security != (tax.SecurityInfo{}) {
+		return data.Security, nil
+	}
+
+	return tax.SecurityInfo{}, common.NewServerError(fmt.Errorf("ticker %s: completely empty security metadata", ticker))
 }
 
 // GetSplits returns split events within the given date range (inclusive).

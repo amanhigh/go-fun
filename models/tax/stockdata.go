@@ -4,7 +4,7 @@ package tax
 // Map of date (YYYY-MM-DD format) to closing price
 // This is the minimal format required for all tax calculations
 type StockData struct {
-	Prices   map[string]float64 `json:"prices"`            // Date (YYYY-MM-DD) -> Closing Price
-	Splits   []SplitInfo        `json:"splits"`            // Chronologically ordered stock split events
-	Security SecurityInfo       `json:"security,omitzero"` // Resolved security metadata from Yahoo chart meta
+	Prices   map[string]float64 `json:"prices"`   // Date (YYYY-MM-DD) -> Closing Price
+	Splits   []SplitInfo        `json:"splits"`   // Chronologically ordered stock split events
+	Security SecurityInfo       `json:"security"` // Resolved security metadata from Yahoo chart meta
 }

@@ -73,7 +73,10 @@ func (y *YahooClient) FetchDailyPrices(ctx context.Context, ticker string) (tax.
 	}
 
 	splits := y.extractSplits(&response)
-	security := y.extractSecurityFromMeta(&response)
+	security, err := y.extractSecurityFromMeta(&response)
+	if err != nil {
+		return tax.StockData{}, err
+	}
 
 	log.Info().
 		Str("Ticker", ticker).
@@ -137,25 +140,27 @@ func (y *YahooClient) extractSplits(response *tax.YahooChartResponse) []tax.Spli
 	return splits
 }
 
-// extractSecurityFromMeta resolves SecurityInfo from Yahoo chart metadata.
-// Uses long name with short-name fallback for the security name.
-func (y *YahooClient) extractSecurityFromMeta(response *tax.YahooChartResponse) tax.SecurityInfo {
+// extractSecurityFromMeta returns SecurityInfo from Yahoo chart metadata.
+// Returns an error only when the metadata object is completely empty;
+// otherwise returns available fields as-is without per-field validation.
+func (y *YahooClient) extractSecurityFromMeta(response *tax.YahooChartResponse) (tax.SecurityInfo, common.HttpError) {
 	if len(response.Chart.Result) == 0 {
-		return tax.SecurityInfo{}
+		return tax.SecurityInfo{}, common.NewServerError(fmt.Errorf("no security metadata in chart response"))
 	}
 
 	meta := response.Chart.Result[0].Meta
-	name := meta.LongName
-	if name == "" {
-		name = meta.ShortName
+
+	// Return error only when all metadata fields are completely empty.
+	if meta.Symbol == "" && meta.LongName == "" && meta.ShortName == "" && meta.ExchangeName == "" && meta.InstrumentType == "" {
+		return tax.SecurityInfo{}, common.NewServerError(fmt.Errorf("completely empty security metadata"))
 	}
 
 	return tax.SecurityInfo{
 		Symbol:   meta.Symbol,
-		Name:     name,
+		Name:     meta.LongName,
 		Exchange: meta.ExchangeName,
 		Type:     meta.InstrumentType,
-	}
+	}, nil
 }
 
 // GetSecurityInfo searches for securities by query string using Yahoo Finance /v1/finance/search.

@@ -93,6 +93,10 @@ func compareTTRatesByActualDate(a, b tax.MonthEndRate) int {
 	return 0
 }
 
+func compareSecuritiesBySymbol(a, b tax.SecurityInfo) int {
+	return cmp.Compare(a.Symbol, b.Symbol)
+}
+
 // generateYearlyFilePath creates the year-specific filepath for tax summary
 func (e *ExcelManagerImpl) generateYearlyFilePath(year int) string {
 	filename := fmt.Sprintf("%d_Tax_Summary.xlsx", year)
@@ -137,7 +141,6 @@ func (e *ExcelManagerImpl) GenerateTaxSummaryExcel(ctx context.Context, year int
 	return
 }
 
-// FIXME: Add a Security Info sheet to the final workbook with resolved security metadata.
 func (e *ExcelManagerImpl) writeSheets(ctx context.Context, f *excelize.File, summary tax.Summary) (err error) {
 	// Defensive sorted copies preserve caller's original slices
 	gains := sortedCopy(summary.INRGains, compareGainsBySellDateSymbol)
@@ -145,6 +148,7 @@ func (e *ExcelManagerImpl) writeSheets(ctx context.Context, f *excelize.File, su
 	valuations := sortedCopy(summary.INRValuations, compareValuationsByTicker)
 	interest := sortedCopy(summary.INRInterest, compareInterestByDateSymbol)
 	rates := sortedCopy(summary.TTMonthEndRates, compareTTRatesByActualDate)
+	securities := sortedCopy(summary.Securities, compareSecuritiesBySymbol)
 
 	if err = e.writeGainsSheet(ctx, f, gains); err != nil {
 		return
@@ -164,6 +168,11 @@ func (e *ExcelManagerImpl) writeSheets(ctx context.Context, f *excelize.File, su
 
 	// Write TT Rates sheet with FY month-end data
 	if err = e.writeTTRatesSheet(ctx, f, summary.Year, rates); err != nil {
+		return
+	}
+
+	// Write Security Info sheet with resolved security metadata
+	if err = e.writeSecurityInfoSheet(ctx, f, securities); err != nil {
 		return
 	}
 
@@ -732,6 +741,42 @@ func (e *ExcelManagerImpl) writePDFLink(f *excelize.File, sheetName string, rowN
 		}
 	}
 
+	return nil
+}
+
+// writeSecurityInfoSheet creates the "Security Info" sheet with resolved security metadata.
+// Rows are sorted by Symbol ascending. Country Name, Address, and Zip code use
+// hardcoded Vested-compatible values. Entity name renders as "<Name> (<Symbol>)".
+func (e *ExcelManagerImpl) writeSecurityInfoSheet(ctx context.Context, f *excelize.File, securities []tax.SecurityInfo) error {
+	sheetName := "Security Info"
+	headers := []string{"Sr No", "Symbol", "Country Name", "Name of entity", "Address", "Zip code", "Nature of entity"}
+	if err := e.createSheetWithHeaders(ctx, f, sheetName, headers); err != nil {
+		return err
+	}
+
+	for idx, sec := range securities {
+		rowNum := idx + 2 // Data starts from row 2
+		rowData := []any{
+			idx + 1,    // Sr No (1-indexed)
+			sec.Symbol, // Symbol
+			"USA",      // Country Name (hardcoded Vested-compatible)
+			fmt.Sprintf("%s (%s)", sec.Name, sec.Symbol), // Name of entity
+			"USA",      // Address (hardcoded Vested-compatible)
+			"99999999", // Zip code (hardcoded Vested-compatible)
+			sec.Type,   // Nature of entity (resolved SecurityInfo.Type)
+		}
+		if err := util.WriteRow(f, sheetName, rowNum, rowData); err != nil {
+			return fmt.Errorf("failed to write row %d in sheet %s: %w", rowNum, sheetName, err)
+		}
+	}
+
+	e.setColumnWidths(f, sheetName, map[string]float64{
+		"A": colWidthNarrow, "B": colWidthSemi, "C": colWidthMedium,
+		"D": colWidthExtraWide, "E": colWidthMedium, "F": colWidthMedium, "G": colWidthMedium,
+	})
+	if err := util.ApplyAutoFilter(f, sheetName, "G", len(securities)+1); err != nil {
+		return fmt.Errorf("failed to apply auto filter on sheet %s: %w", sheetName, err)
+	}
 	return nil
 }
 

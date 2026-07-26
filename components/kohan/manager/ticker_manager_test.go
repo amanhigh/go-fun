@@ -883,4 +883,67 @@ var _ = Describe("TickerManager", func() {
 			})
 		})
 	})
+
+	Context("GetSecurityInfo", func() {
+		const ticker = "META"
+
+		var (
+			result     tax.SecurityInfo
+			getInfoErr common.HttpError
+		)
+
+		Context("when cache contains complete Security metadata", func() {
+			BeforeEach(func() {
+				stockData := tax.StockData{
+					Prices: map[string]float64{"2024-01-15": 350.00},
+					Splits: []tax.SplitInfo{},
+					Security: tax.SecurityInfo{
+						Symbol:   "META",
+						Name:     "Meta Platforms, Inc.",
+						Exchange: "NMS",
+						Type:     "Equity",
+					},
+				}
+				data, err := json.Marshal(stockData)
+				Expect(err).ToNot(HaveOccurred())
+				err = os.WriteFile(filepath.Join(testDir, ticker+".json"), data, 0600)
+				Expect(err).ToNot(HaveOccurred())
+			})
+
+			JustBeforeEach(func() {
+				result, getInfoErr = tickerManager.GetSecurityInfo(ctx, ticker)
+			})
+
+			It("should return the cached Security directly without network call", func() {
+				Expect(getInfoErr).ToNot(HaveOccurred())
+				Expect(result.Symbol).To(Equal("META"))
+				Expect(result.Name).To(Equal("Meta Platforms, Inc."))
+				Expect(result.Type).To(Equal("Equity"))
+			})
+		})
+
+		Context("when cache has completely zero SecurityInfo", func() {
+			BeforeEach(func() {
+				stockData := tax.StockData{
+					Prices:   map[string]float64{"2024-01-15": 350.00},
+					Splits:   []tax.SplitInfo{},
+					Security: tax.SecurityInfo{},
+				}
+				data, err := json.Marshal(stockData)
+				Expect(err).ToNot(HaveOccurred())
+				err = os.WriteFile(filepath.Join(testDir, ticker+".json"), data, 0600)
+				Expect(err).ToNot(HaveOccurred())
+			})
+
+			JustBeforeEach(func() {
+				result, getInfoErr = tickerManager.GetSecurityInfo(ctx, ticker)
+			})
+
+			It("should return a server error for zero SecurityInfo", func() {
+				Expect(getInfoErr).To(HaveOccurred())
+				Expect(getInfoErr.Code()).To(Equal(http.StatusInternalServerError))
+				Expect(getInfoErr.Error()).To(ContainSubstring("completely empty security metadata"))
+			})
+		})
+	})
 })

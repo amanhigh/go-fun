@@ -1094,6 +1094,77 @@ var _ = Describe("ExcelManagerImpl", func() {
 			})
 		})
 
+		Context("when generating the 'Security Info' sheet with data", func() {
+			var (
+				sampleSummary tax.Summary
+				sheetName     = "Security Info"
+				f             *excelize.File
+			)
+
+			BeforeEach(func() {
+				sampleSummary = tax.Summary{
+					Securities: []tax.SecurityInfo{
+						{Symbol: "MSFT", Name: "Microsoft Corporation", Exchange: "NMS", Type: "EQUITY"},
+						{Symbol: "AAPL", Name: "Apple Inc.", Exchange: "NMS", Type: "EQUITY"},
+						{Symbol: "GOOGL", Name: "Alphabet Inc.", Exchange: "NMS", Type: "EQUITY"},
+					},
+				}
+
+				err := excelManager.GenerateTaxSummaryExcel(ctx, testYear, sampleSummary)
+				Expect(err).ToNot(HaveOccurred())
+
+				f, err = excelize.OpenFile(tempOutputFilePath)
+				Expect(err).ToNot(HaveOccurred())
+			})
+
+			AfterEach(func() {
+				if f != nil {
+					Expect(f.Close()).To(Succeed())
+				}
+			})
+
+			It("should create the 'Security Info' sheet with correct headers and data", func() {
+				rows, err := f.GetRows(sheetName)
+				Expect(err).ToNot(HaveOccurred())
+				// Rows include: headers + 3 data records
+				expectedRowCount := 1 + len(sampleSummary.Securities)
+				Expect(rows).To(HaveLen(expectedRowCount), "unexpected row count for Security Info sheet")
+
+				// Verify Headers
+				expectedHeaders := []string{
+					"Sr No", "Symbol", "Country Name", "Name of entity", "Address", "Zip code", "Nature of entity",
+				}
+				Expect(rows[0]).To(Equal(expectedHeaders), "Security Info headers incorrect")
+
+				// Sorted by Symbol ascending: AAPL (row 2), GOOGL (row 3), MSFT (row 4)
+				// Verify AAPL (row 2, index 1)
+				Expect(rows[1][0]).To(Equal("1"), "Sr No should be 1-indexed")
+				Expect(rows[1][1]).To(Equal("AAPL"), "Symbol should be AAPL")
+				Expect(rows[1][2]).To(Equal("USA"), "Country Name should be hardcoded USA")
+				Expect(rows[1][3]).To(Equal("Apple Inc. (AAPL)"), "Name of entity should be '<Name> (<Symbol>)'")
+				Expect(rows[1][4]).To(Equal("USA"), "Address should be hardcoded USA")
+				Expect(rows[1][5]).To(Equal("99999999"), "Zip code should be hardcoded 99999999")
+				Expect(rows[1][6]).To(Equal("EQUITY"), "Nature of entity should use SecurityInfo.Type")
+
+				// Verify GOOGL (row 3, index 2)
+				Expect(rows[2][0]).To(Equal("2"), "Sr No should be 2")
+				Expect(rows[2][1]).To(Equal("GOOGL"), "Symbol should be GOOGL")
+				Expect(rows[2][3]).To(Equal("Alphabet Inc. (GOOGL)"), "Name of entity format")
+				Expect(rows[2][6]).To(Equal("EQUITY"), "Nature of entity type")
+
+				// Verify MSFT (row 4, index 3)
+				Expect(rows[3][0]).To(Equal("3"), "Sr No should be 3")
+				Expect(rows[3][1]).To(Equal("MSFT"), "Symbol should be MSFT")
+				Expect(rows[3][3]).To(Equal("Microsoft Corporation (MSFT)"), "Name of entity format")
+				Expect(rows[3][6]).To(Equal("EQUITY"), "Nature of entity type")
+
+				// Verify AutoFilter range covers header + data rows only
+				ranges := readAutoFilterRanges(tempOutputFilePath)
+				Expect(ranges).To(HaveKeyWithValue(sheetName, "$A$1:$G$4"))
+			})
+
+		})
+
 		Context("when the tax summary is completely empty", func() {
 			var f *excelize.File
 
@@ -1159,6 +1230,14 @@ var _ = Describe("ExcelManagerImpl", func() {
 				Expect(ttRows[0]).To(Equal([]string{
 					"Month", "Year", "TTDate", "TTRate", "PDF Link", "DayOfWeek",
 				}))
+
+				// Security Info
+				secRows, err := f.GetRows("Security Info")
+				Expect(err).ToNot(HaveOccurred())
+				Expect(secRows).To(HaveLen(1), "Security Info sheet should only contain the header row")
+				Expect(secRows[0]).To(Equal([]string{
+					"Sr No", "Symbol", "Country Name", "Name of entity", "Address", "Zip code", "Nature of entity",
+				}))
 			})
 
 			It("should have SUMMARY header with no section rows", func() {
@@ -1171,19 +1250,20 @@ var _ = Describe("ExcelManagerImpl", func() {
 				Expect(val).To(BeEmpty())
 			})
 
-			It("should create a file with exactly 6 sheets and no 'Sheet1'", func() {
+			It("should create a file with exactly 7 sheets and no 'Sheet1'", func() {
 				sheets := f.GetSheetList()
-				Expect(sheets).To(Equal([]string{"Summary", "Gains", "Dividends", "Valuations", "Interest", "TT Rates"}))
+				Expect(sheets).To(Equal([]string{"Summary", "Gains", "Dividends", "Valuations", "Interest", "TT Rates", "Security Info"}))
 			})
 
 			It("should apply AutoFilter to all detail sheets with header-only ranges", func() {
 				ranges := readAutoFilterRanges(tempOutputFilePath)
 				Expect(ranges).To(Equal(map[string]string{
-					"Gains":      "$A$1:$K$1",
-					"Dividends":  "$A$1:$K$1",
-					"Valuations": "$A$1:$W$1",
-					"Interest":   "$A$1:$K$1",
-					"TT Rates":   "$A$1:$F$1",
+					"Gains":         "$A$1:$J$1",
+					"Dividends":     "$A$1:$J$1",
+					"Valuations":    "$A$1:$W$1",
+					"Interest":      "$A$1:$J$1",
+					"TT Rates":      "$A$1:$F$1",
+					"Security Info": "$A$1:$G$1",
 				}))
 			})
 		})
@@ -1402,7 +1482,7 @@ var _ = Describe("ExcelManagerImpl", func() {
 
 			It("should create Summary sheet as the first sheet", func() {
 				sheets := f.GetSheetList()
-				Expect(sheets).To(HaveLen(6)) // Summary, Gains, Dividends, Valuations, Interest, TT Rates
+				Expect(sheets).To(HaveLen(7)) // Summary, Gains, Dividends, Valuations, Interest, TT Rates, Security Info
 				Expect(sheets[0]).To(Equal("Summary"))
 			})
 
