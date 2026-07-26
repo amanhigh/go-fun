@@ -57,7 +57,6 @@ type OSManagerImpl struct {
 }
 
 func NewOSManager(wait time.Duration, screenshotPath string, scheduler gocron.Scheduler) *OSManagerImpl {
-	// HACK: #C Move to Kohan Config and Inject directly via Kohan Injector.
 	return &OSManagerImpl{
 		wait:           wait,
 		screenshotPath: screenshotPath,
