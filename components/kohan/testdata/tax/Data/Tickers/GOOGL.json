@@ -3,5 +3,11 @@
         "2023-12-31": 140.00,
         "2024-12-31": 145.00
     },
-    "splits": []
+    "splits": [],
+    "security": {
+        "symbol": "GOOGL",
+        "name": "Alphabet Inc.",
+        "exchange": "NMS",
+        "type": "EQUITY"
+    }
 }

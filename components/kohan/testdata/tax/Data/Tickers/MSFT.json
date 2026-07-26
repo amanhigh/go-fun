@@ -7,5 +7,11 @@
         "2024-02-15": 226.00,
         "2024-02-20": 229.00
     },
-    "splits": []
+    "splits": [],
+    "security": {
+        "symbol": "MSFT",
+        "name": "Microsoft Corporation",
+        "exchange": "NMS",
+        "type": "EQUITY"
+    }
 }
