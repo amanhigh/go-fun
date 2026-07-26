@@ -7,9 +7,11 @@ import (
 )
 
 // ClipCopy writes text to the system clipboard.
-// The clipboard library must have been initialized (clipboard.Init) before calling this function.
-// Returns a non-nil error only when the underlying write channel is nil.
+// Returns an error if initialization failed or the clipboard is unavailable.
 func ClipCopy(text string) error {
+	if err := clipboard.Init(); err != nil {
+		return fmt.Errorf("clipboard unavailable: %w", err)
+	}
 	// Write sends data to the clipboard immediately.
 	// The returned channel signals when data is overwritten; we discard it.
 	ch := clipboard.Write(clipboard.FmtText, []byte(text))
@@ -20,9 +22,12 @@ func ClipCopy(text string) error {
 }
 
 // ClipPaste reads text from the system clipboard.
-// The clipboard library must have been initialized (clipboard.Init) before calling this function.
-// Returns an error if no text data is present.
+// Returns an error if initialization failed, the clipboard is unavailable,
+// or no text data is present.
 func ClipPaste() (string, error) {
+	if err := clipboard.Init(); err != nil {
+		return "", fmt.Errorf("clipboard unavailable: %w", err)
+	}
 	data := clipboard.Read(clipboard.FmtText)
 	if data == nil {
 		return "", fmt.Errorf("clipboard read failed: no data available")
