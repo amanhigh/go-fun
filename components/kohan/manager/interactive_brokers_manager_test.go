@@ -14,7 +14,6 @@ import (
 	. "github.com/onsi/gomega"
 )
 
-// BUG: #C (2025-10-18) Investigate flaky Interactive Brokers CSV edge-case specs.
 var _ = Describe("InteractiveBrokersManagerImpl", func() {
 	var (
 		tempTestDir   string

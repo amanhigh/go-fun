@@ -9,13 +9,19 @@ import (
 
 	"github.com/failsafe-go/failsafe-go"
 	"github.com/failsafe-go/failsafe-go/cachepolicy"
-	"github.com/failsafe-go/failsafe-go/circuitbreaker"
+	failsafeCB "github.com/failsafe-go/failsafe-go/circuitbreaker"
 	"github.com/failsafe-go/failsafe-go/fallback"
 	"github.com/failsafe-go/failsafe-go/hedgepolicy"
 	"github.com/failsafe-go/failsafe-go/retrypolicy"
-	"github.com/failsafe-go/failsafe-go/timeout"
+	failsafeTimeout "github.com/failsafe-go/failsafe-go/timeout"
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
+	"github.com/slok/goresilience"
+	"github.com/slok/goresilience/chaos"
+	goCB "github.com/slok/goresilience/circuitbreaker"
+	errors2 "github.com/slok/goresilience/errors"
+	"github.com/slok/goresilience/retry"
+	goTimeout "github.com/slok/goresilience/timeout"
 )
 
 // SimpleCache is a basic in-memory cache implementation
@@ -46,7 +52,7 @@ func (c *SimpleCache[R]) Set(key string, value R) {
 	c.data[key] = value
 }
 
-var _ = Describe("Hystrix", func() {
+var _ = Describe("Resilience", func() {
 	const (
 		initialDelayMs = 10
 		jitterMs       = 5
@@ -254,10 +260,10 @@ var _ = Describe("Hystrix", func() {
 		})
 
 		Context("CircuitBreaker", func() {
-			var breakerBuilder circuitbreaker.CircuitBreakerBuilder[string]
+			var breakerBuilder failsafeCB.CircuitBreakerBuilder[string]
 
 			BeforeEach(func() {
-				breakerBuilder = circuitbreaker.Builder[string]()
+				breakerBuilder = failsafeCB.Builder[string]()
 			})
 
 			It("should build", func() {
@@ -274,7 +280,7 @@ var _ = Describe("Hystrix", func() {
 					Expect(result).To(Equal(successResult))
 				}
 
-				Expect(breaker.State()).To(Equal(circuitbreaker.ClosedState))
+				Expect(breaker.State()).To(Equal(failsafeCB.ClosedState))
 			})
 
 			It("should open the circuit before reaching the failure threshold", func() {
@@ -287,20 +293,20 @@ var _ = Describe("Hystrix", func() {
 				for range maxRetries - 1 {
 					_, err := failsafe.Get(failingFunction, breaker)
 					Expect(err).To(HaveOccurred())
-					Expect(breaker.State()).To(Equal(circuitbreaker.ClosedState))
+					Expect(breaker.State()).To(Equal(failsafeCB.ClosedState))
 				}
 
 				// The next execution should open the circuit
 				_, err := failsafe.Get(failingFunction, breaker)
 				By("At threshold")
 				Expect(err).To(HaveOccurred())
-				Expect(breaker.State()).To(Equal(circuitbreaker.OpenState))
+				Expect(breaker.State()).To(Equal(failsafeCB.OpenState))
 
 				// Subsequent executions should immediately return ErrOpen
 				_, err = failsafe.Get(failingFunction, breaker)
 				By("After threshold")
-				Expect(err).To(MatchError(circuitbreaker.ErrOpen))
-				Expect(breaker.State()).To(Equal(circuitbreaker.OpenState))
+				Expect(err).To(MatchError(failsafeCB.ErrOpen))
+				Expect(breaker.State()).To(Equal(failsafeCB.OpenState))
 			})
 
 			It("should close the circuit after reaching the success threshold", func() {
@@ -315,7 +321,7 @@ var _ = Describe("Hystrix", func() {
 				// Open the circuit
 				_, err := failsafe.Get(failingFunction, breaker)
 				Expect(err).To(HaveOccurred())
-				Expect(breaker.State()).To(Equal(circuitbreaker.OpenState))
+				Expect(breaker.State()).To(Equal(failsafeCB.OpenState))
 
 				// Wait for the remaining delay
 				for breaker.RemainingDelay() > 0 {
@@ -329,11 +335,11 @@ var _ = Describe("Hystrix", func() {
 					Expect(result).To(Equal(successResult))
 
 					if i == 0 {
-						Expect(breaker.State()).To(Equal(circuitbreaker.HalfOpenState), "Should transition to half-open on first success")
+						Expect(breaker.State()).To(Equal(failsafeCB.HalfOpenState), "Should transition to half-open on first success")
 					} else if i < successThreshold-1 {
-						Expect(breaker.State()).To(Equal(circuitbreaker.HalfOpenState), "Should remain half-open until threshold is met")
+						Expect(breaker.State()).To(Equal(failsafeCB.HalfOpenState), "Should remain half-open until threshold is met")
 					} else {
-						Expect(breaker.State()).To(Equal(circuitbreaker.ClosedState), "Should close after meeting success threshold")
+						Expect(breaker.State()).To(Equal(failsafeCB.ClosedState), "Should close after meeting success threshold")
 					}
 				}
 
@@ -342,7 +348,7 @@ var _ = Describe("Hystrix", func() {
 					result, err := failsafe.Get(successfulFunction, breaker)
 					Expect(err).NotTo(HaveOccurred())
 					Expect(result).To(Equal(successResult))
-					Expect(breaker.State()).To(Equal(circuitbreaker.ClosedState), "Should remain closed for subsequent successful calls")
+					Expect(breaker.State()).To(Equal(failsafeCB.ClosedState), "Should remain closed for subsequent successful calls")
 				}
 			})
 		})
@@ -533,7 +539,7 @@ var _ = Describe("Hystrix", func() {
 			})
 
 			It("should cancel execution that exceeds the timeout", func() {
-				timeoutPolicy := timeout.With[string](shortTimeout)
+				timeoutPolicy := failsafeTimeout.With[string](shortTimeout)
 
 				slowFunction := func() (string, error) {
 					time.Sleep(longTimeout)
@@ -542,12 +548,12 @@ var _ = Describe("Hystrix", func() {
 
 				result, err := failsafe.Get(slowFunction, timeoutPolicy)
 
-				Expect(err).To(MatchError(timeout.ErrExceeded))
+				Expect(err).To(MatchError(failsafeTimeout.ErrExceeded))
 				Expect(result).To(BeEmpty())
 			})
 
 			It("should not cancel execution that completes within the timeout", func() {
-				timeoutPolicy := timeout.With[string](longTimeout)
+				timeoutPolicy := failsafeTimeout.With[string](longTimeout)
 
 				fastFunction := func() (string, error) {
 					time.Sleep(shortTimeout / 2)
@@ -561,7 +567,7 @@ var _ = Describe("Hystrix", func() {
 			})
 
 			It("should cancel inner retries when timeout is composed outside retry policy", func() {
-				timeoutPolicy := timeout.With[string](150 * time.Millisecond)
+				timeoutPolicy := failsafeTimeout.With[string](150 * time.Millisecond)
 
 				attempts := 0
 				slowFunction := func() (string, error) {
@@ -572,12 +578,12 @@ var _ = Describe("Hystrix", func() {
 
 				_, err := failsafe.Get(slowFunction, timeoutPolicy, retryPolicy)
 
-				Expect(err).To(MatchError(timeout.ErrExceeded))
+				Expect(err).To(MatchError(failsafeTimeout.ErrExceeded))
 				Expect(attempts).To(BeNumerically("<", 4)) // Should be less than max retries + 1
 			})
 
 			It("should apply timeout to each retry attempt when composed inside retry policy", func() {
-				timeoutPolicy := timeout.With[string](shortTimeout / 2)
+				timeoutPolicy := failsafeTimeout.With[string](shortTimeout / 2)
 
 				attempts := 0
 				slowFunction := func() (string, error) {
@@ -588,7 +594,7 @@ var _ = Describe("Hystrix", func() {
 
 				_, err := failsafe.Get(slowFunction, retryPolicy, timeoutPolicy)
 
-				Expect(err).To(MatchError(timeout.ErrExceeded))
+				Expect(err).To(MatchError(failsafeTimeout.ErrExceeded))
 				Expect(attempts).To(Equal(4)) // 1 initial + 3 retries
 			})
 		})
@@ -630,6 +636,145 @@ var _ = Describe("Hystrix", func() {
 				Expect(err).NotTo(HaveOccurred())
 				Expect(result).To(Equal(backupResult))
 			})
+		})
+	})
+
+	Describe("GoResilience", func() {
+		var (
+			cmd goresilience.Runner
+		)
+
+		Context("Timeout", func() {
+			var (
+				TIMEOUT = 2 * time.Millisecond
+			)
+			BeforeEach(func() {
+				cmd = goTimeout.New(goTimeout.Config{
+					Timeout: TIMEOUT,
+				})
+			})
+
+			It("should build", func() {
+				Expect(cmd).To(Not(BeNil()))
+			})
+
+			It("should not timeout", func() {
+				err := cmd.Run(context.TODO(), func(_ context.Context) error {
+					return nil
+				})
+				Expect(err).ToNot(HaveOccurred())
+			})
+
+			It("should timeout", func() {
+				err := cmd.Run(context.TODO(), func(_ context.Context) error {
+					time.Sleep(TIMEOUT * 2)
+					return nil
+				})
+				Expect(err).To(HaveOccurred())
+			})
+
+		})
+
+		Context("Retry", func() {
+			var (
+				RETRY = 2
+			)
+			BeforeEach(func() {
+				cmd = retry.New(retry.Config{
+					Times: RETRY,
+				})
+			})
+
+			It("should work in first go", func() {
+				err := cmd.Run(context.TODO(), func(_ context.Context) error {
+					return nil
+				})
+				Expect(err).ToNot(HaveOccurred())
+			})
+
+			It("should run twice", func() {
+				count := 0
+				err := cmd.Run(context.TODO(), func(_ context.Context) error {
+					if count < RETRY {
+						count++
+						return errors.New("First Call Failed")
+					}
+					return nil
+				})
+				Expect(err).ToNot(HaveOccurred())
+				Expect(count).To(Equal(RETRY))
+			})
+
+			It("should throw error after repeated retries", func() {
+				count := 0
+				err := cmd.Run(context.TODO(), func(_ context.Context) error {
+					count++
+					return errors.New("Call Failed")
+				})
+				Expect(err).To(HaveOccurred())
+				Expect(count).To(Equal(RETRY + 1))
+			})
+
+		})
+
+		Context("Circuit", func() {
+			var (
+				CIRCUIT_OPEN = 2
+			)
+			BeforeEach(func() {
+				cmd =
+					goresilience.RunnerChain(
+						retry.NewMiddleware(retry.Config{
+							Times: CIRCUIT_OPEN,
+						}),
+						goCB.NewMiddleware(goCB.Config{
+							//ErrorPercentThresholdToOpen:        50,
+							MinimumRequestToOpen:         CIRCUIT_OPEN,
+							SuccessfulRequiredOnHalfOpen: CIRCUIT_OPEN / 2,
+							//WaitDurationInOpenState:            5 * time.Second,
+							//MetricsSlidingWindowBucketQuantity: 10,
+							//MetricsBucketDuration:              1 * time.Second,
+						}),
+					)
+			})
+
+			It("should open after failures", func() {
+				count := 0
+				err := cmd.Run(context.TODO(), func(_ context.Context) error {
+					if count < CIRCUIT_OPEN {
+						count++
+						return errors.New("Call Failed")
+					}
+					return nil
+				})
+				Expect(err).To(Equal(errors2.ErrCircuitOpen))
+				Expect(count).To(Equal(CIRCUIT_OPEN))
+			})
+
+		})
+
+		Context("Chaos", func() {
+			var (
+				LATENCY          = 2 * time.Millisecond
+				ERROR_PERCENTILE = 10
+			)
+			BeforeEach(func() {
+				injector := chaos.Injector{}
+				injector.SetLatency(LATENCY)
+				injector.SetErrorPercent(ERROR_PERCENTILE)
+				cmd = chaos.New(chaos.Config{
+					Injector: &injector,
+				})
+
+			})
+
+			It("should fail due to chaos", func() {
+				err := cmd.Run(context.TODO(), func(_ context.Context) error {
+					return nil
+				})
+				Expect(err).To(Equal(errors2.ErrFailureInjected))
+			})
+
 		})
 	})
 })

@@ -32,6 +32,31 @@ var _ = Describe("KohanConfig", func() {
 			Expect(config.Tax.TaxDir).ToNot(ContainSubstring("${HOME}"))
 		})
 
+		Context("Explicitly configured paths with ${HOME} expansion", func() {
+			var originalTaxDir string
+
+			BeforeEach(func() {
+				originalTaxDir = os.Getenv("TAX_DIR")
+				os.Setenv("TAX_DIR", "/tmp/${HOME}/custom-tax")
+			})
+
+			AfterEach(func() {
+				if originalTaxDir == "" {
+					os.Unsetenv("TAX_DIR")
+				} else {
+					os.Setenv("TAX_DIR", originalTaxDir)
+				}
+			})
+
+			It("should expand ${HOME} in explicitly configured TAX_DIR path", func() {
+				config, err := NewKohanConfig()
+				Expect(err).ToNot(HaveOccurred())
+
+				homeDir := os.Getenv("HOME")
+				Expect(config.Tax.TaxDir).To(Equal("/tmp/" + homeDir + "/custom-tax"))
+			})
+		})
+
 		It("should parse configuration successfully", func() {
 			config, err := NewKohanConfig()
 			Expect(err).ToNot(HaveOccurred())

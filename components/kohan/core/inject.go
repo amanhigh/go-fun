@@ -6,7 +6,6 @@ import (
 	"github.com/amanhigh/go-fun/common/util"
 	"github.com/amanhigh/go-fun/components/kohan/manager"
 	"github.com/amanhigh/go-fun/models/config"
-	"github.com/go-co-op/gocron/v2"
 
 	"github.com/golobby/container/v3"
 )
@@ -54,21 +53,21 @@ func GetKohanInterface() KohanInterface {
 // These methods implement the KohanInterface and resolve dependencies from the injector
 
 func (ki *KohanInjector) GetOSManager() manager.OSManagerInterface {
-	scheduler, err := gocron.NewScheduler()
-	if err != nil {
-		panic(fmt.Errorf("failed to create scheduler: %w", err))
+	ki.registerOSDependencies()
+
+	var osManager manager.OSManagerInterface
+	if err := ki.di.Resolve(&osManager); err != nil {
+		panic(fmt.Errorf("failed to resolve OS manager: %w", err))
 	}
-	return manager.NewOSManager(ki.config.OSWaitInterval, ki.config.Barkat.ScreenshotPath, scheduler)
+	return osManager
 }
 
 func (ki *KohanInjector) GetKohanServer() (util.HttpServer, error) {
-	osManager := ki.GetOSManager()
-
 	// Register all dependencies
 	if err := ki.registerCoreDependencies(); err != nil {
 		return nil, fmt.Errorf("failed to register core dependencies: %w", err)
 	}
-	ki.registerOSDependencies(osManager)
+	ki.registerOSDependencies()
 	ki.registerPortalDependencies()
 	if err := ki.registerBarkatDependencies(); err != nil {
 		return nil, fmt.Errorf("failed to register barkat dependencies: %w", err)

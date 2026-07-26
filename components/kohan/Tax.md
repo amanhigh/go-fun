@@ -480,7 +480,7 @@ The system performs daily INR valuation throughout the calendar year, considerin
    - Market price (if exact date unavailable, uses closest previous available close)
    - Exchange rate (if exact date unavailable, uses closest previous available rate)
 3. **Daily INR Valuation:** For each day with holdings: `INR_Value = Daily_Quantity × USD_Price × Exchange_Rate`
-4. **Peak Identification:** The maximum INR value across all days in the calendar year becomes the "Peak Balance Value"
+4. **Peak Identification:** The maximum INR value across all days in the calendar year becomes the "Peak Balance Value". When two or more days produce exactly equal maximum INR values, the earliest date encountered is retained as the peak (the comparison uses strict greater-than, not greater-than-or-equal). This applies only to exact floating-point equality — values that differ by any amount, however small, are not treated as ties.
 
 This approach ensures the reported peak reflects the true highest INR valuation, capturing scenarios where exchange rate movements may dominate price movements or vice versa.
 

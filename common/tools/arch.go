@@ -12,16 +12,7 @@ import (
 // (e.g., pressing Escape during slurp region selection).
 var ErrScreenshotAborted = errors.New("screenshot aborted")
 
-func Screenshot() (err error) {
-	var monitor string
-	if monitor, err = GetActiveMonitor(); err != nil {
-		return
-	}
-	err = script.Exec(fmt.Sprintf("grim -o %s - | wl-copy", monitor)).Error()
-	return
-}
-
-func NamedScreenshot(dir, name string) (err error) {
+func Screenshot(dir, name string) (err error) {
 	var monitor string
 	if monitor, err = GetActiveMonitor(); err != nil {
 		return

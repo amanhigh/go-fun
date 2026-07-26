@@ -4,13 +4,12 @@ import (
 	"context"
 	"os"
 
-	"github.com/amanhigh/go-fun/models"
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
 	"golang.design/x/clipboard"
 )
 
-var _ = Describe("Clipboard", Label(models.GINKGO_SLOW), func() {
+var _ = Describe("Clipboard", func() {
 	var (
 		err      error
 		testData = "CopyThis!!"
@@ -27,7 +26,7 @@ var _ = Describe("Clipboard", Label(models.GINKGO_SLOW), func() {
 
 	Context("Text Copy", func() {
 		var ch <-chan struct{}
-		// TASK: Clipboard Wayland https://github.com/golang-design/clipboard/issues/6
+
 		BeforeEach(func() {
 			ch = clipboard.Write(clipboard.FmtText, []byte(testData))
 		})
@@ -69,7 +68,7 @@ var _ = Describe("Clipboard", Label(models.GINKGO_SLOW), func() {
 
 	Context("Watch", func() {
 		var (
-			ch        <-chan []byte
+			ch        <-chan clipboard.Data
 			watchText = "I am Watching!!"
 		)
 
@@ -79,7 +78,9 @@ var _ = Describe("Clipboard", Label(models.GINKGO_SLOW), func() {
 
 		It("should work", func() {
 			clipboard.Write(clipboard.FmtText, []byte(watchText))
-			Eventually(ch, "2s").Should(Receive(Equal([]byte(watchText))))
+			Eventually(ch, "2s").Should(Receive(WithTransform(func(d clipboard.Data) []byte {
+				return d.Bytes
+			}, Equal([]byte(watchText)))))
 		})
 	})
 })

@@ -1,10 +1,12 @@
 package handler_test
 
 import (
+	"encoding/json"
 	"net/http"
 	"net/http/httptest"
 	"os"
 
+	"github.com/amanhigh/go-fun/common/tools"
 	"github.com/amanhigh/go-fun/common/util"
 	"github.com/amanhigh/go-fun/components/kohan/core"
 	"github.com/amanhigh/go-fun/components/kohan/handler"
@@ -374,6 +376,26 @@ var _ = Describe("OS Handler Integration Tests", func() {
 				router.ServeHTTP(w, req)
 				Expect(w.Code).To(Equal(http.StatusOK))
 				Expect(w.Body.String()).To(ContainSubstring("Success"))
+			})
+		})
+
+		Context("GET /v1/api/os/clip/", func() {
+			var expectedClipText string
+
+			BeforeEach(func() {
+				expectedClipText = "ginkgo-clip-regression-" + GinkgoT().Name()
+				Expect(tools.ClipCopy(expectedClipText)).To(Succeed())
+			})
+
+			It("should return HTTP 200 with the exact clipboard text", func() {
+				req, w = util.CreateTestRequest("GET", "/v1/api/os/clip/", nil)
+				router.ServeHTTP(w, req)
+
+				Expect(w.Code).To(Equal(http.StatusOK))
+
+				var got string
+				Expect(json.Unmarshal(w.Body.Bytes(), &got)).To(Succeed())
+				Expect(got).To(Equal(expectedClipText))
 			})
 		})
 	})

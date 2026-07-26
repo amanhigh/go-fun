@@ -1272,10 +1272,10 @@ var _ = Describe("ExcelManagerImpl", func() {
 			It("should apply AutoFilter to all detail sheets with header-only ranges", func() {
 				ranges := readAutoFilterRanges(tempOutputFilePath)
 				Expect(ranges).To(Equal(map[string]string{
-					"Gains":         "$A$1:$J$1",
-					"Dividends":     "$A$1:$J$1",
+					"Gains":         "$A$1:$K$1",
+					"Dividends":     "$A$1:$K$1",
 					"Valuations":    "$A$1:$W$1",
-					"Interest":      "$A$1:$J$1",
+					"Interest":      "$A$1:$K$1",
 					"TT Rates":      "$A$1:$F$1",
 					"Security Info": "$A$1:$G$1",
 				}))

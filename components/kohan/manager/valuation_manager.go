@@ -169,7 +169,6 @@ func (v *ValuationManagerImpl) AnalyzeValuation(ctx context.Context, tickerSymbo
 	// Step 7: Build daily quantity timeline with event-date split awareness.
 	// Split events are applied before trades on the same date,
 	// then end-of-day quantity is recorded.
-	// TODO: Genuine intraday support (e.g., split after trade on same day) is deliberately out of scope.
 	quantityByDate := v.buildDailyQuantityTimeline(year, holdingPosition, trades, splits)
 
 	// Step 8: Calculate daily peak value from the timeline (Tax.md daily peak calculation rule — mandatory)

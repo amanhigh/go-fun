@@ -12,6 +12,15 @@ PROJECT_ROOT=$(cd "$SCRIPT_DIR/../../.." && pwd)
 TEST_DATA_DIR="$PROJECT_ROOT/components/kohan/testdata/tax"
 FA_COMPUTE_DIR=~/Downloads/FACompute
 
+# EXIT trap: clean up NVDA.json on success or failure
+cleanup_nvda() {
+    if [ -f "$FA_COMPUTE_DIR/Data/Tickers/NVDA.json" ]; then
+        rm -f "$FA_COMPUTE_DIR/Data/Tickers/NVDA.json"
+        echo "✅ EXIT cleanup: removed NVDA.json"
+    fi
+}
+trap cleanup_nvda EXIT
+
 # 1. CLEAN E2E DIRECTORIES (preserve Input/Brokerage for UAT)
 echo "--- Cleaning E2E test directories ---"
 rm -rf "$FA_COMPUTE_DIR/Input/Parsed"
@@ -72,7 +81,7 @@ echo ""
 # 4. Generate accounts_2023.csv (required for 2024 tax computation)
 echo "--- Generating accounts_2023.csv (prerequisite for 2024) ---"
 echo "Running: go run ./components/kohan apps tax compute 2023"
-(cd "$PROJECT_ROOT" && go run ./components/kohan apps tax compute 2023) || echo "Warning: 2023 tax computation had issues, continuing..."
+(cd "$PROJECT_ROOT" && go run ./components/kohan apps tax compute 2023)
 echo "✅ Generated accounts_2023.csv and 2023_Tax_Summary.xlsx"
 echo "-----------------------------------"
 echo ""
@@ -80,7 +89,7 @@ echo ""
 # 5. Run the application's tax command for 2024
 echo "--- Executing 2024 Tax Computation ---"
 echo "Running: go run ./components/kohan apps tax compute 2024"
-(cd "$PROJECT_ROOT" && go run ./components/kohan apps tax compute 2024) || echo "Application returned non-zero exit code, continuing for verification..."
+(cd "$PROJECT_ROOT" && go run ./components/kohan apps tax compute 2024)
 echo "-----------------------------------"
 echo ""
 
@@ -137,7 +146,7 @@ echo "--- Validating Excel Sheets ---"
 EXCEL_OUTPUT=$("$SCRIPT_DIR/read_excel.zsh" "$FA_COMPUTE_DIR/Output/Reports/2024_Tax_Summary.xlsx" 2>&1)
 SHEETS_LINE=$(echo "$EXCEL_OUTPUT" | grep "Available sheets:")
 
-REQUIRED_SHEETS=("Gains" "Dividends" "Valuations" "Interest" "Security Info")
+REQUIRED_SHEETS=("Gains" "Dividends" "Valuations" "Interest" "Security Info" "TT Rates")
 MISSING_SHEETS=()
 
 for sheet in "${REQUIRED_SHEETS[@]}"; do
@@ -155,16 +164,6 @@ else
   exit 1
 fi
 echo "-----------------------------------"
-echo ""
-
-# 9. Cleanup auto-downloaded files for clean test environment
-echo "--- Cleaning up auto-downloaded files ---"
-if [ -f "$FA_COMPUTE_DIR/Data/Tickers/NVDA.json" ]; then
-    rm -f "$FA_COMPUTE_DIR/Data/Tickers/NVDA.json"
-    echo "✅ Cleaned up NVDA.json"
-else
-    echo "ℹ️  No NVDA.json to clean up"
-fi
 echo ""
 
 echo "✅ E2E Test PASSED! (Input/Brokerage/ preserved for UAT)"
