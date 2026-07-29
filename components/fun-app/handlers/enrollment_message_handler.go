@@ -11,26 +11,26 @@ import (
 	"github.com/amanhigh/go-fun/models/fun"
 )
 
-// EnrollmentCommandHandler handles enrollment saga commands/events.
-type EnrollmentCommandHandler interface {
-	EnrollCmd(msg *message.Message) error
-	EnrollmentConfirmedEvt(msg *message.Message) error
-	EnrollmentCancelledEvt(msg *message.Message) error
+// EnrollmentMessageHandler handles enrollment saga commands/events.
+type EnrollmentMessageHandler interface {
+	HandleEnrollCmd(msg *message.Message) error
+	HandleEnrollmentConfirmedEvt(msg *message.Message) error
+	HandleEnrollmentCancelledEvt(msg *message.Message) error
 }
 
-type EnrollmentCommandHandlerImpl struct {
+type EnrollmentMessageHandlerImpl struct {
 	Manager manager.EnrollmentManagerInterface
 }
 
-// NewEnrollmentCommandHandler constructs handler with explicit manager dependency.
-func NewEnrollmentCommandHandler(manager manager.EnrollmentManagerInterface) *EnrollmentCommandHandlerImpl {
-	return &EnrollmentCommandHandlerImpl{Manager: manager}
+// NewEnrollmentMessageHandler constructs handler with explicit manager dependency.
+func NewEnrollmentMessageHandler(manager manager.EnrollmentManagerInterface) *EnrollmentMessageHandlerImpl {
+	return &EnrollmentMessageHandlerImpl{Manager: manager}
 }
 
-var _ EnrollmentCommandHandler = (*EnrollmentCommandHandlerImpl)(nil)
+var _ EnrollmentMessageHandler = (*EnrollmentMessageHandlerImpl)(nil)
 
-// EnrollCmd forwards EnrollCmdV1 to EnrollmentManager; it delegates to SeatManager internally.
-func (h *EnrollmentCommandHandlerImpl) EnrollCmd(msg *message.Message) error {
+// HandleEnrollCmd forwards EnrollCmdV1 to EnrollmentManager; it delegates to SeatManager internally.
+func (h *EnrollmentMessageHandlerImpl) HandleEnrollCmd(msg *message.Message) error {
 	var cmd fun.EnrollCmdV1
 	if err := json.Unmarshal(msg.Payload, &cmd); err != nil {
 		return fmt.Errorf("unmarshal enroll cmd: %w", err)
@@ -40,8 +40,8 @@ func (h *EnrollmentCommandHandlerImpl) EnrollCmd(msg *message.Message) error {
 	return h.Manager.EnrollCmd(ctx, cmd)
 }
 
-// EnrollmentConfirmedEvt persists CONFIRMED status via manager sink.
-func (h *EnrollmentCommandHandlerImpl) EnrollmentConfirmedEvt(msg *message.Message) error {
+// HandleEnrollmentConfirmedEvt persists CONFIRMED status via manager sink.
+func (h *EnrollmentMessageHandlerImpl) HandleEnrollmentConfirmedEvt(msg *message.Message) error {
 	var evt fun.EnrollmentConfirmedEvtV1
 	if err := json.Unmarshal(msg.Payload, &evt); err != nil {
 		return fmt.Errorf("unmarshal enrollment confirmed evt: %w", err)
@@ -50,8 +50,8 @@ func (h *EnrollmentCommandHandlerImpl) EnrollmentConfirmedEvt(msg *message.Messa
 	return h.Manager.OnEnrollmentConfirmedEvt(ctx, evt)
 }
 
-// EnrollmentCancelledEvt persists CANCELLED status via manager sink.
-func (h *EnrollmentCommandHandlerImpl) EnrollmentCancelledEvt(msg *message.Message) error {
+// HandleEnrollmentCancelledEvt persists CANCELLED status via manager sink.
+func (h *EnrollmentMessageHandlerImpl) HandleEnrollmentCancelledEvt(msg *message.Message) error {
 	var evt fun.EnrollmentCancelledEvtV1
 	if err := json.Unmarshal(msg.Payload, &evt); err != nil {
 		return fmt.Errorf("unmarshal enrollment cancelled evt: %w", err)

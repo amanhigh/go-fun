@@ -10,8 +10,9 @@ import (
 
 // SeatManagerInterface handles seat-related saga processing and publishing.
 // PublishAllocateSeat emits AllocateSeat command (C2) downstream.
-// AllocateSeat decides reservation vs waitlist and emits the appropriate seat event;
-// on capacity-unavailable it returns an error to trigger middleware retry.
+// AllocateSeat decides reservation vs waitlist and emits the appropriate seat event.
+// Capacity-unavailable produces a successful SeatWaitlisted event; only technical
+// errors from publishing or processing are returned as retryable errors.
 type SeatManagerInterface interface {
 	PublishAllocateSeat(ctx context.Context, enrollment fun.Enrollment) common.HttpError
 	AllocateSeat(ctx context.Context, cmd fun.AllocateSeatCmdV1) common.HttpError

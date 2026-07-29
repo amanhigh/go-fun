@@ -66,18 +66,17 @@ func (h *SeatCommandHandlerImpl) SeatWaitlistedEvt(msg *message.Message) error {
 	return nil
 }
 
-// PoisonAllocate consumes poison messages after retries and cancels enrollment.
-func (h *SeatCommandHandlerImpl) PoisonAllocate(msg *message.Message) error {
+// HandlePoisonedAllocateSeatCmd handles a poisoned AllocateSeatCmdV1 by cancelling the enrollment.
+func (h *SeatMessageHandlerImpl) HandlePoisonedAllocateSeatCmd(msg *message.Message) error {
 	var cmd fun.AllocateSeatCmdV1
-	// FIXME: Rename PoisonAllocateCmd ?
 	if err := json.Unmarshal(msg.Payload, &cmd); err != nil {
-		return fmt.Errorf("unmarshal poison allocate: %w", err)
+		return fmt.Errorf("unmarshal poisoned allocate seat cmd v1: %w", err)
 	}
 	ctx := stampCtx(msg.Context(), msg.Metadata, cmd.EnrollmentID, msg.UUID)
 	return h.EnrollmentManager.CancelEnrollmentAndPublish(ctx, fun.EnrollmentCancelledEvtV1{
 		EnrollmentID: cmd.EnrollmentID,
 		PersonID:     cmd.PersonID,
-		Reason:       "waitlist_retries_exhausted",
+		Reason:       fun.EnrollmentCancellationReasonSeatAllocationFailed,
 		CancelledAt:  time.Now().UTC(),
 	})
 }

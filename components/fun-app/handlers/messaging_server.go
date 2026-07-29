@@ -1,7 +1,6 @@
 package handlers
 
 import (
-	"encoding/json"
 	"fmt"
 	"time"
 
@@ -12,13 +11,11 @@ import (
 	"github.com/amanhigh/go-fun/models/fun"
 )
 
-// Default retry and poison configuration. Move to config later if needed.
+// Scoped retry configuration for the allocation command handler.
 const (
-	wmRetryMax      = 2
-	wmRetryInterval = 2 * time.Second
+	allocateSeatRetryMax      = 2
+	allocateSeatRetryInterval = 2 * time.Second
 )
-
-const wmPoisonTopic = fun.TopicPoison
 
 // MessagingServer builds and owns the Watermill router and saga handlers wiring.
 type MessagingServer struct {
@@ -30,8 +27,8 @@ func NewMessagingServer(
 	logger watermill.LoggerAdapter,
 	publisher message.Publisher,
 	subscriber message.Subscriber,
-	enrollmentHandler EnrollmentCommandHandler,
-	seatHandler SeatCommandHandler,
+	enrollmentHandler EnrollmentMessageHandler,
+	seatHandler SeatMessageHandler,
 ) (*MessagingServer, error) {
 	router, err := util.NewRouter(logger)
 	if err != nil {

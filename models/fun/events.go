@@ -2,16 +2,6 @@ package fun
 
 import "time"
 
-const (
-	TopicSeatReservedEvt           = "funapp.enrollment.event.seat_reserved.v1"
-	TopicSeatWaitlistedEvt         = "funapp.enrollment.event.seat_waitlisted.v1"
-	TopicEnrollmentConfirmedEvt    = "funapp.enrollment.event.enrollment_confirmed.v1"
-	TopicEnrollmentCancelledEvt    = "funapp.enrollment.event.enrollment_cancelled.v1"
-	TopicEnrollmentStateTransition = "funapp.enrollment.event.state_transition.v1"
-	// Poison queue for failed messages after retries are exhausted
-	TopicPoison = "funapp.enrollment.poison"
-)
-
 type SeatReservedEvtV1 struct {
 	EnrollmentID string    `json:"enrollmentId"`
 	PersonID     string    `json:"personId"`
