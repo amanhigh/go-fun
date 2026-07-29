@@ -18,7 +18,6 @@ import (
 //	ShowExpr — Alpine expression for visibility (x-show).
 //	Class    — layout/shape overrides only (e.g. "rounded-full px-3 py-1 text-xs").
 type FilterChipProps struct {
-	// FIXME: Cover Component Package with Test
 	TextExpr string
 	Tone     Tone
 	ShowExpr string
