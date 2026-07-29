@@ -942,7 +942,7 @@ var _ = Describe("Watermill", func() {
 			})
 		})
 
-		Context("Retry + Recoverer + PoisonQueue Composition", func() {
+		Context("Retry + PoisonQueue Composition", func() {
 			var (
 				poisonTopicComp = "poison-topic-composition"
 				poisonMessages  <-chan *message.Message
@@ -955,7 +955,7 @@ var _ = Describe("Watermill", func() {
 
 				poisonMessages = setupPoisonQueue(poisonTopicComp)
 
-				// Middleware order: PoisonQueue (outermost) → Retry → Recoverer (innermost)
+				// Middleware order: PoisonQueue (outermost) → Retry (innermost)
 				// First added = outermost wrapping in Watermill's middleware chain
 				router.AddMiddleware(
 					middleware.Retry{
@@ -965,11 +965,9 @@ var _ = Describe("Watermill", func() {
 					}.Middleware,
 				)
 
-				router.AddMiddleware(middleware.Recoverer)
-
 				// Handler that always fails to exercise full retry-then-poison flow
 				router.AddConsumerHandler(
-					"composition-test-handler",
+					"retry-poison-queue-handler",
 					testTopic,
 					pubSub,
 					func(_ *message.Message) error {
@@ -1008,8 +1006,8 @@ var _ = Describe("Watermill", func() {
 
 				By("Verifying poison metadata identifies original topic and handler")
 				Expect(poisonMsg.Metadata.Get(middleware.PoisonedTopicKey)).To(Equal(testTopic))
-				Expect(poisonMsg.Metadata.Get(middleware.PoisonedHandlerKey)).To(Equal("composition-test-handler"))
-				Expect(poisonMsg.Metadata.Get(middleware.ReasonForPoisonedKey)).To(ContainSubstring("handler failure"))
+				Expect(poisonMsg.Metadata.Get(middleware.PoisonedHandlerKey)).To(Equal("retry-poison-queue-handler"))
+				Expect(poisonMsg.Metadata.Get(middleware.ReasonForPoisonedKey)).To(Equal("handler failure on attempt 3"))
 
 				By("Verifying no additional messages on poison topic")
 				Consistently(poisonMessages, "100ms", "10ms").ShouldNot(Receive())
@@ -1030,7 +1028,7 @@ var _ = Describe("Watermill", func() {
 
 				// CORRELATION-ID: Handler middleware that copies correlation ID from input to output messages.
 				// middleware.CorrelationID is a HandlerMiddleware (wraps the handler), not a RouterMiddleware.
-				// It reads the correlation ID from the input message metadata and copies it to all output messages.
+				// It reads the correlation ID from the input message metadata and copies it to ALL output messages.
 				router.AddHandler(
 					"correlation-handler",
 					correlationInputTopic,
@@ -1038,34 +1036,98 @@ var _ = Describe("Watermill", func() {
 					correlationOutputTopic,
 					pubSub,
 					middleware.CorrelationID(func(_ *message.Message) ([]*message.Message, error) {
-						outputMsg := message.NewMessage(watermill.NewUUID(), []byte("correlated-response"))
-						return []*message.Message{outputMsg}, nil
+						// Handler returns two messages to demonstrate that middleware
+						// copies the same correlation ID to every produced message.
+						outputMsg1 := message.NewMessage(watermill.NewUUID(), []byte("correlated-response-1"))
+						outputMsg2 := message.NewMessage(watermill.NewUUID(), []byte("correlated-response-2"))
+						return []*message.Message{outputMsg1, outputMsg2}, nil
 					}),
 				)
 			})
 
-			// CORRELATION-ID: Middleware copies correlation metadata from input to handler-produced output messages
-			It("should copy correlation ID from input message to output message", func() {
+			// CORRELATION-ID: Middleware copies correlation metadata from input to all handler-produced output messages.
+			// SetCorrelationID is the idiomatic entry-point API; MessageCorrelationID reads it back.
+			It("should copy correlation ID from input message to all output messages", func() {
 				go router.Run(ctx)
 				<-router.Running()
 
-				By("Publishing message with a known correlation ID")
+				By("Publishing message with a known correlation ID using SetCorrelationID")
 				knownCorrelationID := "my-test-correlation-id-42"
 				inputMsg := message.NewMessage(watermill.NewUUID(), []byte("request"))
-				inputMsg.Metadata.Set(middleware.CorrelationIDMetadataKey, knownCorrelationID)
+				middleware.SetCorrelationID(knownCorrelationID, inputMsg)
 				err = pubSub.Publish(correlationInputTopic, inputMsg)
 				Expect(err).NotTo(HaveOccurred())
 
-				By("Receiving output message and verifying correlation ID was copied")
+				By("Receiving both output messages and acknowledging each")
+				var outputMsg1, outputMsg2 *message.Message
 				select {
-				case outputMsg := <-outputMessages:
-					Expect(outputMsg).NotTo(BeNil())
-					Expect(string(outputMsg.Payload)).To(Equal("correlated-response"))
-					Expect(outputMsg.Metadata.Get(middleware.CorrelationIDMetadataKey)).To(Equal(knownCorrelationID))
-					outputMsg.Ack()
+				case outputMsg1 = <-outputMessages:
+					Expect(outputMsg1).NotTo(BeNil())
+					outputMsg1.Ack()
 				case <-ctx.Done():
-					Fail("Timeout waiting for correlated output message")
+					Fail("Timeout waiting for first correlated output message")
 				}
+				select {
+				case outputMsg2 = <-outputMessages:
+					Expect(outputMsg2).NotTo(BeNil())
+					outputMsg2.Ack()
+				case <-ctx.Done():
+					Fail("Timeout waiting for second correlated output message")
+				}
+
+				By("Verifying payloads in any order (order-independent)")
+				receivedPayloads := []string{string(outputMsg1.Payload), string(outputMsg2.Payload)}
+				Expect(receivedPayloads).To(ConsistOf("correlated-response-1", "correlated-response-2"))
+
+				By("Verifying both messages received the same correlation ID, order-independently")
+				receivedCorrelations := []string{
+					middleware.MessageCorrelationID(outputMsg1),
+					middleware.MessageCorrelationID(outputMsg2),
+				}
+				Expect(receivedCorrelations).To(ConsistOf(knownCorrelationID, knownCorrelationID))
+			})
+		})
+
+		// RECOVERER: Wraps a handler with panic recovery; on panic, returns a
+		// RecoveredPanicError containing the original value and a stack trace
+		// instead of crashing the process.
+		Context("Recoverer Middleware", func() {
+			var (
+				panickingHandler message.HandlerFunc
+				wrappedHandler   message.HandlerFunc
+				handlerMsg       *message.Message
+				handlerErr       error
+				handlerOutput    []*message.Message
+			)
+
+			BeforeEach(func() {
+				// Handler that always panics — wrapped by Recoverer before invocation
+				panickingHandler = func(_ *message.Message) ([]*message.Message, error) {
+					panic("deliberate test panic")
+				}
+				wrappedHandler = middleware.Recoverer(panickingHandler)
+				handlerMsg = message.NewMessage(watermill.NewUUID(), []byte("panic-trigger"))
+			})
+
+			It("should recover from panic and return RecoveredPanicError with no produced messages", func() {
+				By("Invoking Recoverer-wrapped handler directly (no Router)")
+				handlerOutput, handlerErr = wrappedHandler(handlerMsg)
+
+				By("Asserting the error is a RecoveredPanicError via errors.As")
+				var recoveredErr middleware.RecoveredPanicError
+				Expect(errors.As(handlerErr, &recoveredErr)).To(BeTrue())
+
+				By("Asserting the original panic value is preserved")
+				Expect(recoveredErr.V).To(Equal("deliberate test panic"))
+
+				By("Asserting the stack trace is non-empty")
+				Expect(recoveredErr.Stacktrace).NotTo(BeEmpty())
+
+				By("Asserting no output messages were produced")
+				Expect(handlerOutput).To(BeEmpty())
+
+				By("Asserting an error occurred")
+				Expect(handlerErr).To(HaveOccurred())
 			})
 		})
 	})
