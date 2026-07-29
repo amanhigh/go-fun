@@ -45,11 +45,15 @@ func NewMessagingServer(
 	}
 	router.AddMiddleware(poisonMw)
 
-	// Register topic consumers
-	addEnrollmentCommandHandlers(router, subscriber, enrollmentHandler)
-	addSeatHandlers(router, subscriber, seatHandler)
-	addEnrollmentEventHandlers(router, subscriber, enrollmentHandler)
+	// Register topic consumers with handler-level middleware.
+	addEnrollmentCmdHandlers(router, subscriber, enrollmentHandler)
+	addSeatHandlers(router, subscriber, seatHandler, allocPoisonMw, allocRetry)
+	addEnrollmentEvtHandlers(router, subscriber, enrollmentHandler)
 	addPoisonHandlers(router, subscriber, seatHandler)
+
+	// Router-level Recoverer: innermost router middleware, applied innermost relative
+	// to the handler-level PoisonQueue → Retry chain, producing PoisonQueue → Retry → Recoverer → handler.
+	router.AddMiddleware(middleware.Recoverer)
 
 	return &MessagingServer{router: router}, nil
 }
@@ -57,48 +61,61 @@ func NewMessagingServer(
 // Router exposes the configured Watermill router for lifecycle control.
 func (ms *MessagingServer) Router() *message.Router { return ms.router }
 
-func addEnrollmentCommandHandlers(router *message.Router, subscriber message.Subscriber, enrollmentHandler EnrollmentCommandHandler) {
+// addEnrollmentCmdHandlers registers enrollment command handlers.
+func addEnrollmentCmdHandlers(router *message.Router, subscriber message.Subscriber, enrollmentHandler EnrollmentMessageHandler) {
 	router.AddConsumerHandler(
-		"enrollment_enroll_requested",
+		fun.RouterHandlerIDRequestSeatAllocation,
 		fun.TopicEnrollCmd,
 		subscriber,
-		enrollmentHandler.EnrollCmd,
+		enrollmentHandler.HandleEnrollCmd,
 	)
 }
 
-func addSeatHandlers(router *message.Router, subscriber message.Subscriber, seatHandler SeatCommandHandler) {
-	router.AddConsumerHandler(
-		"seat_allocate",
+// addSeatHandlers registers seat handlers. The allocation command handler receives
+// scoped PoisonQueue → Retry handler-level middleware; other seat handlers have none.
+func addSeatHandlers(
+	router *message.Router,
+	subscriber message.Subscriber,
+	seatHandler SeatMessageHandler,
+	allocPoisonMw message.HandlerMiddleware,
+	allocRetry message.HandlerMiddleware,
+) {
+	// Allocation command handler: PoisonQueue (outermost) → Retry → Recoverer (innermost) → handler.
+	h := router.AddConsumerHandler(
+		fun.RouterHandlerIDAllocateSeat,
 		fun.TopicAllocateSeatCmd,
 		subscriber,
-		seatHandler.AllocateSeatCmd,
+		seatHandler.HandleAllocateSeatCmd,
 	)
 	router.AddConsumerHandler(
-		"seat_reserved_evt",
+		fun.RouterHandlerIDConfirmEnrollment,
 		fun.TopicSeatReservedEvt,
 		subscriber,
-		seatHandler.SeatReservedEvt,
+		seatHandler.HandleSeatReservedEvt,
 	)
+
 	router.AddConsumerHandler(
-		"seat_waitlisted_evt",
+		fun.RouterHandlerIDWaitlistEnrollment,
 		fun.TopicSeatWaitlistedEvt,
 		subscriber,
-		seatHandler.SeatWaitlistedEvt,
+		seatHandler.HandleSeatWaitlistedEvt,
 	)
 }
 
-func addEnrollmentEventHandlers(router *message.Router, subscriber message.Subscriber, enrollmentHandler EnrollmentCommandHandler) {
+// addEnrollmentEvtHandlers registers enrollment event handlers.
+func addEnrollmentEvtHandlers(router *message.Router, subscriber message.Subscriber, enrollmentHandler EnrollmentMessageHandler) {
 	router.AddConsumerHandler(
-		"enrollment_confirmed_evt",
+		fun.RouterHandlerIDRecordEnrollmentConfirmation,
 		fun.TopicEnrollmentConfirmedEvt,
 		subscriber,
-		enrollmentHandler.EnrollmentConfirmedEvt,
+		enrollmentHandler.HandleEnrollmentConfirmedEvt,
 	)
+
 	router.AddConsumerHandler(
-		"enrollment_cancelled_evt",
+		fun.RouterHandlerIDRecordEnrollmentCancellation,
 		fun.TopicEnrollmentCancelledEvt,
 		subscriber,
-		enrollmentHandler.EnrollmentCancelledEvt,
+		enrollmentHandler.HandleEnrollmentCancelledEvt,
 	)
 }
 
