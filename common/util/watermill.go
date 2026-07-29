@@ -32,7 +32,6 @@ func NewRouter(logger watermill.LoggerAdapter) (*message.Router, error) {
 	}
 
 	router.AddMiddleware(
-		middleware.Recoverer,
 		middleware.CorrelationID,
 	)
 
