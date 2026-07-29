@@ -856,50 +856,49 @@ var _ = Describe("Watermill", func() {
 		})
 
 		Context("Deduplicator Middleware", func() {
-			var processCount int
+			var handledPayloads chan string
 
 			BeforeEach(func() {
-				processCount = 0
+				handledPayloads = make(chan string, 3)
 
 				// Add deduplicator middleware with default settings
 				router.AddMiddleware(
 					(&middleware.Deduplicator{}).Middleware,
 				)
 
-				// Handler that counts processed messages
+				// Handler that records processed payloads
 				router.AddConsumerHandler(
 					"dedup-test-handler",
 					testTopic,
 					pubSub,
-					func(_ *message.Message) error {
-						processCount++
-						processed <- true
+					func(msg *message.Message) error {
+						handledPayloads <- string(msg.Payload)
 						return nil
 					},
 				)
 			})
 
-			It("should drop duplicate messages", func() {
+			It("should drop duplicate messages while processing unique messages", func() {
 				go router.Run(ctx)
 				<-router.Running()
 
 				err = router.RunHandlers(ctx)
 				Expect(err).NotTo(HaveOccurred())
 
-				// Publish same message twice (same payload = same hash)
+				// Publish two messages with different UUIDs but the same payload, and one different payload.
 				msg1 := message.NewMessage(watermill.NewUUID(), []byte("duplicate-content"))
 				msg2 := message.NewMessage(watermill.NewUUID(), []byte("duplicate-content"))
+				msg3 := message.NewMessage(watermill.NewUUID(), []byte("different-content"))
+				Expect(msg1.UUID).NotTo(Equal(msg2.UUID))
 
-				err = pubSub.Publish(testTopic, msg1)
+				err = pubSub.Publish(testTopic, msg1, msg2, msg3)
 				Expect(err).NotTo(HaveOccurred())
 
-				err = pubSub.Publish(testTopic, msg2)
-				Expect(err).NotTo(HaveOccurred())
-
-				// Should only process first message, second should be dropped
-				Eventually(processed).Should(Receive(Equal(true)))
-				Consistently(processed, 100*time.Millisecond).ShouldNot(Receive())
-				Expect(processCount).To(Equal(1)) // Only first message processed
+				var firstPayload, secondPayload string
+				Eventually(handledPayloads).Should(Receive(&firstPayload))
+				Eventually(handledPayloads).Should(Receive(&secondPayload))
+				Expect([]string{firstPayload, secondPayload}).To(ConsistOf("duplicate-content", "different-content"))
+				Consistently(handledPayloads, 100*time.Millisecond).ShouldNot(Receive())
 			})
 		})
 
