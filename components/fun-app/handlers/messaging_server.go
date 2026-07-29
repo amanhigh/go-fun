@@ -35,105 +35,26 @@ func NewMessagingServer(
 		return nil, fmt.Errorf("new watermill router: %w", err)
 	}
 
-	// Global middlewares: retry and poison queue
-	router.AddMiddleware(
-		middleware.Retry{MaxRetries: wmRetryMax, InitialInterval: wmRetryInterval}.Middleware,
-	)
-	poisonMw, perr := middleware.PoisonQueue(publisher, wmPoisonTopic)
-	if perr != nil {
-		return nil, fmt.Errorf("poison middleware: %w", perr)
+	// Register ordinary topic consumers (no handler-level middleware beyond automatic Recoverer).
+	util.AddConsumerHandler(router, fun.TopicEnrollCmd, subscriber, enrollmentHandler.HandleEnrollCmd)
+	util.AddConsumerHandler(router, fun.TopicSeatReservedEvt, subscriber, seatHandler.HandleSeatReservedEvt)
+	util.AddConsumerHandler(router, fun.TopicSeatWaitlistedEvt, subscriber, seatHandler.HandleSeatWaitlistedEvt)
+	util.AddConsumerHandler(router, fun.TopicEnrollmentConfirmedEvt, subscriber, enrollmentHandler.HandleEnrollmentConfirmedEvt)
+	util.AddConsumerHandler(router, fun.TopicEnrollmentCancelledEvt, subscriber, enrollmentHandler.HandleEnrollmentCancelledEvt)
+
+	// Allocation command handler: PoisonQueue (outermost) → Retry → Recoverer → handler.
+	// The poison topic is derived from the source topic via PoisonTopic.
+	if err := util.AddRetryPoisonConsumerHandler(router, publisher, subscriber, util.RetryPoisonConsumerConfig{
+		Topic:         fun.TopicAllocateSeatCmd,
+		Retry:         middleware.Retry{MaxRetries: allocateSeatRetryMax, InitialInterval: allocateSeatRetryInterval},
+		Handler:       seatHandler.HandleAllocateSeatCmd,
+		PoisonHandler: seatHandler.HandlePoisonedAllocateSeatCmd,
+	}); err != nil {
+		return nil, fmt.Errorf("allocation retry-poison handler: %w", err)
 	}
-	router.AddMiddleware(poisonMw)
-
-	// Register topic consumers with handler-level middleware.
-	addEnrollmentCmdHandlers(router, subscriber, enrollmentHandler)
-	addSeatHandlers(router, subscriber, seatHandler, allocPoisonMw, allocRetry)
-	addEnrollmentEvtHandlers(router, subscriber, enrollmentHandler)
-	addPoisonHandlers(router, subscriber, seatHandler)
-
-	// Router-level Recoverer: innermost router middleware, applied innermost relative
-	// to the handler-level PoisonQueue → Retry chain, producing PoisonQueue → Retry → Recoverer → handler.
-	router.AddMiddleware(middleware.Recoverer)
 
 	return &MessagingServer{router: router}, nil
 }
 
 // Router exposes the configured Watermill router for lifecycle control.
 func (ms *MessagingServer) Router() *message.Router { return ms.router }
-
-// addEnrollmentCmdHandlers registers enrollment command handlers.
-func addEnrollmentCmdHandlers(router *message.Router, subscriber message.Subscriber, enrollmentHandler EnrollmentMessageHandler) {
-	router.AddConsumerHandler(
-		fun.RouterHandlerIDRequestSeatAllocation,
-		fun.TopicEnrollCmd,
-		subscriber,
-		enrollmentHandler.HandleEnrollCmd,
-	)
-}
-
-// addSeatHandlers registers seat handlers. The allocation command handler receives
-// scoped PoisonQueue → Retry handler-level middleware; other seat handlers have none.
-func addSeatHandlers(
-	router *message.Router,
-	subscriber message.Subscriber,
-	seatHandler SeatMessageHandler,
-	allocPoisonMw message.HandlerMiddleware,
-	allocRetry message.HandlerMiddleware,
-) {
-	// Allocation command handler: PoisonQueue (outermost) → Retry → Recoverer (innermost) → handler.
-	h := router.AddConsumerHandler(
-		fun.RouterHandlerIDAllocateSeat,
-		fun.TopicAllocateSeatCmd,
-		subscriber,
-		seatHandler.HandleAllocateSeatCmd,
-	)
-	router.AddConsumerHandler(
-		fun.RouterHandlerIDConfirmEnrollment,
-		fun.TopicSeatReservedEvt,
-		subscriber,
-		seatHandler.HandleSeatReservedEvt,
-	)
-
-	router.AddConsumerHandler(
-		fun.RouterHandlerIDWaitlistEnrollment,
-		fun.TopicSeatWaitlistedEvt,
-		subscriber,
-		seatHandler.HandleSeatWaitlistedEvt,
-	)
-}
-
-// addEnrollmentEvtHandlers registers enrollment event handlers.
-func addEnrollmentEvtHandlers(router *message.Router, subscriber message.Subscriber, enrollmentHandler EnrollmentMessageHandler) {
-	router.AddConsumerHandler(
-		fun.RouterHandlerIDRecordEnrollmentConfirmation,
-		fun.TopicEnrollmentConfirmedEvt,
-		subscriber,
-		enrollmentHandler.HandleEnrollmentConfirmedEvt,
-	)
-
-	router.AddConsumerHandler(
-		fun.RouterHandlerIDRecordEnrollmentCancellation,
-		fun.TopicEnrollmentCancelledEvt,
-		subscriber,
-		enrollmentHandler.HandleEnrollmentCancelledEvt,
-	)
-}
-
-// addPoisonHandlers consumes messages from poison topic to perform final cancellation.
-func addPoisonHandlers(router *message.Router, subscriber message.Subscriber, seatHandler SeatCommandHandler) {
-	router.AddConsumerHandler(
-		"poison_allocate",
-		wmPoisonTopic,
-		subscriber,
-		func(msg *message.Message) error {
-			// BUG: Is Poison Handler Worknig ?
-			// Try decode as AllocateSeatCmdV1 and cancel via handler
-			var cmd fun.AllocateSeatCmdV1
-			if err := json.Unmarshal(msg.Payload, &cmd); err == nil {
-				return seatHandler.PoisonAllocate(msg)
-			}
-			// Unknown poison payload: ack as no-op
-			return nil
-		},
-	)
-}

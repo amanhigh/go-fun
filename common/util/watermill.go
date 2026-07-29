@@ -25,6 +25,10 @@ func NewGoChannel(logger watermill.LoggerAdapter) *gochannel.GoChannel {
 }
 
 // NewRouter creates a Watermill router with default middleware.
+//
+// FIXME: CorrelationID only propagates for messages that pass through the router
+// (i.e. returned by handlers). Direct publishing via BasePublisher / stampCtx
+// bypasses the router and must carry its own correlation metadata.
 func NewRouter(logger watermill.LoggerAdapter) (*message.Router, error) {
 	router, err := message.NewRouter(message.RouterConfig{}, logger)
 	if err != nil {
@@ -36,6 +40,70 @@ func NewRouter(logger watermill.LoggerAdapter) (*message.Router, error) {
 	)
 
 	return router, nil
+}
+
+// PoisonTopic returns the derived poison-topic name for the given source topic.
+func PoisonTopic(topic string) string {
+	return topic + ".poison"
+}
+
+// AddConsumerHandler registers a no-publish handler on the router that subscribes
+// to topic using the supplied subscriber. The handler is identified by topic (used
+// as both the Watermill handler name and the subscription topic). Any supplied
+// middlewares are added in order, then middleware.Recoverer is appended last so
+// recovery is the innermost layer. Returns the Watermill *Handler for further
+// configuration if needed.
+func AddConsumerHandler(
+	router *message.Router,
+	topic string,
+	subscriber message.Subscriber,
+	handler message.NoPublishHandlerFunc,
+	middlewares ...message.HandlerMiddleware,
+) *message.Handler {
+	h := router.AddConsumerHandler(topic, topic, subscriber, handler)
+	h.AddMiddleware(middlewares...)
+	h.AddMiddleware(middleware.Recoverer)
+	return h
+}
+
+// RetryPoisonConsumerConfig bundles the parameters for AddRetryPoisonConsumerHandler.
+type RetryPoisonConsumerConfig struct {
+	Topic         string
+	Retry         middleware.Retry
+	Handler       message.NoPublishHandlerFunc
+	PoisonHandler message.NoPublishHandlerFunc
+}
+
+// AddRetryPoisonConsumerHandler wires up a retry + poison-queue pipeline for the
+// given source topic. It derives a poison topic via PoisonTopic, creates a
+// middleware.PoisonQueue that publishes failed messages there, and registers two
+// handlers:
+//  1. Source handler — runs the user handler wrapped by PoisonQueue (outer) and
+//     Retry.Middleware (inner), plus the automatic Recoverer.
+//  2. Poison consumer — subscribes to the poison topic and runs poisonHandler.
+//
+// Returns any PoisonQueue construction error. The dedicated poison consumer
+// receives the automatic Recoverer from AddConsumerHandler.
+func AddRetryPoisonConsumerHandler(
+	router *message.Router,
+	publisher message.Publisher,
+	subscriber message.Subscriber,
+	config RetryPoisonConsumerConfig,
+) error {
+	poisonTopic := PoisonTopic(config.Topic)
+
+	poisonMiddleware, err := middleware.PoisonQueue(publisher, poisonTopic)
+	if err != nil {
+		return errors.Wrap(err, "create poison queue middleware")
+	}
+
+	// Source handler: PoisonQueue (outer) → Retry → Recoverer (inner) → handler
+	AddConsumerHandler(router, config.Topic, subscriber, config.Handler, poisonMiddleware, config.Retry.Middleware)
+
+	// Dedicated poison consumer on the derived poison topic
+	AddConsumerHandler(router, poisonTopic, subscriber, config.PoisonHandler)
+
+	return nil
 }
 
 // PublishJSONMessage marshals payload, attaches metadata, and publishes to the topic.

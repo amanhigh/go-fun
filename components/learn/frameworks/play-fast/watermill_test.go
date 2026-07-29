@@ -1037,7 +1037,7 @@ var _ = Describe("Watermill", func() {
 					pubSub,
 					correlationOutputTopic,
 					pubSub,
-					middleware.CorrelationID(func(msg *message.Message) ([]*message.Message, error) {
+					middleware.CorrelationID(func(_ *message.Message) ([]*message.Message, error) {
 						outputMsg := message.NewMessage(watermill.NewUUID(), []byte("correlated-response"))
 						return []*message.Message{outputMsg}, nil
 					}),

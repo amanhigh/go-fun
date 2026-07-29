@@ -7,12 +7,12 @@ import (
 
 	"github.com/ThreeDotsLabs/watermill"
 	"github.com/ThreeDotsLabs/watermill/message"
-	"github.com/ThreeDotsLabs/watermill/message/router/middleware"
 	"github.com/ThreeDotsLabs/watermill/pubsub/gochannel"
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
 	"github.com/stretchr/testify/mock"
 
+	"github.com/amanhigh/go-fun/common/util"
 	"github.com/amanhigh/go-fun/components/fun-app/handlers"
 	managermocks "github.com/amanhigh/go-fun/components/fun-app/manager/mocks"
 	"github.com/amanhigh/go-fun/models/fun"
@@ -54,7 +54,7 @@ var _ = Describe("MessagingServer - Poison Consumer", func() {
 		_ = channel.Close()
 	})
 
-	Context("when AllocateSeatCmd is published to poison topic with correct PoisonedTopicKey", func() {
+	Context("when AllocateSeatCmd lands on the derived poison topic", func() {
 		var cmd fun.AllocateSeatCmdV1
 
 		BeforeEach(func() {
@@ -84,41 +84,10 @@ var _ = Describe("MessagingServer - Poison Consumer", func() {
 			Expect(err).ToNot(HaveOccurred())
 
 			msg := message.NewMessage("poison-1", payload)
-			msg.Metadata.Set(middleware.PoisonedTopicKey, fun.TopicAllocateSeatCmd)
 
-			Expect(channel.Publish(fun.TopicPoisonedAllocateSeatCmd, msg)).To(Succeed())
+			Expect(channel.Publish(util.PoisonTopic(fun.TopicAllocateSeatCmd), msg)).To(Succeed())
 
 			Eventually(called).Should(BeClosed())
-		})
-	})
-
-	Context("when AllocateSeatCmd is published to poison topic with wrong PoisonedTopicKey", func() {
-		It("does not invoke CancelEnrollmentAndPublish", func() {
-			cmd := fun.AllocateSeatCmdV1{
-				EnrollmentID: "enr-2",
-				PersonID:     "person-2",
-				Grade:        4,
-				RequestedAt:  time.Now().UTC(),
-			}
-
-			notCalled := make(chan struct{})
-
-			enrollmentMock.EXPECT().CancelEnrollmentAndPublish(
-				mock.Anything,
-				mock.Anything,
-			).Run(func(_ context.Context, _ fun.EnrollmentCancelledEvtV1) {
-				close(notCalled)
-			}).Maybe()
-
-			payload, err := json.Marshal(cmd)
-			Expect(err).ToNot(HaveOccurred())
-
-			msg := message.NewMessage("poison-wrong", payload)
-			msg.Metadata.Set(middleware.PoisonedTopicKey, "wrong.topic")
-
-			Expect(channel.Publish(fun.TopicPoisonedAllocateSeatCmd, msg)).To(Succeed())
-
-			Consistently(notCalled, 1*time.Second).ShouldNot(BeClosed())
 		})
 	})
 })
