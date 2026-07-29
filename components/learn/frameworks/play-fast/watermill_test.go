@@ -729,10 +729,11 @@ var _ = Describe("Watermill", func() {
 
 	Context("Router Middleware", func() {
 		var (
-			router      *message.Router
-			processed   chan bool
-			failCount   int
-			maxFailures int
+			router           *message.Router
+			processed        chan bool
+			failCount        int
+			maxFailures      int
+			setupPoisonQueue func(topic string) <-chan *message.Message
 		)
 
 		BeforeEach(func() {
@@ -741,6 +742,17 @@ var _ = Describe("Watermill", func() {
 
 			processed = make(chan bool, 1)
 			failCount = 0
+
+			setupPoisonQueue = func(topic string) <-chan *message.Message {
+				poisonMsgs, subscribeErr := pubSub.Subscribe(ctx, topic)
+				Expect(subscribeErr).NotTo(HaveOccurred())
+
+				poisonMiddleware, middlewareErr := middleware.PoisonQueue(pubSub, topic)
+				Expect(middlewareErr).NotTo(HaveOccurred())
+				router.AddMiddleware(poisonMiddleware)
+
+				return poisonMsgs
+			}
 		})
 
 		AfterEach(func() {
@@ -898,15 +910,7 @@ var _ = Describe("Watermill", func() {
 			)
 
 			BeforeEach(func() {
-				// Subscribe to poison topic to capture poisoned messages
-				var err error
-				poisonMessages, err = pubSub.Subscribe(ctx, poisonTopic)
-				Expect(err).NotTo(HaveOccurred())
-
-				// Add poison queue middleware
-				poisonMiddleware, err := middleware.PoisonQueue(pubSub, poisonTopic)
-				Expect(err).NotTo(HaveOccurred())
-				router.AddMiddleware(poisonMiddleware)
+				poisonMessages = setupPoisonQueue(poisonTopic)
 
 				// Handler that always fails
 				router.AddConsumerHandler(
@@ -932,14 +936,136 @@ var _ = Describe("Watermill", func() {
 				Expect(err).NotTo(HaveOccurred())
 
 				// Should receive the message on poison queue
-				Eventually(func() bool {
-					select {
-					case poisonMsg := <-poisonMessages:
-						return string(poisonMsg.Payload) == "failing-message"
-					default:
-						return false
-					}
-				}).Should(BeTrue())
+				var poisonMsg *message.Message
+				Eventually(poisonMessages).Should(Receive(&poisonMsg))
+				Expect(string(poisonMsg.Payload)).To(Equal("failing-message"))
+			})
+		})
+
+		Context("Retry + Recoverer + PoisonQueue Composition", func() {
+			var (
+				poisonTopicComp = "poison-topic-composition"
+				poisonMessages  <-chan *message.Message
+				attemptCount    int
+				mu              sync.Mutex
+			)
+
+			BeforeEach(func() {
+				attemptCount = 0
+
+				poisonMessages = setupPoisonQueue(poisonTopicComp)
+
+				// Middleware order: PoisonQueue (outermost) → Retry → Recoverer (innermost)
+				// First added = outermost wrapping in Watermill's middleware chain
+				router.AddMiddleware(
+					middleware.Retry{
+						MaxRetries:      2, // 2 retries + 1 initial = 3 total attempts
+						InitialInterval: 10 * time.Millisecond,
+						Logger:          logger,
+					}.Middleware,
+				)
+
+				router.AddMiddleware(middleware.Recoverer)
+
+				// Handler that always fails to exercise full retry-then-poison flow
+				router.AddConsumerHandler(
+					"composition-test-handler",
+					testTopic,
+					pubSub,
+					func(_ *message.Message) error {
+						mu.Lock()
+						attemptCount++
+						count := attemptCount
+						mu.Unlock()
+						return fmt.Errorf("handler failure on attempt %d", count)
+					},
+				)
+			})
+
+			It("should retry twice then send to poison queue with correct metadata", func() {
+				go router.Run(ctx)
+				<-router.Running()
+
+				err = router.RunHandlers(ctx)
+				Expect(err).NotTo(HaveOccurred())
+
+				By("Publishing message that will always fail")
+				msg := message.NewMessage(watermill.NewUUID(), []byte("composition-test"))
+				err = pubSub.Publish(testTopic, msg)
+				Expect(err).NotTo(HaveOccurred())
+
+				By("Verifying handler was attempted 3 times (initial + 2 retries)")
+				Eventually(func() int {
+					mu.Lock()
+					defer mu.Unlock()
+					return attemptCount
+				}).Should(Equal(3))
+
+				By("Verifying exactly one message published to poison topic")
+				var poisonMsg *message.Message
+				Eventually(poisonMessages).Should(Receive(&poisonMsg))
+				Expect(string(poisonMsg.Payload)).To(Equal("composition-test"))
+
+				By("Verifying poison metadata identifies original topic and handler")
+				Expect(poisonMsg.Metadata.Get(middleware.PoisonedTopicKey)).To(Equal(testTopic))
+				Expect(poisonMsg.Metadata.Get(middleware.PoisonedHandlerKey)).To(Equal("composition-test-handler"))
+				Expect(poisonMsg.Metadata.Get(middleware.ReasonForPoisonedKey)).To(ContainSubstring("handler failure"))
+
+				By("Verifying no additional messages on poison topic")
+				Consistently(poisonMessages, "100ms", "10ms").ShouldNot(Receive())
+			})
+		})
+
+		Context("Correlation ID Middleware", func() {
+			var (
+				correlationInputTopic  = "correlation-input"
+				correlationOutputTopic = "correlation-output"
+				outputMessages         <-chan *message.Message
+			)
+
+			BeforeEach(func() {
+				var subscribeErr error
+				outputMessages, subscribeErr = pubSub.Subscribe(ctx, correlationOutputTopic)
+				Expect(subscribeErr).NotTo(HaveOccurred())
+
+				// CORRELATION-ID: Handler middleware that copies correlation ID from input to output messages.
+				// middleware.CorrelationID is a HandlerMiddleware (wraps the handler), not a RouterMiddleware.
+				// It reads the correlation ID from the input message metadata and copies it to all output messages.
+				router.AddHandler(
+					"correlation-handler",
+					correlationInputTopic,
+					pubSub,
+					correlationOutputTopic,
+					pubSub,
+					middleware.CorrelationID(func(msg *message.Message) ([]*message.Message, error) {
+						outputMsg := message.NewMessage(watermill.NewUUID(), []byte("correlated-response"))
+						return []*message.Message{outputMsg}, nil
+					}),
+				)
+			})
+
+			// CORRELATION-ID: Middleware copies correlation metadata from input to handler-produced output messages
+			It("should copy correlation ID from input message to output message", func() {
+				go router.Run(ctx)
+				<-router.Running()
+
+				By("Publishing message with a known correlation ID")
+				knownCorrelationID := "my-test-correlation-id-42"
+				inputMsg := message.NewMessage(watermill.NewUUID(), []byte("request"))
+				inputMsg.Metadata.Set(middleware.CorrelationIDMetadataKey, knownCorrelationID)
+				err = pubSub.Publish(correlationInputTopic, inputMsg)
+				Expect(err).NotTo(HaveOccurred())
+
+				By("Receiving output message and verifying correlation ID was copied")
+				select {
+				case outputMsg := <-outputMessages:
+					Expect(outputMsg).NotTo(BeNil())
+					Expect(string(outputMsg.Payload)).To(Equal("correlated-response"))
+					Expect(outputMsg.Metadata.Get(middleware.CorrelationIDMetadataKey)).To(Equal(knownCorrelationID))
+					outputMsg.Ack()
+				case <-ctx.Done():
+					Fail("Timeout waiting for correlated output message")
+				}
 			})
 		})
 	})
