@@ -12,7 +12,6 @@ func SetupOSRoutes(os *gin.RouterGroup, osHandler OSHandler) {
 	os.POST("/screenshot", osHandler.HandleScreenshot)
 	os.GET("/ticker/:ticker/record", osHandler.HandleRecordTicker)
 	os.GET("/clip/", osHandler.HandleReadClip)
-	os.POST("/submap/:action", osHandler.HandleSubmapControl)
 }
 
 // SetupImageRoutes configures image-related routes for the given journal router group

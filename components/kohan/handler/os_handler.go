@@ -19,7 +19,6 @@ type OSHandler interface {
 	HandleScreenshot(ctx *gin.Context)
 	HandleReadClip(ctx *gin.Context)
 	HandleRecordTicker(ctx *gin.Context)
-	HandleSubmapControl(ctx *gin.Context)
 }
 
 type OSHandlerImpl struct {
@@ -75,36 +74,5 @@ func (h *OSHandlerImpl) HandleRecordTicker(ctx *gin.Context) {
 	} else {
 		log.Error().Str("Ticker", ticker).Err(httpErr).Msg("Record Ticker Failed")
 		ctx.JSON(httpErr.Code(), httpErr)
-	}
-}
-
-// HandleSubmapControl handles POST /v1/submap/:action
-func (h *OSHandlerImpl) HandleSubmapControl(ctx *gin.Context) {
-	action := ctx.Param("action")
-
-	var request struct {
-		Submap string `json:"submap"`
-		Ticker string `json:"ticker,omitempty"`
-	}
-
-	if err := ctx.ShouldBindJSON(&request); err == nil {
-		switch action {
-		case "enable":
-			err = tools.HyperDispatch("submap " + request.Submap)
-		case "disable":
-			err = tools.HyperDispatch("submap reset")
-		default:
-			ctx.JSON(http.StatusBadRequest, gin.H{"error": "Invalid action. Use 'enable' or 'disable'"})
-			return
-		}
-
-		if err == nil {
-			log.Info().Str("Action", action).Str("Submap", request.Submap).Msg("Submap Control")
-			ctx.JSON(http.StatusOK, gin.H{"status": "success", "action": action, "submap": request.Submap})
-		} else {
-			ctx.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
-		}
-	} else {
-		ctx.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 	}
 }
