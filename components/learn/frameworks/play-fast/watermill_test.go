@@ -44,15 +44,14 @@ func (h BookRoomHandler) Handle(ctx context.Context, cmd *BookRoom) error {
 }
 
 type FinancialReport struct {
-	events  *[]string
-	revenue *int64
+	events  []string
+	revenue int64
 	mutex   sync.Mutex
 }
 
-func NewFinancialReport(events *[]string, revenue *int64) *FinancialReport {
+func NewFinancialReport() *FinancialReport {
 	return &FinancialReport{
-		events:  events,
-		revenue: revenue,
+		events: []string{},
 	}
 }
 
@@ -60,9 +59,16 @@ func (f *FinancialReport) Handle(_ context.Context, event *RoomBooked) error {
 	f.mutex.Lock()
 	defer f.mutex.Unlock()
 
-	*f.events = append(*f.events, "RoomBooked")
-	*f.revenue += event.Price
+	f.events = append(f.events, "RoomBooked")
+	f.revenue += event.Price
 	return nil
+}
+
+func (f *FinancialReport) Snapshot() ([]string, int64) {
+	f.mutex.Lock()
+	defer f.mutex.Unlock()
+
+	return append([]string{}, f.events...), f.revenue
 }
 
 type WelcomeEmailService struct {
@@ -1145,14 +1151,9 @@ var _ = Describe("Watermill", func() {
 
 			roomID    string
 			guestName string
-
-			receivedEvents []string
-			totalRevenue   int64
 		)
 
 		BeforeEach(func() {
-			pubSub = gochannel.NewGoChannel(gochannel.Config{}, logger)
-
 			router, err = message.NewRouter(message.RouterConfig{}, logger)
 			Expect(err).ToNot(HaveOccurred())
 
@@ -1198,11 +1199,8 @@ var _ = Describe("Watermill", func() {
 			})
 			Expect(err).ToNot(HaveOccurred())
 
-			receivedEvents = []string{}
-			totalRevenue = 0
-
 			bookRoomHandler = BookRoomHandler{eventBus: eventBus}
-			financialReport = NewFinancialReport(&receivedEvents, &totalRevenue)
+			financialReport = NewFinancialReport()
 			welcomeEmailService = NewWelcomeEmailService()
 
 			err = commandProcessor.AddHandlers(
@@ -1227,7 +1225,15 @@ var _ = Describe("Watermill", func() {
 				}
 			}()
 
-			time.Sleep(100 * time.Millisecond)
+			<-router.Running()
+
+			bookRoomCmd := &BookRoom{
+				RoomID:    roomID,
+				GuestName: guestName,
+			}
+
+			err = commandBus.Send(ctx, bookRoomCmd)
+			Expect(err).ToNot(HaveOccurred())
 		})
 
 		AfterEach(func() {
@@ -1237,24 +1243,11 @@ var _ = Describe("Watermill", func() {
 		})
 
 		It("should demonstrate CQRS fan-out: 1 Command → 1 Event → Multiple Handlers", func() {
-			bookRoomCmd := &BookRoom{
-				RoomID:    roomID,
-				GuestName: guestName,
-			}
-
-			err := commandBus.Send(ctx, bookRoomCmd)
-			Expect(err).ToNot(HaveOccurred())
-
-			// Verify Financial Report Handler processed the event
-			Eventually(func() []string {
-				return receivedEvents
-			}, "2s", "100ms").Should(ContainElement("RoomBooked"))
-
 			Eventually(func() int64 {
-				return totalRevenue
+				_, revenue := financialReport.Snapshot()
+				return revenue
 			}, "2s", "100ms").Should(Equal(int64(100)))
 
-			// Verify Welcome Email Handler processed the same event
 			Eventually(func() []string {
 				return welcomeEmailService.GetEmails()
 			}, "2s", "100ms").Should(HaveLen(1))
@@ -1264,9 +1257,10 @@ var _ = Describe("Watermill", func() {
 			Expect(emails[0]).To(ContainSubstring("Welcome John Doe"))
 			Expect(emails[0]).To(ContainSubstring("room 101"))
 
-			// Verify both handlers processed the SAME event independently
-			Expect(receivedEvents).To(HaveLen(1))
-			Expect(totalRevenue).To(Equal(int64(100)))
+			// Verify the SAME logical event reached separate handlers independently,
+			// not that both handlers received the same Go object.
+			receivedEvents, _ := financialReport.Snapshot()
+			Expect(receivedEvents).To(Equal([]string{"RoomBooked"}))
 			Expect(emails).To(HaveLen(1))
 		})
 	})
