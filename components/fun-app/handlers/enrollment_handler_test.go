@@ -1,3 +1,4 @@
+//nolint:dupl
 package handlers_test
 
 import (
@@ -27,64 +28,79 @@ import (
 	gormlogger "gorm.io/gorm/logger"
 )
 
+type terminalSeatMessageHandler struct{}
+
+func (terminalSeatMessageHandler) HandleAllocateSeatCmd(*message.Message) error         { return nil }
+func (terminalSeatMessageHandler) HandleSeatReservedEvt(*message.Message) error         { return nil }
+func (terminalSeatMessageHandler) HandleSeatWaitlistedEvt(*message.Message) error       { return nil }
+func (terminalSeatMessageHandler) HandleSeatAllocationFailedEvt(*message.Message) error { return nil }
+func (terminalSeatMessageHandler) HandleDeadLetteredAllocateSeatCmd(*message.Message) error {
+	return nil
+}
+
 var _ = Describe("Enrollments", func() {
-	Context("POST /v1/enrollments", func() {
-		var (
-			ctx               context.Context
-			db                *gorm.DB
-			dbSQL             *sql.DB
-			channel           *gochannel.GoChannel
-			router            *gin.Engine
-			person            fun.Person
-			enrollmentManager manager.EnrollmentManagerInterface
-			request           fun.EnrollmentRequest
-			response          fun.Enrollment
-			persisted         fun.Enrollment
-			persistedErr      common.HttpError
-			command           fun.EnrollCmdV1
-			commandMessage    *message.Message
-			responseRecorder  *httptest.ResponseRecorder
-			commandMessages   <-chan *message.Message
+	var (
+		ctx               context.Context
+		db                *gorm.DB
+		dbSQL             *sql.DB
+		channel           *gochannel.GoChannel
+		router            *gin.Engine
+		person            fun.Person
+		enrollmentDao     dao.EnrollmentDaoInterface
+		enrollmentManager manager.EnrollmentManagerInterface
+	)
+
+	BeforeEach(func() {
+		ctx = context.Background()
+		channel = gochannel.NewGoChannel(gochannel.Config{}, watermill.NewStdLogger(false, false))
+
+		var err error
+		db, err = util.CreateTestDb(gormlogger.Warn)
+		Expect(err).ToNot(HaveOccurred())
+		Expect(db.AutoMigrate(&fun.Person{}, &fun.PersonAudit{}, &fun.Enrollment{})).To(Succeed())
+		dbSQL, err = db.DB()
+		Expect(err).ToNot(HaveOccurred())
+
+		baseRepository := util.NewBaseDbRepository(db)
+		tracer := otel.Tracer("fun-app-handler-test")
+		personManager := manager.NewPersonManager(dao.NewPersonDao(baseRepository), tracer)
+		enrollmentDao = dao.NewEnrollmentDao(baseRepository)
+		enrollmentPublisher := publisher.NewEnrollmentPublisher(publisher.NewBasePublisher(channel))
+		seatManager := manager.NewSeatManager(publisher.NewSeatAllocationPublisher(publisher.NewBasePublisher(channel)))
+		enrollmentManager = manager.NewEnrollmentManager(
+			personManager,
+			enrollmentDao,
+			enrollmentPublisher,
+			seatManager,
 		)
 
-		BeforeEach(func() {
-			ctx = context.Background()
-			channel = gochannel.NewGoChannel(gochannel.Config{}, watermill.NewStdLogger(false, false))
-
-			var err error
-			db, err = util.CreateTestDb(gormlogger.Warn)
-			Expect(err).ToNot(HaveOccurred())
-			Expect(db.AutoMigrate(&fun.Person{}, &fun.PersonAudit{}, &fun.Enrollment{})).To(Succeed())
-			dbSQL, err = db.DB()
-			Expect(err).ToNot(HaveOccurred())
-
-			baseRepository := util.NewBaseDbRepository(db)
-			tracer := otel.Tracer("fun-app-handler-test")
-			personManager := manager.NewPersonManager(dao.NewPersonDao(baseRepository), tracer)
-			enrollmentPublisher := publisher.NewEnrollmentPublisher(publisher.NewBasePublisher(channel))
-			seatManager := manager.NewSeatManager(publisher.NewSeatAllocationPublisher(publisher.NewBasePublisher(channel)))
-			enrollmentManager = manager.NewEnrollmentManager(
-				personManager,
-				dao.NewEnrollmentDao(baseRepository),
-				enrollmentPublisher,
-				seatManager,
-			)
-
-			person, err = personManager.CreatePerson(ctx, fun.PersonRequest{
-				Name:   "REST Benchmark Person",
-				Age:    10,
-				Gender: "MALE",
-			})
-			Expect(err).ToNot(HaveOccurred())
-
-			router = util.CreateTestGinRouter()
-			router.POST("/v1/enrollments", handlers.NewEnrollmentHandler(enrollmentManager, tracer).CreateEnrollment)
+		person, err = personManager.CreatePerson(ctx, fun.PersonRequest{
+			Name:   "REST Benchmark Person",
+			Age:    10,
+			Gender: "MALE",
 		})
+		Expect(err).ToNot(HaveOccurred())
 
-		AfterEach(func() {
-			Expect(dbSQL.Close()).To(Succeed())
-			Expect(channel.Close()).To(Succeed())
-		})
+		router = util.CreateTestGinRouter()
+		router.POST("/v1/enrollments", handlers.NewEnrollmentHandler(enrollmentManager, tracer).CreateEnrollment)
+	})
+
+	AfterEach(func() {
+		Expect(dbSQL.Close()).To(Succeed())
+		Expect(channel.Close()).To(Succeed())
+	})
+
+	Context("POST /v1/enrollments", func() {
+		var (
+			request          fun.EnrollmentRequest
+			response         fun.Enrollment
+			persisted        fun.Enrollment
+			persistedErr     common.HttpError
+			command          fun.EnrollCmdV1
+			commandMessage   *message.Message
+			responseRecorder *httptest.ResponseRecorder
+			commandMessages  <-chan *message.Message
+		)
 
 		Context("Happy Path", func() {
 			Context("with existing person", func() {
@@ -292,6 +308,77 @@ var _ = Describe("Enrollments", func() {
 					Expect(persisted).To(Equal(fun.Enrollment{}))
 					Expect(persistedErr).To(Equal(common.ErrNotFound))
 					Consistently(commandMessages, 100*time.Millisecond).ShouldNot(Receive())
+				})
+			})
+		})
+	})
+
+	Context("EnrollCmdV1", func() {
+		Context("Happy Path", func() {
+			Context("with an initiated enrollment", func() {
+				var (
+					messagingServer *handlers.MessagingServer
+					routerCtx       context.Context
+					routerCancel    context.CancelFunc
+					allocationMsgs  <-chan *message.Message
+					allocationCmd   fun.AllocateSeatCmdV1
+					enrollment      fun.Enrollment
+					persisted       fun.Enrollment
+				)
+
+				BeforeEach(func() {
+					enrollment = fun.Enrollment{
+						PersonID: person.Id,
+						Grade:    4,
+						Status:   fun.EnrollmentStatusSeatAllocationInitiated,
+					}
+					Expect(enrollmentDao.Create(ctx, &enrollment)).ToNot(HaveOccurred())
+
+					var err error
+					allocationMsgs, err = channel.Subscribe(ctx, fun.TopicAllocateSeatCmd)
+					Expect(err).ToNot(HaveOccurred())
+
+					enrollmentHandler := handlers.NewEnrollmentMessageHandler(enrollmentManager)
+					messagingServer, err = handlers.NewMessagingServer(
+						watermill.NewStdLogger(false, false),
+						channel,
+						channel,
+						enrollmentHandler,
+						terminalSeatMessageHandler{},
+					)
+					Expect(err).ToNot(HaveOccurred())
+
+					routerCtx, routerCancel = context.WithCancel(ctx)
+					go func() { _ = messagingServer.Router().Run(routerCtx) }()
+					<-messagingServer.Router().Running()
+
+					payload, marshalErr := json.Marshal(fun.EnrollCmdV1{
+						EnrollmentID: enrollment.ID,
+						PersonID:     enrollment.PersonID,
+						Grade:        enrollment.Grade,
+						Status:       enrollment.Status,
+						RequestedAt:  time.Now().UTC(),
+					})
+					Expect(marshalErr).ToNot(HaveOccurred())
+					Expect(channel.Publish(fun.TopicEnrollCmd, message.NewMessage(watermill.NewUUID(), payload))).To(Succeed())
+					var allocationMessage *message.Message
+					Eventually(allocationMsgs, time.Second).Should(Receive(&allocationMessage))
+					Expect(json.Unmarshal(allocationMessage.Payload, &allocationCmd)).To(Succeed())
+					persisted, err = enrollmentManager.GetEnrollment(ctx, person.Id)
+					Expect(err).ToNot(HaveOccurred())
+				})
+
+				AfterEach(func() {
+					routerCancel()
+					Expect(messagingServer.Router().Close()).To(Succeed())
+				})
+
+				It("publishes allocation for the initiated enrollment", func() {
+					Expect(allocationCmd.EnrollmentID).To(Equal(enrollment.ID))
+					Expect(allocationCmd.PersonID).To(Equal(person.Id))
+					Expect(allocationCmd.Grade).To(Equal(4))
+					Expect(allocationCmd.RequestedAt).ToNot(Equal(time.Time{}))
+					Expect(persisted.Status).To(Equal(fun.EnrollmentStatusSeatAllocationInitiated))
 				})
 			})
 		})
