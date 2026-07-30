@@ -8,6 +8,7 @@ import (
 	"github.com/ThreeDotsLabs/watermill/message/router/middleware"
 	"github.com/amanhigh/go-fun/common/util"
 	"github.com/amanhigh/go-fun/models/fun"
+	"github.com/rs/zerolog/log"
 )
 
 // MessagingServer builds and owns the Watermill router and saga handlers wiring.
@@ -36,9 +37,7 @@ func NewMessagingServer(
 		subscriber: subscriber,
 	}
 
-	if err := server.registerHandlers(enrollmentHandler, seatHandler); err != nil {
-		return nil, err
-	}
+	server.registerHandlers(enrollmentHandler, seatHandler)
 
 	return server, nil
 }
@@ -46,38 +45,16 @@ func NewMessagingServer(
 func (ms *MessagingServer) registerHandlers(
 	enrollmentHandler EnrollmentMessageHandler,
 	seatHandler SeatMessageHandler,
-) error {
-	ordinaryConsumers := []struct {
-		topic   string
-		handler message.NoPublishHandlerFunc
-	}{
-		{fun.TopicEnrollCmd, enrollmentHandler.HandleEnrollCmd},
-		{fun.TopicSeatReservedEvt, seatHandler.HandleSeatReservedEvt},
-		{fun.TopicSeatWaitlistedEvt, seatHandler.HandleSeatWaitlistedEvt},
-		{fun.TopicEnrollmentCancelledEvt, enrollmentHandler.HandleEnrollmentCancelledEvt},
-	}
+) {
+	ms.registerConsumer(fun.TopicEnrollCmd, enrollmentHandler.HandleEnrollCmd)
+	ms.registerConsumer(fun.TopicSeatReservedEvt, seatHandler.HandleSeatReservedEvt)
+	ms.registerConsumer(fun.TopicSeatWaitlistedEvt, seatHandler.HandleSeatWaitlistedEvt)
+	ms.registerConsumer(fun.TopicEnrollmentCancelledEvt, enrollmentHandler.HandleEnrollmentCancelledEvt)
 
-	for _, consumer := range ordinaryConsumers {
-		ms.registerConsumer(consumer.topic, consumer.handler)
-	}
-
-	retryConsumers := []struct {
-		topic   string
-		handler message.NoPublishHandlerFunc
-	}{
-		{fun.TopicSeatAllocationFailedEvt, seatHandler.HandleSeatAllocationFailedEvt},
-		{fun.TopicAllocateSeatCmd, seatHandler.HandleAllocateSeatCmd},
-		{util.DeadLetterTopic(fun.TopicAllocateSeatCmd), seatHandler.HandleDeadLetteredAllocateSeatCmd},
-		{fun.TopicEnrollmentConfirmedEvt, enrollmentHandler.HandleEnrollmentConfirmedEvt},
-	}
-
-	for _, consumer := range retryConsumers {
-		err := ms.registerRetryConsumer(consumer.topic, consumer.handler)
-		if err != nil {
-			return err
-		}
-	}
-	return nil
+	ms.registerRetryConsumer(fun.TopicSeatAllocationFailedEvt, seatHandler.HandleSeatAllocationFailedEvt)
+	ms.registerRetryConsumer(fun.TopicAllocateSeatCmd, seatHandler.HandleAllocateSeatCmd)
+	ms.registerRetryConsumer(util.DeadLetterTopic(fun.TopicAllocateSeatCmd), seatHandler.HandleDeadLetteredAllocateSeatCmd)
+	ms.registerRetryConsumer(fun.TopicEnrollmentConfirmedEvt, enrollmentHandler.HandleEnrollmentConfirmedEvt)
 }
 
 // registerConsumer wires a consumer with only the server's standard recovery middleware.
@@ -87,16 +64,15 @@ func (ms *MessagingServer) registerConsumer(topic string, handler message.NoPubl
 }
 
 // registerRetryConsumer wires retrying consumers and their dead-letter destinations.
-func (ms *MessagingServer) registerRetryConsumer(topic string, handler message.NoPublishHandlerFunc) error {
+func (ms *MessagingServer) registerRetryConsumer(topic string, handler message.NoPublishHandlerFunc) {
 	h := ms.router.AddConsumerHandler(topic, topic, ms.subscriber, handler)
 	poisonMiddleware, err := middleware.PoisonQueue(ms.publisher, util.DeadLetterTopic(topic))
 	if err != nil {
-		return fmt.Errorf("create dead-letter middleware for %s: %w", topic, err)
+		log.Fatal().Err(err).Str("topic", topic).Msg("failed to create dead-letter middleware")
 	}
 	h.AddMiddleware(poisonMiddleware)
 	h.AddMiddleware(util.DefaultRetryConfig().Middleware)
 	h.AddMiddleware(middleware.Recoverer)
-	return nil
 }
 
 // Router exposes the configured Watermill router for lifecycle control.
