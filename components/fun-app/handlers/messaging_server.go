@@ -5,13 +5,16 @@ import (
 
 	"github.com/ThreeDotsLabs/watermill"
 	"github.com/ThreeDotsLabs/watermill/message"
+	"github.com/ThreeDotsLabs/watermill/message/router/middleware"
 	"github.com/amanhigh/go-fun/common/util"
 	"github.com/amanhigh/go-fun/models/fun"
 )
 
 // MessagingServer builds and owns the Watermill router and saga handlers wiring.
 type MessagingServer struct {
-	router *message.Router
+	router     *message.Router
+	publisher  message.Publisher
+	subscriber message.Subscriber
 }
 
 // NewMessagingServer constructs router, attaches middlewares, and registers topic consumers.
@@ -27,38 +30,73 @@ func NewMessagingServer(
 		return nil, fmt.Errorf("new watermill router: %w", err)
 	}
 
-	// Ordinary consumers — no retry, no DLQ. Messages are processed once;
-	// the built-in Recoverer requeues on panic but nothing beyond that.
-	util.AddConsumerHandler(router, fun.TopicEnrollCmd, subscriber, enrollmentHandler.HandleEnrollCmd)
-	util.AddConsumerHandler(router, fun.TopicSeatReservedEvt, subscriber, seatHandler.HandleSeatReservedEvt)
-	util.AddConsumerHandler(router, fun.TopicSeatWaitlistedEvt, subscriber, seatHandler.HandleSeatWaitlistedEvt)
-	util.AddConsumerHandler(router, fun.TopicSeatAllocationFailedEvt, subscriber, seatHandler.HandleSeatAllocationFailedEvt, util.ConsumerConfig{
-		Retry:               util.DefaultRetryConfig(),
-		DeadLetterPublisher: publisher,
-	})
-	util.AddConsumerHandler(router, fun.TopicEnrollmentCancelledEvt, subscriber, enrollmentHandler.HandleEnrollmentCancelledEvt)
+	server := &MessagingServer{
+		router:     router,
+		publisher:  publisher,
+		subscriber: subscriber,
+	}
 
-	// Compensation DLQ — AllocateSeatCmd.
-	// Retries exhausted → source-specific dead-letter topic → publish allocation failure.
-	util.AddConsumerHandler(router, fun.TopicAllocateSeatCmd, subscriber, seatHandler.HandleAllocateSeatCmd, util.ConsumerConfig{
-		Retry:               util.DefaultRetryConfig(),
-		DeadLetterPublisher: publisher,
-	})
-	util.AddConsumerHandler(router, util.DeadLetterTopic(fun.TopicAllocateSeatCmd), subscriber, seatHandler.HandleDeadLetteredAllocateSeatCmd, util.ConsumerConfig{
-		Retry:               util.DefaultRetryConfig(),
-		DeadLetterPublisher: publisher,
-	})
+	if err := server.registerHandlers(enrollmentHandler, seatHandler); err != nil {
+		return nil, err
+	}
 
-	// Terminal DLQ — EnrollmentConfirmedEvt.
-	// Retries exhausted → source-specific dead-letter topic with NO domain handler.
-	// The message lands in the terminal DLQ topic for manual inspection;
-	// there is no automatic compensation because confirmation is a terminal event.
-	util.AddConsumerHandler(router, fun.TopicEnrollmentConfirmedEvt, subscriber, enrollmentHandler.HandleEnrollmentConfirmedEvt, util.ConsumerConfig{
-		Retry:               util.DefaultRetryConfig(),
-		DeadLetterPublisher: publisher,
-	})
+	return server, nil
+}
 
-	return &MessagingServer{router: router}, nil
+func (ms *MessagingServer) registerHandlers(
+	enrollmentHandler EnrollmentMessageHandler,
+	seatHandler SeatMessageHandler,
+) error {
+	ordinaryConsumers := []struct {
+		topic   string
+		handler message.NoPublishHandlerFunc
+	}{
+		{fun.TopicEnrollCmd, enrollmentHandler.HandleEnrollCmd},
+		{fun.TopicSeatReservedEvt, seatHandler.HandleSeatReservedEvt},
+		{fun.TopicSeatWaitlistedEvt, seatHandler.HandleSeatWaitlistedEvt},
+		{fun.TopicEnrollmentCancelledEvt, enrollmentHandler.HandleEnrollmentCancelledEvt},
+	}
+
+	for _, consumer := range ordinaryConsumers {
+		ms.registerConsumer(consumer.topic, consumer.handler)
+	}
+
+	retryConsumers := []struct {
+		topic   string
+		handler message.NoPublishHandlerFunc
+	}{
+		{fun.TopicSeatAllocationFailedEvt, seatHandler.HandleSeatAllocationFailedEvt},
+		{fun.TopicAllocateSeatCmd, seatHandler.HandleAllocateSeatCmd},
+		{util.DeadLetterTopic(fun.TopicAllocateSeatCmd), seatHandler.HandleDeadLetteredAllocateSeatCmd},
+		{fun.TopicEnrollmentConfirmedEvt, enrollmentHandler.HandleEnrollmentConfirmedEvt},
+	}
+
+	for _, consumer := range retryConsumers {
+		err := ms.registerRetryConsumer(consumer.topic, consumer.handler)
+		if err != nil {
+			return err
+		}
+	}
+	return nil
+}
+
+// registerConsumer wires a consumer with only the server's standard recovery middleware.
+func (ms *MessagingServer) registerConsumer(topic string, handler message.NoPublishHandlerFunc) {
+	h := ms.router.AddConsumerHandler(topic, topic, ms.subscriber, handler)
+	h.AddMiddleware(middleware.Recoverer)
+}
+
+// registerRetryConsumer wires retrying consumers and their dead-letter destinations.
+func (ms *MessagingServer) registerRetryConsumer(topic string, handler message.NoPublishHandlerFunc) error {
+	h := ms.router.AddConsumerHandler(topic, topic, ms.subscriber, handler)
+	poisonMiddleware, err := middleware.PoisonQueue(ms.publisher, util.DeadLetterTopic(topic))
+	if err != nil {
+		return fmt.Errorf("create dead-letter middleware for %s: %w", topic, err)
+	}
+	h.AddMiddleware(poisonMiddleware)
+	h.AddMiddleware(util.DefaultRetryConfig().Middleware)
+	h.AddMiddleware(middleware.Recoverer)
+	return nil
 }
 
 // Router exposes the configured Watermill router for lifecycle control.

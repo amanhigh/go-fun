@@ -49,15 +49,6 @@ func DeadLetterTopic(topic string) string {
 	return topic + ".dead-letter"
 }
 
-// ConsumerConfig optionally configures retry and dead-letter handling for a
-// consumer registered via AddConsumerHandler.
-type ConsumerConfig struct {
-	// Retry is opt-in: MaxRetries > 0 enables retry.
-	Retry middleware.Retry
-	// DeadLetterPublisher enables immediate DLQ publishing when MaxRetries is zero.
-	DeadLetterPublisher message.Publisher
-}
-
 // DefaultRetryConfig returns the default retry configuration: two retries with
 // a two-second initial interval, including the standard ShouldRetry
 // classification. Callers may mutate fields directly on the returned value.
@@ -111,55 +102,6 @@ func shouldRetry(params middleware.RetryParams) bool {
 
 	// Unknown errors are retryable.
 	return true
-}
-
-// AddConsumerHandler registers a no-publish handler on the router that
-// subscribes to topic using the supplied subscriber. The handler is identified
-// by topic (used as both the Watermill handler name and the subscription
-// topic).
-//
-// An optional ConsumerConfig enables selected middleware in this order:
-// PoisonQueue → Retry → Recoverer; omitted stages are skipped. Dead-letter
-// consumers must be registered explicitly by callers.
-//
-// Returns the Watermill *Handler for further configuration if needed.
-func AddConsumerHandler(
-	router *message.Router,
-	topic string,
-	subscriber message.Subscriber,
-	handler message.NoPublishHandlerFunc,
-	config ...ConsumerConfig,
-) *message.Handler {
-	var cfg ConsumerConfig
-	if len(config) > 0 {
-		cfg = config[0]
-	}
-
-	h := router.AddConsumerHandler(topic, topic, subscriber, handler)
-
-	hasRetry := cfg.Retry.MaxRetries > 0
-
-	// Apply default ShouldRetry classification when retry is active and caller
-	// has not provided their own.
-	if hasRetry && cfg.Retry.ShouldRetry == nil {
-		cfg.Retry.ShouldRetry = shouldRetry
-	}
-
-	// 1. PoisonQueue outermost (when DLQ publisher is configured).
-	if cfg.DeadLetterPublisher != nil {
-		poisonMiddleware, _ := middleware.PoisonQueue(cfg.DeadLetterPublisher, DeadLetterTopic(topic))
-		h.AddMiddleware(poisonMiddleware)
-	}
-
-	// 2. Retry in the middle (when retry is active).
-	if hasRetry {
-		h.AddMiddleware(cfg.Retry.Middleware)
-	}
-
-	// 3. Recoverer innermost (always).
-	h.AddMiddleware(middleware.Recoverer)
-
-	return h
 }
 
 // PublishJSONMessage marshals payload, attaches metadata, and publishes to the topic.
