@@ -81,7 +81,7 @@ var _ = Describe("MessagingServer learning scenarios", func() {
 		seatHandler := handlers.NewSeatMessageHandler(seatMock, enrollmentMock)
 
 		var err error
-		ms, err = handlers.NewMessagingServer(logger, channel, channel, enrollmentHandler, seatHandler, util.NewNoopMetadataDiagnostics())
+		ms, err = handlers.NewMessagingServer(logger, channel, channel, enrollmentHandler, seatHandler)
 		Expect(err).ToNot(HaveOccurred())
 
 		routerCtx, routerCancel = context.WithCancel(context.Background())
@@ -265,7 +265,6 @@ var _ = Describe("MessagingServer causal-chain scenario", func() {
 		server, err = handlers.NewMessagingServer(logger, recorder, chainChannel,
 			handlers.NewEnrollmentMessageHandler(enrollmentManager),
 			handlers.NewSeatMessageHandler(seatManager, enrollmentManager),
-			util.NewNoopMetadataDiagnostics(),
 		)
 		Expect(err).ToNot(HaveOccurred())
 		routerCtx, routerCancel = context.WithCancel(context.Background())
