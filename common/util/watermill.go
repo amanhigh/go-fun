@@ -3,14 +3,16 @@ package util
 import (
 	"context"
 	"encoding/json"
+	"errors"
 	"fmt"
+	"net/http"
+	"time"
 
 	"github.com/ThreeDotsLabs/watermill"
 	"github.com/ThreeDotsLabs/watermill/message"
 	"github.com/ThreeDotsLabs/watermill/message/router/middleware"
 	"github.com/ThreeDotsLabs/watermill/pubsub/gochannel"
 	modelcommon "github.com/amanhigh/go-fun/models/common"
-	"github.com/pkg/errors"
 )
 
 // WatermillLifecycle abstracts router lifecycle management.
@@ -25,18 +27,146 @@ func NewGoChannel(logger watermill.LoggerAdapter) *gochannel.GoChannel {
 }
 
 // NewRouter creates a Watermill router with default middleware.
+//
+// FIXME: CorrelationID only propagates for messages that pass through the router
+// (i.e. returned by handlers). Direct publishing via BasePublisher / stampCtx
+// bypasses the router and must carry its own correlation metadata.
 func NewRouter(logger watermill.LoggerAdapter) (*message.Router, error) {
 	router, err := message.NewRouter(message.RouterConfig{}, logger)
 	if err != nil {
-		return nil, errors.Wrap(err, "new watermill router")
+		return nil, fmt.Errorf("new watermill router: %w", err)
 	}
 
 	router.AddMiddleware(
-		middleware.Recoverer,
 		middleware.CorrelationID,
 	)
 
 	return router, nil
+}
+
+// PoisonTopic returns the derived poison-topic name for the given source topic.
+func PoisonTopic(topic string) string {
+	return topic + ".poison"
+}
+
+// ConsumerConfig optionally configures retry, DLQ, and poison handling for a
+// consumer registered via AddConsumerHandler.
+type ConsumerConfig struct {
+	// Retry is opt-in: MaxRetries > 0 enables retry.
+	Retry middleware.Retry
+	// DeadLetterPublisher enables immediate DLQ publishing when MaxRetries is zero.
+	DeadLetterPublisher message.Publisher
+	// PoisonHandler requires DeadLetterPublisher to be configured.
+	PoisonHandler message.NoPublishHandlerFunc
+}
+
+// DefaultRetryConfig returns the default retry configuration: two retries with
+// a two-second initial interval, including the standard ShouldRetry
+// classification. Callers may mutate fields directly on the returned value.
+func DefaultRetryConfig() middleware.Retry {
+	return middleware.Retry{
+		MaxRetries:      2,
+		InitialInterval: 2 * time.Second,
+		ShouldRetry:     shouldRetry,
+	}
+}
+
+// shouldRetry classifies errors for retry decisions. Transient technical
+// failures should be retried, while permanent input or client failures should
+// be sent directly to their final handling path.
+//
+// Non-retryable: malformed JSON (json.SyntaxError), type errors
+// (json.UnmarshalTypeError), and ordinary 4xx common.HttpError values.
+//
+// Retryable: 408 Request Timeout, 429 Too Many Requests, 5xx common.HttpError,
+// and unknown errors.
+func shouldRetry(params middleware.RetryParams) bool {
+	err := params.Err
+
+	// HTTP error classification.
+	var httpErr modelcommon.HttpError
+	if errors.As(err, &httpErr) {
+		code := httpErr.Code()
+		// 408 (Request Timeout) and 429 (Too Many Requests) are retryable.
+		if code == http.StatusRequestTimeout || code == http.StatusTooManyRequests {
+			return true
+		}
+		// Other 4xx errors are not retryable.
+		if code >= 400 && code < 500 {
+			return false
+		}
+		// 5xx errors are retryable.
+		return true
+	}
+
+	// JSON syntax errors are not retryable.
+	var syntaxErr *json.SyntaxError
+	if errors.As(err, &syntaxErr) {
+		return false
+	}
+
+	// JSON type mismatch errors are not retryable.
+	var typeErr *json.UnmarshalTypeError
+	if errors.As(err, &typeErr) {
+		return false
+	}
+
+	// Unknown errors are retryable.
+	return true
+}
+
+// AddConsumerHandler registers a no-publish handler on the router that
+// subscribes to topic using the supplied subscriber. The handler is identified
+// by topic (used as both the Watermill handler name and the subscription
+// topic).
+//
+// An optional ConsumerConfig enables selected middleware in this order:
+// PoisonQueue → Retry → Recoverer; omitted stages are skipped.
+//
+// Returns the Watermill *Handler for further configuration if needed.
+func AddConsumerHandler(
+	router *message.Router,
+	topic string,
+	subscriber message.Subscriber,
+	handler message.NoPublishHandlerFunc,
+	config ...ConsumerConfig,
+) *message.Handler {
+	var cfg ConsumerConfig
+	if len(config) > 0 {
+		cfg = config[0]
+	}
+
+	h := router.AddConsumerHandler(topic, topic, subscriber, handler)
+
+	hasRetry := cfg.Retry.MaxRetries > 0
+
+	// Apply default ShouldRetry classification when retry is active and caller
+	// has not provided their own.
+	if hasRetry && cfg.Retry.ShouldRetry == nil {
+		cfg.Retry.ShouldRetry = shouldRetry
+	}
+
+	// 1. PoisonQueue outermost (when DLQ publisher is configured).
+	if cfg.DeadLetterPublisher != nil {
+		poisonTopic := PoisonTopic(topic)
+		// PoisonTopic always appends ".poison", so PoisonQueue receives a non-empty topic.
+		poisonMiddleware, _ := middleware.PoisonQueue(cfg.DeadLetterPublisher, poisonTopic)
+		h.AddMiddleware(poisonMiddleware)
+		// Register poison handler on the derived topic if provided.
+		if cfg.PoisonHandler != nil {
+			AddConsumerHandler(router, poisonTopic, subscriber, cfg.PoisonHandler)
+		}
+	}
+
+	// 2. Retry in the middle (when retry is active).
+	if hasRetry {
+		h.AddMiddleware(cfg.Retry.Middleware)
+	}
+
+	// 3. Recoverer innermost (always).
+	h.AddMiddleware(middleware.Recoverer)
+
+	return h
 }
 
 // PublishJSONMessage marshals payload, attaches metadata, and publishes to the topic.

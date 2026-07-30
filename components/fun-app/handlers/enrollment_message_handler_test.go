@@ -17,23 +17,23 @@ import (
 	"github.com/amanhigh/go-fun/models/fun"
 )
 
-func TestEnrollmentCommandHandler(t *testing.T) {
+func TestEnrollmentMessageHandler(t *testing.T) {
 	RegisterFailHandler(Fail)
-	RunSpecs(t, "EnrollmentCommandHandler Suite")
+	RunSpecs(t, "EnrollmentMessageHandler Suite")
 }
 
-var _ = Describe("EnrollmentCommandHandler", func() {
+var _ = Describe("EnrollmentMessageHandler", func() {
 	var (
 		managerMock *managermocks.EnrollmentManagerInterface
-		handler     *handlers.EnrollmentCommandHandlerImpl
+		handler     *handlers.EnrollmentMessageHandlerImpl
 	)
 
 	BeforeEach(func() {
 		managerMock = managermocks.NewEnrollmentManagerInterface(GinkgoT())
-		handler = handlers.NewEnrollmentCommandHandler(managerMock)
+		handler = handlers.NewEnrollmentMessageHandler(managerMock)
 	})
 
-	Context("EnrollCmd", func() {
+	Context("HandleEnrollCmd", func() {
 		var (
 			cmd         fun.EnrollCmdV1
 			msg         *message.Message
@@ -64,7 +64,7 @@ var _ = Describe("EnrollmentCommandHandler", func() {
 					}).
 					Return(nil)
 
-				resultErr = handler.EnrollCmd(msg)
+				resultErr = handler.HandleEnrollCmd(msg)
 			})
 
 			It("sets correlation to EnrollmentID and causation to message UUID", func() {
@@ -90,7 +90,7 @@ var _ = Describe("EnrollmentCommandHandler", func() {
 					}).
 					Return(nil)
 
-				resultErr = handler.EnrollCmd(msg)
+				resultErr = handler.HandleEnrollCmd(msg)
 			})
 
 			It("uses Metadata[CorrelationID] and Metadata[CausationID] instead of defaults", func() {
@@ -111,7 +111,7 @@ var _ = Describe("EnrollmentCommandHandler", func() {
 					}).
 					Return(nil)
 
-				resultErr = handler.EnrollCmd(msg)
+				resultErr = handler.HandleEnrollCmd(msg)
 			})
 
 			It("uses background ctx and default stamps when msg.Context() is nil", func() {
@@ -126,7 +126,7 @@ var _ = Describe("EnrollmentCommandHandler", func() {
 		Context("invalid JSON payload", func() {
 			BeforeEach(func() {
 				msg.Payload = []byte("not-json")
-				resultErr = handler.EnrollCmd(msg)
+				resultErr = handler.HandleEnrollCmd(msg)
 			})
 
 			It("returns unmarshal error and does not call manager.EnrollCmd", func() {
@@ -142,7 +142,7 @@ var _ = Describe("EnrollmentCommandHandler", func() {
 				ctxMatcher := mock.MatchedBy(func(_ context.Context) bool { return true })
 				cmdMatcher := mock.MatchedBy(func(in fun.EnrollCmdV1) bool { return in.EnrollmentID == cmd.EnrollmentID })
 				managerMock.EXPECT().EnrollCmd(ctxMatcher, cmdMatcher).Return(expectedErr)
-				resultErr = handler.EnrollCmd(msg)
+				resultErr = handler.HandleEnrollCmd(msg)
 			})
 
 			It("returns the same HttpError returned by manager.EnrollCmd", func() {

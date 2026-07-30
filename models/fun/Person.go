@@ -92,7 +92,7 @@ type PersonAudit struct {
 	// Audit Fields
 	AuditID   uint   `gorm:"primaryKey"`
 	Operation string `gorm:"not null"`
-	// TODO: Use Base Dao of Gorm for common Fields ?
+	// FIXME: Use Base Dao of Gorm for common Fields ?
 	CreatedBy string    `gorm:"not null"`
 	CreatedAt time.Time `gorm:"not null"`
 }

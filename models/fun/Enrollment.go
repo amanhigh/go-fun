@@ -8,7 +8,7 @@ import (
 )
 
 const (
-	// TODO: Smaller Name for Initial State ?
+	// HACK: Smaller Name for Initial State ?
 	EnrollmentStatusSeatAllocationInitiated = "SEAT_ALLOCATION_INITIATED"
 	EnrollmentStatusSeatReserved            = "SEAT_RESERVED"
 	EnrollmentStatusWaitlisted              = "WAITLISTED"

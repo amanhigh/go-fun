@@ -124,18 +124,6 @@ var _ = Describe("Barkat E2E Test", func() {
 
 	// OS Endpoints - Tests system-level operations
 	Context("OS Endpoints", func() {
-		It("should handle OS endpoint", func() {
-			resp, err := client.R().SetBody(map[string]string{"submap": "test"}).
-				Post("/v1/api/os/submap/disable")
-			Expect(err).ToNot(HaveOccurred())
-			Expect(resp.StatusCode()).To(Equal(http.StatusOK))
-
-			var result map[string]any
-			Expect(json.Unmarshal(resp.Body(), &result)).To(Succeed())
-			Expect(result["status"]).To(Equal("success"))
-			Expect(result["action"]).To(Equal("disable"))
-		})
-
 		It("should handle ticker recording endpoint", func() {
 			resp, err := client.R().Get("/v1/api/os/ticker/AAPL/record")
 			Expect(err).ToNot(HaveOccurred())

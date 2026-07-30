@@ -10,27 +10,27 @@ import (
 	"github.com/amanhigh/go-fun/models/fun"
 )
 
-// SeatCommandHandler handles seat-related commands and events.
-type SeatCommandHandler interface {
-	AllocateSeatCmd(msg *message.Message) error
-	SeatReservedEvt(msg *message.Message) error
-	SeatWaitlistedEvt(msg *message.Message) error
-	PoisonAllocate(msg *message.Message) error
+// SeatMessageHandler handles seat-related commands and events.
+type SeatMessageHandler interface {
+	HandleAllocateSeatCmd(msg *message.Message) error
+	HandleSeatReservedEvt(msg *message.Message) error
+	HandleSeatWaitlistedEvt(msg *message.Message) error
+	HandlePoisonedAllocateSeatCmd(msg *message.Message) error
 }
 
-type SeatCommandHandlerImpl struct {
+type SeatMessageHandlerImpl struct {
 	SeatManager       manager.SeatManagerInterface
 	EnrollmentManager manager.EnrollmentManagerInterface
 }
 
-// NewSeatCommandHandler constructs handler with explicit dependencies.
-func NewSeatCommandHandler(seatManager manager.SeatManagerInterface, enrollmentManager manager.EnrollmentManagerInterface) *SeatCommandHandlerImpl {
-	return &SeatCommandHandlerImpl{SeatManager: seatManager, EnrollmentManager: enrollmentManager}
+// NewSeatMessageHandler constructs handler with explicit dependencies.
+func NewSeatMessageHandler(seatManager manager.SeatManagerInterface, enrollmentManager manager.EnrollmentManagerInterface) *SeatMessageHandlerImpl {
+	return &SeatMessageHandlerImpl{SeatManager: seatManager, EnrollmentManager: enrollmentManager}
 }
 
-var _ SeatCommandHandler = (*SeatCommandHandlerImpl)(nil)
+var _ SeatMessageHandler = (*SeatMessageHandlerImpl)(nil)
 
-func (h *SeatCommandHandlerImpl) AllocateSeatCmd(msg *message.Message) error {
+func (h *SeatMessageHandlerImpl) HandleAllocateSeatCmd(msg *message.Message) error {
 	var cmd fun.AllocateSeatCmdV1
 	if err := json.Unmarshal(msg.Payload, &cmd); err != nil {
 		return fmt.Errorf("unmarshal allocate seat cmd: %w", err)
@@ -40,7 +40,7 @@ func (h *SeatCommandHandlerImpl) AllocateSeatCmd(msg *message.Message) error {
 	return h.SeatManager.AllocateSeat(ctx, cmd)
 }
 
-func (h *SeatCommandHandlerImpl) SeatReservedEvt(msg *message.Message) error {
+func (h *SeatMessageHandlerImpl) HandleSeatReservedEvt(msg *message.Message) error {
 	var evt fun.SeatReservedEvtV1
 	if err := json.Unmarshal(msg.Payload, &evt); err != nil {
 		return fmt.Errorf("unmarshal seat reserved evt: %w", err)
@@ -50,34 +50,28 @@ func (h *SeatCommandHandlerImpl) SeatReservedEvt(msg *message.Message) error {
 	return h.EnrollmentManager.OnSeatReservedEvt(ctx, e)
 }
 
-func (h *SeatCommandHandlerImpl) SeatWaitlistedEvt(msg *message.Message) error {
+func (h *SeatMessageHandlerImpl) HandleSeatWaitlistedEvt(msg *message.Message) error {
 	var evt fun.SeatWaitlistedEvtV1
 	if err := json.Unmarshal(msg.Payload, &evt); err != nil {
 		return fmt.Errorf("unmarshal seat waitlisted evt: %w", err)
 	}
 	ctx := stampCtx(msg.Context(), msg.Metadata, evt.EnrollmentID, msg.UUID)
 	enrollment := fun.Enrollment{ID: evt.EnrollmentID, PersonID: evt.PersonID, Grade: evt.Grade}
-	// 1) Persist WAITLISTED state via manager sink (idempotent)
-	if err := h.EnrollmentManager.UpdateToWaitlisted(ctx, enrollment); err != nil {
-		return err
-	}
-	// TODO: Not Sure if Retry would work Unclear Who does SeatAllocation Retry.
-	// Done after sink; retry will be driven by middleware on AllocateSeatCmd path
-	return nil
+	// Persist WAITLISTED state via manager sink (idempotent).
+	return h.EnrollmentManager.UpdateToWaitlisted(ctx, enrollment)
 }
 
-// PoisonAllocate consumes poison messages after retries and cancels enrollment.
-func (h *SeatCommandHandlerImpl) PoisonAllocate(msg *message.Message) error {
+// HandlePoisonedAllocateSeatCmd handles a poisoned AllocateSeatCmdV1 by cancelling the enrollment.
+func (h *SeatMessageHandlerImpl) HandlePoisonedAllocateSeatCmd(msg *message.Message) error {
 	var cmd fun.AllocateSeatCmdV1
-	// TODO: Rename PoisonAllocateCmd ?
 	if err := json.Unmarshal(msg.Payload, &cmd); err != nil {
-		return fmt.Errorf("unmarshal poison allocate: %w", err)
+		return fmt.Errorf("unmarshal poisoned allocate seat cmd v1: %w", err)
 	}
 	ctx := stampCtx(msg.Context(), msg.Metadata, cmd.EnrollmentID, msg.UUID)
 	return h.EnrollmentManager.CancelEnrollmentAndPublish(ctx, fun.EnrollmentCancelledEvtV1{
 		EnrollmentID: cmd.EnrollmentID,
 		PersonID:     cmd.PersonID,
-		Reason:       "waitlist_retries_exhausted",
+		Reason:       fun.EnrollmentCancellationReasonSeatAllocationFailed,
 		CancelledAt:  time.Now().UTC(),
 	})
 }

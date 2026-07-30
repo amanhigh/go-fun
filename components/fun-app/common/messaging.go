@@ -23,17 +23,17 @@ func (fi *FunAppInjector) registerMessagingWiring() {
 }
 
 func (fi *FunAppInjector) registerCommandHandlers() {
-	container.MustSingleton(fi.di, provideEnrollmentCommandHandler)
-	container.MustSingleton(fi.di, provideSeatCommandHandler)
+	container.MustSingleton(fi.di, provideEnrollmentMessageHandler)
+	container.MustSingleton(fi.di, provideSeatMessageHandler)
 	container.MustSingleton(fi.di, handlers.NewMessagingServer)
 }
 
-func provideEnrollmentCommandHandler(mgr manager.EnrollmentManagerInterface) handlers.EnrollmentCommandHandler {
-	return handlers.NewEnrollmentCommandHandler(mgr)
+func provideEnrollmentMessageHandler(mgr manager.EnrollmentManagerInterface) handlers.EnrollmentMessageHandler {
+	return handlers.NewEnrollmentMessageHandler(mgr)
 }
 
-func provideSeatCommandHandler(seatMgr manager.SeatManagerInterface, enrollMgr manager.EnrollmentManagerInterface) handlers.SeatCommandHandler {
-	return handlers.NewSeatCommandHandler(seatMgr, enrollMgr)
+func provideSeatMessageHandler(seatMgr manager.SeatManagerInterface, enrollMgr manager.EnrollmentManagerInterface) handlers.SeatMessageHandler {
+	return handlers.NewSeatMessageHandler(seatMgr, enrollMgr)
 }
 
 func (fi *FunAppInjector) registerPublishers() {

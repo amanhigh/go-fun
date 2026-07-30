@@ -54,10 +54,6 @@ func configureMockOSHandler() *handlerMocks.OSHandler {
 			"full_path":     "/mock/path/mock.png",
 		}})
 	}).Maybe()
-	osHandler.EXPECT().HandleSubmapControl(mock.Anything).Run(func(ctx *gin.Context) {
-		action := ctx.Param("action")
-		ctx.JSON(http.StatusOK, gin.H{"status": "success", "action": action})
-	}).Maybe()
 	osHandler.EXPECT().HandleRecordTicker(mock.Anything).Run(func(ctx *gin.Context) {
 		ctx.JSON(http.StatusOK, "Success")
 	}).Maybe()

@@ -47,7 +47,6 @@ func newPgAdvisoryLocker(db *sql.DB) gocron.Locker {
 }
 
 func (l *pgAdvisoryLocker) Lock(ctx context.Context, key string) (gocron.Lock, error) {
-	// TODO: Can this be simplified?
 	// Hash the key to get a consistent positive int64 for advisory lock
 	h := fnv.New64a()
 	h.Write([]byte(key))
@@ -76,81 +75,51 @@ func (l *pgAdvisoryLocker) Lock(ctx context.Context, key string) (gocron.Lock, e
 var _ gocron.Locker = (*pgAdvisoryLocker)(nil)
 var _ gocron.Lock = (*pgAdvisoryLock)(nil)
 
-var _ = Describe("CronDistributed", Ordered, Label(models.GINKGO_SLOW), func() {
-	var (
-		ctx            = context.Background()
-		redisContainer testcontainers.Container
-		redisClient    *redis.Client
-		pgContainer    testcontainers.Container
-		pgDB           *sql.DB
-		err            error
-	)
+var _ = Describe("CronDistributed", Label(models.GINKGO_SLOW), func() {
+	ctx := context.Background()
 
-	BeforeAll(func() {
-		By("Starting Redis container")
-		redisContainer, err = util.RedisTestContainer(ctx)
-		Expect(err).ToNot(HaveOccurred())
+	Context("PostgreSQL Distributed Locking", Ordered, func() {
+		var (
+			pgContainer testcontainers.Container
+			pgDB        *sql.DB
+			err         error
+		)
 
-		redisHost, err := redisContainer.PortEndpoint(ctx, "6379/tcp", "")
-		Expect(err).ToNot(HaveOccurred())
-		log.Info().Str("Host", redisHost).Msg("Redis Endpoint")
+		BeforeAll(func() {
+			By("Starting PostgreSQL container")
+			pgContainer, err = util.PostgresTestContainer(ctx)
+			Expect(err).ToNot(HaveOccurred())
 
-		redisClient = redis.NewClient(&redis.Options{
-			Addr: redisHost,
+			pgHost, err := pgContainer.PortEndpoint(ctx, "5432/tcp", "")
+			Expect(err).ToNot(HaveOccurred())
+			log.Info().Str("Host", pgHost).Msg("PostgreSQL Endpoint")
+
+			dsn := fmt.Sprintf("postgres://test:test@%s/testdb?sslmode=disable", pgHost)
+			pgDB, err = sql.Open("postgres", dsn)
+			Expect(err).ToNot(HaveOccurred())
+
+			By("Verifying PostgreSQL connection")
+			err = pgDB.PingContext(ctx)
+			Expect(err).ToNot(HaveOccurred())
 		})
 
-		By("Verifying Redis connection")
-		_, err = redisClient.Ping(ctx).Result()
-		Expect(err).ToNot(HaveOccurred())
+		AfterAll(func() {
+			log.Warn().Msg("PostgreSQL Shutting Down")
+			if pgDB != nil {
+				pgDB.Close()
+			}
+			if pgContainer != nil {
+				err = pgContainer.Terminate(ctx)
+				Expect(err).ToNot(HaveOccurred())
+			}
+		})
 
-		By("Starting PostgreSQL container")
-		pgContainer, err = util.PostgresTestContainer(ctx)
-		Expect(err).ToNot(HaveOccurred())
+		It("should connect to PostgreSQL", func() {
+			Expect(pgDB).ToNot(BeNil())
+			err := pgDB.PingContext(ctx)
+			Expect(err).ToNot(HaveOccurred())
+		})
 
-		pgHost, err := pgContainer.PortEndpoint(ctx, "5432/tcp", "")
-		Expect(err).ToNot(HaveOccurred())
-		log.Info().Str("Host", pgHost).Msg("PostgreSQL Endpoint")
-
-		dsn := fmt.Sprintf("postgres://test:test@%s/testdb?sslmode=disable", pgHost)
-		pgDB, err = sql.Open("postgres", dsn)
-		Expect(err).ToNot(HaveOccurred())
-
-		By("Verifying PostgreSQL connection")
-		err = pgDB.PingContext(ctx)
-		Expect(err).ToNot(HaveOccurred())
-	})
-
-	AfterAll(func() {
-		log.Warn().Msg("Redis Shutting Down")
-		if redisClient != nil {
-			redisClient.Close()
-		}
-		err = redisContainer.Terminate(ctx)
-		Expect(err).ToNot(HaveOccurred())
-
-		log.Warn().Msg("PostgreSQL Shutting Down")
-		if pgDB != nil {
-			pgDB.Close()
-		}
-		err = pgContainer.Terminate(ctx)
-		Expect(err).ToNot(HaveOccurred())
-	})
-
-	It("should connect to Redis", func() {
-		Expect(redisClient).ToNot(BeNil())
-		result, err := redisClient.Ping(ctx).Result()
-		Expect(err).ToNot(HaveOccurred())
-		Expect(result).To(Equal("PONG"))
-	})
-
-	It("should connect to PostgreSQL", func() {
-		Expect(pgDB).ToNot(BeNil())
-		err := pgDB.PingContext(ctx)
-		Expect(err).ToNot(HaveOccurred())
-	})
-
-	Context("PostgreSQL Distributed Locking", func() {
-		// TODO: Should setup PostgreSQL only in this context.
 		It("should acquire and release advisory lock", func() {
 			By("Creating PostgreSQL advisory locker")
 			locker := newPgAdvisoryLocker(pgDB)
@@ -295,8 +264,49 @@ var _ = Describe("CronDistributed", Ordered, Label(models.GINKGO_SLOW), func() {
 		})
 	})
 
-	Context("Redis Distributed Locking", func() {
-		// TODO: Should setup Redis only in this context.
+	Context("Redis Distributed Locking", Ordered, func() {
+		var (
+			redisContainer testcontainers.Container
+			redisClient    *redis.Client
+			err            error
+		)
+
+		BeforeAll(func() {
+			By("Starting Redis container")
+			redisContainer, err = util.RedisTestContainer(ctx)
+			Expect(err).ToNot(HaveOccurred())
+
+			redisHost, err := redisContainer.PortEndpoint(ctx, "6379/tcp", "")
+			Expect(err).ToNot(HaveOccurred())
+			log.Info().Str("Host", redisHost).Msg("Redis Endpoint")
+
+			redisClient = redis.NewClient(&redis.Options{
+				Addr: redisHost,
+			})
+
+			By("Verifying Redis connection")
+			_, err = redisClient.Ping(ctx).Result()
+			Expect(err).ToNot(HaveOccurred())
+		})
+
+		AfterAll(func() {
+			log.Warn().Msg("Redis Shutting Down")
+			if redisClient != nil {
+				redisClient.Close()
+			}
+			if redisContainer != nil {
+				err = redisContainer.Terminate(ctx)
+				Expect(err).ToNot(HaveOccurred())
+			}
+		})
+
+		It("should connect to Redis", func() {
+			Expect(redisClient).ToNot(BeNil())
+			result, err := redisClient.Ping(ctx).Result()
+			Expect(err).ToNot(HaveOccurred())
+			Expect(result).To(Equal("PONG"))
+		})
+
 		It("should create locker from Redis client", func() {
 			locker, err := redislock.NewRedisLocker(redisClient)
 			Expect(err).ToNot(HaveOccurred())

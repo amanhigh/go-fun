@@ -22,7 +22,7 @@ import (
 //   - OnEnrollmentConfirmedEvt and OnEnrollmentCancelledEvt are idempotent sinks that persist status without publishing.
 //   - SeatManager publishes only seat-related commands/events and never touches enrollment publishers.
 //
-// TODO: #C Rename Person usage to Student once the domain model is updated.
+// TODO: Rename Person usage to Student once the domain model is updated.
 type EnrollmentManagerInterface interface {
 	EnrollPerson(ctx context.Context, personID string, grade int) (fun.Enrollment, common.HttpError)
 	GetEnrollment(ctx context.Context, personID string) (fun.Enrollment, common.HttpError)

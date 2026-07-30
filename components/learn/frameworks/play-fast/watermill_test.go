@@ -44,15 +44,14 @@ func (h BookRoomHandler) Handle(ctx context.Context, cmd *BookRoom) error {
 }
 
 type FinancialReport struct {
-	events  *[]string
-	revenue *int64
+	events  []string
+	revenue int64
 	mutex   sync.Mutex
 }
 
-func NewFinancialReport(events *[]string, revenue *int64) *FinancialReport {
+func NewFinancialReport() *FinancialReport {
 	return &FinancialReport{
-		events:  events,
-		revenue: revenue,
+		events: []string{},
 	}
 }
 
@@ -60,9 +59,16 @@ func (f *FinancialReport) Handle(_ context.Context, event *RoomBooked) error {
 	f.mutex.Lock()
 	defer f.mutex.Unlock()
 
-	*f.events = append(*f.events, "RoomBooked")
-	*f.revenue += event.Price
+	f.events = append(f.events, "RoomBooked")
+	f.revenue += event.Price
 	return nil
+}
+
+func (f *FinancialReport) Snapshot() ([]string, int64) {
+	f.mutex.Lock()
+	defer f.mutex.Unlock()
+
+	return append([]string{}, f.events...), f.revenue
 }
 
 type WelcomeEmailService struct {
@@ -729,10 +735,11 @@ var _ = Describe("Watermill", func() {
 
 	Context("Router Middleware", func() {
 		var (
-			router      *message.Router
-			processed   chan bool
-			failCount   int
-			maxFailures int
+			router           *message.Router
+			processed        chan bool
+			failCount        int
+			maxFailures      int
+			setupPoisonQueue func(topic string) <-chan *message.Message
 		)
 
 		BeforeEach(func() {
@@ -741,6 +748,17 @@ var _ = Describe("Watermill", func() {
 
 			processed = make(chan bool, 1)
 			failCount = 0
+
+			setupPoisonQueue = func(topic string) <-chan *message.Message {
+				poisonMsgs, subscribeErr := pubSub.Subscribe(ctx, topic)
+				Expect(subscribeErr).NotTo(HaveOccurred())
+
+				poisonMiddleware, middlewareErr := middleware.PoisonQueue(pubSub, topic)
+				Expect(middlewareErr).NotTo(HaveOccurred())
+				router.AddMiddleware(poisonMiddleware)
+
+				return poisonMsgs
+			}
 		})
 
 		AfterEach(func() {
@@ -844,50 +862,49 @@ var _ = Describe("Watermill", func() {
 		})
 
 		Context("Deduplicator Middleware", func() {
-			var processCount int
+			var handledPayloads chan string
 
 			BeforeEach(func() {
-				processCount = 0
+				handledPayloads = make(chan string, 3)
 
 				// Add deduplicator middleware with default settings
 				router.AddMiddleware(
 					(&middleware.Deduplicator{}).Middleware,
 				)
 
-				// Handler that counts processed messages
+				// Handler that records processed payloads
 				router.AddConsumerHandler(
 					"dedup-test-handler",
 					testTopic,
 					pubSub,
-					func(_ *message.Message) error {
-						processCount++
-						processed <- true
+					func(msg *message.Message) error {
+						handledPayloads <- string(msg.Payload)
 						return nil
 					},
 				)
 			})
 
-			It("should drop duplicate messages", func() {
+			It("should drop duplicate messages while processing unique messages", func() {
 				go router.Run(ctx)
 				<-router.Running()
 
 				err = router.RunHandlers(ctx)
 				Expect(err).NotTo(HaveOccurred())
 
-				// Publish same message twice (same payload = same hash)
+				// Publish two messages with different UUIDs but the same payload, and one different payload.
 				msg1 := message.NewMessage(watermill.NewUUID(), []byte("duplicate-content"))
 				msg2 := message.NewMessage(watermill.NewUUID(), []byte("duplicate-content"))
+				msg3 := message.NewMessage(watermill.NewUUID(), []byte("different-content"))
+				Expect(msg1.UUID).NotTo(Equal(msg2.UUID))
 
-				err = pubSub.Publish(testTopic, msg1)
+				err = pubSub.Publish(testTopic, msg1, msg2, msg3)
 				Expect(err).NotTo(HaveOccurred())
 
-				err = pubSub.Publish(testTopic, msg2)
-				Expect(err).NotTo(HaveOccurred())
-
-				// Should only process first message, second should be dropped
-				Eventually(processed).Should(Receive(Equal(true)))
-				Consistently(processed, 100*time.Millisecond).ShouldNot(Receive())
-				Expect(processCount).To(Equal(1)) // Only first message processed
+				var firstPayload, secondPayload string
+				Eventually(handledPayloads).Should(Receive(&firstPayload))
+				Eventually(handledPayloads).Should(Receive(&secondPayload))
+				Expect([]string{firstPayload, secondPayload}).To(ConsistOf("duplicate-content", "different-content"))
+				Consistently(handledPayloads, 100*time.Millisecond).ShouldNot(Receive())
 			})
 		})
 
@@ -898,15 +915,7 @@ var _ = Describe("Watermill", func() {
 			)
 
 			BeforeEach(func() {
-				// Subscribe to poison topic to capture poisoned messages
-				var err error
-				poisonMessages, err = pubSub.Subscribe(ctx, poisonTopic)
-				Expect(err).NotTo(HaveOccurred())
-
-				// Add poison queue middleware
-				poisonMiddleware, err := middleware.PoisonQueue(pubSub, poisonTopic)
-				Expect(err).NotTo(HaveOccurred())
-				router.AddMiddleware(poisonMiddleware)
+				poisonMessages = setupPoisonQueue(poisonTopic)
 
 				// Handler that always fails
 				router.AddConsumerHandler(
@@ -932,14 +941,198 @@ var _ = Describe("Watermill", func() {
 				Expect(err).NotTo(HaveOccurred())
 
 				// Should receive the message on poison queue
-				Eventually(func() bool {
-					select {
-					case poisonMsg := <-poisonMessages:
-						return string(poisonMsg.Payload) == "failing-message"
-					default:
-						return false
-					}
-				}).Should(BeTrue())
+				var poisonMsg *message.Message
+				Eventually(poisonMessages).Should(Receive(&poisonMsg))
+				Expect(string(poisonMsg.Payload)).To(Equal("failing-message"))
+			})
+		})
+
+		Context("Retry + PoisonQueue Composition", func() {
+			var (
+				poisonTopicComp = "poison-topic-composition"
+				poisonMessages  <-chan *message.Message
+				attemptCount    int
+				mu              sync.Mutex
+			)
+
+			BeforeEach(func() {
+				attemptCount = 0
+
+				poisonMessages = setupPoisonQueue(poisonTopicComp)
+
+				// Middleware order: PoisonQueue (outermost) → Retry (innermost)
+				// First added = outermost wrapping in Watermill's middleware chain
+				router.AddMiddleware(
+					middleware.Retry{
+						MaxRetries:      2, // 2 retries + 1 initial = 3 total attempts
+						InitialInterval: 10 * time.Millisecond,
+						Logger:          logger,
+					}.Middleware,
+				)
+
+				// Handler that always fails to exercise full retry-then-poison flow
+				router.AddConsumerHandler(
+					"retry-poison-queue-handler",
+					testTopic,
+					pubSub,
+					func(_ *message.Message) error {
+						mu.Lock()
+						attemptCount++
+						count := attemptCount
+						mu.Unlock()
+						return fmt.Errorf("handler failure on attempt %d", count)
+					},
+				)
+			})
+
+			It("should retry twice then send to poison queue with correct metadata", func() {
+				go router.Run(ctx)
+				<-router.Running()
+
+				err = router.RunHandlers(ctx)
+				Expect(err).NotTo(HaveOccurred())
+
+				By("Publishing message that will always fail")
+				msg := message.NewMessage(watermill.NewUUID(), []byte("composition-test"))
+				err = pubSub.Publish(testTopic, msg)
+				Expect(err).NotTo(HaveOccurred())
+
+				By("Verifying handler was attempted 3 times (initial + 2 retries)")
+				Eventually(func() int {
+					mu.Lock()
+					defer mu.Unlock()
+					return attemptCount
+				}).Should(Equal(3))
+
+				By("Verifying exactly one message published to poison topic")
+				var poisonMsg *message.Message
+				Eventually(poisonMessages).Should(Receive(&poisonMsg))
+				Expect(string(poisonMsg.Payload)).To(Equal("composition-test"))
+
+				By("Verifying poison metadata identifies original topic and handler")
+				Expect(poisonMsg.Metadata.Get(middleware.PoisonedTopicKey)).To(Equal(testTopic))
+				Expect(poisonMsg.Metadata.Get(middleware.PoisonedHandlerKey)).To(Equal("retry-poison-queue-handler"))
+				Expect(poisonMsg.Metadata.Get(middleware.ReasonForPoisonedKey)).To(Equal("handler failure on attempt 3"))
+
+				By("Verifying no additional messages on poison topic")
+				Consistently(poisonMessages, "100ms", "10ms").ShouldNot(Receive())
+			})
+		})
+
+		Context("Correlation ID Middleware", func() {
+			var (
+				correlationInputTopic  = "correlation-input"
+				correlationOutputTopic = "correlation-output"
+				outputMessages         <-chan *message.Message
+			)
+
+			BeforeEach(func() {
+				var subscribeErr error
+				outputMessages, subscribeErr = pubSub.Subscribe(ctx, correlationOutputTopic)
+				Expect(subscribeErr).NotTo(HaveOccurred())
+
+				// CORRELATION-ID: Handler middleware that copies correlation ID from input to output messages.
+				// middleware.CorrelationID is a HandlerMiddleware (wraps the handler), not a RouterMiddleware.
+				// It reads the correlation ID from the input message metadata and copies it to ALL output messages.
+				router.AddHandler(
+					"correlation-handler",
+					correlationInputTopic,
+					pubSub,
+					correlationOutputTopic,
+					pubSub,
+					middleware.CorrelationID(func(_ *message.Message) ([]*message.Message, error) {
+						// Handler returns two messages to demonstrate that middleware
+						// copies the same correlation ID to every produced message.
+						outputMsg1 := message.NewMessage(watermill.NewUUID(), []byte("correlated-response-1"))
+						outputMsg2 := message.NewMessage(watermill.NewUUID(), []byte("correlated-response-2"))
+						return []*message.Message{outputMsg1, outputMsg2}, nil
+					}),
+				)
+			})
+
+			// CORRELATION-ID: Middleware copies correlation metadata from input to all handler-produced output messages.
+			// SetCorrelationID is the idiomatic entry-point API; MessageCorrelationID reads it back.
+			It("should copy correlation ID from input message to all output messages", func() {
+				go router.Run(ctx)
+				<-router.Running()
+
+				By("Publishing message with a known correlation ID using SetCorrelationID")
+				knownCorrelationID := "my-test-correlation-id-42"
+				inputMsg := message.NewMessage(watermill.NewUUID(), []byte("request"))
+				middleware.SetCorrelationID(knownCorrelationID, inputMsg)
+				err = pubSub.Publish(correlationInputTopic, inputMsg)
+				Expect(err).NotTo(HaveOccurred())
+
+				By("Receiving both output messages and acknowledging each")
+				var outputMsg1, outputMsg2 *message.Message
+				select {
+				case outputMsg1 = <-outputMessages:
+					Expect(outputMsg1).NotTo(BeNil())
+					outputMsg1.Ack()
+				case <-ctx.Done():
+					Fail("Timeout waiting for first correlated output message")
+				}
+				select {
+				case outputMsg2 = <-outputMessages:
+					Expect(outputMsg2).NotTo(BeNil())
+					outputMsg2.Ack()
+				case <-ctx.Done():
+					Fail("Timeout waiting for second correlated output message")
+				}
+
+				By("Verifying payloads in any order (order-independent)")
+				receivedPayloads := []string{string(outputMsg1.Payload), string(outputMsg2.Payload)}
+				Expect(receivedPayloads).To(ConsistOf("correlated-response-1", "correlated-response-2"))
+
+				By("Verifying both messages received the same correlation ID, order-independently")
+				receivedCorrelations := []string{
+					middleware.MessageCorrelationID(outputMsg1),
+					middleware.MessageCorrelationID(outputMsg2),
+				}
+				Expect(receivedCorrelations).To(ConsistOf(knownCorrelationID, knownCorrelationID))
+			})
+		})
+
+		// RECOVERER: Wraps a handler with panic recovery; on panic, returns a
+		// RecoveredPanicError containing the original value and a stack trace
+		// instead of crashing the process.
+		Context("Recoverer Middleware", func() {
+			var (
+				panickingHandler message.HandlerFunc
+				wrappedHandler   message.HandlerFunc
+				handlerMsg       *message.Message
+				handlerErr       error
+				handlerOutput    []*message.Message
+			)
+
+			BeforeEach(func() {
+				// Handler that always panics — wrapped by Recoverer before invocation
+				panickingHandler = func(_ *message.Message) ([]*message.Message, error) {
+					panic("deliberate test panic")
+				}
+				wrappedHandler = middleware.Recoverer(panickingHandler)
+				handlerMsg = message.NewMessage(watermill.NewUUID(), []byte("panic-trigger"))
+			})
+
+			It("should recover from panic and return RecoveredPanicError with no produced messages", func() {
+				By("Invoking Recoverer-wrapped handler directly (no Router)")
+				handlerOutput, handlerErr = wrappedHandler(handlerMsg)
+
+				By("Asserting the error is a RecoveredPanicError via errors.As")
+				var recoveredErr middleware.RecoveredPanicError
+				Expect(errors.As(handlerErr, &recoveredErr)).To(BeTrue())
+
+				By("Asserting the original panic value is preserved")
+				Expect(recoveredErr.V).To(Equal("deliberate test panic"))
+
+				By("Asserting the stack trace is non-empty")
+				Expect(recoveredErr.Stacktrace).NotTo(BeEmpty())
+
+				By("Asserting no output messages were produced")
+				Expect(handlerOutput).To(BeEmpty())
+
+				By("Asserting an error occurred")
+				Expect(handlerErr).To(HaveOccurred())
 			})
 		})
 	})
@@ -958,14 +1151,9 @@ var _ = Describe("Watermill", func() {
 
 			roomID    string
 			guestName string
-
-			receivedEvents []string
-			totalRevenue   int64
 		)
 
 		BeforeEach(func() {
-			pubSub = gochannel.NewGoChannel(gochannel.Config{}, logger)
-
 			router, err = message.NewRouter(message.RouterConfig{}, logger)
 			Expect(err).ToNot(HaveOccurred())
 
@@ -1011,11 +1199,8 @@ var _ = Describe("Watermill", func() {
 			})
 			Expect(err).ToNot(HaveOccurred())
 
-			receivedEvents = []string{}
-			totalRevenue = 0
-
 			bookRoomHandler = BookRoomHandler{eventBus: eventBus}
-			financialReport = NewFinancialReport(&receivedEvents, &totalRevenue)
+			financialReport = NewFinancialReport()
 			welcomeEmailService = NewWelcomeEmailService()
 
 			err = commandProcessor.AddHandlers(
@@ -1040,7 +1225,15 @@ var _ = Describe("Watermill", func() {
 				}
 			}()
 
-			time.Sleep(100 * time.Millisecond)
+			<-router.Running()
+
+			bookRoomCmd := &BookRoom{
+				RoomID:    roomID,
+				GuestName: guestName,
+			}
+
+			err = commandBus.Send(ctx, bookRoomCmd)
+			Expect(err).ToNot(HaveOccurred())
 		})
 
 		AfterEach(func() {
@@ -1050,24 +1243,11 @@ var _ = Describe("Watermill", func() {
 		})
 
 		It("should demonstrate CQRS fan-out: 1 Command → 1 Event → Multiple Handlers", func() {
-			bookRoomCmd := &BookRoom{
-				RoomID:    roomID,
-				GuestName: guestName,
-			}
-
-			err := commandBus.Send(ctx, bookRoomCmd)
-			Expect(err).ToNot(HaveOccurred())
-
-			// Verify Financial Report Handler processed the event
-			Eventually(func() []string {
-				return receivedEvents
-			}, "2s", "100ms").Should(ContainElement("RoomBooked"))
-
 			Eventually(func() int64 {
-				return totalRevenue
+				_, revenue := financialReport.Snapshot()
+				return revenue
 			}, "2s", "100ms").Should(Equal(int64(100)))
 
-			// Verify Welcome Email Handler processed the same event
 			Eventually(func() []string {
 				return welcomeEmailService.GetEmails()
 			}, "2s", "100ms").Should(HaveLen(1))
@@ -1077,9 +1257,10 @@ var _ = Describe("Watermill", func() {
 			Expect(emails[0]).To(ContainSubstring("Welcome John Doe"))
 			Expect(emails[0]).To(ContainSubstring("room 101"))
 
-			// Verify both handlers processed the SAME event independently
-			Expect(receivedEvents).To(HaveLen(1))
-			Expect(totalRevenue).To(Equal(int64(100)))
+			// Verify the SAME logical event reached separate handlers independently,
+			// not that both handlers received the same Go object.
+			receivedEvents, _ := financialReport.Snapshot()
+			Expect(receivedEvents).To(Equal([]string{"RoomBooked"}))
 			Expect(emails).To(HaveLen(1))
 		})
 	})
@@ -1091,7 +1272,7 @@ var _ = Describe("Watermill", func() {
 	// THE PROBLEM:
 	// You need to update a database AND publish an event atomically.
 	// If either fails, the system becomes inconsistent.
-	//k
+	//
 	// Example Scenario:
 	// 1. Save order to database
 	// 2. Publish "OrderCreated" event
