@@ -12,6 +12,9 @@ on:
 
 jobs:
   build:
+    permissions:
+      contents: read
+      id-token: write
     runs-on: ubuntu-latest
     steps:
       - name: CHECKOUT
@@ -52,9 +55,12 @@ jobs:
           xvfb-run -a just reset
 
       - name: COVERAGE -> Report
-        uses: codecov/codecov-action@v3
+        uses: codecov/codecov-action@v7
         with:
           files: /tmp/cover/coverage-combined.out
           flags: combined
           verbose: true
           name: codecov-go-fun
+          disable_search: true
+          fail_ci_if_error: true
+          use_oidc: true
