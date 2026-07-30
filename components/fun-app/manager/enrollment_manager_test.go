@@ -10,6 +10,7 @@ import (
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
 
+	"github.com/amanhigh/go-fun/common/util"
 	daomocks "github.com/amanhigh/go-fun/components/fun-app/dao/mocks"
 	"github.com/amanhigh/go-fun/components/fun-app/manager"
 	managermocks "github.com/amanhigh/go-fun/components/fun-app/manager/mocks"
@@ -90,6 +91,43 @@ var _ = Describe("EnrollmentManager", func() {
 
 			err := em.EnrollCmd(ctx, cmd)
 			Expect(err).To(Equal(expected))
+		})
+	})
+
+	Context("CancelEnrollmentAndPublish", func() {
+		It("persists and publishes only on the first cancellation", func() {
+			evt := fun.EnrollmentCancelledEvtV1{
+				EnrollmentID: "enr-101",
+				PersonID:     "person-1",
+				Reason:       "seat allocation failed",
+			}
+			findCount := 0
+
+			dao.EXPECT().UseOrCreateTx(mock.Anything, mock.Anything).RunAndReturn(
+				func(ctx context.Context, run util.DbRun, _ ...bool) common.HttpError {
+					return run(ctx)
+				},
+			).Twice()
+			dao.EXPECT().FindById(mock.Anything, evt.EnrollmentID, mock.Anything).Run(
+				func(_ context.Context, _ any, entity any) {
+					findCount++
+					status := fun.EnrollmentStatusSeatAllocationInitiated
+					if findCount == 2 {
+						status = fun.EnrollmentStatusCancelled
+					}
+					enrollment, ok := entity.(*fun.Enrollment)
+					Expect(ok).To(BeTrue())
+					*enrollment = fun.Enrollment{ID: evt.EnrollmentID, PersonID: evt.PersonID, Status: status}
+				},
+			).Return(nil).Twice()
+			dao.EXPECT().Update(mock.Anything, mock.Anything).Return(nil).Once()
+			publisher.EXPECT().EnrollmentCancelledEvt(mock.Anything, mock.MatchedBy(func(enrollment fun.Enrollment) bool {
+				return enrollment.ID == evt.EnrollmentID && enrollment.Status == fun.EnrollmentStatusCancelled
+			}), evt.Reason).Return(nil).Once()
+
+			Expect(em.CancelEnrollmentAndPublish(context.Background(), evt)).ToNot(HaveOccurred())
+			Expect(em.CancelEnrollmentAndPublish(context.Background(), evt)).ToNot(HaveOccurred())
+			Expect(findCount).To(Equal(2))
 		})
 	})
 })

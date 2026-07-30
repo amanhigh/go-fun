@@ -32,19 +32,25 @@ func NewMessagingServer(
 	util.AddConsumerHandler(router, fun.TopicEnrollCmd, subscriber, enrollmentHandler.HandleEnrollCmd)
 	util.AddConsumerHandler(router, fun.TopicSeatReservedEvt, subscriber, seatHandler.HandleSeatReservedEvt)
 	util.AddConsumerHandler(router, fun.TopicSeatWaitlistedEvt, subscriber, seatHandler.HandleSeatWaitlistedEvt)
+	util.AddConsumerHandler(router, fun.TopicSeatAllocationFailedEvt, subscriber, seatHandler.HandleSeatAllocationFailedEvt, util.ConsumerConfig{
+		Retry:               util.DefaultRetryConfig(),
+		DeadLetterPublisher: publisher,
+	})
 	util.AddConsumerHandler(router, fun.TopicEnrollmentCancelledEvt, subscriber, enrollmentHandler.HandleEnrollmentCancelledEvt)
 
 	// Compensation DLQ — AllocateSeatCmd.
-	// Retries exhausted → source-specific poison topic → HandlePoisonedAllocateSeatCmd
-	// publishes an enrollment-cancellation command (compensation).
+	// Retries exhausted → source-specific dead-letter topic → publish allocation failure.
 	util.AddConsumerHandler(router, fun.TopicAllocateSeatCmd, subscriber, seatHandler.HandleAllocateSeatCmd, util.ConsumerConfig{
 		Retry:               util.DefaultRetryConfig(),
 		DeadLetterPublisher: publisher,
-		PoisonHandler:       seatHandler.HandlePoisonedAllocateSeatCmd,
+	})
+	util.AddConsumerHandler(router, util.DeadLetterTopic(fun.TopicAllocateSeatCmd), subscriber, seatHandler.HandleDeadLetteredAllocateSeatCmd, util.ConsumerConfig{
+		Retry:               util.DefaultRetryConfig(),
+		DeadLetterPublisher: publisher,
 	})
 
 	// Terminal DLQ — EnrollmentConfirmedEvt.
-	// Retries exhausted → source-specific poison topic with NO domain handler.
+	// Retries exhausted → source-specific dead-letter topic with NO domain handler.
 	// The message lands in the terminal DLQ topic for manual inspection;
 	// there is no automatic compensation because confirmation is a terminal event.
 	util.AddConsumerHandler(router, fun.TopicEnrollmentConfirmedEvt, subscriber, enrollmentHandler.HandleEnrollmentConfirmedEvt, util.ConsumerConfig{

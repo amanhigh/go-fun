@@ -6,16 +6,20 @@ import (
 	"time"
 
 	"github.com/ThreeDotsLabs/watermill/message"
+	"github.com/ThreeDotsLabs/watermill/message/router/middleware"
 	"github.com/amanhigh/go-fun/components/fun-app/manager"
 	"github.com/amanhigh/go-fun/models/fun"
 )
+
+const defaultSeatAllocationFailureReason = "unknown allocation failure"
 
 // SeatMessageHandler handles seat-related commands and events.
 type SeatMessageHandler interface {
 	HandleAllocateSeatCmd(msg *message.Message) error
 	HandleSeatReservedEvt(msg *message.Message) error
 	HandleSeatWaitlistedEvt(msg *message.Message) error
-	HandlePoisonedAllocateSeatCmd(msg *message.Message) error
+	HandleSeatAllocationFailedEvt(msg *message.Message) error
+	HandleDeadLetteredAllocateSeatCmd(msg *message.Message) error
 }
 
 type SeatMessageHandlerImpl struct {
@@ -61,19 +65,36 @@ func (h *SeatMessageHandlerImpl) HandleSeatWaitlistedEvt(msg *message.Message) e
 	return h.EnrollmentManager.UpdateToWaitlisted(ctx, enrollment)
 }
 
-// HandlePoisonedAllocateSeatCmd handles a poisoned AllocateSeatCmdV1 by cancelling the enrollment.
-func (h *SeatMessageHandlerImpl) HandlePoisonedAllocateSeatCmd(msg *message.Message) error {
-	var cmd fun.AllocateSeatCmdV1
-	if err := json.Unmarshal(msg.Payload, &cmd); err != nil {
-		return fmt.Errorf("unmarshal poisoned allocate seat cmd v1: %w", err)
+// HandleSeatAllocationFailedEvt compensates a failed seat allocation by cancelling the enrollment.
+func (h *SeatMessageHandlerImpl) HandleSeatAllocationFailedEvt(msg *message.Message) error {
+	var evt fun.SeatAllocationFailedEvtV1
+	if err := json.Unmarshal(msg.Payload, &evt); err != nil {
+		return fmt.Errorf("unmarshal seat allocation failed evt: %w", err)
 	}
-	ctx := stampCtx(msg.Context(), msg.Metadata, cmd.EnrollmentID, msg.UUID)
-	return h.EnrollmentManager.CancelEnrollmentAndPublish(ctx, fun.EnrollmentCancelledEvtV1{
-		EnrollmentID: cmd.EnrollmentID,
-		PersonID:     cmd.PersonID,
-		Reason:       fun.EnrollmentCancellationReasonSeatAllocationFailed,
+
+	ctx := stampCtx(msg.Context(), msg.Metadata, evt.EnrollmentID, msg.UUID)
+	cancelled := fun.EnrollmentCancelledEvtV1{
+		EnrollmentID: evt.EnrollmentID,
+		PersonID:     evt.PersonID,
+		Reason:       evt.Reason,
 		CancelledAt:  time.Now().UTC(),
-	})
+	}
+	return h.EnrollmentManager.CancelEnrollmentAndPublish(ctx, cancelled)
 }
 
-// emit helpers removed; direct publisher calls are used.
+// HandleDeadLetteredAllocateSeatCmd publishes the terminal allocation failure event.
+func (h *SeatMessageHandlerImpl) HandleDeadLetteredAllocateSeatCmd(msg *message.Message) error {
+	var cmd fun.AllocateSeatCmdV1
+	if err := json.Unmarshal(msg.Payload, &cmd); err != nil {
+		return fmt.Errorf("unmarshal dead-lettered allocate seat cmd v1: %w", err)
+	}
+	ctx := stampCtx(msg.Context(), msg.Metadata, cmd.EnrollmentID, msg.UUID)
+	reason := ""
+	if msg.Metadata != nil {
+		reason = msg.Metadata.Get(middleware.ReasonForPoisonedKey)
+	}
+	if reason == "" {
+		reason = defaultSeatAllocationFailureReason
+	}
+	return h.SeatManager.PublishSeatAllocationFailed(ctx, fun.Enrollment{ID: cmd.EnrollmentID, PersonID: cmd.PersonID}, reason)
+}

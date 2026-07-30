@@ -13,6 +13,7 @@ type SeatAllocationPublisher interface {
 	AllocateSeat(ctx context.Context, enrollment fun.Enrollment) common.HttpError
 	SeatReserved(ctx context.Context, enrollment fun.Enrollment) common.HttpError
 	SeatWaitlisted(ctx context.Context, enrollment fun.Enrollment, reason string) common.HttpError
+	SeatAllocationFailed(ctx context.Context, enrollment fun.Enrollment, reason string) common.HttpError
 }
 
 type seatAllocationPublisher struct {
@@ -71,4 +72,20 @@ func (sap *seatAllocationPublisher) SeatWaitlisted(ctx context.Context, enrollme
 	}
 
 	return sap.base.PublishWithExtras(ctx, fun.TopicSeatWaitlistedEvt, payload, extras)
+}
+
+func (sap *seatAllocationPublisher) SeatAllocationFailed(ctx context.Context, enrollment fun.Enrollment, reason string) common.HttpError {
+	payload := fun.SeatAllocationFailedEvtV1{
+		EnrollmentID: enrollment.ID,
+		PersonID:     enrollment.PersonID,
+		Reason:       reason,
+		FailedAt:     time.Now().UTC(),
+	}
+
+	extras := map[string]string{
+		fun.MetadataEnrollmentID: enrollment.ID,
+		fun.MetadataPersonID:     enrollment.PersonID,
+	}
+
+	return sap.base.PublishWithExtras(ctx, fun.TopicSeatAllocationFailedEvt, payload, extras)
 }

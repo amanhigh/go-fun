@@ -22,12 +22,8 @@ import (
 )
 
 const (
-	SIDE_MONITOR          = 1
-	MAIL_WORKSPACE        = "2"
 	DATE_FORMAT           = "20060102__150405"
-	LOGSEQ_CLASS          = "Logseq"
 	NETWORK_RESTART_DELAY = 5 * time.Second
-	UI_INTERACTION_DELAY  = 50 * time.Millisecond
 	TRADE_INFO            = `
 Trends
 HTF - Up
@@ -46,7 +42,6 @@ Support:
 type OSManagerInterface interface {
 	Screenshot(ctx context.Context, directoryType kohan.ScreenshotDirectoryType, fileName string, screenshotType kohan.ScreenshotType, window string) (string, common.HttpError)
 	RecordTicker(ctx context.Context, ticker string) common.HttpError
-	TryOpenTicker(ctx context.Context, ticker string)
 	MonitorInternetConnection(ctx context.Context)
 }
 
@@ -209,45 +204,6 @@ func (a *OSManagerImpl) monitorInternetConnection() {
 		// Extra Wait for Network Manager
 		time.Sleep(NETWORK_RESTART_DELAY)
 	}
-}
-
-func (a *OSManagerImpl) TryOpenTicker(_ context.Context, ticker string) {
-	window, err := tools.GetHyperWindow()
-	if err == nil && window.Class == LOGSEQ_CLASS && window.Monitor == SIDE_MONITOR && window.Workspace.Name == MAIL_WORKSPACE {
-		if openErr := a.openTicker(ticker); openErr != nil {
-			log.Error().Err(err).Str("Ticker", ticker).Msg("Failed to open ticker")
-		} else {
-			log.Info().Str("Ticker", ticker).Msg("Opening Ticker")
-		}
-	} else {
-		if err != nil {
-			log.Error().Err(err).Msg("OpenTicker: GetHyperWindow Failed")
-			return
-		}
-		log.Debug().Str("Ticker", ticker).Str("Class", window.Class).Int("Monitor", window.Monitor).Str("Workspace", window.Workspace.Name).Str("Window", window.Title).Msg("OpenTicker: Logseq Not Active")
-	}
-}
-
-func (a *OSManagerImpl) openTicker(ticker string) (err error) {
-	// Focus on the window named "TradingView"
-	log.Debug().Str("Ticker", ticker).Msg("OpenTicker")
-	if err = tools.FocusWindow("TradingView"); err == nil {
-		// Focus Input Box
-		if err = tools.SendKey("-M Ctrl b -m Ctrl"); err == nil {
-			if err = tools.ClipCopy(ticker); err == nil {
-				if err = tools.SendKey("-M Ctrl v -m Ctrl"); err == nil {
-					time.Sleep(UI_INTERACTION_DELAY)
-					// Bang ! to Open
-					err = tools.SendInput("xox ")
-					// Return Focus Back
-					if focusErr := tools.FocusLastWindow(); focusErr != nil {
-						log.Error().Err(focusErr).Msg("Failed to return focus")
-					}
-				}
-			}
-		}
-	}
-	return
 }
 
 func (a *OSManagerImpl) restartNetworkManager() {

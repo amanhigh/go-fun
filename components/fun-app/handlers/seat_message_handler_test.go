@@ -1,7 +1,9 @@
 package handlers_test
 
 import (
+	"context"
 	"encoding/json"
+	"time"
 
 	"github.com/ThreeDotsLabs/watermill/message"
 	"github.com/ThreeDotsLabs/watermill/message/router/middleware"
@@ -17,51 +19,104 @@ import (
 
 var _ = Describe("SeatMessageHandler", func() {
 	var (
-		enrollmentMock *managermocks.EnrollmentManagerInterface
-		seatHandler    *handlers.SeatMessageHandlerImpl
-		resultErr      error
+		enrollmentMock  *managermocks.EnrollmentManagerInterface
+		seatManagerMock *managermocks.SeatManagerInterface
+		seatHandler     *handlers.SeatMessageHandlerImpl
+		resultErr       error
 	)
 
 	BeforeEach(func() {
 		enrollmentMock = managermocks.NewEnrollmentManagerInterface(GinkgoT())
+		seatManagerMock = managermocks.NewSeatManagerInterface(GinkgoT())
 		seatHandler = handlers.NewSeatMessageHandler(
-			managermocks.NewSeatManagerInterface(GinkgoT()),
+			seatManagerMock,
 			enrollmentMock,
 		)
 	})
 
-	Context("HandlePoisonedAllocateSeatCmd with malformed payload", func() {
+	Context("HandleDeadLetteredAllocateSeatCmd with malformed payload", func() {
 		BeforeEach(func() {
 			msg := message.NewMessage("poison-msg", []byte("not-json"))
 			msg.Metadata.Set(middleware.PoisonedTopicKey, fun.TopicAllocateSeatCmd)
 			msg.Metadata.Set(middleware.PoisonedHandlerKey, fun.TopicAllocateSeatCmd)
 			msg.Metadata.Set(middleware.ReasonForPoisonedKey, "invalid payload")
-			resultErr = seatHandler.HandlePoisonedAllocateSeatCmd(msg)
+			resultErr = seatHandler.HandleDeadLetteredAllocateSeatCmd(msg)
 		})
 
 		It("returns an unmarshal error without compensating", func() {
 			Expect(resultErr).To(HaveOccurred())
-			Expect(resultErr.Error()).To(ContainSubstring("unmarshal poisoned allocate seat cmd v1"))
+			Expect(resultErr.Error()).To(ContainSubstring("unmarshal dead-lettered allocate seat cmd v1"))
+			seatManagerMock.AssertNotCalled(GinkgoT(), "PublishSeatAllocationFailed", mock.Anything, mock.Anything, mock.Anything)
 			enrollmentMock.AssertNotCalled(GinkgoT(), "CancelEnrollmentAndPublish", mock.Anything, mock.Anything)
 		})
 	})
 
-	Context("HandlePoisonedAllocateSeatCmd with valid payload", func() {
+	Context("HandleDeadLetteredAllocateSeatCmd with valid payload", func() {
 		BeforeEach(func() {
 			cmd := fun.AllocateSeatCmdV1{EnrollmentID: "enr-1", PersonID: "person-1"}
 			payload, err := json.Marshal(cmd)
 			Expect(err).ToNot(HaveOccurred())
-			msg := message.NewMessage("poison-msg", payload)
-			expectedErr := common.NewHttpError("cancel failed", 500)
-			enrollmentMock.EXPECT().CancelEnrollmentAndPublish(mock.Anything, mock.MatchedBy(func(evt fun.EnrollmentCancelledEvtV1) bool {
-				return evt.EnrollmentID == cmd.EnrollmentID && evt.PersonID == cmd.PersonID
-			})).Return(expectedErr)
-			resultErr = seatHandler.HandlePoisonedAllocateSeatCmd(msg)
+			msg := message.NewMessage("dead-letter-msg", payload)
+			msg.Metadata.Set(middleware.ReasonForPoisonedKey, "capacity service unavailable")
+			seatManagerMock.EXPECT().PublishSeatAllocationFailed(mock.Anything, fun.Enrollment{ID: cmd.EnrollmentID, PersonID: cmd.PersonID}, "capacity service unavailable").Return(nil)
+			resultErr = seatHandler.HandleDeadLetteredAllocateSeatCmd(msg)
 		})
 
-		It("propagates the compensation manager error", func() {
+		It("publishes an allocation failure through the seat manager", func() {
+			Expect(resultErr).ToNot(HaveOccurred())
+			enrollmentMock.AssertNotCalled(GinkgoT(), "CancelEnrollmentAndPublish", mock.Anything, mock.Anything)
+		})
+	})
+
+	Context("HandleSeatAllocationFailedEvt with malformed payload", func() {
+		BeforeEach(func() {
+			msg := message.NewMessage("failed-msg", []byte("not-json"))
+			resultErr = seatHandler.HandleSeatAllocationFailedEvt(msg)
+		})
+
+		It("returns an unmarshal error without compensating", func() {
 			Expect(resultErr).To(HaveOccurred())
-			Expect(resultErr.Error()).To(Equal("cancel failed"))
+			Expect(resultErr.Error()).To(ContainSubstring("unmarshal seat allocation failed evt"))
+			enrollmentMock.AssertNotCalled(GinkgoT(), "CancelEnrollmentAndPublish", mock.Anything, mock.Anything)
+		})
+	})
+
+	Context("HandleSeatAllocationFailedEvt with valid payload", func() {
+		var (
+			evt       fun.SeatAllocationFailedEvtV1
+			startedAt time.Time
+		)
+
+		BeforeEach(func() {
+			evt = fun.SeatAllocationFailedEvtV1{
+				EnrollmentID: "enr-1",
+				PersonID:     "person-1",
+				Reason:       "capacity unavailable",
+				FailedAt:     time.Now().UTC(),
+			}
+			payload, err := json.Marshal(evt)
+			Expect(err).ToNot(HaveOccurred())
+			msg := message.NewMessage("failed-msg", payload)
+			msg.Metadata.Set(common.MetadataCorrelationIDKey, "corr-1")
+			msg.Metadata.Set(common.MetadataCausationIDKey, "cause-1")
+			startedAt = time.Now().UTC()
+			enrollmentMock.EXPECT().CancelEnrollmentAndPublish(
+				mock.MatchedBy(func(ctx context.Context) bool {
+					return common.CorrelationFrom(ctx) == "corr-1" && common.CausationFrom(ctx) == "cause-1"
+				}),
+				mock.MatchedBy(func(cancelled fun.EnrollmentCancelledEvtV1) bool {
+					return cancelled.EnrollmentID == evt.EnrollmentID &&
+						cancelled.PersonID == evt.PersonID &&
+						cancelled.Reason == evt.Reason &&
+						!cancelled.CancelledAt.Before(startedAt) &&
+						!cancelled.CancelledAt.After(time.Now().UTC())
+				}),
+			).Return(nil)
+			resultErr = seatHandler.HandleSeatAllocationFailedEvt(msg)
+		})
+
+		It("cancels the enrollment through the enrollment manager", func() {
+			Expect(resultErr).ToNot(HaveOccurred())
 		})
 	})
 })

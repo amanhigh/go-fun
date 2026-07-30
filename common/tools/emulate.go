@@ -13,11 +13,3 @@ func SendKey(keys string) error {
 	}
 	return nil
 }
-
-func SendInput(input string) error {
-	_, err := script.Exec(fmt.Sprintf("wtype \"%v\"", input)).String()
-	if err != nil {
-		return fmt.Errorf("failed to send input: %w", err)
-	}
-	return nil
-}

@@ -72,14 +72,27 @@ var _ = Describe("MessagingServer learning scenarios", func() {
 			cancelled = make(chan struct{})
 			seatMock.EXPECT().AllocateSeat(mock.Anything, cmd).
 				Return(common.NewHttpError("seat service unavailable", http.StatusInternalServerError)).Times(3)
-			enrollmentMock.EXPECT().CancelEnrollmentAndPublish(
+			seatMock.EXPECT().PublishSeatAllocationFailed(
 				mock.Anything,
-				mock.MatchedBy(func(evt fun.EnrollmentCancelledEvtV1) bool {
-					return evt.EnrollmentID == cmd.EnrollmentID &&
-						evt.PersonID == cmd.PersonID &&
-						evt.Reason == fun.EnrollmentCancellationReasonSeatAllocationFailed
+				fun.Enrollment{ID: cmd.EnrollmentID, PersonID: cmd.PersonID},
+				mock.MatchedBy(func(reason string) bool {
+					return reason != ""
 				}),
-			).Run(func(_ context.Context, _ fun.EnrollmentCancelledEvtV1) {
+			).Run(func(_ context.Context, enrollment fun.Enrollment, reason string) {
+				evtPayload, err := json.Marshal(fun.SeatAllocationFailedEvtV1{
+					EnrollmentID: enrollment.ID,
+					PersonID:     enrollment.PersonID,
+					Reason:       reason,
+					FailedAt:     time.Now().UTC(),
+				})
+				if err != nil {
+					return
+				}
+				Expect(channel.Publish(fun.TopicSeatAllocationFailedEvt, message.NewMessage("allocation-failed-1", evtPayload))).To(Succeed())
+			}).Return(nil).Once()
+			enrollmentMock.EXPECT().CancelEnrollmentAndPublish(mock.Anything, mock.MatchedBy(func(evt fun.EnrollmentCancelledEvtV1) bool {
+				return evt.EnrollmentID == cmd.EnrollmentID && evt.PersonID == cmd.PersonID
+			})).Run(func(context.Context, fun.EnrollmentCancelledEvtV1) {
 				close(cancelled)
 			}).Return(nil).Once()
 
@@ -89,44 +102,89 @@ var _ = Describe("MessagingServer learning scenarios", func() {
 			Eventually(cancelled, 10*time.Second).Should(BeClosed())
 		})
 
-		It("retries allocation twice before compensating once", func() {
+		It("retries allocation twice before publishing one failure", func() {
 			seatMock.AssertNumberOfCalls(GinkgoT(), "AllocateSeat", 3)
-			enrollmentMock.AssertNumberOfCalls(GinkgoT(), "CancelEnrollmentAndPublish", 1)
+			seatMock.AssertNumberOfCalls(GinkgoT(), "PublishSeatAllocationFailed", 1)
 		})
 	})
 
 	Context("malformed allocation", func() {
-		var poisonMessages <-chan *message.Message
+		var (
+			deadLetterMessages <-chan *message.Message
+			quarantineMessages <-chan *message.Message
+			deadLetterMessage  *message.Message
+			quarantineMessage  *message.Message
+		)
 
 		BeforeEach(func() {
 			var err error
-			poisonMessages, err = channel.Subscribe(routerCtx, util.PoisonTopic(fun.TopicAllocateSeatCmd))
+			deadLetterMessages, err = channel.Subscribe(routerCtx, util.DeadLetterTopic(fun.TopicAllocateSeatCmd))
+			Expect(err).ToNot(HaveOccurred())
+			quarantineMessages, err = channel.Subscribe(routerCtx, util.DeadLetterTopic(util.DeadLetterTopic(fun.TopicAllocateSeatCmd)))
 			Expect(err).ToNot(HaveOccurred())
 			Expect(channel.Publish(fun.TopicAllocateSeatCmd, message.NewMessage("allocate-malformed", []byte("not-json")))).To(Succeed())
-			var poisonMessage *message.Message
-			Eventually(poisonMessages).Should(Receive(&poisonMessage))
+			Eventually(deadLetterMessages).Should(Receive(&deadLetterMessage))
+			Eventually(quarantineMessages).Should(Receive(&quarantineMessage))
 		})
 
-		It("acknowledges permanently malformed allocation without retry or compensation", func() {
+		It("quarantines malformed allocation without retry or compensation", func() {
+			Expect(string(deadLetterMessage.Payload)).To(Equal("not-json"))
+			Expect(deadLetterMessage.Metadata.Get(middleware.PoisonedTopicKey)).To(Equal(fun.TopicAllocateSeatCmd))
+			Expect(string(quarantineMessage.Payload)).To(Equal("not-json"))
+			Expect(quarantineMessage.Metadata.Get(middleware.PoisonedTopicKey)).To(Equal(util.DeadLetterTopic(fun.TopicAllocateSeatCmd)))
 			seatMock.AssertNotCalled(GinkgoT(), "AllocateSeat", mock.Anything, mock.Anything)
+			seatMock.AssertNotCalled(GinkgoT(), "PublishSeatAllocationFailed", mock.Anything, mock.Anything, mock.Anything)
 			enrollmentMock.AssertNotCalled(GinkgoT(), "CancelEnrollmentAndPublish", mock.Anything, mock.Anything)
 		})
 	})
 
-	Context("terminal enrollment confirmation DLQ", func() {
-		var poisonMessage *message.Message
+	Context("allocation failure compensation", func() {
+		var (
+			deadLetterMessages <-chan *message.Message
+			deadLetterMessage  *message.Message
+		)
 
 		BeforeEach(func() {
-			poisonMessages, err := channel.Subscribe(routerCtx, util.PoisonTopic(fun.TopicEnrollmentConfirmedEvt))
+			failed := fun.SeatAllocationFailedEvtV1{
+				EnrollmentID: "enr-1",
+				PersonID:     "person-1",
+				Reason:       "capacity unavailable",
+				FailedAt:     time.Now().UTC(),
+			}
+			payload, err := json.Marshal(failed)
+			Expect(err).ToNot(HaveOccurred())
+			enrollmentMock.EXPECT().CancelEnrollmentAndPublish(mock.Anything, mock.Anything).
+				Return(common.NewHttpError("database unavailable", http.StatusInternalServerError)).Times(3)
+			deadLetterMessages, err = channel.Subscribe(routerCtx, util.DeadLetterTopic(fun.TopicSeatAllocationFailedEvt))
+			Expect(err).ToNot(HaveOccurred())
+			Expect(channel.Publish(fun.TopicSeatAllocationFailedEvt, message.NewMessage("failed-1", payload))).To(Succeed())
+			Eventually(deadLetterMessages, 10*time.Second).Should(Receive(&deadLetterMessage))
+		})
+
+		It("bounds cancellation retries and preserves a terminal dead-letter record", func() {
+			Expect(deadLetterMessage.Metadata.Get(middleware.PoisonedTopicKey)).To(Equal(fun.TopicSeatAllocationFailedEvt))
+			enrollmentMock.AssertNumberOfCalls(GinkgoT(), "CancelEnrollmentAndPublish", 3)
+		})
+	})
+
+	Context("terminal enrollment confirmation DLQ", func() {
+		var (
+			deadLetterMessages <-chan *message.Message
+			deadLetterMessage  *message.Message
+			err                error
+		)
+
+		BeforeEach(func() {
+			deadLetterMessages, err = channel.Subscribe(routerCtx, util.DeadLetterTopic(fun.TopicEnrollmentConfirmedEvt))
 			Expect(err).ToNot(HaveOccurred())
 			payload := []byte("not-json")
 			Expect(channel.Publish(fun.TopicEnrollmentConfirmedEvt, message.NewMessage("confirmation-malformed", payload))).To(Succeed())
-			Eventually(poisonMessages).Should(Receive(&poisonMessage))
+			Eventually(deadLetterMessages).Should(Receive(&deadLetterMessage))
 		})
 
-		It("publishes one terminal poison record with source metadata", func() {
-			Expect(string(poisonMessage.Payload)).To(Equal("not-json"))
-			Expect(poisonMessage.Metadata.Get(middleware.PoisonedTopicKey)).To(Equal(fun.TopicEnrollmentConfirmedEvt))
+		It("publishes one terminal dead-letter record with source metadata", func() {
+			Expect(string(deadLetterMessage.Payload)).To(Equal("not-json"))
+			Expect(deadLetterMessage.Metadata.Get(middleware.PoisonedTopicKey)).To(Equal(fun.TopicEnrollmentConfirmedEvt))
 			enrollmentMock.AssertNotCalled(GinkgoT(), "OnEnrollmentConfirmedEvt", mock.Anything, mock.Anything)
 			seatMock.AssertNotCalled(GinkgoT(), "AllocateSeat", mock.Anything, mock.Anything)
 		})

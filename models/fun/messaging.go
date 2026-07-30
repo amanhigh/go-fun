@@ -29,6 +29,8 @@ const (
 	TopicEnrollmentConfirmedEvt = "funapp.enrollment.event.enrollment_confirmed.v1"
 	// TopicEnrollmentCancelledEvt signals that the enrollment was cancelled.
 	TopicEnrollmentCancelledEvt = "funapp.enrollment.event.enrollment_cancelled.v1"
+	// TopicSeatAllocationFailedEvt signals that seat allocation exhausted retries.
+	TopicSeatAllocationFailedEvt = "funapp.enrollment.event.seat_allocation_failed.v1"
 )
 
 // ---------------------------------------------------------------------------
