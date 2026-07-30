@@ -79,9 +79,7 @@ var _ = Describe("EnrollmentMessageHandler", func() {
 
 		Context("with metadata, overrides correlation and causation", func() {
 			BeforeEach(func() {
-				msg.SetContext(common.WithMetadata(context.Background(), common.Metadata{
-					MessageID: msg.UUID, CorrelationID: "meta-corr", CausationID: "meta-cause",
-				}))
+				msg.SetContext(common.WithMetadata(context.Background(), common.NewMetadata(msg.UUID, "meta-corr", "meta-cause")))
 				managerMock.EXPECT().EnrollCmd(mock.Anything, mock.Anything).
 					Run(func(c context.Context, in fun.EnrollCmdV1) {
 						capturedCtx = c
@@ -94,7 +92,7 @@ var _ = Describe("EnrollmentMessageHandler", func() {
 
 			It("passes typed metadata from the message context", func() {
 				Expect(resultErr).ToNot(HaveOccurred())
-				Expect(common.MetadataFromContext(capturedCtx)).To(Equal(common.Metadata{MessageID: msg.UUID, CorrelationID: "meta-corr", CausationID: "meta-cause"}))
+				Expect(common.MetadataFromContext(capturedCtx)).To(Equal(common.NewMetadata(msg.UUID, "meta-corr", "meta-cause")))
 				Expect(capturedCmd.EnrollmentID).To(Equal(cmd.EnrollmentID))
 			})
 		})

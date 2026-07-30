@@ -107,7 +107,7 @@ var _ = Describe("BasePublisher", func() {
 		var parent common.Metadata
 
 		BeforeEach(func() {
-			parent = common.Metadata{MessageID: "parent-message"}
+			parent = common.NewRootMetadata("parent-message", "")
 			ctx := common.WithMetadata(context.Background(), parent)
 			pub.On("Publish", "topic", mock.Anything).Return(nil)
 			result = base.PublishChild(ctx, "topic", struct{}{})

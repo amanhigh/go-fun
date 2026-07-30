@@ -17,10 +17,7 @@ var _ = Describe("Metadata", func() {
 		})
 
 		It("contains the message and correlation identifiers", func() {
-			Expect(metadata).To(Equal(common.Metadata{
-				MessageID:     "message-1",
-				CorrelationID: "correlation-1",
-			}))
+			Expect(metadata).To(Equal(common.NewRootMetadata("message-1", "correlation-1")))
 			Expect(metadata.CausationID).To(BeEmpty())
 		})
 	})
@@ -34,11 +31,7 @@ var _ = Describe("Metadata", func() {
 		})
 
 		It("inherits correlation and records the parent message as causation", func() {
-			Expect(metadata).To(Equal(common.Metadata{
-				MessageID:     "child-message",
-				CorrelationID: "correlation-1",
-				CausationID:   "parent-message",
-			}))
+			Expect(metadata).To(Equal(common.NewMetadata("child-message", "correlation-1", "parent-message")))
 		})
 	})
 
@@ -47,11 +40,7 @@ var _ = Describe("Metadata", func() {
 		var result common.Metadata
 
 		BeforeEach(func() {
-			metadata = common.Metadata{
-				MessageID:     "message-1",
-				CorrelationID: "correlation-1",
-				CausationID:   "parent-message",
-			}
+			metadata = common.NewMetadata("message-1", "correlation-1", "parent-message")
 			ctx := common.WithMetadata(context.Background(), metadata)
 			result = common.MetadataFromContext(ctx)
 		})
@@ -67,7 +56,7 @@ var _ = Describe("Metadata", func() {
 		})
 
 		It("accepts nil context when storing metadata", func() {
-			metadata := common.Metadata{MessageID: "message-1"}
+			metadata := common.NewRootMetadata("message-1", "")
 			ctx := common.WithMetadata(context.TODO(), metadata)
 
 			Expect(common.MetadataFromContext(ctx)).To(Equal(metadata))

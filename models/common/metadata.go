@@ -9,21 +9,23 @@ type Metadata struct {
 	CausationID   string
 }
 
-// NewRootMetadata creates metadata for the first message in a correlation.
-func NewRootMetadata(messageID, correlationID string) Metadata {
+// NewMetadata creates metadata with message, correlation, and causation identifiers.
+func NewMetadata(messageID, correlationID, causationID string) Metadata {
 	return Metadata{
 		MessageID:     messageID,
 		CorrelationID: correlationID,
+		CausationID:   causationID,
 	}
+}
+
+// NewRootMetadata creates metadata for the first message in a correlation.
+func NewRootMetadata(messageID, correlationID string) Metadata {
+	return NewMetadata(messageID, correlationID, "")
 }
 
 // NewChildMetadata creates metadata linked to its parent message.
 func NewChildMetadata(messageID string, parent Metadata) Metadata {
-	return Metadata{
-		MessageID:     messageID,
-		CorrelationID: parent.CorrelationID,
-		CausationID:   parent.MessageID,
-	}
+	return NewMetadata(messageID, parent.CorrelationID, parent.MessageID)
 }
 
 type metadataContextKey struct{}

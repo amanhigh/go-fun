@@ -6,6 +6,7 @@ import (
 	"net/http"
 	"time"
 
+	"github.com/ThreeDotsLabs/watermill/message"
 	"github.com/ThreeDotsLabs/watermill/message/router/middleware"
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
@@ -15,6 +16,40 @@ import (
 )
 
 var _ = Describe("Watermill Utilities", func() {
+	Context("SagaMetadataMiddleware", func() {
+		It("recovers missing UUID and correlation metadata", func() {
+			msg := message.NewMessage("", []byte("payload"))
+			var metadata common.Metadata
+			handler := util.SagaMetadataMiddleware()(func(msg *message.Message) ([]*message.Message, error) {
+				metadata = common.MetadataFromContext(msg.Context())
+				return nil, nil
+			})
+
+			_, err := handler(msg)
+			Expect(err).NotTo(HaveOccurred())
+			Expect(metadata.MessageID).NotTo(BeEmpty())
+			Expect(metadata.CorrelationID).NotTo(BeEmpty())
+			Expect(msg.UUID).To(Equal(metadata.MessageID))
+			Expect(middleware.MessageCorrelationID(msg)).To(Equal(metadata.CorrelationID))
+		})
+
+		It("keeps recovered metadata stable across repeated invocation", func() {
+			msg := message.NewMessage("", []byte("payload"))
+			var seen []common.Metadata
+			handler := util.SagaMetadataMiddleware()(func(msg *message.Message) ([]*message.Message, error) {
+				seen = append(seen, common.MetadataFromContext(msg.Context()))
+				return nil, nil
+			})
+
+			_, firstErr := handler(msg)
+			_, secondErr := handler(msg)
+			Expect(firstErr).NotTo(HaveOccurred())
+			Expect(secondErr).NotTo(HaveOccurred())
+			Expect(seen).To(HaveLen(2))
+			Expect(seen[1]).To(Equal(seen[0]))
+		})
+	})
+
 	// =========================================================================
 	// 1. DeadLetterTopic — pure string utility
 	// =========================================================================

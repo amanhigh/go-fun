@@ -113,10 +113,48 @@ func PublishJSONMessage(_ context.Context, publisher message.Publisher, topic st
 	}
 
 	msg := message.NewMessage(metadata.MessageID, data)
-	ApplyMetadata(msg, metadata)
+	middleware.SetCorrelationID(metadata.CorrelationID, msg)
+	if metadata.CausationID != "" {
+		msg.Metadata.Set("causation_id", metadata.CausationID)
+	}
 
 	if err = publisher.Publish(topic, msg); err != nil {
 		return fmt.Errorf("publish topic %s: %w", topic, err)
 	}
 	return nil
+}
+
+// metadataFromMessage normalizes transport identity and returns typed saga
+// metadata. Malformed transport metadata is recovered rather than treated as
+// a business failure.
+func metadataFromMessage(msg *message.Message) modelcommon.Metadata {
+	if msg == nil {
+		return modelcommon.Metadata{}
+	}
+
+	if msg.UUID == "" {
+		msg.UUID = watermill.NewUUID()
+	}
+
+	correlationID := middleware.MessageCorrelationID(msg)
+	if correlationID == "" {
+		correlationID = watermill.NewUUID()
+		middleware.SetCorrelationID(correlationID, msg)
+	}
+
+	return modelcommon.NewMetadata(msg.UUID, correlationID, msg.Metadata.Get("causation_id"))
+}
+
+// SagaMetadataMiddleware attaches normalized typed metadata before the
+// wrapped handler. Recovery is fail-open so metadata cannot block delivery.
+func SagaMetadataMiddleware() message.HandlerMiddleware {
+	return func(next message.HandlerFunc) message.HandlerFunc {
+		return func(msg *message.Message) ([]*message.Message, error) {
+			if msg != nil {
+				metadata := metadataFromMessage(msg)
+				msg.SetContext(modelcommon.WithMetadata(msg.Context(), metadata))
+			}
+			return next(msg)
+		}
+	}
 }

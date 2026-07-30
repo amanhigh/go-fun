@@ -99,11 +99,7 @@ var _ = Describe("SeatMessageHandler", func() {
 			payload, err := json.Marshal(evt)
 			Expect(err).ToNot(HaveOccurred())
 			msg := message.NewMessage("failed-msg", payload)
-			msg.SetContext(common.WithMetadata(context.Background(), common.Metadata{
-				MessageID:     msg.UUID,
-				CorrelationID: "corr-1",
-				CausationID:   "cause-1",
-			}))
+			msg.SetContext(common.WithMetadata(context.Background(), common.NewMetadata(msg.UUID, "corr-1", "cause-1")))
 			startedAt = time.Now().UTC()
 			enrollmentMock.EXPECT().CancelEnrollmentAndPublish(
 				mock.MatchedBy(func(ctx context.Context) bool {
