@@ -43,19 +43,19 @@ var _ = Describe("Watermill Utilities", func() {
 	})
 
 	// =========================================================================
-	// 1. PoisonTopic — pure string utility
+	// 1. DeadLetterTopic — pure string utility
 	// =========================================================================
-	Context("PoisonTopic", func() {
-		It("should append .poison suffix to the source topic", func() {
-			Expect(util.PoisonTopic("orders")).To(Equal("orders.poison"))
+	Context("DeadLetterTopic", func() {
+		It("should append .dead-letter suffix to the source topic", func() {
+			Expect(util.DeadLetterTopic("orders")).To(Equal("orders.dead-letter"))
 		})
 
 		It("should handle an empty source topic", func() {
-			Expect(util.PoisonTopic("")).To(Equal(".poison"))
+			Expect(util.DeadLetterTopic("")).To(Equal(".dead-letter"))
 		})
 
 		It("should handle topics that already contain dots", func() {
-			Expect(util.PoisonTopic("a.b.c")).To(Equal("a.b.c.poison"))
+			Expect(util.DeadLetterTopic("a.b.c")).To(Equal("a.b.c.dead-letter"))
 		})
 	})
 
@@ -216,7 +216,7 @@ var _ = Describe("Watermill Utilities", func() {
 			Context("default retry config", func() {
 				It("should retry twice (initial + 2 retries) before DLQ", func() {
 					var attempts atomic.Int32
-					poisonMessages, subErr := pubSub.Subscribe(ctx, util.PoisonTopic("default-retry"))
+					deadLetterMessages, subErr := pubSub.Subscribe(ctx, util.DeadLetterTopic("default-retry"))
 					Expect(subErr).NotTo(HaveOccurred())
 
 					util.AddConsumerHandler(router, "default-retry", pubSub, func(_ *message.Message) error {
@@ -232,23 +232,23 @@ var _ = Describe("Watermill Utilities", func() {
 					msg := message.NewMessage(watermill.NewUUID(), []byte("doomed"))
 					Expect(pubSub.Publish("default-retry", msg)).To(Succeed())
 
-					By("Waiting for exactly one message on the poison topic")
-					var poisonMsg *message.Message
-					Eventually(poisonMessages).Should(Receive(&poisonMsg))
-					Expect(string(poisonMsg.Payload)).To(Equal("doomed"))
+					By("Waiting for exactly one message on the dead-letter topic")
+					var deadLetterMsg *message.Message
+					Eventually(deadLetterMessages).Should(Receive(&deadLetterMsg))
+					Expect(string(deadLetterMsg.Payload)).To(Equal("doomed"))
 
 					By("Verifying handler was attempted 3 times (initial + 2 retries)")
 					Expect(attempts.Load()).To(Equal(int32(3)))
 
-					By("Verifying no additional messages appear on the poison topic")
-					Consistently(poisonMessages, "200ms", "50ms").ShouldNot(Receive())
+					By("Verifying no additional messages appear on the dead-letter topic")
+					Consistently(deadLetterMessages, "200ms", "50ms").ShouldNot(Receive())
 				})
 			})
 
 			Context("MaxRetries override", func() {
 				It("should respect a custom MaxRetries value", func() {
 					var attempts atomic.Int32
-					poisonMessages, subErr := pubSub.Subscribe(ctx, util.PoisonTopic("custom-retry"))
+					deadLetterMessages, subErr := pubSub.Subscribe(ctx, util.DeadLetterTopic("custom-retry"))
 					Expect(subErr).NotTo(HaveOccurred())
 
 					retryConfig.MaxRetries = 4
@@ -266,8 +266,8 @@ var _ = Describe("Watermill Utilities", func() {
 					msg := message.NewMessage(watermill.NewUUID(), []byte("doomed"))
 					Expect(pubSub.Publish("custom-retry", msg)).To(Succeed())
 
-					var poisonMsg *message.Message
-					Eventually(poisonMessages).Should(Receive(&poisonMsg))
+					var deadLetterMsg *message.Message
+					Eventually(deadLetterMessages).Should(Receive(&deadLetterMsg))
 
 					Expect(attempts.Load()).To(Equal(int32(5))) // initial + 4 retries
 				})
@@ -276,7 +276,7 @@ var _ = Describe("Watermill Utilities", func() {
 			Context("permanent malformed-JSON pipeline", func() {
 				It("should bypass retries for malformed JSON", func() {
 					var attempts atomic.Int32
-					poisonMessages, subErr := pubSub.Subscribe(ctx, util.PoisonTopic("perm-json"))
+					deadLetterMessages, subErr := pubSub.Subscribe(ctx, util.DeadLetterTopic("perm-json"))
 					Expect(subErr).NotTo(HaveOccurred())
 
 					util.AddConsumerHandler(router, "perm-json", pubSub, func(_ *message.Message) error {
@@ -292,16 +292,16 @@ var _ = Describe("Watermill Utilities", func() {
 					msg := message.NewMessage(watermill.NewUUID(), []byte("bad-json"))
 					Expect(pubSub.Publish("perm-json", msg)).To(Succeed())
 
-					var poisonMsg *message.Message
-					Eventually(poisonMessages).Should(Receive(&poisonMsg))
+					var deadLetterMsg *message.Message
+					Eventually(deadLetterMessages).Should(Receive(&deadLetterMsg))
 
 					Expect(attempts.Load()).To(Equal(int32(1)))
 				})
 			})
 
 			Context("DLQ publication", func() {
-				It("should publish exhausted messages to poison topic with metadata", func() {
-					poisonMessages, subErr := pubSub.Subscribe(ctx, util.PoisonTopic("dlq-meta"))
+				It("should publish exhausted messages to the dead-letter topic with metadata", func() {
+					deadLetterMessages, subErr := pubSub.Subscribe(ctx, util.DeadLetterTopic("dlq-meta"))
 					Expect(subErr).NotTo(HaveOccurred())
 
 					retryConfig.MaxRetries = 1
@@ -318,44 +318,44 @@ var _ = Describe("Watermill Utilities", func() {
 					msg := message.NewMessage(watermill.NewUUID(), []byte("payload"))
 					Expect(pubSub.Publish("dlq-meta", msg)).To(Succeed())
 
-					var poisonMsg *message.Message
-					Eventually(poisonMessages).Should(Receive(&poisonMsg))
+					var deadLetterMsg *message.Message
+					Eventually(deadLetterMessages).Should(Receive(&deadLetterMsg))
 
 					By("Verifying payload is preserved")
-					Expect(string(poisonMsg.Payload)).To(Equal("payload"))
+					Expect(string(deadLetterMsg.Payload)).To(Equal("payload"))
 
 					By("Verifying poison metadata keys are set")
-					Expect(poisonMsg.Metadata.Get(middleware.PoisonedTopicKey)).To(Equal("dlq-meta"))
-					Expect(poisonMsg.Metadata.Get(middleware.PoisonedHandlerKey)).To(Equal("dlq-meta"))
-					Expect(poisonMsg.Metadata.Get(middleware.ReasonForPoisonedKey)).To(ContainSubstring("fatal error"))
+					Expect(deadLetterMsg.Metadata.Get(middleware.PoisonedTopicKey)).To(Equal("dlq-meta"))
+					Expect(deadLetterMsg.Metadata.Get(middleware.PoisonedHandlerKey)).To(Equal("dlq-meta"))
+					Expect(deadLetterMsg.Metadata.Get(middleware.ReasonForPoisonedKey)).To(ContainSubstring("fatal error"))
 				})
 			})
 
-			Context("poison handler delivery", func() {
-				It("should deliver poison messages to the registered poison handler", func() {
-					poisonSeen := make(chan *message.Message, 1)
+			Context("explicit dead-letter consumer delivery", func() {
+				It("should deliver dead-letter messages only to an explicitly registered consumer", func() {
+					deadLetterSeen := make(chan *message.Message, 1)
 
 					retryConfig.MaxRetries = 1
 
-					util.AddConsumerHandler(router, "poison-hdl", pubSub, func(_ *message.Message) error {
+					util.AddConsumerHandler(router, "dead-letter-source", pubSub, func(_ *message.Message) error {
 						return errors.New("fatal error")
 					}, util.ConsumerConfig{
 						Retry:               retryConfig,
 						DeadLetterPublisher: pubSub,
-						PoisonHandler: func(msg *message.Message) error {
-							poisonSeen <- msg
-							return nil
-						},
+					})
+					util.AddConsumerHandler(router, util.DeadLetterTopic("dead-letter-source"), pubSub, func(msg *message.Message) error {
+						deadLetterSeen <- msg
+						return nil
 					})
 
 					startRouter()
 
-					msg := message.NewMessage(watermill.NewUUID(), []byte("poisoned"))
-					Expect(pubSub.Publish("poison-hdl", msg)).To(Succeed())
+					msg := message.NewMessage(watermill.NewUUID(), []byte("dead-lettered"))
+					Expect(pubSub.Publish("dead-letter-source", msg)).To(Succeed())
 
 					var received *message.Message
-					Eventually(poisonSeen).Should(Receive(&received))
-					Expect(string(received.Payload)).To(Equal("poisoned"))
+					Eventually(deadLetterSeen).Should(Receive(&received))
+					Expect(string(received.Payload)).To(Equal("dead-lettered"))
 				})
 			})
 
@@ -388,7 +388,7 @@ var _ = Describe("Watermill Utilities", func() {
 			Context("recovered panic with retry", func() {
 				It("should retry a panicking handler and deliver to DLQ", func() {
 					var attempts atomic.Int32
-					poisonMessages, subErr := pubSub.Subscribe(ctx, util.PoisonTopic("panic-retry"))
+					deadLetterMessages, subErr := pubSub.Subscribe(ctx, util.DeadLetterTopic("panic-retry"))
 					Expect(subErr).NotTo(HaveOccurred())
 
 					retryConfig.MaxRetries = 1
@@ -406,10 +406,10 @@ var _ = Describe("Watermill Utilities", func() {
 					orig := message.NewMessage(watermill.NewUUID(), []byte("doomed"))
 					Expect(pubSub.Publish("panic-retry", orig)).To(Succeed())
 
-					var poisonMsg *message.Message
-					Eventually(poisonMessages).Should(Receive(&poisonMsg))
-					Expect(string(poisonMsg.Payload)).To(Equal("doomed"))
-					Expect(poisonMsg.Metadata.Get(middleware.ReasonForPoisonedKey)).To(ContainSubstring("panic"))
+					var deadLetterMsg *message.Message
+					Eventually(deadLetterMessages).Should(Receive(&deadLetterMsg))
+					Expect(string(deadLetterMsg.Payload)).To(Equal("doomed"))
+					Expect(deadLetterMsg.Metadata.Get(middleware.ReasonForPoisonedKey)).To(ContainSubstring("panic"))
 
 					Expect(attempts.Load()).To(Equal(int32(2))) // initial + 1 retry
 				})

@@ -9,6 +9,7 @@ type SeatReservedEvtV1 struct {
 	ReservedAt   time.Time `json:"reservedAt"`
 }
 
+// HACK: Reorganise around Domain names not Event.
 type SeatWaitlistedEvtV1 struct {
 	EnrollmentID string    `json:"enrollmentId"`
 	PersonID     string    `json:"personId"`
@@ -28,4 +29,11 @@ type EnrollmentCancelledEvtV1 struct {
 	PersonID     string    `json:"personId"`
 	Reason       string    `json:"reason"`
 	CancelledAt  time.Time `json:"cancelledAt"`
+}
+
+type SeatAllocationFailedEvtV1 struct {
+	EnrollmentID string    `json:"enrollmentId"`
+	PersonID     string    `json:"personId"`
+	Reason       string    `json:"reason"`
+	FailedAt     time.Time `json:"failedAt"`
 }

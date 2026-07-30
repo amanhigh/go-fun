@@ -44,20 +44,18 @@ func NewRouter(logger watermill.LoggerAdapter) (*message.Router, error) {
 	return router, nil
 }
 
-// PoisonTopic returns the derived poison-topic name for the given source topic.
-func PoisonTopic(topic string) string {
-	return topic + ".poison"
+// DeadLetterTopic returns the derived dead-letter topic name for the given source topic.
+func DeadLetterTopic(topic string) string {
+	return topic + ".dead-letter"
 }
 
-// ConsumerConfig optionally configures retry, DLQ, and poison handling for a
+// ConsumerConfig optionally configures retry and dead-letter handling for a
 // consumer registered via AddConsumerHandler.
 type ConsumerConfig struct {
 	// Retry is opt-in: MaxRetries > 0 enables retry.
 	Retry middleware.Retry
 	// DeadLetterPublisher enables immediate DLQ publishing when MaxRetries is zero.
 	DeadLetterPublisher message.Publisher
-	// PoisonHandler requires DeadLetterPublisher to be configured.
-	PoisonHandler message.NoPublishHandlerFunc
 }
 
 // DefaultRetryConfig returns the default retry configuration: two retries with
@@ -121,7 +119,8 @@ func shouldRetry(params middleware.RetryParams) bool {
 // topic).
 //
 // An optional ConsumerConfig enables selected middleware in this order:
-// PoisonQueue → Retry → Recoverer; omitted stages are skipped.
+// PoisonQueue → Retry → Recoverer; omitted stages are skipped. Dead-letter
+// consumers must be registered explicitly by callers.
 //
 // Returns the Watermill *Handler for further configuration if needed.
 func AddConsumerHandler(
@@ -148,14 +147,8 @@ func AddConsumerHandler(
 
 	// 1. PoisonQueue outermost (when DLQ publisher is configured).
 	if cfg.DeadLetterPublisher != nil {
-		poisonTopic := PoisonTopic(topic)
-		// PoisonTopic always appends ".poison", so PoisonQueue receives a non-empty topic.
-		poisonMiddleware, _ := middleware.PoisonQueue(cfg.DeadLetterPublisher, poisonTopic)
+		poisonMiddleware, _ := middleware.PoisonQueue(cfg.DeadLetterPublisher, DeadLetterTopic(topic))
 		h.AddMiddleware(poisonMiddleware)
-		// Register poison handler on the derived topic if provided.
-		if cfg.PoisonHandler != nil {
-			AddConsumerHandler(router, poisonTopic, subscriber, cfg.PoisonHandler)
-		}
 	}
 
 	// 2. Retry in the middle (when retry is active).

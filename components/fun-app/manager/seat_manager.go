@@ -16,6 +16,7 @@ import (
 type SeatManagerInterface interface {
 	PublishAllocateSeat(ctx context.Context, enrollment fun.Enrollment) common.HttpError
 	AllocateSeat(ctx context.Context, cmd fun.AllocateSeatCmdV1) common.HttpError
+	PublishSeatAllocationFailed(ctx context.Context, enrollment fun.Enrollment, reason string) common.HttpError
 }
 
 type SeatManager struct {
@@ -39,6 +40,11 @@ var _ SeatManagerInterface = (*SeatManager)(nil)
 // PublishAllocateSeat emits the AllocateSeat command for async processing.
 func (sm *SeatManager) PublishAllocateSeat(ctx context.Context, enrollment fun.Enrollment) common.HttpError {
 	return sm.SeatPublisher.AllocateSeat(ctx, enrollment)
+}
+
+// PublishSeatAllocationFailed emits the terminal seat-allocation failure event.
+func (sm *SeatManager) PublishSeatAllocationFailed(ctx context.Context, enrollment fun.Enrollment, reason string) common.HttpError {
+	return sm.SeatPublisher.SeatAllocationFailed(ctx, enrollment, reason)
 }
 
 // AllocateSeat processes AllocateSeat command and emits SeatReserved or SeatWaitlisted.
