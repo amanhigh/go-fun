@@ -39,8 +39,9 @@ var _ = Describe("SeatMessageHandler", func() {
 			resultErr = seatHandler.HandlePoisonedAllocateSeatCmd(msg)
 		})
 
-		It("acknowledges the poison message without compensating", func() {
-			Expect(resultErr).ToNot(HaveOccurred())
+		It("returns an unmarshal error without compensating", func() {
+			Expect(resultErr).To(HaveOccurred())
+			Expect(resultErr.Error()).To(ContainSubstring("unmarshal poisoned allocate seat cmd v1"))
 			enrollmentMock.AssertNotCalled(GinkgoT(), "CancelEnrollmentAndPublish", mock.Anything, mock.Anything)
 		})
 	})
