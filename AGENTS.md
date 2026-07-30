@@ -56,6 +56,8 @@ This file contains guidelines for coding, testing, and examples on coding style 
 - Refer to components/kohan/handler/journal_handler_test.go - it uses a nesting style building user stories on each other.
 - Do operations in BeforeEach and cleanup in AfterEach. Tests lie in the center. BeforeEach helps other Contexts which need that setup to be available.
 - Another example is components/learn/frameworks/play/zoo_test.go - in this Context builds on each. Example: Write followed by Update & Watch. Similar structure is followed by vault_test.go in the same folder.
+- Use separate `It` blocks for distinct behaviors. One `It` block is acceptable when multiple assertions prove one cohesive behavior.
+- Keep test operations and setup in `BeforeEach` and assertions in `It`; for fixed scenarios, prefer explicit assertions over inline loops or map-driven assertion loops so the behavior reads as a BDD story.
 
 ### Test Data Management
 - For test data, keep test data closest to It (test blocks) in BeforeEach blocks for each Context to enhance readability and localization. Common setup should be in higher-level BeforeEach.

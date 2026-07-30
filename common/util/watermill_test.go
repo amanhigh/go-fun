@@ -3,6 +3,7 @@ package util_test
 import (
 	"encoding/json"
 	"errors"
+	"fmt"
 	"net/http"
 	"time"
 
@@ -77,6 +78,42 @@ var _ = Describe("Watermill Utilities", func() {
 			}
 
 			Expect(shouldRetry(middleware.RetryParams{Err: errors.New("transient failure")})).To(BeTrue())
+			Expect(shouldRetry(middleware.RetryParams{Err: fmt.Errorf("wrapped: %w", util.ErrInvalidMessageMetadata)})).To(BeFalse())
+		})
+	})
+
+	Context("ContextFromMessage", func() {
+		It("uses Watermill correlation and the consumed message ID for causation", func() {
+			msg := message.NewMessage("msg-1", []byte("payload"))
+			middleware.SetCorrelationID("corr-1", msg)
+			msg.Metadata.Set(common.MetadataMessageIDKey, "msg-1")
+			msg.Metadata.Set(common.MetadataCausationIDKey, "upstream-msg")
+
+			result, err := util.ContextFromMessage(msg)
+
+			Expect(err).NotTo(HaveOccurred())
+			Expect(common.CorrelationFrom(result)).To(Equal("corr-1"))
+			Expect(common.CausationFrom(result)).To(Equal("msg-1"))
+		})
+
+		It("rejects missing or mismatched identity and missing correlation", func() {
+			cases := []struct {
+				name string
+				msg  *message.Message
+			}{
+				{name: "missing correlation", msg: message.NewMessage("msg-1", nil)},
+				{name: "missing identity", msg: message.NewMessage("", nil)},
+				{name: "mismatched identity", msg: message.NewMessage("msg-1", nil)},
+			}
+			middleware.SetCorrelationID("corr-1", cases[1].msg)
+			middleware.SetCorrelationID("corr-1", cases[2].msg)
+			cases[2].msg.Metadata.Set(common.MetadataMessageIDKey, "msg-2")
+
+			for _, testCase := range cases {
+				_, err := util.ContextFromMessage(testCase.msg)
+				Expect(err).To(HaveOccurred(), testCase.name)
+				Expect(errors.Is(err, util.ErrInvalidMessageMetadata)).To(BeTrue(), testCase.name)
+			}
 		})
 	})
 
