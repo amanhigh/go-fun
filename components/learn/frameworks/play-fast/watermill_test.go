@@ -1217,7 +1217,7 @@ var _ = Describe("Watermill", func() {
 	// THE PROBLEM:
 	// You need to update a database AND publish an event atomically.
 	// If either fails, the system becomes inconsistent.
-	//k
+	//
 	// Example Scenario:
 	// 1. Save order to database
 	// 2. Publish "OrderCreated" event
