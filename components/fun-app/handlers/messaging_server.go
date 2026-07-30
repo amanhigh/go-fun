@@ -20,8 +20,6 @@ type MessagingServer struct {
 }
 
 // NewMessagingServer constructs router, attaches middlewares, and registers topic consumers.
-//
-//nolint:funlen
 func NewMessagingServer(
 	logger watermill.LoggerAdapter,
 	publisher message.Publisher,
