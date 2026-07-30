@@ -37,6 +37,7 @@ var _ = Describe("SeatMessageHandler", func() {
 	Context("HandleDeadLetteredAllocateSeatCmd with malformed payload", func() {
 		BeforeEach(func() {
 			msg := message.NewMessage("poison-msg", []byte("not-json"))
+			msg.SetContext(common.WithMetadata(context.Background(), common.NewRootMetadata(msg.UUID, "corr-1")))
 			msg.Metadata.Set(middleware.PoisonedTopicKey, fun.TopicAllocateSeatCmd)
 			msg.Metadata.Set(middleware.PoisonedHandlerKey, fun.TopicAllocateSeatCmd)
 			msg.Metadata.Set(middleware.ReasonForPoisonedKey, "invalid payload")
@@ -57,6 +58,7 @@ var _ = Describe("SeatMessageHandler", func() {
 			payload, err := json.Marshal(cmd)
 			Expect(err).ToNot(HaveOccurred())
 			msg := message.NewMessage("dead-letter-msg", payload)
+			msg.SetContext(common.WithMetadata(context.Background(), common.NewRootMetadata(msg.UUID, "corr-1")))
 			msg.Metadata.Set(middleware.ReasonForPoisonedKey, "capacity service unavailable")
 			seatManagerMock.EXPECT().PublishSeatAllocationFailed(mock.Anything, fun.Enrollment{ID: cmd.EnrollmentID, PersonID: cmd.PersonID}, "capacity service unavailable").Return(nil)
 			resultErr = seatHandler.HandleDeadLetteredAllocateSeatCmd(msg)
@@ -97,12 +99,16 @@ var _ = Describe("SeatMessageHandler", func() {
 			payload, err := json.Marshal(evt)
 			Expect(err).ToNot(HaveOccurred())
 			msg := message.NewMessage("failed-msg", payload)
-			msg.Metadata.Set(common.MetadataCorrelationIDKey, "corr-1")
-			msg.Metadata.Set(common.MetadataCausationIDKey, "cause-1")
+			msg.SetContext(common.WithMetadata(context.Background(), common.Metadata{
+				MessageID:     msg.UUID,
+				CorrelationID: "corr-1",
+				CausationID:   "cause-1",
+			}))
 			startedAt = time.Now().UTC()
 			enrollmentMock.EXPECT().CancelEnrollmentAndPublish(
 				mock.MatchedBy(func(ctx context.Context) bool {
-					return common.CorrelationFrom(ctx) == "corr-1" && common.CausationFrom(ctx) == "cause-1"
+					metadata := common.MetadataFromContext(ctx)
+					return metadata.CorrelationID == "corr-1" && metadata.CausationID == "cause-1"
 				}),
 				mock.MatchedBy(func(cancelled fun.EnrollmentCancelledEvtV1) bool {
 					return cancelled.EnrollmentID == evt.EnrollmentID &&

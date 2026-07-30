@@ -40,8 +40,7 @@ func (h *SeatMessageHandlerImpl) HandleAllocateSeatCmd(msg *message.Message) err
 		return fmt.Errorf("unmarshal allocate seat cmd: %w", err)
 	}
 
-	ctx := stampCtx(msg.Context(), msg.Metadata, cmd.EnrollmentID, msg.UUID)
-	return h.SeatManager.AllocateSeat(ctx, cmd)
+	return h.SeatManager.AllocateSeat(msg.Context(), cmd)
 }
 
 func (h *SeatMessageHandlerImpl) HandleSeatReservedEvt(msg *message.Message) error {
@@ -49,9 +48,8 @@ func (h *SeatMessageHandlerImpl) HandleSeatReservedEvt(msg *message.Message) err
 	if err := json.Unmarshal(msg.Payload, &evt); err != nil {
 		return fmt.Errorf("unmarshal seat reserved evt: %w", err)
 	}
-	ctx := stampCtx(msg.Context(), msg.Metadata, evt.EnrollmentID, msg.UUID)
 	e := fun.Enrollment{ID: evt.EnrollmentID, PersonID: evt.PersonID, Grade: evt.Grade}
-	return h.EnrollmentManager.OnSeatReservedEvt(ctx, e)
+	return h.EnrollmentManager.OnSeatReservedEvt(msg.Context(), e)
 }
 
 func (h *SeatMessageHandlerImpl) HandleSeatWaitlistedEvt(msg *message.Message) error {
@@ -59,11 +57,10 @@ func (h *SeatMessageHandlerImpl) HandleSeatWaitlistedEvt(msg *message.Message) e
 	if err := json.Unmarshal(msg.Payload, &evt); err != nil {
 		return fmt.Errorf("unmarshal seat waitlisted evt: %w", err)
 	}
-	ctx := stampCtx(msg.Context(), msg.Metadata, evt.EnrollmentID, msg.UUID)
 	enrollment := fun.Enrollment{ID: evt.EnrollmentID, PersonID: evt.PersonID, Grade: evt.Grade}
 	// FIXME: Waitlisted flow ends here — add exponential backoff retry to re-check seat availability before terminal failure.
 	// Persist WAITLISTED state via manager sink (idempotent).
-	return h.EnrollmentManager.UpdateToWaitlisted(ctx, enrollment)
+	return h.EnrollmentManager.UpdateToWaitlisted(msg.Context(), enrollment)
 }
 
 // HandleSeatAllocationFailedEvt compensates a failed seat allocation by cancelling the enrollment.
@@ -72,15 +69,13 @@ func (h *SeatMessageHandlerImpl) HandleSeatAllocationFailedEvt(msg *message.Mess
 	if err := json.Unmarshal(msg.Payload, &evt); err != nil {
 		return fmt.Errorf("unmarshal seat allocation failed evt: %w", err)
 	}
-
-	ctx := stampCtx(msg.Context(), msg.Metadata, evt.EnrollmentID, msg.UUID)
 	cancelled := fun.EnrollmentCancelledEvtV1{
 		EnrollmentID: evt.EnrollmentID,
 		PersonID:     evt.PersonID,
 		Reason:       evt.Reason,
 		CancelledAt:  time.Now().UTC(),
 	}
-	return h.EnrollmentManager.CancelEnrollmentAndPublish(ctx, cancelled)
+	return h.EnrollmentManager.CancelEnrollmentAndPublish(msg.Context(), cancelled)
 }
 
 // HandleDeadLetteredAllocateSeatCmd publishes the terminal allocation failure event.
@@ -89,7 +84,6 @@ func (h *SeatMessageHandlerImpl) HandleDeadLetteredAllocateSeatCmd(msg *message.
 	if err := json.Unmarshal(msg.Payload, &cmd); err != nil {
 		return fmt.Errorf("unmarshal dead-lettered allocate seat cmd v1: %w", err)
 	}
-	ctx := stampCtx(msg.Context(), msg.Metadata, cmd.EnrollmentID, msg.UUID)
 	reason := ""
 	if msg.Metadata != nil {
 		reason = msg.Metadata.Get(middleware.ReasonForPoisonedKey)
@@ -97,5 +91,5 @@ func (h *SeatMessageHandlerImpl) HandleDeadLetteredAllocateSeatCmd(msg *message.
 	if reason == "" {
 		reason = defaultSeatAllocationFailureReason
 	}
-	return h.SeatManager.PublishSeatAllocationFailed(ctx, fun.Enrollment{ID: cmd.EnrollmentID, PersonID: cmd.PersonID}, reason)
+	return h.SeatManager.PublishSeatAllocationFailed(msg.Context(), fun.Enrollment{ID: cmd.EnrollmentID, PersonID: cmd.PersonID}, reason)
 }

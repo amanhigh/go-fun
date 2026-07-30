@@ -68,10 +68,6 @@ func (em *EnrollmentManager) EnrollPerson(ctx context.Context, personID string, 
 		return fun.Enrollment{}, err
 	}
 
-	if common.CorrelationFrom(ctx) == "" {
-		ctx = common.WithCorrelation(ctx, enrollment.ID)
-	}
-
 	if publishErr := em.EnrollmentPublisher.Enroll(ctx, *enrollment); publishErr != nil {
 		return fun.Enrollment{}, publishErr
 	}

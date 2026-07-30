@@ -26,20 +26,15 @@ func NewGoChannel(logger watermill.LoggerAdapter) *gochannel.GoChannel {
 	return gochannel.NewGoChannel(gochannel.Config{}, logger)
 }
 
-// NewRouter creates a Watermill router with default middleware.
+// NewRouter creates a Watermill router without correlation middleware.
 //
-// FIXME: CorrelationID only propagates for messages that pass through the router
-// (i.e. returned by handlers). Direct publishing via BasePublisher / stampCtx
-// bypasses the router and must carry its own correlation metadata.
+// This application uses NoPublishHandlerFunc handlers and publishes directly
+// through managers and publishers, so correlation metadata is set at publish time.
 func NewRouter(logger watermill.LoggerAdapter) (*message.Router, error) {
 	router, err := message.NewRouter(message.RouterConfig{}, logger)
 	if err != nil {
 		return nil, fmt.Errorf("new watermill router: %w", err)
 	}
-
-	router.AddMiddleware(
-		middleware.CorrelationID,
-	)
 
 	return router, nil
 }
@@ -71,7 +66,6 @@ func DefaultRetryConfig() middleware.Retry {
 // and unknown errors.
 func shouldRetry(params middleware.RetryParams) bool {
 	err := params.Err
-
 	// HTTP error classification.
 	var httpErr modelcommon.HttpError
 	if errors.As(err, &httpErr) {
@@ -111,21 +105,15 @@ func PublishJSONMessage(_ context.Context, publisher message.Publisher, topic st
 		return fmt.Errorf("marshal payload: %w", err)
 	}
 
-	// Correlation is mandatory for all saga messages.
-	if c := metadata[modelcommon.MetadataCorrelationIDKey]; c == "" {
-		return fmt.Errorf("missing %s", modelcommon.MetadataCorrelationIDKey)
+	if metadata.MessageID == "" {
+		return fmt.Errorf("missing message id")
+	}
+	if metadata.CorrelationID == "" {
+		return fmt.Errorf("missing correlation id")
 	}
 
-	id := watermill.NewUUID()
-	msg := message.NewMessage(id, data)
-
-	// Copy provided metadata.
-	for key, value := range metadata {
-		msg.Metadata.Set(key, value)
-	}
-
-	// Always mirror the message id for downstream consumers.
-	msg.Metadata.Set(modelcommon.MetadataMessageIDKey, id)
+	msg := message.NewMessage(metadata.MessageID, data)
+	ApplyMetadata(msg, metadata)
 
 	if err = publisher.Publish(topic, msg); err != nil {
 		return fmt.Errorf("publish topic %s: %w", topic, err)

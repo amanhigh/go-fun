@@ -13,18 +13,22 @@ import (
 
 // MessagingServer builds and owns the Watermill router and saga handlers wiring.
 type MessagingServer struct {
-	router     *message.Router
-	publisher  message.Publisher
-	subscriber message.Subscriber
+	router      *message.Router
+	publisher   message.Publisher
+	subscriber  message.Subscriber
+	diagnostics util.MetadataDiagnostics
 }
 
 // NewMessagingServer constructs router, attaches middlewares, and registers topic consumers.
+//
+//nolint:funlen
 func NewMessagingServer(
 	logger watermill.LoggerAdapter,
 	publisher message.Publisher,
 	subscriber message.Subscriber,
 	enrollmentHandler EnrollmentMessageHandler,
 	seatHandler SeatMessageHandler,
+	diagnostics util.MetadataDiagnostics,
 ) (*MessagingServer, error) {
 	router, err := util.NewRouter(logger)
 	if err != nil {
@@ -32,9 +36,10 @@ func NewMessagingServer(
 	}
 
 	server := &MessagingServer{
-		router:     router,
-		publisher:  publisher,
-		subscriber: subscriber,
+		router:      router,
+		publisher:   publisher,
+		subscriber:  subscriber,
+		diagnostics: diagnostics,
 	}
 
 	server.registerHandlers(enrollmentHandler, seatHandler)
@@ -46,31 +51,33 @@ func (ms *MessagingServer) registerHandlers(
 	enrollmentHandler EnrollmentMessageHandler,
 	seatHandler SeatMessageHandler,
 ) {
-	ms.registerConsumer(fun.TopicEnrollCmd, enrollmentHandler.HandleEnrollCmd)
-	ms.registerConsumer(fun.TopicSeatReservedEvt, seatHandler.HandleSeatReservedEvt)
-	ms.registerConsumer(fun.TopicSeatWaitlistedEvt, seatHandler.HandleSeatWaitlistedEvt)
-	ms.registerConsumer(fun.TopicEnrollmentCancelledEvt, enrollmentHandler.HandleEnrollmentCancelledEvt)
+	ms.registerConsumer(fun.TopicEnrollCmd, enrollmentHandler.HandleEnrollCmd, util.RootMessageRole)
+	ms.registerConsumer(fun.TopicSeatReservedEvt, seatHandler.HandleSeatReservedEvt, util.DownstreamMessageRole)
+	ms.registerConsumer(fun.TopicSeatWaitlistedEvt, seatHandler.HandleSeatWaitlistedEvt, util.DownstreamMessageRole)
+	ms.registerConsumer(fun.TopicEnrollmentCancelledEvt, enrollmentHandler.HandleEnrollmentCancelledEvt, util.DownstreamMessageRole)
 
-	ms.registerRetryConsumer(fun.TopicSeatAllocationFailedEvt, seatHandler.HandleSeatAllocationFailedEvt)
-	ms.registerRetryConsumer(fun.TopicAllocateSeatCmd, seatHandler.HandleAllocateSeatCmd)
-	ms.registerRetryConsumer(util.DeadLetterTopic(fun.TopicAllocateSeatCmd), seatHandler.HandleDeadLetteredAllocateSeatCmd)
-	ms.registerRetryConsumer(fun.TopicEnrollmentConfirmedEvt, enrollmentHandler.HandleEnrollmentConfirmedEvt)
+	ms.registerRetryConsumer(fun.TopicSeatAllocationFailedEvt, seatHandler.HandleSeatAllocationFailedEvt, util.DownstreamMessageRole)
+	ms.registerRetryConsumer(fun.TopicAllocateSeatCmd, seatHandler.HandleAllocateSeatCmd, util.DownstreamMessageRole)
+	ms.registerRetryConsumer(util.DeadLetterTopic(fun.TopicAllocateSeatCmd), seatHandler.HandleDeadLetteredAllocateSeatCmd, util.DownstreamMessageRole)
+	ms.registerRetryConsumer(fun.TopicEnrollmentConfirmedEvt, enrollmentHandler.HandleEnrollmentConfirmedEvt, util.DownstreamMessageRole)
 }
 
-// registerConsumer wires a consumer with only the server's standard recovery middleware.
-func (ms *MessagingServer) registerConsumer(topic string, handler message.NoPublishHandlerFunc) {
+// registerConsumer wires a consumer with metadata normalization and recovery.
+func (ms *MessagingServer) registerConsumer(topic string, handler message.NoPublishHandlerFunc, role util.MessageRole) {
 	h := ms.router.AddConsumerHandler(topic, topic, ms.subscriber, handler)
+	h.AddMiddleware(util.SagaMetadataMiddleware(role, ms.diagnostics))
 	h.AddMiddleware(middleware.Recoverer)
 }
 
 // registerRetryConsumer wires retrying consumers and their dead-letter destinations.
-func (ms *MessagingServer) registerRetryConsumer(topic string, handler message.NoPublishHandlerFunc) {
+func (ms *MessagingServer) registerRetryConsumer(topic string, handler message.NoPublishHandlerFunc, role util.MessageRole) {
 	h := ms.router.AddConsumerHandler(topic, topic, ms.subscriber, handler)
 	poisonMiddleware, err := middleware.PoisonQueue(ms.publisher, util.DeadLetterTopic(topic))
 	if err != nil {
 		log.Fatal().Err(err).Str("topic", topic).Msg("failed to create dead-letter middleware")
 	}
 	h.AddMiddleware(poisonMiddleware)
+	h.AddMiddleware(util.SagaMetadataMiddleware(role, ms.diagnostics))
 	h.AddMiddleware(util.DefaultRetryConfig().Middleware)
 	h.AddMiddleware(middleware.Recoverer)
 }

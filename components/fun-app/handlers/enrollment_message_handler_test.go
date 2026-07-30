@@ -53,9 +53,10 @@ var _ = Describe("EnrollmentMessageHandler", func() {
 			payload, err := json.Marshal(cmd)
 			Expect(err).ToNot(HaveOccurred())
 			msg = message.NewMessage("msg-uuid", payload)
+			msg.SetContext(common.WithMetadata(context.Background(), common.NewRootMetadata(msg.UUID, "meta-corr")))
 		})
 
-		Context("without metadata, uses default stamps", func() {
+		Context("with required metadata", func() {
 			BeforeEach(func() {
 				managerMock.EXPECT().EnrollCmd(mock.Anything, mock.Anything).
 					Run(func(c context.Context, in fun.EnrollCmdV1) {
@@ -67,10 +68,9 @@ var _ = Describe("EnrollmentMessageHandler", func() {
 				resultErr = handler.HandleEnrollCmd(msg)
 			})
 
-			It("sets correlation to EnrollmentID and causation to message UUID", func() {
+			It("sets correlation and causation from the consumed message", func() {
 				Expect(resultErr).ToNot(HaveOccurred())
-				Expect(common.CorrelationFrom(capturedCtx)).To(Equal(cmd.EnrollmentID))
-				Expect(common.CausationFrom(capturedCtx)).To(Equal(msg.UUID))
+				Expect(common.MetadataFromContext(capturedCtx)).To(Equal(common.NewRootMetadata(msg.UUID, "meta-corr")))
 				Expect(capturedCmd.EnrollmentID).To(Equal(cmd.EnrollmentID))
 				Expect(capturedCmd.PersonID).To(Equal(cmd.PersonID))
 				Expect(capturedCmd.Grade).To(Equal(cmd.Grade))
@@ -79,10 +79,9 @@ var _ = Describe("EnrollmentMessageHandler", func() {
 
 		Context("with metadata, overrides correlation and causation", func() {
 			BeforeEach(func() {
-				msg.Metadata = message.Metadata{
-					common.MetadataCorrelationIDKey: "meta-corr",
-					common.MetadataCausationIDKey:   "meta-cause",
-				}
+				msg.SetContext(common.WithMetadata(context.Background(), common.Metadata{
+					MessageID: msg.UUID, CorrelationID: "meta-corr", CausationID: "meta-cause",
+				}))
 				managerMock.EXPECT().EnrollCmd(mock.Anything, mock.Anything).
 					Run(func(c context.Context, in fun.EnrollCmdV1) {
 						capturedCtx = c
@@ -93,17 +92,16 @@ var _ = Describe("EnrollmentMessageHandler", func() {
 				resultErr = handler.HandleEnrollCmd(msg)
 			})
 
-			It("uses Metadata[CorrelationID] and Metadata[CausationID] instead of defaults", func() {
+			It("passes typed metadata from the message context", func() {
 				Expect(resultErr).ToNot(HaveOccurred())
-				Expect(common.CorrelationFrom(capturedCtx)).To(Equal("meta-corr"))
-				Expect(common.CausationFrom(capturedCtx)).To(Equal("meta-cause"))
+				Expect(common.MetadataFromContext(capturedCtx)).To(Equal(common.Metadata{MessageID: msg.UUID, CorrelationID: "meta-corr", CausationID: "meta-cause"}))
 				Expect(capturedCmd.EnrollmentID).To(Equal(cmd.EnrollmentID))
 			})
 		})
 
-		Context("nil message context falls back to background ctx", func() {
+		Context("message context with root metadata", func() {
 			BeforeEach(func() {
-				msg.SetContext(context.TODO())
+				msg.SetContext(common.WithMetadata(context.TODO(), common.NewRootMetadata(msg.UUID, "meta-corr")))
 				managerMock.EXPECT().EnrollCmd(mock.Anything, mock.Anything).
 					Run(func(c context.Context, in fun.EnrollCmdV1) {
 						capturedCtx = c
@@ -114,11 +112,10 @@ var _ = Describe("EnrollmentMessageHandler", func() {
 				resultErr = handler.HandleEnrollCmd(msg)
 			})
 
-			It("uses background ctx and default stamps when msg.Context() is nil", func() {
+			It("passes the message context metadata to the manager", func() {
 				Expect(resultErr).ToNot(HaveOccurred())
 				Expect(capturedCtx).ToNot(BeNil())
-				Expect(common.CorrelationFrom(capturedCtx)).To(Equal(cmd.EnrollmentID))
-				Expect(common.CausationFrom(capturedCtx)).To(Equal(msg.UUID))
+				Expect(common.MetadataFromContext(capturedCtx)).To(Equal(common.NewRootMetadata(msg.UUID, "meta-corr")))
 				Expect(capturedCmd.EnrollmentID).To(Equal(cmd.EnrollmentID))
 			})
 		})

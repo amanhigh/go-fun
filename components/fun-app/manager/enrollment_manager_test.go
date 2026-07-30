@@ -49,14 +49,14 @@ var _ = Describe("EnrollmentManager", func() {
 
 		BeforeEach(func() {
 			ctx = context.Background()
-			ctx = common.WithCorrelation(ctx, "corr-123")
-			ctx = common.WithCausation(ctx, "cause-456")
+			ctx = common.WithMetadata(ctx, common.NewChildMetadata("child-456", common.NewRootMetadata("cause-456", "corr-123")))
 			cmd = fun.EnrollCmdV1{EnrollmentID: "enr-101", PersonID: "person-1", Grade: 5, RequestedAt: time.Now().UTC()}
 		})
 
 		It("delegates to SeatManager with ctx unchanged", func() {
 			ctxMatcher := mock.MatchedBy(func(c context.Context) bool {
-				return common.CorrelationFrom(c) == "corr-123" && common.CausationFrom(c) == "cause-456"
+				metadata := common.MetadataFromContext(c)
+				return metadata.CorrelationID == "corr-123" && metadata.CausationID == "cause-456"
 			})
 			enrMatcher := mock.MatchedBy(func(e fun.Enrollment) bool {
 				return e.ID == cmd.EnrollmentID && e.PersonID == cmd.PersonID && e.Grade == cmd.Grade
@@ -69,7 +69,7 @@ var _ = Describe("EnrollmentManager", func() {
 
 		It("works with nil context (uses non-nil ctx, no stamps)", func() {
 			ctxMatcher := mock.MatchedBy(func(c context.Context) bool {
-				return c != nil && common.CorrelationFrom(c) == "" && common.CausationFrom(c) == ""
+				return c != nil && common.MetadataFromContext(c) == (common.Metadata{})
 			})
 			enrMatcher := mock.MatchedBy(func(e fun.Enrollment) bool {
 				return e.ID == cmd.EnrollmentID && e.PersonID == cmd.PersonID && e.Grade == cmd.Grade
@@ -82,7 +82,7 @@ var _ = Describe("EnrollmentManager", func() {
 		})
 
 		It("propagates SeatManager error", func() {
-			ctx = common.WithCausation(common.WithCorrelation(context.Background(), "corr-err"), "cause-err")
+			ctx = common.WithMetadata(context.Background(), common.NewChildMetadata("child-err", common.NewRootMetadata("cause-err", "corr-err")))
 			expected := common.NewHttpError("seat-fail", 500)
 
 			ctxMatcher := mock.MatchedBy(func(_ context.Context) bool { return true })

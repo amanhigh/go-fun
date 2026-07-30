@@ -33,12 +33,7 @@ func (ep *enrollmentPublisher) Enroll(ctx context.Context, enrollment fun.Enroll
 		RequestedAt:  time.Now().UTC(),
 	}
 
-	extras := map[string]string{
-		fun.MetadataEnrollmentID: enrollment.ID,
-		fun.MetadataPersonID:     enrollment.PersonID,
-	}
-
-	return ep.base.PublishWithExtras(ctx, fun.TopicEnrollCmd, payload, extras)
+	return ep.base.PublishRoot(ctx, fun.TopicEnrollCmd, payload)
 }
 
 func (ep *enrollmentPublisher) EnrollmentConfirmedEvt(ctx context.Context, enrollment fun.Enrollment) common.HttpError {
@@ -48,12 +43,7 @@ func (ep *enrollmentPublisher) EnrollmentConfirmedEvt(ctx context.Context, enrol
 		ConfirmedAt:  time.Now().UTC(),
 	}
 
-	extras := map[string]string{
-		fun.MetadataEnrollmentID: enrollment.ID,
-		fun.MetadataPersonID:     enrollment.PersonID,
-	}
-
-	return ep.base.PublishWithExtras(ctx, fun.TopicEnrollmentConfirmedEvt, payload, extras)
+	return ep.base.PublishChild(ctx, fun.TopicEnrollmentConfirmedEvt, payload)
 }
 
 func (ep *enrollmentPublisher) EnrollmentCancelledEvt(ctx context.Context, enrollment fun.Enrollment, reason string) common.HttpError {
@@ -64,10 +54,5 @@ func (ep *enrollmentPublisher) EnrollmentCancelledEvt(ctx context.Context, enrol
 		CancelledAt:  time.Now().UTC(),
 	}
 
-	extras := map[string]string{
-		fun.MetadataEnrollmentID: enrollment.ID,
-		fun.MetadataPersonID:     enrollment.PersonID,
-	}
-
-	return ep.base.PublishWithExtras(ctx, fun.TopicEnrollmentCancelledEvt, payload, extras)
+	return ep.base.PublishChild(ctx, fun.TopicEnrollmentCancelledEvt, payload)
 }

@@ -1,13 +1,11 @@
 package handlers
 
 import (
-	"context"
 	"encoding/json"
 	"fmt"
 
 	"github.com/ThreeDotsLabs/watermill/message"
 	"github.com/amanhigh/go-fun/components/fun-app/manager"
-	"github.com/amanhigh/go-fun/models/common"
 	"github.com/amanhigh/go-fun/models/fun"
 )
 
@@ -36,8 +34,7 @@ func (h *EnrollmentMessageHandlerImpl) HandleEnrollCmd(msg *message.Message) err
 		return fmt.Errorf("unmarshal enroll cmd: %w", err)
 	}
 
-	ctx := stampCtx(msg.Context(), msg.Metadata, cmd.EnrollmentID, msg.UUID)
-	return h.Manager.EnrollCmd(ctx, cmd)
+	return h.Manager.EnrollCmd(msg.Context(), cmd)
 }
 
 // HandleEnrollmentConfirmedEvt persists CONFIRMED status via manager sink.
@@ -46,8 +43,7 @@ func (h *EnrollmentMessageHandlerImpl) HandleEnrollmentConfirmedEvt(msg *message
 	if err := json.Unmarshal(msg.Payload, &evt); err != nil {
 		return fmt.Errorf("unmarshal enrollment confirmed evt: %w", err)
 	}
-	ctx := stampCtx(msg.Context(), msg.Metadata, evt.EnrollmentID, msg.UUID)
-	return h.Manager.OnEnrollmentConfirmedEvt(ctx, evt)
+	return h.Manager.OnEnrollmentConfirmedEvt(msg.Context(), evt)
 }
 
 // HandleEnrollmentCancelledEvt persists CANCELLED status via manager sink.
@@ -56,31 +52,5 @@ func (h *EnrollmentMessageHandlerImpl) HandleEnrollmentCancelledEvt(msg *message
 	if err := json.Unmarshal(msg.Payload, &evt); err != nil {
 		return fmt.Errorf("unmarshal enrollment cancelled evt: %w", err)
 	}
-	ctx := stampCtx(msg.Context(), msg.Metadata, evt.EnrollmentID, msg.UUID)
-	return h.Manager.OnEnrollmentCancelledEvt(ctx, evt)
-}
-
-// stampCtx helper to apply correlation/causation from message metadata.
-func stampCtx(in context.Context, meta message.Metadata, enrollmentID, messageID string) context.Context {
-	// HACK: Can this Be a Generic Implementation ?
-	if in == nil {
-		in = context.Background()
-	}
-	corr := enrollmentID
-	if meta != nil {
-		if v := meta.Get(common.MetadataCorrelationIDKey); v != "" {
-			corr = v
-		}
-	}
-	out := common.WithCorrelation(in, corr)
-	causation := messageID
-	if meta != nil {
-		if v := meta.Get(common.MetadataCausationIDKey); v != "" {
-			causation = v
-		}
-	}
-	if causation != "" {
-		out = common.WithCausation(out, causation)
-	}
-	return out
+	return h.Manager.OnEnrollmentCancelledEvt(msg.Context(), evt)
 }
