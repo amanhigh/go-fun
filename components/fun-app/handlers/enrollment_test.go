@@ -29,6 +29,8 @@ import (
 	gormlogger "gorm.io/gorm/logger"
 )
 
+const unknownEnrollmentID = "unknown-enrollment"
+
 var _ = Describe("Enrollments", func() {
 	var (
 		ctx               context.Context
@@ -77,6 +79,7 @@ var _ = Describe("Enrollments", func() {
 
 		router = util.CreateTestGinRouter()
 		router.POST("/v1/enrollments", handlers.NewEnrollmentHandler(enrollmentManager, tracer).CreateEnrollment)
+		router.GET("/v1/enrollments/:personId", handlers.NewEnrollmentHandler(enrollmentManager, tracer).GetEnrollment)
 	})
 
 	AfterEach(func() {
@@ -84,7 +87,7 @@ var _ = Describe("Enrollments", func() {
 		Expect(channel.Close()).To(Succeed())
 	})
 
-	Context("POST /v1/enrollments", func() {
+	Describe("POST /v1/enrollments", func() {
 		var (
 			request          fun.EnrollmentRequest
 			response         fun.Enrollment
@@ -127,7 +130,6 @@ var _ = Describe("Enrollments", func() {
 					Expect(command.EnrollmentID).To(Equal(persisted.ID))
 					Expect(command.PersonID).To(Equal(persisted.PersonID))
 					Expect(command.Grade).To(Equal(persisted.Grade))
-					Expect(command.Status).To(Equal(persisted.Status))
 					Expect(command.RequestedAt).ToNot(Equal(time.Time{}))
 				})
 			})
@@ -307,7 +309,84 @@ var _ = Describe("Enrollments", func() {
 		})
 	})
 
-	Context("EnrollCmdV1", func() {
+	Describe("GET /v1/enrollments/:personId", func() {
+		var (
+			enrollment       fun.Enrollment
+			response         fun.Enrollment
+			responseRecorder *httptest.ResponseRecorder
+		)
+
+		Context("Happy Path", func() {
+			BeforeEach(func() {
+				enrollment = fun.Enrollment{
+					PersonID: person.Id,
+					Grade:    4,
+					Status:   fun.EnrollmentStatusSeatAllocationInitiated,
+				}
+				Expect(enrollmentDao.Create(ctx, &enrollment)).ToNot(HaveOccurred())
+				req, recorder := util.CreateTestRequest(http.MethodGet, "/v1/enrollments/"+person.Id, nil)
+				responseRecorder = recorder
+				router.ServeHTTP(responseRecorder, req)
+				Expect(json.Unmarshal(responseRecorder.Body.Bytes(), &response)).To(Succeed())
+			})
+
+			It("returns the persisted enrollment for the person", func() {
+				Expect(responseRecorder.Code).To(Equal(http.StatusOK))
+				Expect(response).To(Equal(enrollment))
+			})
+		})
+
+		Context("Field Validations", func() {
+			Context("PersonID Field", func() {
+				Context("Allowed Values", func() {
+					BeforeEach(func() {
+						enrollment = fun.Enrollment{
+							PersonID: person.Id,
+							Grade:    4,
+							Status:   fun.EnrollmentStatusSeatAllocationInitiated,
+						}
+						Expect(enrollmentDao.Create(ctx, &enrollment)).ToNot(HaveOccurred())
+						req, recorder := util.CreateTestRequest(http.MethodGet, "/v1/enrollments/"+person.Id, nil)
+						responseRecorder = recorder
+						router.ServeHTTP(responseRecorder, req)
+					})
+
+					It("accepts an existing person ID", func() {
+						Expect(responseRecorder.Code).To(Equal(http.StatusOK))
+					})
+				})
+			})
+		})
+
+		Context("Errors", func() {
+			Context("unknown enrollment for an existing person", func() {
+				BeforeEach(func() {
+					req, recorder := util.CreateTestRequest(http.MethodGet, "/v1/enrollments/"+person.Id, nil)
+					responseRecorder = recorder
+					router.ServeHTTP(responseRecorder, req)
+				})
+
+				It("returns HTTP 404", func() {
+					Expect(responseRecorder.Code).To(Equal(http.StatusNotFound))
+				})
+			})
+
+			Context("unknown person", func() {
+				BeforeEach(func() {
+					req, recorder := util.CreateTestRequest(http.MethodGet, "/v1/enrollments/unknown-person", nil)
+					responseRecorder = recorder
+					router.ServeHTTP(responseRecorder, req)
+				})
+
+				It("returns HTTP 404", func() {
+					Expect(responseRecorder.Code).To(Equal(http.StatusNotFound))
+				})
+			})
+
+		})
+	})
+
+	Describe("EnrollCmdV1", func() {
 		var (
 			allocationCmd  fun.AllocateSeatCmdV1
 			allocationMsgs <-chan *message.Message
@@ -328,7 +407,6 @@ var _ = Describe("Enrollments", func() {
 				EnrollmentID: enrollment.ID,
 				PersonID:     enrollment.PersonID,
 				Grade:        enrollment.Grade,
-				Status:       enrollment.Status,
 				RequestedAt:  time.Now().UTC(),
 			}
 			handler = handlers.NewEnrollmentMessageHandler(enrollmentManager)
@@ -474,45 +552,6 @@ var _ = Describe("Enrollments", func() {
 				})
 			})
 
-			Context("Status Field", func() {
-				Context("Allowed Values", func() {
-					BeforeEach(func() {
-						var err error
-						allocationMsgs, err = channel.Subscribe(ctx, fun.TopicAllocateSeatCmd)
-						Expect(err).ToNot(HaveOccurred())
-						payload, marshalErr := json.Marshal(command)
-						Expect(marshalErr).ToNot(HaveOccurred())
-						resultErr = handler.HandleEnrollCmd(message.NewMessage(watermill.NewUUID(), payload))
-					})
-
-					It("accepts the status and publishes allocation", func() {
-						Expect(resultErr).ToNot(HaveOccurred())
-						Eventually(allocationMsgs, time.Second).Should(Receive())
-					})
-				})
-
-				Context("Bad Values", func() {
-					BeforeEach(func() {
-						command.Status = "INVALID_STATUS"
-						var err error
-						allocationMsgs, err = channel.Subscribe(ctx, fun.TopicAllocateSeatCmd)
-						Expect(err).ToNot(HaveOccurred())
-						payload, marshalErr := json.Marshal(command)
-						Expect(marshalErr).ToNot(HaveOccurred())
-						resultErr = handler.HandleEnrollCmd(message.NewMessage(watermill.NewUUID(), payload))
-					})
-
-					It("returns a Status validation error without allocation publication", func() {
-						var fieldErr common.FieldHttpError
-						ok := errors.As(resultErr, &fieldErr)
-						Expect(ok).To(BeTrue())
-						Expect(fieldErr.Field()).To(Equal("Status"))
-						Expect(fieldErr.Code()).To(Equal(http.StatusBadRequest))
-						Consistently(allocationMsgs, 100*time.Millisecond).ShouldNot(Receive())
-					})
-				})
-			})
-
 			Context("RequestedAt Field", func() {
 				Context("Allowed Values", func() {
 					BeforeEach(func() {
@@ -552,9 +591,60 @@ var _ = Describe("Enrollments", func() {
 				})
 			})
 		})
+
+		Context("Errors", func() {
+			Context("malformed payload", func() {
+				BeforeEach(func() {
+					var err error
+					allocationMsgs, err = channel.Subscribe(ctx, fun.TopicAllocateSeatCmd)
+					Expect(err).ToNot(HaveOccurred())
+					resultErr = handler.HandleEnrollCmd(message.NewMessage(watermill.NewUUID(), []byte(`{"enrollmentId":`)))
+				})
+
+				It("returns HTTP 400 without allocation publication", func() {
+					var httpErr common.HttpError
+					Expect(errors.As(resultErr, &httpErr)).To(BeTrue())
+					Expect(httpErr.Code()).To(Equal(http.StatusBadRequest))
+					Consistently(allocationMsgs, 100*time.Millisecond).ShouldNot(Receive())
+				})
+			})
+
+			Context("empty payload", func() {
+				BeforeEach(func() {
+					var err error
+					allocationMsgs, err = channel.Subscribe(ctx, fun.TopicAllocateSeatCmd)
+					Expect(err).ToNot(HaveOccurred())
+					resultErr = handler.HandleEnrollCmd(message.NewMessage(watermill.NewUUID(), nil))
+				})
+
+				It("returns HTTP 400 without allocation publication", func() {
+					var httpErr common.HttpError
+					Expect(errors.As(resultErr, &httpErr)).To(BeTrue())
+					Expect(httpErr.Code()).To(Equal(http.StatusBadRequest))
+					Consistently(allocationMsgs, 100*time.Millisecond).ShouldNot(Receive())
+				})
+			})
+
+			Context("JSON null", func() {
+				BeforeEach(func() {
+					var err error
+					allocationMsgs, err = channel.Subscribe(ctx, fun.TopicAllocateSeatCmd)
+					Expect(err).ToNot(HaveOccurred())
+					resultErr = handler.HandleEnrollCmd(message.NewMessage(watermill.NewUUID(), []byte("null")))
+				})
+
+				It("returns HTTP 400 without allocation publication", func() {
+					var httpErr common.HttpError
+					Expect(errors.As(resultErr, &httpErr)).To(BeTrue())
+					Expect(httpErr.Code()).To(Equal(http.StatusBadRequest))
+					Consistently(allocationMsgs, 100*time.Millisecond).ShouldNot(Receive())
+				})
+			})
+		})
+
 	})
 
-	Context("AllocateSeatCmdV1", func() {
+	Describe("AllocateSeatCmdV1", func() {
 		var (
 			command          fun.AllocateSeatCmdV1
 			reservedEvent    fun.SeatReservedEvtV1
@@ -741,17 +831,59 @@ var _ = Describe("Enrollments", func() {
 				})
 			})
 		})
+
+		Context("Errors", func() {
+			Context("malformed payload", func() {
+				BeforeEach(func() {
+					resultErr = seatHandler.HandleAllocateSeatCmd(message.NewMessage(watermill.NewUUID(), []byte(`{"enrollmentId":`)))
+				})
+
+				It("returns HTTP 400 without publication", func() {
+					var httpErr common.HttpError
+					Expect(errors.As(resultErr, &httpErr)).To(BeTrue())
+					Expect(httpErr.Code()).To(Equal(http.StatusBadRequest))
+					Consistently(reservedMessages, 100*time.Millisecond).ShouldNot(Receive())
+					Consistently(waitlistedMsgs, 100*time.Millisecond).ShouldNot(Receive())
+				})
+			})
+
+			Context("empty payload", func() {
+				BeforeEach(func() {
+					resultErr = seatHandler.HandleAllocateSeatCmd(message.NewMessage(watermill.NewUUID(), nil))
+				})
+
+				It("returns HTTP 400 without publication", func() {
+					var httpErr common.HttpError
+					Expect(errors.As(resultErr, &httpErr)).To(BeTrue())
+					Expect(httpErr.Code()).To(Equal(http.StatusBadRequest))
+					Consistently(reservedMessages, 100*time.Millisecond).ShouldNot(Receive())
+					Consistently(waitlistedMsgs, 100*time.Millisecond).ShouldNot(Receive())
+				})
+			})
+
+			Context("JSON null", func() {
+				BeforeEach(func() {
+					resultErr = seatHandler.HandleAllocateSeatCmd(message.NewMessage(watermill.NewUUID(), []byte("null")))
+				})
+
+				It("returns HTTP 400 without publication", func() {
+					var httpErr common.HttpError
+					Expect(errors.As(resultErr, &httpErr)).To(BeTrue())
+					Expect(httpErr.Code()).To(Equal(http.StatusBadRequest))
+					Consistently(reservedMessages, 100*time.Millisecond).ShouldNot(Receive())
+					Consistently(waitlistedMsgs, 100*time.Millisecond).ShouldNot(Receive())
+				})
+			})
+		})
 	})
 
-	Context("SeatReservedEvtV1", func() {
+	Describe("SeatReservedEvtV1", func() {
 		var (
-			enrollment       fun.Enrollment
-			event            fun.SeatReservedEvtV1
-			confirmation     fun.EnrollmentConfirmedEvtV1
-			confirmationMsgs <-chan *message.Message
-			resultErr        error
-			persisted        fun.Enrollment
-			persistedErr     common.HttpError
+			enrollment   fun.Enrollment
+			event        fun.SeatReservedEvtV1
+			resultErr    error
+			persisted    fun.Enrollment
+			persistedErr common.HttpError
 		)
 
 		BeforeEach(func() {
@@ -767,9 +899,6 @@ var _ = Describe("Enrollments", func() {
 				Grade:        enrollment.Grade,
 				ReservedAt:   time.Now().UTC(),
 			}
-			var err error
-			confirmationMsgs, err = channel.Subscribe(ctx, fun.TopicEnrollmentConfirmedEvt)
-			Expect(err).ToNot(HaveOccurred())
 		})
 
 		Context("Happy Path", func() {
@@ -778,18 +907,12 @@ var _ = Describe("Enrollments", func() {
 				Expect(err).ToNot(HaveOccurred())
 				resultErr = seatHandler.HandleSeatReservedEvt(message.NewMessage(watermill.NewUUID(), payload))
 				persisted, persistedErr = enrollmentManager.GetEnrollment(ctx, enrollment.PersonID)
-				var confirmationMessage *message.Message
-				Eventually(confirmationMsgs, time.Second).Should(Receive(&confirmationMessage))
-				Expect(json.Unmarshal(confirmationMessage.Payload, &confirmation)).To(Succeed())
 			})
 
-			It("persists confirmation and publishes a complete enrollment event", func() {
+			It("persists the reserved enrollment without publishing another event", func() {
 				Expect(resultErr).ToNot(HaveOccurred())
 				Expect(persistedErr).ToNot(HaveOccurred())
 				Expect(persisted.Status).To(Equal(fun.EnrollmentStatusConfirmed))
-				Expect(confirmation.EnrollmentID).To(Equal(event.EnrollmentID))
-				Expect(confirmation.PersonID).To(Equal(event.PersonID))
-				Expect(confirmation.ConfirmedAt).ToNot(Equal(time.Time{}))
 			})
 		})
 
@@ -810,12 +933,11 @@ var _ = Describe("Enrollments", func() {
 						Expect(err).ToNot(HaveOccurred())
 						resultErr = seatHandler.HandleSeatReservedEvt(message.NewMessage(watermill.NewUUID(), payload))
 					})
-					It("returns HTTP 400 without confirmation publication", func() {
+					It("returns HTTP 400 without publication", func() {
 						var fieldErr common.FieldHttpError
 						Expect(errors.As(resultErr, &fieldErr)).To(BeTrue())
 						Expect(fieldErr.Field()).To(Equal("EnrollmentID"))
 						Expect(fieldErr.Code()).To(Equal(http.StatusBadRequest))
-						Consistently(confirmationMsgs, 100*time.Millisecond).ShouldNot(Receive())
 					})
 				})
 			})
@@ -836,12 +958,11 @@ var _ = Describe("Enrollments", func() {
 						Expect(err).ToNot(HaveOccurred())
 						resultErr = seatHandler.HandleSeatReservedEvt(message.NewMessage(watermill.NewUUID(), payload))
 					})
-					It("returns HTTP 400 without confirmation publication", func() {
+					It("returns HTTP 400 without publication", func() {
 						var fieldErr common.FieldHttpError
 						Expect(errors.As(resultErr, &fieldErr)).To(BeTrue())
 						Expect(fieldErr.Field()).To(Equal("PersonID"))
 						Expect(fieldErr.Code()).To(Equal(http.StatusBadRequest))
-						Consistently(confirmationMsgs, 100*time.Millisecond).ShouldNot(Receive())
 					})
 				})
 			})
@@ -863,12 +984,11 @@ var _ = Describe("Enrollments", func() {
 							Expect(err).ToNot(HaveOccurred())
 							resultErr = seatHandler.HandleSeatReservedEvt(message.NewMessage(watermill.NewUUID(), payload))
 						})
-						It("returns HTTP 400 without confirmation publication", func() {
+						It("returns HTTP 400 without publication", func() {
 							var fieldErr common.FieldHttpError
 							Expect(errors.As(resultErr, &fieldErr)).To(BeTrue())
 							Expect(fieldErr.Field()).To(Equal("Grade"))
 							Expect(fieldErr.Code()).To(Equal(http.StatusBadRequest))
-							Consistently(confirmationMsgs, 100*time.Millisecond).ShouldNot(Receive())
 						})
 					})
 					Context("with grade 13", func() {
@@ -878,12 +998,11 @@ var _ = Describe("Enrollments", func() {
 							Expect(err).ToNot(HaveOccurred())
 							resultErr = seatHandler.HandleSeatReservedEvt(message.NewMessage(watermill.NewUUID(), payload))
 						})
-						It("returns HTTP 400 without confirmation publication", func() {
+						It("returns HTTP 400 without publication", func() {
 							var fieldErr common.FieldHttpError
 							Expect(errors.As(resultErr, &fieldErr)).To(BeTrue())
 							Expect(fieldErr.Field()).To(Equal("Grade"))
 							Expect(fieldErr.Code()).To(Equal(http.StatusBadRequest))
-							Consistently(confirmationMsgs, 100*time.Millisecond).ShouldNot(Receive())
 						})
 					})
 				})
@@ -905,31 +1024,408 @@ var _ = Describe("Enrollments", func() {
 						Expect(err).ToNot(HaveOccurred())
 						resultErr = seatHandler.HandleSeatReservedEvt(message.NewMessage(watermill.NewUUID(), payload))
 					})
-					It("returns HTTP 400 without confirmation publication", func() {
+					It("returns HTTP 400 without publication", func() {
 						var fieldErr common.FieldHttpError
 						Expect(errors.As(resultErr, &fieldErr)).To(BeTrue())
 						Expect(fieldErr.Field()).To(Equal("ReservedAt"))
 						Expect(fieldErr.Code()).To(Equal(http.StatusBadRequest))
-						Consistently(confirmationMsgs, 100*time.Millisecond).ShouldNot(Receive())
 					})
 				})
 			})
 		})
 
 		Context("Errors", func() {
+			Context("malformed payload", func() {
+				BeforeEach(func() {
+					resultErr = seatHandler.HandleSeatReservedEvt(message.NewMessage(watermill.NewUUID(), []byte(`{"enrollmentId":`)))
+				})
+
+				It("returns HTTP 400 without publication", func() {
+					var httpErr common.HttpError
+					Expect(errors.As(resultErr, &httpErr)).To(BeTrue())
+					Expect(httpErr.Code()).To(Equal(http.StatusBadRequest))
+				})
+			})
+
+			Context("empty payload", func() {
+				BeforeEach(func() {
+					resultErr = seatHandler.HandleSeatReservedEvt(message.NewMessage(watermill.NewUUID(), nil))
+				})
+
+				It("returns HTTP 400 without publication", func() {
+					var httpErr common.HttpError
+					Expect(errors.As(resultErr, &httpErr)).To(BeTrue())
+					Expect(httpErr.Code()).To(Equal(http.StatusBadRequest))
+				})
+			})
+
+			Context("JSON null", func() {
+				BeforeEach(func() {
+					resultErr = seatHandler.HandleSeatReservedEvt(message.NewMessage(watermill.NewUUID(), []byte("null")))
+				})
+
+				It("returns HTTP 400 without publication", func() {
+					var httpErr common.HttpError
+					Expect(errors.As(resultErr, &httpErr)).To(BeTrue())
+					Expect(httpErr.Code()).To(Equal(http.StatusBadRequest))
+				})
+			})
+
 			BeforeEach(func() {
-				event.EnrollmentID = "unknown-enrollment"
+				event.EnrollmentID = unknownEnrollmentID
 				payload, err := json.Marshal(event)
 				Expect(err).ToNot(HaveOccurred())
 				resultErr = seatHandler.HandleSeatReservedEvt(message.NewMessage(watermill.NewUUID(), payload))
 				persisted, persistedErr = enrollmentManager.GetEnrollment(ctx, enrollment.PersonID)
 			})
 
-			It("returns not found without changing enrollment or publishing confirmation", func() {
+			It("returns not found without changing enrollment or publishing", func() {
 				Expect(resultErr).To(Equal(common.ErrNotFound))
 				Expect(persistedErr).ToNot(HaveOccurred())
 				Expect(persisted.Status).To(Equal(fun.EnrollmentStatusSeatAllocationInitiated))
-				Consistently(confirmationMsgs, 100*time.Millisecond).ShouldNot(Receive())
+			})
+		})
+	})
+
+	Describe("SeatWaitlistedEvtV1", func() {
+		var (
+			enrollment   fun.Enrollment
+			event        fun.SeatWaitlistedEvtV1
+			resultErr    error
+			persisted    fun.Enrollment
+			persistedErr common.HttpError
+		)
+
+		BeforeEach(func() {
+			enrollment = fun.Enrollment{PersonID: person.Id, Grade: 4, Status: fun.EnrollmentStatusSeatAllocationInitiated}
+			Expect(enrollmentDao.Create(ctx, &enrollment)).ToNot(HaveOccurred())
+			event = fun.SeatWaitlistedEvtV1{
+				EnrollmentID: enrollment.ID, PersonID: enrollment.PersonID, Grade: enrollment.Grade,
+				Reason: "capacity reached", WaitlistedAt: time.Now().UTC(),
+			}
+		})
+
+		execute := func() {
+			payload, err := json.Marshal(event)
+			Expect(err).ToNot(HaveOccurred())
+			resultErr = seatHandler.HandleSeatWaitlistedEvt(message.NewMessage(watermill.NewUUID(), payload))
+			persisted, persistedErr = enrollmentManager.GetEnrollment(ctx, enrollment.PersonID)
+		}
+		assertFieldError := func(field, rule string) {
+			var fieldErr common.FieldHttpError
+			Expect(errors.As(resultErr, &fieldErr)).To(BeTrue())
+			Expect(fieldErr.Field()).To(Equal(field))
+			Expect(fieldErr.Code()).To(Equal(http.StatusBadRequest))
+			Expect(resultErr.Error()).To(ContainSubstring(rule))
+		}
+
+		Context("Happy Path", func() {
+			Context("initial enrollment", func() {
+				BeforeEach(execute)
+				It("transitions INITIATED to WAITLISTED", func() {
+					Expect(resultErr).ToNot(HaveOccurred())
+					Expect(persistedErr).ToNot(HaveOccurred())
+					Expect(persisted.Status).To(Equal(fun.EnrollmentStatusWaitlisted))
+				})
+			})
+			Context("duplicate waitlisting", func() {
+				BeforeEach(func() {
+					enrollment.Status = fun.EnrollmentStatusWaitlisted
+					Expect(enrollmentDao.Update(ctx, &enrollment)).ToNot(HaveOccurred())
+					execute()
+				})
+				It("acknowledges the duplicate and preserves WAITLISTED", func() {
+					Expect(resultErr).ToNot(HaveOccurred())
+					Expect(persisted.Status).To(Equal(fun.EnrollmentStatusWaitlisted))
+				})
+			})
+			Context("terminal enrollment", func() {
+				Context("CONFIRMED", func() {
+					BeforeEach(func() {
+						enrollment.Status = fun.EnrollmentStatusConfirmed
+						Expect(enrollmentDao.Update(ctx, &enrollment)).ToNot(HaveOccurred())
+						execute()
+					})
+					It("acknowledges without overwriting CONFIRMED", func() {
+						Expect(resultErr).ToNot(HaveOccurred())
+						Expect(persisted.Status).To(Equal(fun.EnrollmentStatusConfirmed))
+					})
+				})
+				Context("CANCELLED", func() {
+					BeforeEach(func() {
+						enrollment.Status = fun.EnrollmentStatusCancelled
+						Expect(enrollmentDao.Update(ctx, &enrollment)).ToNot(HaveOccurred())
+						execute()
+					})
+					It("acknowledges without overwriting CANCELLED", func() {
+						Expect(resultErr).ToNot(HaveOccurred())
+						Expect(persisted.Status).To(Equal(fun.EnrollmentStatusCancelled))
+					})
+				})
+			})
+		})
+
+		Context("Field Validations", func() {
+			Context("EnrollmentID Field", func() {
+				Context("Allowed Values", func() {
+					BeforeEach(execute)
+					It("accepts a valid enrollment ID", func() { Expect(resultErr).ToNot(HaveOccurred()) })
+				})
+				Context("Bad Values", func() {
+					BeforeEach(func() { event.EnrollmentID = ""; execute() })
+					It("returns the required validation error", func() { assertFieldError("EnrollmentID", "required") })
+				})
+			})
+			Context("PersonID Field", func() {
+				Context("Allowed Values", func() {
+					BeforeEach(execute)
+					It("accepts a valid person ID", func() { Expect(resultErr).ToNot(HaveOccurred()) })
+				})
+				Context("Bad Values", func() {
+					BeforeEach(func() { event.PersonID = ""; execute() })
+					It("returns the required validation error", func() { assertFieldError("PersonID", "required") })
+				})
+			})
+			Context("Grade Field", func() {
+				Context("Allowed Values", func() {
+					Context("grade 1", func() {
+						BeforeEach(func() { event.Grade = 1; execute() })
+						It("is accepted", func() { Expect(resultErr).ToNot(HaveOccurred()) })
+					})
+					Context("grade 12", func() {
+						BeforeEach(func() { event.Grade = 12; execute() })
+						It("is accepted", func() { Expect(resultErr).ToNot(HaveOccurred()) })
+					})
+				})
+				Context("Bad Values", func() {
+					Context("grade 0", func() {
+						BeforeEach(func() { event.Grade = 0; execute() })
+						It("returns the required validation error", func() { assertFieldError("Grade", "required") })
+					})
+					Context("grade 13", func() {
+						BeforeEach(func() { event.Grade = 13; execute() })
+						It("returns the maximum validation error", func() { assertFieldError("Grade", "max") })
+					})
+				})
+			})
+			Context("Reason Field", func() {
+				Context("Allowed Values", func() {
+					BeforeEach(execute)
+					It("accepts a failure reason", func() { Expect(resultErr).ToNot(HaveOccurred()) })
+				})
+				Context("Bad Values", func() {
+					BeforeEach(func() { event.Reason = ""; execute() })
+					It("returns the required validation error", func() { assertFieldError("Reason", "required") })
+				})
+			})
+			Context("WaitlistedAt Field", func() {
+				Context("Allowed Values", func() {
+					BeforeEach(execute)
+					It("accepts a waitlisted timestamp", func() { Expect(resultErr).ToNot(HaveOccurred()) })
+				})
+				Context("Bad Values", func() {
+					BeforeEach(func() { event.WaitlistedAt = time.Time{}; execute() })
+					It("returns the required validation error", func() { assertFieldError("WaitlistedAt", "required") })
+				})
+			})
+		})
+
+		Context("Errors", func() {
+			Context("malformed payload", func() {
+				BeforeEach(func() {
+					resultErr = seatHandler.HandleSeatWaitlistedEvt(message.NewMessage(watermill.NewUUID(), []byte(`{"enrollmentId":`)))
+				})
+				It("returns HTTP 400", func() {
+					var httpErr common.HttpError
+					Expect(errors.As(resultErr, &httpErr)).To(BeTrue())
+					Expect(httpErr.Code()).To(Equal(http.StatusBadRequest))
+				})
+			})
+			Context("empty payload", func() {
+				BeforeEach(func() { resultErr = seatHandler.HandleSeatWaitlistedEvt(message.NewMessage(watermill.NewUUID(), nil)) })
+				It("returns HTTP 400", func() {
+					var httpErr common.HttpError
+					Expect(errors.As(resultErr, &httpErr)).To(BeTrue())
+					Expect(httpErr.Code()).To(Equal(http.StatusBadRequest))
+				})
+			})
+			Context("JSON null", func() {
+				BeforeEach(func() {
+					resultErr = seatHandler.HandleSeatWaitlistedEvt(message.NewMessage(watermill.NewUUID(), []byte("null")))
+				})
+				It("returns HTTP 400", func() {
+					var httpErr common.HttpError
+					Expect(errors.As(resultErr, &httpErr)).To(BeTrue())
+					Expect(httpErr.Code()).To(Equal(http.StatusBadRequest))
+				})
+			})
+			Context("unknown enrollment", func() {
+				BeforeEach(func() { event.EnrollmentID = unknownEnrollmentID; execute() })
+				It("returns not found and leaves the enrollment unchanged", func() {
+					Expect(resultErr).To(Equal(common.ErrNotFound))
+					Expect(persistedErr).ToNot(HaveOccurred())
+					Expect(persisted.Status).To(Equal(fun.EnrollmentStatusSeatAllocationInitiated))
+				})
+			})
+		})
+	})
+
+	Describe("SeatAllocationFailedEvtV1", func() {
+		var (
+			enrollment   fun.Enrollment
+			event        fun.SeatAllocationFailedEvtV1
+			resultErr    error
+			persisted    fun.Enrollment
+			persistedErr common.HttpError
+		)
+
+		BeforeEach(func() {
+			enrollment = fun.Enrollment{PersonID: person.Id, Grade: 4, Status: fun.EnrollmentStatusSeatAllocationInitiated}
+			Expect(enrollmentDao.Create(ctx, &enrollment)).ToNot(HaveOccurred())
+			event = fun.SeatAllocationFailedEvtV1{EnrollmentID: enrollment.ID, PersonID: enrollment.PersonID, Reason: "allocation failed", FailedAt: time.Now().UTC()}
+		})
+
+		execute := func() {
+			payload, err := json.Marshal(event)
+			Expect(err).ToNot(HaveOccurred())
+			resultErr = seatHandler.HandleSeatAllocationFailedEvt(message.NewMessage(watermill.NewUUID(), payload))
+			persisted, persistedErr = enrollmentManager.GetEnrollment(ctx, enrollment.PersonID)
+		}
+		assertFieldError := func(field, rule string) {
+			var fieldErr common.FieldHttpError
+			Expect(errors.As(resultErr, &fieldErr)).To(BeTrue())
+			Expect(fieldErr.Field()).To(Equal(field))
+			Expect(fieldErr.Code()).To(Equal(http.StatusBadRequest))
+			Expect(resultErr.Error()).To(ContainSubstring(rule))
+		}
+
+		Context("Happy Path", func() {
+			Context("initial enrollment", func() {
+				BeforeEach(execute)
+				It("transitions INITIATED to CANCELLED", func() {
+					Expect(resultErr).ToNot(HaveOccurred())
+					Expect(persistedErr).ToNot(HaveOccurred())
+					Expect(persisted.Status).To(Equal(fun.EnrollmentStatusCancelled))
+				})
+			})
+			Context("duplicate cancellation", func() {
+				BeforeEach(func() {
+					enrollment.Status = fun.EnrollmentStatusCancelled
+					Expect(enrollmentDao.Update(ctx, &enrollment)).ToNot(HaveOccurred())
+					execute()
+				})
+				It("acknowledges the duplicate and preserves CANCELLED", func() {
+					Expect(resultErr).ToNot(HaveOccurred())
+					Expect(persisted.Status).To(Equal(fun.EnrollmentStatusCancelled))
+				})
+			})
+			Context("terminal enrollment", func() {
+				Context("CONFIRMED", func() {
+					BeforeEach(func() {
+						enrollment.Status = fun.EnrollmentStatusConfirmed
+						Expect(enrollmentDao.Update(ctx, &enrollment)).ToNot(HaveOccurred())
+						execute()
+					})
+					It("acknowledges without overwriting CONFIRMED", func() {
+						Expect(resultErr).ToNot(HaveOccurred())
+						Expect(persisted.Status).To(Equal(fun.EnrollmentStatusConfirmed))
+					})
+				})
+				Context("WAITLISTED", func() {
+					BeforeEach(func() {
+						enrollment.Status = fun.EnrollmentStatusWaitlisted
+						Expect(enrollmentDao.Update(ctx, &enrollment)).ToNot(HaveOccurred())
+						execute()
+					})
+					It("acknowledges without overwriting WAITLISTED", func() {
+						Expect(resultErr).ToNot(HaveOccurred())
+						Expect(persisted.Status).To(Equal(fun.EnrollmentStatusWaitlisted))
+					})
+				})
+			})
+		})
+
+		Context("Field Validations", func() {
+			Context("EnrollmentID Field", func() {
+				Context("Allowed Values", func() {
+					BeforeEach(execute)
+					It("accepts a valid enrollment ID", func() { Expect(resultErr).ToNot(HaveOccurred()) })
+				})
+				Context("Bad Values", func() {
+					BeforeEach(func() { event.EnrollmentID = ""; execute() })
+					It("returns the required validation error", func() { assertFieldError("EnrollmentID", "required") })
+				})
+			})
+			Context("PersonID Field", func() {
+				Context("Allowed Values", func() {
+					BeforeEach(execute)
+					It("accepts a valid person ID", func() { Expect(resultErr).ToNot(HaveOccurred()) })
+				})
+				Context("Bad Values", func() {
+					BeforeEach(func() { event.PersonID = ""; execute() })
+					It("returns the required validation error", func() { assertFieldError("PersonID", "required") })
+				})
+			})
+			Context("Reason Field", func() {
+				Context("Allowed Values", func() {
+					BeforeEach(execute)
+					It("accepts a failure reason", func() { Expect(resultErr).ToNot(HaveOccurred()) })
+				})
+				Context("Bad Values", func() {
+					BeforeEach(func() { event.Reason = ""; execute() })
+					It("returns the required validation error", func() { assertFieldError("Reason", "required") })
+				})
+			})
+			Context("FailedAt Field", func() {
+				Context("Allowed Values", func() {
+					BeforeEach(execute)
+					It("accepts a failure timestamp", func() { Expect(resultErr).ToNot(HaveOccurred()) })
+				})
+				Context("Bad Values", func() {
+					BeforeEach(func() { event.FailedAt = time.Time{}; execute() })
+					It("returns the required validation error", func() { assertFieldError("FailedAt", "required") })
+				})
+			})
+		})
+
+		Context("Errors", func() {
+			Context("malformed payload", func() {
+				BeforeEach(func() {
+					resultErr = seatHandler.HandleSeatAllocationFailedEvt(message.NewMessage(watermill.NewUUID(), []byte(`{"enrollmentId":`)))
+				})
+				It("returns HTTP 400", func() {
+					var httpErr common.HttpError
+					Expect(errors.As(resultErr, &httpErr)).To(BeTrue())
+					Expect(httpErr.Code()).To(Equal(http.StatusBadRequest))
+				})
+			})
+			Context("empty payload", func() {
+				BeforeEach(func() {
+					resultErr = seatHandler.HandleSeatAllocationFailedEvt(message.NewMessage(watermill.NewUUID(), nil))
+				})
+				It("returns HTTP 400", func() {
+					var httpErr common.HttpError
+					Expect(errors.As(resultErr, &httpErr)).To(BeTrue())
+					Expect(httpErr.Code()).To(Equal(http.StatusBadRequest))
+				})
+			})
+			Context("JSON null", func() {
+				BeforeEach(func() {
+					resultErr = seatHandler.HandleSeatAllocationFailedEvt(message.NewMessage(watermill.NewUUID(), []byte("null")))
+				})
+				It("returns HTTP 400", func() {
+					var httpErr common.HttpError
+					Expect(errors.As(resultErr, &httpErr)).To(BeTrue())
+					Expect(httpErr.Code()).To(Equal(http.StatusBadRequest))
+				})
+			})
+			Context("unknown enrollment", func() {
+				BeforeEach(func() { event.EnrollmentID = unknownEnrollmentID; execute() })
+				It("returns not found and leaves the enrollment unchanged", func() {
+					Expect(resultErr).To(Equal(common.ErrNotFound))
+					Expect(persistedErr).ToNot(HaveOccurred())
+					Expect(persisted.Status).To(Equal(fun.EnrollmentStatusSeatAllocationInitiated))
+				})
 			})
 		})
 	})

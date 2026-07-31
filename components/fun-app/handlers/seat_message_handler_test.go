@@ -48,7 +48,7 @@ var _ = Describe("SeatMessageHandler", func() {
 			Expect(resultErr).To(HaveOccurred())
 			Expect(resultErr.Error()).To(ContainSubstring("unmarshal dead-lettered allocate seat cmd v1"))
 			seatManagerMock.AssertNotCalled(GinkgoT(), "PublishSeatAllocationFailed", mock.Anything, mock.Anything, mock.Anything)
-			enrollmentMock.AssertNotCalled(GinkgoT(), "CancelEnrollmentAndPublish", mock.Anything, mock.Anything)
+			enrollmentMock.AssertNotCalled(GinkgoT(), "CancelEnrollment", mock.Anything, mock.Anything)
 		})
 	})
 
@@ -66,7 +66,7 @@ var _ = Describe("SeatMessageHandler", func() {
 
 		It("publishes an allocation failure through the seat manager", func() {
 			Expect(resultErr).ToNot(HaveOccurred())
-			enrollmentMock.AssertNotCalled(GinkgoT(), "CancelEnrollmentAndPublish", mock.Anything, mock.Anything)
+			enrollmentMock.AssertNotCalled(GinkgoT(), "CancelEnrollment", mock.Anything, mock.Anything)
 		})
 	})
 
@@ -78,15 +78,14 @@ var _ = Describe("SeatMessageHandler", func() {
 
 		It("returns an unmarshal error without compensating", func() {
 			Expect(resultErr).To(HaveOccurred())
-			Expect(resultErr.Error()).To(ContainSubstring("unmarshal seat allocation failed evt"))
-			enrollmentMock.AssertNotCalled(GinkgoT(), "CancelEnrollmentAndPublish", mock.Anything, mock.Anything)
+			Expect(resultErr.Error()).To(ContainSubstring("Invalid JSON at position"))
+			enrollmentMock.AssertNotCalled(GinkgoT(), "CancelEnrollment", mock.Anything, mock.Anything)
 		})
 	})
 
 	Context("HandleSeatAllocationFailedEvt with valid payload", func() {
 		var (
-			evt       fun.SeatAllocationFailedEvtV1
-			startedAt time.Time
+			evt fun.SeatAllocationFailedEvtV1
 		)
 
 		BeforeEach(func() {
@@ -100,25 +99,19 @@ var _ = Describe("SeatMessageHandler", func() {
 			Expect(err).ToNot(HaveOccurred())
 			msg := message.NewMessage("failed-msg", payload)
 			msg.SetContext(common.WithMetadata(context.Background(), common.NewMetadata(msg.UUID, "corr-1", "cause-1")))
-			startedAt = time.Now().UTC()
-			enrollmentMock.EXPECT().CancelEnrollmentAndPublish(
+			enrollmentMock.EXPECT().CancelEnrollment(
 				mock.MatchedBy(func(ctx context.Context) bool {
 					metadata := common.MetadataFromContext(ctx)
 					return metadata.CorrelationID == "corr-1" && metadata.CausationID == "cause-1"
 				}),
-				mock.MatchedBy(func(cancelled fun.EnrollmentCancelledEvtV1) bool {
-					return cancelled.EnrollmentID == evt.EnrollmentID &&
-						cancelled.PersonID == evt.PersonID &&
-						cancelled.Reason == evt.Reason &&
-						!cancelled.CancelledAt.Before(startedAt) &&
-						!cancelled.CancelledAt.After(time.Now().UTC())
-				}),
+				evt.EnrollmentID,
 			).Return(nil)
 			resultErr = seatHandler.HandleSeatAllocationFailedEvt(msg)
 		})
 
 		It("cancels the enrollment through the enrollment manager", func() {
 			Expect(resultErr).ToNot(HaveOccurred())
+			enrollmentMock.AssertCalled(GinkgoT(), "CancelEnrollment", mock.Anything, evt.EnrollmentID)
 		})
 	})
 })

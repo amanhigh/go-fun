@@ -8,11 +8,9 @@ import (
 	"github.com/amanhigh/go-fun/models/fun"
 )
 
-// EnrollmentEventPublisher defines publishing APIs for enrollment saga commands and events.
+// EnrollmentPublisher publishes only the root enrollment command.
 type EnrollmentPublisher interface {
 	Enroll(ctx context.Context, enrollment fun.Enrollment) common.HttpError
-	EnrollmentConfirmedEvt(ctx context.Context, enrollment fun.Enrollment) common.HttpError
-	EnrollmentCancelledEvt(ctx context.Context, enrollment fun.Enrollment, reason string) common.HttpError
 }
 
 type enrollmentPublisher struct {
@@ -29,30 +27,8 @@ func (ep *enrollmentPublisher) Enroll(ctx context.Context, enrollment fun.Enroll
 		EnrollmentID: enrollment.ID,
 		PersonID:     enrollment.PersonID,
 		Grade:        enrollment.Grade,
-		Status:       enrollment.Status,
 		RequestedAt:  time.Now().UTC(),
 	}
 
 	return ep.base.PublishRoot(ctx, fun.TopicEnrollCmd, payload)
-}
-
-func (ep *enrollmentPublisher) EnrollmentConfirmedEvt(ctx context.Context, enrollment fun.Enrollment) common.HttpError {
-	payload := fun.EnrollmentConfirmedEvtV1{
-		EnrollmentID: enrollment.ID,
-		PersonID:     enrollment.PersonID,
-		ConfirmedAt:  time.Now().UTC(),
-	}
-
-	return ep.base.PublishChild(ctx, fun.TopicEnrollmentConfirmedEvt, payload)
-}
-
-func (ep *enrollmentPublisher) EnrollmentCancelledEvt(ctx context.Context, enrollment fun.Enrollment, reason string) common.HttpError {
-	payload := fun.EnrollmentCancelledEvtV1{
-		EnrollmentID: enrollment.ID,
-		PersonID:     enrollment.PersonID,
-		Reason:       reason,
-		CancelledAt:  time.Now().UTC(),
-	}
-
-	return ep.base.PublishChild(ctx, fun.TopicEnrollmentCancelledEvt, payload)
 }

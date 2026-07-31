@@ -49,12 +49,10 @@ func (ms *MessagingServer) registerHandlers(
 	ms.registerConsumer(fun.TopicEnrollCmd, enrollmentHandler.HandleEnrollCmd)
 	ms.registerConsumer(fun.TopicSeatReservedEvt, seatHandler.HandleSeatReservedEvt)
 	ms.registerConsumer(fun.TopicSeatWaitlistedEvt, seatHandler.HandleSeatWaitlistedEvt)
-	ms.registerConsumer(fun.TopicEnrollmentCancelledEvt, enrollmentHandler.HandleEnrollmentCancelledEvt)
 
 	ms.registerRetryConsumer(fun.TopicSeatAllocationFailedEvt, seatHandler.HandleSeatAllocationFailedEvt)
 	ms.registerRetryConsumer(fun.TopicAllocateSeatCmd, seatHandler.HandleAllocateSeatCmd)
-	ms.registerRetryConsumer(util.DeadLetterTopic(fun.TopicAllocateSeatCmd), seatHandler.HandleDeadLetteredAllocateSeatCmd)
-	ms.registerRetryConsumer(fun.TopicEnrollmentConfirmedEvt, enrollmentHandler.HandleEnrollmentConfirmedEvt)
+	ms.registerConsumer(util.DeadLetterTopic(fun.TopicAllocateSeatCmd), seatHandler.HandleDeadLetteredAllocateSeatCmd)
 }
 
 // registerConsumer wires a consumer with metadata normalization and recovery.

@@ -1,20 +1,15 @@
 package handlers
 
 import (
-	"encoding/json"
-	"fmt"
-
 	"github.com/ThreeDotsLabs/watermill/message"
 	"github.com/amanhigh/go-fun/common/util"
 	"github.com/amanhigh/go-fun/components/fun-app/manager"
 	"github.com/amanhigh/go-fun/models/fun"
 )
 
-// EnrollmentMessageHandler handles enrollment saga commands/events.
+// EnrollmentMessageHandler handles enrollment commands only.
 type EnrollmentMessageHandler interface {
 	HandleEnrollCmd(msg *message.Message) error
-	HandleEnrollmentConfirmedEvt(msg *message.Message) error
-	HandleEnrollmentCancelledEvt(msg *message.Message) error
 }
 
 type EnrollmentMessageHandlerImpl struct {
@@ -36,22 +31,4 @@ func (h *EnrollmentMessageHandlerImpl) HandleEnrollCmd(msg *message.Message) err
 	}
 
 	return h.Manager.EnrollCmd(msg.Context(), cmd)
-}
-
-// HandleEnrollmentConfirmedEvt persists CONFIRMED status via manager sink.
-func (h *EnrollmentMessageHandlerImpl) HandleEnrollmentConfirmedEvt(msg *message.Message) error {
-	var evt fun.EnrollmentConfirmedEvtV1
-	if err := json.Unmarshal(msg.Payload, &evt); err != nil {
-		return fmt.Errorf("unmarshal enrollment confirmed evt: %w", err)
-	}
-	return h.Manager.OnEnrollmentConfirmedEvt(msg.Context(), evt)
-}
-
-// HandleEnrollmentCancelledEvt persists CANCELLED status via manager sink.
-func (h *EnrollmentMessageHandlerImpl) HandleEnrollmentCancelledEvt(msg *message.Message) error {
-	var evt fun.EnrollmentCancelledEvtV1
-	if err := json.Unmarshal(msg.Payload, &evt); err != nil {
-		return fmt.Errorf("unmarshal enrollment cancelled evt: %w", err)
-	}
-	return h.Manager.OnEnrollmentCancelledEvt(msg.Context(), evt)
 }

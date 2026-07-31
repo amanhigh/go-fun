@@ -3,7 +3,6 @@ package handlers
 import (
 	"encoding/json"
 	"fmt"
-	"time"
 
 	"github.com/ThreeDotsLabs/watermill/message"
 	"github.com/ThreeDotsLabs/watermill/message/router/middleware"
@@ -54,9 +53,9 @@ func (h *SeatMessageHandlerImpl) HandleSeatReservedEvt(msg *message.Message) err
 }
 
 func (h *SeatMessageHandlerImpl) HandleSeatWaitlistedEvt(msg *message.Message) error {
-	var evt fun.SeatWaitlistedEvtV1
-	if err := json.Unmarshal(msg.Payload, &evt); err != nil {
-		return fmt.Errorf("unmarshal seat waitlisted evt: %w", err)
+	evt, err := util.DecodeAndValidateMessage[fun.SeatWaitlistedEvtV1](msg)
+	if err != nil {
+		return err
 	}
 	enrollment := fun.Enrollment{ID: evt.EnrollmentID, PersonID: evt.PersonID, Grade: evt.Grade}
 	// FIXME: Waitlisted flow ends here — add exponential backoff retry to re-check seat availability before terminal failure.
@@ -66,20 +65,14 @@ func (h *SeatMessageHandlerImpl) HandleSeatWaitlistedEvt(msg *message.Message) e
 
 // HandleSeatAllocationFailedEvt compensates a failed seat allocation by cancelling the enrollment.
 func (h *SeatMessageHandlerImpl) HandleSeatAllocationFailedEvt(msg *message.Message) error {
-	var evt fun.SeatAllocationFailedEvtV1
-	if err := json.Unmarshal(msg.Payload, &evt); err != nil {
-		return fmt.Errorf("unmarshal seat allocation failed evt: %w", err)
+	evt, err := util.DecodeAndValidateMessage[fun.SeatAllocationFailedEvtV1](msg)
+	if err != nil {
+		return err
 	}
-	cancelled := fun.EnrollmentCancelledEvtV1{
-		EnrollmentID: evt.EnrollmentID,
-		PersonID:     evt.PersonID,
-		Reason:       evt.Reason,
-		CancelledAt:  time.Now().UTC(),
-	}
-	return h.EnrollmentManager.CancelEnrollmentAndPublish(msg.Context(), cancelled)
+	return h.EnrollmentManager.CancelEnrollment(msg.Context(), evt.EnrollmentID)
 }
 
-// HandleDeadLetteredAllocateSeatCmd publishes the terminal allocation failure event.
+// HandleDeadLetteredAllocateSeatCmd publishes the allocation failure event.
 func (h *SeatMessageHandlerImpl) HandleDeadLetteredAllocateSeatCmd(msg *message.Message) error {
 	var cmd fun.AllocateSeatCmdV1
 	if err := json.Unmarshal(msg.Payload, &cmd); err != nil {
