@@ -7,6 +7,7 @@ import (
 
 	"github.com/ThreeDotsLabs/watermill/message"
 	"github.com/ThreeDotsLabs/watermill/message/router/middleware"
+	"github.com/amanhigh/go-fun/common/util"
 	"github.com/amanhigh/go-fun/components/fun-app/manager"
 	"github.com/amanhigh/go-fun/models/fun"
 )
@@ -35,18 +36,18 @@ func NewSeatMessageHandler(seatManager manager.SeatManagerInterface, enrollmentM
 var _ SeatMessageHandler = (*SeatMessageHandlerImpl)(nil)
 
 func (h *SeatMessageHandlerImpl) HandleAllocateSeatCmd(msg *message.Message) error {
-	var cmd fun.AllocateSeatCmdV1
-	if err := json.Unmarshal(msg.Payload, &cmd); err != nil {
-		return fmt.Errorf("unmarshal allocate seat cmd: %w", err)
+	cmd, err := util.DecodeAndValidateMessage[fun.AllocateSeatCmdV1](msg)
+	if err != nil {
+		return err
 	}
 
 	return h.SeatManager.AllocateSeat(msg.Context(), cmd)
 }
 
 func (h *SeatMessageHandlerImpl) HandleSeatReservedEvt(msg *message.Message) error {
-	var evt fun.SeatReservedEvtV1
-	if err := json.Unmarshal(msg.Payload, &evt); err != nil {
-		return fmt.Errorf("unmarshal seat reserved evt: %w", err)
+	evt, err := util.DecodeAndValidateMessage[fun.SeatReservedEvtV1](msg)
+	if err != nil {
+		return err
 	}
 	e := fun.Enrollment{ID: evt.EnrollmentID, PersonID: evt.PersonID, Grade: evt.Grade}
 	return h.EnrollmentManager.OnSeatReservedEvt(msg.Context(), e)

@@ -5,6 +5,7 @@ import (
 	"fmt"
 
 	"github.com/ThreeDotsLabs/watermill/message"
+	"github.com/amanhigh/go-fun/common/util"
 	"github.com/amanhigh/go-fun/components/fun-app/manager"
 	"github.com/amanhigh/go-fun/models/fun"
 )
@@ -29,9 +30,9 @@ var _ EnrollmentMessageHandler = (*EnrollmentMessageHandlerImpl)(nil)
 
 // HandleEnrollCmd forwards EnrollCmdV1 to EnrollmentManager; it delegates to SeatManager internally.
 func (h *EnrollmentMessageHandlerImpl) HandleEnrollCmd(msg *message.Message) error {
-	var cmd fun.EnrollCmdV1
-	if err := json.Unmarshal(msg.Payload, &cmd); err != nil {
-		return fmt.Errorf("unmarshal enroll cmd: %w", err)
+	cmd, err := util.DecodeAndValidateMessage[fun.EnrollCmdV1](msg)
+	if err != nil {
+		return err
 	}
 
 	return h.Manager.EnrollCmd(msg.Context(), cmd)

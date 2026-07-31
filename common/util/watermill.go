@@ -13,7 +13,10 @@ import (
 	"github.com/ThreeDotsLabs/watermill/message/router/middleware"
 	"github.com/ThreeDotsLabs/watermill/pubsub/gochannel"
 	modelcommon "github.com/amanhigh/go-fun/models/common"
+	"github.com/go-playground/validator/v10"
 )
+
+var messageValidator = validator.New()
 
 // WatermillLifecycle abstracts router lifecycle management.
 // NewStdWatermillLogger returns Watermill's default stdout logger.
@@ -122,6 +125,19 @@ func PublishJSONMessage(_ context.Context, publisher message.Publisher, topic st
 		return fmt.Errorf("publish topic %s: %w", topic, err)
 	}
 	return nil
+}
+
+// DecodeAndValidateMessage unmarshals a Watermill message payload into T and
+// validates it using the payload's validate tags.
+func DecodeAndValidateMessage[T any](msg *message.Message) (T, error) {
+	var payload T
+	if err := json.Unmarshal(msg.Payload, &payload); err != nil {
+		return payload, ProcessValidationError(err)
+	}
+	if err := messageValidator.Struct(payload); err != nil {
+		return payload, ProcessValidationError(err)
+	}
+	return payload, nil
 }
 
 // metadataFromMessage normalizes transport identity and returns typed saga
