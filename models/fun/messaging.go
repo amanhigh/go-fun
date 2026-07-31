@@ -25,28 +25,6 @@ const (
 	TopicSeatReservedEvt = "funapp.enrollment.event.seat_reserved.v1"
 	// TopicSeatWaitlistedEvt signals that the enrollment was waitlisted.
 	TopicSeatWaitlistedEvt = "funapp.enrollment.event.seat_waitlisted.v1"
-	// TopicEnrollmentConfirmedEvt signals that the enrollment is confirmed.
-	TopicEnrollmentConfirmedEvt = "funapp.enrollment.event.enrollment_confirmed.v1"
-	// TopicEnrollmentCancelledEvt signals that the enrollment was cancelled.
-	TopicEnrollmentCancelledEvt = "funapp.enrollment.event.enrollment_cancelled.v1"
-)
-
-// ---------------------------------------------------------------------------
-// Message metadata keys – attached as Watermill message metadata headers.
-// ---------------------------------------------------------------------------
-
-const (
-	MetadataEnrollmentID = "enrollment_id"
-	MetadataPersonID     = "person_id"
-)
-
-// ---------------------------------------------------------------------------
-// Domain constants
-// ---------------------------------------------------------------------------
-
-const (
-	// EnrollmentCancellationReasonSeatAllocationFailed is the reason stored in
-	// EnrollmentCancelledEvtV1 when the cancellation is triggered by an
-	// allocation failure after retries are exhausted.
-	EnrollmentCancellationReasonSeatAllocationFailed = "seat_allocation_failed_after_retries"
+	// TopicSeatAllocationFailedEvt signals that seat allocation exhausted retries.
+	TopicSeatAllocationFailedEvt = "funapp.enrollment.event.seat_allocation_failed.v1"
 )

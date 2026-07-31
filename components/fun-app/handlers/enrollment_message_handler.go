@@ -1,21 +1,15 @@
 package handlers
 
 import (
-	"context"
-	"encoding/json"
-	"fmt"
-
 	"github.com/ThreeDotsLabs/watermill/message"
+	"github.com/amanhigh/go-fun/common/util"
 	"github.com/amanhigh/go-fun/components/fun-app/manager"
-	"github.com/amanhigh/go-fun/models/common"
 	"github.com/amanhigh/go-fun/models/fun"
 )
 
-// EnrollmentMessageHandler handles enrollment saga commands/events.
+// EnrollmentMessageHandler handles enrollment commands only.
 type EnrollmentMessageHandler interface {
 	HandleEnrollCmd(msg *message.Message) error
-	HandleEnrollmentConfirmedEvt(msg *message.Message) error
-	HandleEnrollmentCancelledEvt(msg *message.Message) error
 }
 
 type EnrollmentMessageHandlerImpl struct {
@@ -31,56 +25,10 @@ var _ EnrollmentMessageHandler = (*EnrollmentMessageHandlerImpl)(nil)
 
 // HandleEnrollCmd forwards EnrollCmdV1 to EnrollmentManager; it delegates to SeatManager internally.
 func (h *EnrollmentMessageHandlerImpl) HandleEnrollCmd(msg *message.Message) error {
-	var cmd fun.EnrollCmdV1
-	if err := json.Unmarshal(msg.Payload, &cmd); err != nil {
-		return fmt.Errorf("unmarshal enroll cmd: %w", err)
+	cmd, err := util.DecodeAndValidateMessage[fun.EnrollCmdV1](msg)
+	if err != nil {
+		return err
 	}
 
-	ctx := stampCtx(msg.Context(), msg.Metadata, cmd.EnrollmentID, msg.UUID)
-	return h.Manager.EnrollCmd(ctx, cmd)
-}
-
-// HandleEnrollmentConfirmedEvt persists CONFIRMED status via manager sink.
-func (h *EnrollmentMessageHandlerImpl) HandleEnrollmentConfirmedEvt(msg *message.Message) error {
-	var evt fun.EnrollmentConfirmedEvtV1
-	if err := json.Unmarshal(msg.Payload, &evt); err != nil {
-		return fmt.Errorf("unmarshal enrollment confirmed evt: %w", err)
-	}
-	ctx := stampCtx(msg.Context(), msg.Metadata, evt.EnrollmentID, msg.UUID)
-	return h.Manager.OnEnrollmentConfirmedEvt(ctx, evt)
-}
-
-// HandleEnrollmentCancelledEvt persists CANCELLED status via manager sink.
-func (h *EnrollmentMessageHandlerImpl) HandleEnrollmentCancelledEvt(msg *message.Message) error {
-	var evt fun.EnrollmentCancelledEvtV1
-	if err := json.Unmarshal(msg.Payload, &evt); err != nil {
-		return fmt.Errorf("unmarshal enrollment cancelled evt: %w", err)
-	}
-	ctx := stampCtx(msg.Context(), msg.Metadata, evt.EnrollmentID, msg.UUID)
-	return h.Manager.OnEnrollmentCancelledEvt(ctx, evt)
-}
-
-// stampCtx helper to apply correlation/causation from message metadata.
-func stampCtx(in context.Context, meta message.Metadata, enrollmentID, messageID string) context.Context {
-	// HACK: Can this Be a Generic Implementation ?
-	if in == nil {
-		in = context.Background()
-	}
-	corr := enrollmentID
-	if meta != nil {
-		if v := meta.Get(common.MetadataCorrelationIDKey); v != "" {
-			corr = v
-		}
-	}
-	out := common.WithCorrelation(in, corr)
-	causation := messageID
-	if meta != nil {
-		if v := meta.Get(common.MetadataCausationIDKey); v != "" {
-			causation = v
-		}
-	}
-	if causation != "" {
-		out = common.WithCausation(out, causation)
-	}
-	return out
+	return h.Manager.EnrollCmd(msg.Context(), cmd)
 }

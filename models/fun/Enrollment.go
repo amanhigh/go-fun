@@ -10,7 +10,6 @@ import (
 const (
 	// HACK: Smaller Name for Initial State ?
 	EnrollmentStatusSeatAllocationInitiated = "SEAT_ALLOCATION_INITIATED"
-	EnrollmentStatusSeatReserved            = "SEAT_RESERVED"
 	EnrollmentStatusWaitlisted              = "WAITLISTED"
 	EnrollmentStatusConfirmed               = "CONFIRMED"
 	EnrollmentStatusCancelled               = "CANCELLED"
