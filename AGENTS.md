@@ -52,6 +52,8 @@ This file contains guidelines for coding, testing, and examples on coding style 
 
 ## Testing
 
+- Use `just test` to run the existing full test flow, or `just test target=./path/to/package` and `just test target=./path/to/file_test.go` for targeted Go/Ginkgo tests. A supplied target dispatches to the private targeted runner, while no target runs the existing full flow; targeted runs bypass full-suite setup and slow-test filters. Targets must be existing package directories or `*_test.go` files, and invalid packages, missing paths, and non-test `.go` files are rejected.
+
 ### Test Structure
 - Refer to components/kohan/handler/journal_handler_test.go - it uses a nesting style building user stories on each other.
 - Do operations in BeforeEach and cleanup in AfterEach. Tests lie in the center. BeforeEach helps other Contexts which need that setup to be available.
