@@ -236,10 +236,15 @@ var _ = Describe("DBUtil", Ordered, Label(models.GINKGO_SLOW), func() {
 
 		BeforeEach(func() {
 			var err error
-			db, err = gorm.Open(sqlite.Open("file:memdb1?mode=memory&cache=shared"), &gorm.Config{
+			db, err = gorm.Open(sqlite.Open("file:apply-sort?mode=memory&cache=shared"), &gorm.Config{
 				Logger: logger.Default.LogMode(logger.Silent),
 			})
 			Expect(err).ToNot(HaveOccurred())
+			sqlDB, err := db.DB()
+			Expect(err).ToNot(HaveOccurred())
+			DeferCleanup(func() {
+				Expect(sqlDB.Close()).To(Succeed())
+			})
 
 			Expect(db.AutoMigrate(&testSortModel{})).To(Succeed())
 			Expect(db.Create(&[]testSortModel{
