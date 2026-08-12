@@ -6,7 +6,6 @@ import './.just/build.just'
 import './.just/generate.just'
 import './.just/quality.just'
 import './.just/test.just'
-import './.just/docker.just'
 import './.just/release.just'
 import './.just/devspace.just'
 import './.just/ops.just'
@@ -34,7 +33,8 @@ prepare-k8s: _setup-k8
 
 [group('setup')]
 [doc('Run the full local setup workflow')]
-setup: _sync test generate build lint-dead _helm-package docker-build
+setup: _sync test generate build lint-dead _helm-package
+    just components/fun-app/docker-build
 
 [group('setup')]
 [doc('Run setup, show info, and clean generated artifacts')]
@@ -42,4 +42,7 @@ reset: setup info clean
 
 [group('setup')]
 [doc('Run the full bootstrap workflow including slow tests')]
-all: prepare docker-clean install reset infos test-slow
+all: prepare _clean-fun-docker install reset infos test-slow
+
+_clean-fun-docker:
+    just components/fun-app/docker-clean

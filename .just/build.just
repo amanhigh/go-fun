@@ -28,10 +28,10 @@ clean: _clean-test _clean-build
 
 [group('info')]
 [doc('Show release tags and Docker image information')]
-info: _info-release _info-docker
+info: _info-release
+    just components/fun-app/docker-info
 
 [group('info')]
 [doc('Show release info plus devspace information')]
 infos: info space-info
-
 
