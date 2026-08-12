@@ -8,9 +8,7 @@ _build-fun-cover:
 
 [group('build')]
 _build-kohan:
-    just _title "BUILD" "Building Kohan"
-    mkdir -p bin
-    CGO_ENABLED=1 GOARCH=amd64 go build -o bin/kohan components/kohan/main.go
+    just components/kohan/build
 
 [group('core')]
 [doc('Build the Fun App and Kohan binaries')]
@@ -34,4 +32,3 @@ info: _info-release
 [group('info')]
 [doc('Show release info plus devspace information')]
 infos: info space-info
-

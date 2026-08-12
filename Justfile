@@ -42,7 +42,7 @@ reset: setup info clean
 
 [group('setup')]
 [doc('Run the full bootstrap workflow including slow tests')]
-all: prepare _clean-fun-docker install reset infos test-slow
+all: prepare _clean-fun-docker reset infos test-slow
 
 _clean-fun-docker:
     just components/fun-app/docker-clean
