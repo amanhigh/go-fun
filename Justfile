@@ -22,14 +22,11 @@ format:
 
 [group('setup')]
 [doc('Install local development tools and validate the environment')]
-prepare:
-    just _setup-gotools
-    just doctor
+prepare: _setup-gotools _doctor
 
 [group('setup')]
-[doc('Validate tools, display support, and optional environment dependencies')]
-doctor:
-    just _doctor
+[doc('Check external display and environment dependencies')]
+doctor: _doctor
 
 [group('setup')]
 [doc('Configure Helm repositories and local Kubernetes ingress hosts')]

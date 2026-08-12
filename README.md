@@ -14,7 +14,7 @@ This repository follows the philosophy of Learning by Doing. It includes plays, 
 		- #### Onetime
 			- We will use [Just](https://github.com/casey/just) for project management.
 			- Install repository development tools and validate the environment: `just prepare`
-			- Check missing tools and their impact without changing the system: `just doctor`
+			- Check external display and environment dependencies without changing the system: `just doctor`
 			- Configure Kubernetes Helm repositories and local `.docker` ingress hosts when needed: `just prepare-k8s`
 			- If `just doctor` reports missing headless display support, install it on Debian/Ubuntu with `sudo apt-get update && sudo apt-get install -y xvfb xauth`.
 			- To check what all is available run `just` to display help.
