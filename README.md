@@ -18,7 +18,7 @@ This repository follows the philosophy of Learning by Doing. It includes plays, 
 			- Configure Kubernetes Helm repositories and local `.docker` ingress hosts when needed: `just prepare-k8s`
 			- If `just doctor` reports missing headless display support, install it on Debian/Ubuntu with `sudo apt-get update && sudo apt-get install -y xvfb xauth`.
 			- To check what all is available run `just` to display help.
-		- Run `just reset` to do a complete build, test, coverage, and info pass.
+		- Run `just reset` to do a complete build, test, coverage, and info pass. Run `just prepare-k8s` first when Helm chart packaging or Kubernetes integration is required.
 		- Use `just info` (or `infos`) for displaying info.
 	- ### Play
 		Easy ways to Play with **FunApp** without Dev Setup.  

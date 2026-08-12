@@ -46,6 +46,11 @@ jobs:
           export GOTOOLCHAIN=local
           just prepare
 
+      - name: SETUP -> Kubernetes
+        run: |
+          export GOTOOLCHAIN=local
+          just prepare-k8s
+
       - name: SETUP -> Build
         run: |
           export GOTOOLCHAIN=local
