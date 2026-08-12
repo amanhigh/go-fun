@@ -33,13 +33,10 @@ run: build
 docker-build: build
     #!/usr/bin/env bash
     set -euo pipefail
-    cleanup() {
-        rm -f fun
-    }
-    trap cleanup EXIT
     just _title "Docker" "Building FunApp"
     cp "{{fun_app_binary}}" fun
     just _run "docker buildx build -t amanfdk/fun-app -f Dockerfile ."
+    rm fun
     just _info "Docker Hub" "https://hub.docker.com/r/amanfdk/fun-app/tags"
 
 [doc('Run the Fun App Docker image interactively')]
