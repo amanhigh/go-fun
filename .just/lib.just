@@ -4,7 +4,7 @@ set quiet := true
 tailwind := "tailwindcss"
 tsc := "tsc"
 esbuild := "esbuild"
-gobin := `if command -v go >/dev/null 2>&1; then go env GOPATH; else printf '%s' /tmp/go-fun-gopath; fi` + "/bin"
+gobin := `go env GOPATH 2>/dev/null || printf '%s' /tmp/go-fun-gopath` + "/bin"
 templ_install := "github.com/a-h/templ/cmd/templ@latest"
 templ := gobin + "/templ"
 goimports_install := "golang.org/x/tools/cmd/goimports@latest"
@@ -56,8 +56,8 @@ _run-with-display command:
     run_command='{{command}}'
 
     if [[ -z "${DISPLAY:-}" && -z "${WAYLAND_DISPLAY:-}" ]]; then
-        if ! command -v xvfb-run >/dev/null 2>&1; then
-            echo "No graphical display is available and xvfb-run is not installed." >&2
+        if ! command -v xvfb-run >/dev/null 2>&1 || ! command -v xauth >/dev/null 2>&1; then
+            echo "No graphical display is available and xvfb-run/xauth is not installed." >&2
             echo "Run 'just doctor' for the Debian/Ubuntu installation command." >&2
             exit 1
         fi

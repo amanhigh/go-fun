@@ -66,18 +66,6 @@ _doctor:
         fi
     fi
 
-    if command_status just; then
-        ok "Just" "available"
-    else
-        error "Just" "Required to run repository recipes"
-    fi
-
-    if command_status git; then
-        ok "Git" "available"
-    else
-        error "Git" "Required for repository workflows"
-    fi
-
     for command_name in jq make; do
         if command_status "$command_name"; then
             ok "$command_name" "available"
