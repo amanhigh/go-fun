@@ -46,10 +46,15 @@ jobs:
           export GOTOOLCHAIN=local
           just prepare
 
+      - name: SETUP -> Kubernetes
+        run: |
+          export GOTOOLCHAIN=local
+          just prepare-k8s
+
       - name: SETUP -> Build
         run: |
           export GOTOOLCHAIN=local
-          xvfb-run -a just reset
+          just reset
 
       - name: COVERAGE -> Report
         uses: codecov/codecov-action@v3
