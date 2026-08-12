@@ -23,7 +23,7 @@ This repository follows the philosophy of Learning by Doing. It includes plays, 
 	- ### Play
 		Easy ways to Play with **FunApp** without Dev Setup.  
 		- Start
-			- Golang: `just run`
+			- Golang: `just components/fun-app/run`
 				![Go Run](common/images/fun-app/go-run.gif)  
 			- Docker [Image](https://hub.docker.com/r/amanfdk/fun-app): `docker run amanfdk/fun-app`
 		- Testing
@@ -33,7 +33,7 @@ This repository follows the philosophy of Learning by Doing. It includes plays, 
 			- Performance Test
 				[Vegeta](https://github.com/tsenart/vegeta) is the tool of choice here. [Gum](https://github.com/charmbracelet/gum) helps in prompts.  
 				- Installation: `brew install gum vegeta`
-				- Run: `just --justfile components/fun-app/it/Justfile --working-directory components/fun-app/it all`
+				- Run: `just components/fun-app/it/all`
 		- Linting
 			- `just lint` will do code linting using [golangci-lint](https://github.com/golangci/golangci-lint)
 	- ### Dev Setup
@@ -60,12 +60,12 @@ This repository follows the philosophy of Learning by Doing. It includes plays, 
 				- Cleanup: `helm -n fun-app delete fun-app`
 			- Via Local
 				- Deploys FunApp and Vegeta Container (for Load Test).
-				- Setup: `just --justfile components/fun-app/charts/Justfile --working-directory components/fun-app/charts setup` (or `reset`)
-				- Clean: `just --justfile components/fun-app/charts/Justfile --working-directory components/fun-app/charts clean` (or `info`)
+				- Setup: `just components/fun-app/charts/setup` (or `just components/fun-app/charts/reset`)
+				- Clean: `just components/fun-app/charts/clean` (or `just components/fun-app/charts/info`)
 			- Access
 				- Open: http://localhost:9090/metrics  (Tunnel required for forwarding:  `minikube tunnel`)
 				- Load Test (From Vegeta Container):  `echo 'GET http://fun-app:9090/person/all' | vegeta attack | vegeta report`
-				- Log Analyzer : `just --justfile components/fun-app/charts/Justfile --working-directory components/fun-app/charts analyse`
+				- Log Analyzer : `just components/fun-app/charts/analyse`
 			- ![Helm](common/images/fun-app/helm.gif)
 - ## Tools
 	- ## Kubernetes

@@ -1,0 +1,29 @@
+set shell := ["bash", "-cu"]
+
+import '../../.just/lib.just'
+
+fun_app_binary := root + "/bin/fun"
+
+[doc('Show available Fun App recipes')]
+help:
+    just --list
+
+[doc('Build the Fun App binary')]
+[group('build')]
+build:
+    just _title "BUILD" "Building Fun App"
+    mkdir -p {{root}}/bin
+    CGO_ENABLED=0 GOARCH=amd64 go build -o {{fun_app_binary}} .
+
+[doc('Build the Fun App binary with coverage instrumentation')]
+[group('build')]
+build-cover:
+    just _title "BUILD" "Building Fun App with Coverage"
+    mkdir -p {{root}}/bin
+    CGO_ENABLED=0 GOARCH=amd64 go build -cover -o {{fun_app_binary}} .
+
+[doc('Build and run the Fun App')]
+[group('run')]
+run: build
+    just _title "RUN" "Running Fun App"
+    just _run "{{fun_app_binary}}"
