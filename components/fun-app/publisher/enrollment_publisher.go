@@ -27,7 +27,7 @@ func NewEnrollmentPublisher(base BasePublisher) EnrollmentPublisher {
 func (ep *enrollmentPublisher) Enroll(ctx context.Context, enrollment fun.Enrollment) common.HttpError {
 	payload := fun.EnrollCmdV1{
 		EnrollmentID: enrollment.ID,
-		PersonID:     enrollment.PersonID,
+		StudentID:     enrollment.StudentID,
 		Grade:        enrollment.Grade,
 		Status:       enrollment.Status,
 		RequestedAt:  time.Now().UTC(),
@@ -35,7 +35,7 @@ func (ep *enrollmentPublisher) Enroll(ctx context.Context, enrollment fun.Enroll
 
 	extras := map[string]string{
 		fun.MetadataEnrollmentID: enrollment.ID,
-		fun.MetadataPersonID:     enrollment.PersonID,
+		fun.MetadataStudentID:     enrollment.StudentID,
 	}
 
 	return ep.base.PublishWithExtras(ctx, fun.TopicEnrollCmd, payload, extras)
@@ -44,13 +44,13 @@ func (ep *enrollmentPublisher) Enroll(ctx context.Context, enrollment fun.Enroll
 func (ep *enrollmentPublisher) EnrollmentConfirmedEvt(ctx context.Context, enrollment fun.Enrollment) common.HttpError {
 	payload := fun.EnrollmentConfirmedEvtV1{
 		EnrollmentID: enrollment.ID,
-		PersonID:     enrollment.PersonID,
+		StudentID:     enrollment.StudentID,
 		ConfirmedAt:  time.Now().UTC(),
 	}
 
 	extras := map[string]string{
 		fun.MetadataEnrollmentID: enrollment.ID,
-		fun.MetadataPersonID:     enrollment.PersonID,
+		fun.MetadataStudentID:     enrollment.StudentID,
 	}
 
 	return ep.base.PublishWithExtras(ctx, fun.TopicEnrollmentConfirmedEvt, payload, extras)
@@ -59,14 +59,14 @@ func (ep *enrollmentPublisher) EnrollmentConfirmedEvt(ctx context.Context, enrol
 func (ep *enrollmentPublisher) EnrollmentCancelledEvt(ctx context.Context, enrollment fun.Enrollment, reason string) common.HttpError {
 	payload := fun.EnrollmentCancelledEvtV1{
 		EnrollmentID: enrollment.ID,
-		PersonID:     enrollment.PersonID,
+		StudentID:     enrollment.StudentID,
 		Reason:       reason,
 		CancelledAt:  time.Now().UTC(),
 	}
 
 	extras := map[string]string{
 		fun.MetadataEnrollmentID: enrollment.ID,
-		fun.MetadataPersonID:     enrollment.PersonID,
+		fun.MetadataStudentID:     enrollment.StudentID,
 	}
 
 	return ep.base.PublishWithExtras(ctx, fun.TopicEnrollmentCancelledEvt, payload, extras)

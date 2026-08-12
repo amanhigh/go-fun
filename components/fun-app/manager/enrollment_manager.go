@@ -15,17 +15,16 @@ import (
 //   - Flow is always Handler -> Manager -> Publisher. Handlers never publish directly.
 //   - Managers only talk to their own publisher; cross-domain messages use Manager-to-Manager calls.
 //   - EnrollmentManager responsibilities:
-//   - EnrollPerson persists an initiated enrollment and publishes EnrollCmd (C1).
+//   - EnrollStudent persists an initiated enrollment and publishes EnrollCmd (C1).
 //   - EnrollCmd delegates seat allocation to SeatManager, which publishes AllocateSeat (C2).
 //   - OnSeatReservedEvt persists status and emits EnrollmentConfirmedEvt.
 //   - CancelEnrollmentAndPublish persists status and emits EnrollmentCancelledEvt for origin-side cancellations.
 //   - OnEnrollmentConfirmedEvt and OnEnrollmentCancelledEvt are idempotent sinks that persist status without publishing.
 //   - SeatManager publishes only seat-related commands/events and never touches enrollment publishers.
 //
-// TODO: Rename Person usage to Student once the domain model is updated.
 type EnrollmentManagerInterface interface {
-	EnrollPerson(ctx context.Context, personID string, grade int) (fun.Enrollment, common.HttpError)
-	GetEnrollment(ctx context.Context, personID string) (fun.Enrollment, common.HttpError)
+	EnrollStudent(ctx context.Context, studentID string, grade int) (fun.Enrollment, common.HttpError)
+	GetEnrollment(ctx context.Context, studentID string) (fun.Enrollment, common.HttpError)
 	EnrollCmd(ctx context.Context, cmd fun.EnrollCmdV1) common.HttpError
 	OnSeatReservedEvt(ctx context.Context, enrollment fun.Enrollment) common.HttpError
 	UpdateToWaitlisted(ctx context.Context, enrollment fun.Enrollment) common.HttpError
@@ -35,20 +34,20 @@ type EnrollmentManagerInterface interface {
 }
 
 type EnrollmentManager struct {
-	PersonManager       PersonManagerInterface
+	StudentManager       StudentManagerInterface
 	EnrollmentDao       dao.EnrollmentDaoInterface
 	EnrollmentPublisher publisher.EnrollmentPublisher
 	SeatManager         SeatManagerInterface
 }
 
 func NewEnrollmentManager(
-	personManager PersonManagerInterface,
+	studentManager StudentManagerInterface,
 	enrollmentDao dao.EnrollmentDaoInterface,
 	enrollmentPublisher publisher.EnrollmentPublisher,
 	seatManager SeatManagerInterface,
 ) *EnrollmentManager {
 	return &EnrollmentManager{
-		PersonManager:       personManager,
+		StudentManager:       studentManager,
 		EnrollmentDao:       enrollmentDao,
 		EnrollmentPublisher: enrollmentPublisher,
 		SeatManager:         seatManager,
@@ -57,13 +56,13 @@ func NewEnrollmentManager(
 
 var _ EnrollmentManagerInterface = (*EnrollmentManager)(nil)
 
-func (em *EnrollmentManager) EnrollPerson(ctx context.Context, personID string, grade int) (fun.Enrollment, common.HttpError) {
-	person, err := em.PersonManager.GetPerson(ctx, personID)
+func (em *EnrollmentManager) EnrollStudent(ctx context.Context, studentID string, grade int) (fun.Enrollment, common.HttpError) {
+	student, err := em.StudentManager.GetStudent(ctx, studentID)
 	if err != nil {
 		return fun.Enrollment{}, err
 	}
 
-	enrollment := em.buildEnrollment(person.Id, grade)
+	enrollment := em.buildEnrollment(student.Id, grade)
 	if err := em.upsertEnrollment(ctx, enrollment); err != nil {
 		return fun.Enrollment{}, err
 	}
@@ -78,9 +77,9 @@ func (em *EnrollmentManager) EnrollPerson(ctx context.Context, personID string, 
 	return *enrollment, nil
 }
 
-func (em *EnrollmentManager) GetEnrollment(ctx context.Context, personID string) (fun.Enrollment, common.HttpError) {
+func (em *EnrollmentManager) GetEnrollment(ctx context.Context, studentID string) (fun.Enrollment, common.HttpError) {
 	var enrollment fun.Enrollment
-	if err := em.EnrollmentDao.FindByPersonID(ctx, personID, &enrollment); err != nil {
+	if err := em.EnrollmentDao.FindByStudentID(ctx, studentID, &enrollment); err != nil {
 		return fun.Enrollment{}, err
 	}
 
@@ -95,7 +94,7 @@ func (em *EnrollmentManager) EnrollCmd(ctx context.Context, cmd fun.EnrollCmdV1)
 
 	enrollment := fun.Enrollment{
 		ID:       cmd.EnrollmentID,
-		PersonID: cmd.PersonID,
+		StudentID: cmd.StudentID,
 		Grade:    cmd.Grade,
 	}
 
@@ -168,7 +167,7 @@ func (em *EnrollmentManager) updateStatusByID(ctx context.Context, enrollmentID,
 func (em *EnrollmentManager) upsertEnrollment(ctx context.Context, enrollment *fun.Enrollment) common.HttpError {
 	return em.EnrollmentDao.UseOrCreateTx(ctx, func(c context.Context) common.HttpError {
 		var existing fun.Enrollment
-		err := em.EnrollmentDao.FindByPersonID(c, enrollment.PersonID, &existing)
+		err := em.EnrollmentDao.FindByStudentID(c, enrollment.StudentID, &existing)
 		switch err {
 		case nil:
 			existing.Grade = enrollment.Grade
@@ -186,9 +185,9 @@ func (em *EnrollmentManager) upsertEnrollment(ctx context.Context, enrollment *f
 	})
 }
 
-func (em *EnrollmentManager) buildEnrollment(personID string, grade int) *fun.Enrollment {
+func (em *EnrollmentManager) buildEnrollment(studentID string, grade int) *fun.Enrollment {
 	return &fun.Enrollment{
-		PersonID: personID,
+		StudentID: studentID,
 		Grade:    grade,
 		Status:   fun.EnrollmentStatusSeatAllocationInitiated,
 	}

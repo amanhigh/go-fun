@@ -27,14 +27,14 @@ func NewSeatAllocationPublisher(base BasePublisher) SeatAllocationPublisher {
 func (sap *seatAllocationPublisher) AllocateSeat(ctx context.Context, enrollment fun.Enrollment) common.HttpError {
 	payload := fun.AllocateSeatCmdV1{
 		EnrollmentID: enrollment.ID,
-		PersonID:     enrollment.PersonID,
+		StudentID:     enrollment.StudentID,
 		Grade:        enrollment.Grade,
 		RequestedAt:  time.Now().UTC(),
 	}
 
 	extras := map[string]string{
 		fun.MetadataEnrollmentID: enrollment.ID,
-		fun.MetadataPersonID:     enrollment.PersonID,
+		fun.MetadataStudentID:     enrollment.StudentID,
 	}
 
 	return sap.base.PublishWithExtras(ctx, fun.TopicAllocateSeatCmd, payload, extras)
@@ -43,14 +43,14 @@ func (sap *seatAllocationPublisher) AllocateSeat(ctx context.Context, enrollment
 func (sap *seatAllocationPublisher) SeatReserved(ctx context.Context, enrollment fun.Enrollment) common.HttpError {
 	payload := fun.SeatReservedEvtV1{
 		EnrollmentID: enrollment.ID,
-		PersonID:     enrollment.PersonID,
+		StudentID:     enrollment.StudentID,
 		Grade:        enrollment.Grade,
 		ReservedAt:   time.Now().UTC(),
 	}
 
 	extras := map[string]string{
 		fun.MetadataEnrollmentID: enrollment.ID,
-		fun.MetadataPersonID:     enrollment.PersonID,
+		fun.MetadataStudentID:     enrollment.StudentID,
 	}
 
 	return sap.base.PublishWithExtras(ctx, fun.TopicSeatReservedEvt, payload, extras)
@@ -59,7 +59,7 @@ func (sap *seatAllocationPublisher) SeatReserved(ctx context.Context, enrollment
 func (sap *seatAllocationPublisher) SeatWaitlisted(ctx context.Context, enrollment fun.Enrollment, reason string) common.HttpError {
 	payload := fun.SeatWaitlistedEvtV1{
 		EnrollmentID: enrollment.ID,
-		PersonID:     enrollment.PersonID,
+		StudentID:     enrollment.StudentID,
 		Grade:        enrollment.Grade,
 		Reason:       reason,
 		WaitlistedAt: time.Now().UTC(),
@@ -67,7 +67,7 @@ func (sap *seatAllocationPublisher) SeatWaitlisted(ctx context.Context, enrollme
 
 	extras := map[string]string{
 		fun.MetadataEnrollmentID: enrollment.ID,
-		fun.MetadataPersonID:     enrollment.PersonID,
+		fun.MetadataStudentID:     enrollment.StudentID,
 	}
 
 	return sap.base.PublishWithExtras(ctx, fun.TopicSeatWaitlistedEvt, payload, extras)

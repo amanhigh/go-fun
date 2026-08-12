@@ -67,7 +67,7 @@ var _ = Describe("Resty", func() {
 
 	Context("Custom Request", func() {
 		var (
-			person      fun.PersonRequest
+			student     fun.StudentRequest
 			binResponse BinAnyResponse
 			headerKey   = "myheader"
 			headerValue = "MyHeaderValue"
@@ -75,7 +75,7 @@ var _ = Describe("Resty", func() {
 
 		BeforeEach(func() {
 			binResponse = BinAnyResponse{}
-			person = fun.PersonRequest{
+			student = fun.StudentRequest{
 				Name:   "Aman",
 				Age:    18,
 				Gender: "Male",
@@ -85,7 +85,7 @@ var _ = Describe("Resty", func() {
 		It("should build custom Request", func() {
 			resp, err = client.R().
 				SetHeader(headerKey, headerValue).
-				SetBody(person).
+				SetBody(student).
 				SetResult(&binResponse).
 				Post("/anything")
 

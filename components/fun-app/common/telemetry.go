@@ -34,22 +34,22 @@ func (fi *FunAppInjector) registerMetrics() {
 	meter := otel.GetMeterProvider().Meter(NAMESPACE)
 
 	container.MustNamedSingleton(fi.di, "CreateCounter", func() metric.Int64Counter {
-		counter, _ := meter.Int64Counter("create_person",
-			metric.WithDescription("Counts Person Create API"),
+		counter, _ := meter.Int64Counter("create_student",
+			metric.WithDescription("Counts Student Create API"),
 		)
 		return counter
 	})
 
-	container.MustNamedSingleton(fi.di, "PersonCounter", func() metric.Int64UpDownCounter {
-		counter, _ := meter.Int64UpDownCounter("person_count",
-			metric.WithDescription("Person Count in Get Persons"),
+	container.MustNamedSingleton(fi.di, "StudentCounter", func() metric.Int64UpDownCounter {
+		counter, _ := meter.Int64UpDownCounter("student_count",
+			metric.WithDescription("Student Count in Get Students"),
 		)
 		return counter
 	})
 
-	container.MustNamedSingleton(fi.di, "PersonCreateTime", func() metric.Float64Histogram {
-		histogram, _ := meter.Float64Histogram("person_create_time",
-			metric.WithDescription("Time Taken to Create Person"),
+	container.MustNamedSingleton(fi.di, "StudentCreateTime", func() metric.Float64Histogram {
+		histogram, _ := meter.Float64Histogram("student_create_time",
+			metric.WithDescription("Time Taken to Create Student"),
 		)
 		return histogram
 	})

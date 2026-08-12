@@ -46,7 +46,7 @@ func (h *SeatMessageHandlerImpl) HandleSeatReservedEvt(msg *message.Message) err
 		return fmt.Errorf("unmarshal seat reserved evt: %w", err)
 	}
 	ctx := stampCtx(msg.Context(), msg.Metadata, evt.EnrollmentID, msg.UUID)
-	e := fun.Enrollment{ID: evt.EnrollmentID, PersonID: evt.PersonID, Grade: evt.Grade}
+	e := fun.Enrollment{ID: evt.EnrollmentID, StudentID: evt.StudentID, Grade: evt.Grade}
 	return h.EnrollmentManager.OnSeatReservedEvt(ctx, e)
 }
 
@@ -56,7 +56,7 @@ func (h *SeatMessageHandlerImpl) HandleSeatWaitlistedEvt(msg *message.Message) e
 		return fmt.Errorf("unmarshal seat waitlisted evt: %w", err)
 	}
 	ctx := stampCtx(msg.Context(), msg.Metadata, evt.EnrollmentID, msg.UUID)
-	enrollment := fun.Enrollment{ID: evt.EnrollmentID, PersonID: evt.PersonID, Grade: evt.Grade}
+	enrollment := fun.Enrollment{ID: evt.EnrollmentID, StudentID: evt.StudentID, Grade: evt.Grade}
 	// Persist WAITLISTED state via manager sink (idempotent).
 	return h.EnrollmentManager.UpdateToWaitlisted(ctx, enrollment)
 }
@@ -70,7 +70,7 @@ func (h *SeatMessageHandlerImpl) HandlePoisonedAllocateSeatCmd(msg *message.Mess
 	ctx := stampCtx(msg.Context(), msg.Metadata, cmd.EnrollmentID, msg.UUID)
 	return h.EnrollmentManager.CancelEnrollmentAndPublish(ctx, fun.EnrollmentCancelledEvtV1{
 		EnrollmentID: cmd.EnrollmentID,
-		PersonID:     cmd.PersonID,
+		StudentID:     cmd.StudentID,
 		Reason:       fun.EnrollmentCancellationReasonSeatAllocationFailed,
 		CancelledAt:  time.Now().UTC(),
 	})

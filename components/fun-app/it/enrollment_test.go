@@ -12,28 +12,28 @@ import (
 
 var _ = Describe("Enrollment API", func() {
 	var (
-		personRequest fun.PersonRequest
-		createdPerson fun.Person
+		studentRequest fun.StudentRequest
+		createdStudent fun.Student
 		enrollRequest fun.EnrollmentRequest
 		enrollResp    fun.Enrollment
 		err           common.HttpError
 	)
 
 	BeforeEach(func() {
-		personRequest = fun.PersonRequest{
+		studentRequest = fun.StudentRequest{
 			Name:   "Saga Tester",
 			Age:    10,
 			Gender: "MALE",
 		}
 
-		createdPerson, err = client.PersonService.CreatePerson(ctx, personRequest)
+		createdStudent, err = client.StudentService.CreateStudent(ctx, studentRequest)
 		Expect(err).ToNot(HaveOccurred())
-		Expect(createdPerson.Id).ToNot(BeEmpty())
+		Expect(createdStudent.Id).ToNot(BeEmpty())
 	})
 
 	AfterEach(func() {
-		if createdPerson.Id != "" {
-			err = client.PersonService.DeletePerson(ctx, createdPerson.Id)
+		if createdStudent.Id != "" {
+			err = client.StudentService.DeleteStudent(ctx, createdStudent.Id)
 			Expect(err).ToNot(HaveOccurred())
 		}
 	})
@@ -45,29 +45,29 @@ var _ = Describe("Enrollment API", func() {
 
 		Context("when grade is within capacity", func() {
 			BeforeEach(func() {
-				initialRequest = fun.EnrollmentRequest{PersonID: createdPerson.Id, Grade: 4}
+				initialRequest = fun.EnrollmentRequest{StudentID: createdStudent.Id, Grade: 4}
 				enrollResp, err = client.EnrollmentService.CreateEnrollment(ctx, initialRequest)
 				Expect(err).ToNot(HaveOccurred())
 			})
 
 			It("should create enrollment and confirm asynchronously", func() {
 				Expect(enrollResp.ID).ToNot(BeEmpty())
-				Expect(enrollResp.PersonID).To(Equal(createdPerson.Id))
+				Expect(enrollResp.StudentID).To(Equal(createdStudent.Id))
 				Expect(enrollResp.Status).To(Equal(fun.EnrollmentStatusSeatAllocationInitiated))
 				Expect(enrollResp.Grade).To(Equal(initialRequest.Grade))
 
 				Eventually(func() string {
-					resp, pollErr := client.EnrollmentService.GetEnrollment(ctx, createdPerson.Id)
+					resp, pollErr := client.EnrollmentService.GetEnrollment(ctx, createdStudent.Id)
 					if pollErr != nil {
 						return ""
 					}
 					return resp.Status
 				}, 3*time.Second, 50*time.Millisecond).Should(Equal(fun.EnrollmentStatusConfirmed))
 
-				getResp, getErr := client.EnrollmentService.GetEnrollment(ctx, createdPerson.Id)
+				getResp, getErr := client.EnrollmentService.GetEnrollment(ctx, createdStudent.Id)
 				Expect(getErr).ToNot(HaveOccurred())
 				Expect(getResp.ID).To(Equal(enrollResp.ID))
-				Expect(getResp.PersonID).To(Equal(createdPerson.Id))
+				Expect(getResp.StudentID).To(Equal(createdStudent.Id))
 				Expect(getResp.Grade).To(Equal(initialRequest.Grade))
 				Expect(getResp.Status).To(Equal(fun.EnrollmentStatusConfirmed))
 			})
@@ -80,7 +80,7 @@ var _ = Describe("Enrollment API", func() {
 				)
 
 				BeforeEach(func() {
-					secondRequest = fun.EnrollmentRequest{PersonID: createdPerson.Id, Grade: 2}
+					secondRequest = fun.EnrollmentRequest{StudentID: createdStudent.Id, Grade: 2}
 					secondResp, secondErr = client.EnrollmentService.CreateEnrollment(ctx, secondRequest)
 					Expect(secondErr).ToNot(HaveOccurred())
 				})
@@ -91,7 +91,7 @@ var _ = Describe("Enrollment API", func() {
 					Expect(secondResp.Status).To(Equal(fun.EnrollmentStatusSeatAllocationInitiated))
 
 					Eventually(func() string {
-						resp, pollErr := client.EnrollmentService.GetEnrollment(ctx, createdPerson.Id)
+						resp, pollErr := client.EnrollmentService.GetEnrollment(ctx, createdStudent.Id)
 						if pollErr != nil {
 							return ""
 						}
@@ -101,7 +101,7 @@ var _ = Describe("Enrollment API", func() {
 						return resp.Status
 					}, 3*time.Second, 50*time.Millisecond).Should(Equal(fun.EnrollmentStatusConfirmed))
 
-					getResp, getErr := client.EnrollmentService.GetEnrollment(ctx, createdPerson.Id)
+					getResp, getErr := client.EnrollmentService.GetEnrollment(ctx, createdStudent.Id)
 					Expect(getErr).ToNot(HaveOccurred())
 					Expect(getResp.ID).To(Equal(enrollResp.ID))
 					Expect(getResp.Grade).To(Equal(secondRequest.Grade))
@@ -111,13 +111,13 @@ var _ = Describe("Enrollment API", func() {
 		})
 
 		It("should waitlist when grade exceeds capacity", func() {
-			enrollRequest = fun.EnrollmentRequest{PersonID: createdPerson.Id, Grade: 6}
+			enrollRequest = fun.EnrollmentRequest{StudentID: createdStudent.Id, Grade: 6}
 			enrollResp, err = client.EnrollmentService.CreateEnrollment(ctx, enrollRequest)
 			Expect(err).ToNot(HaveOccurred())
 			Expect(enrollResp.Status).To(Equal(fun.EnrollmentStatusSeatAllocationInitiated))
 
 			Eventually(func() string {
-				resp, pollErr := client.EnrollmentService.GetEnrollment(ctx, createdPerson.Id)
+				resp, pollErr := client.EnrollmentService.GetEnrollment(ctx, createdStudent.Id)
 				if pollErr != nil {
 					return ""
 				}

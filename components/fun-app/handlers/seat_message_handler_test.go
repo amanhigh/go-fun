@@ -48,13 +48,13 @@ var _ = Describe("SeatMessageHandler", func() {
 
 	Context("HandlePoisonedAllocateSeatCmd with valid payload", func() {
 		BeforeEach(func() {
-			cmd := fun.AllocateSeatCmdV1{EnrollmentID: "enr-1", PersonID: "person-1"}
+			cmd := fun.AllocateSeatCmdV1{EnrollmentID: "enr-1", StudentID: "student-1"}
 			payload, err := json.Marshal(cmd)
 			Expect(err).ToNot(HaveOccurred())
 			msg := message.NewMessage("poison-msg", payload)
 			expectedErr := common.NewHttpError("cancel failed", 500)
 			enrollmentMock.EXPECT().CancelEnrollmentAndPublish(mock.Anything, mock.MatchedBy(func(evt fun.EnrollmentCancelledEvtV1) bool {
-				return evt.EnrollmentID == cmd.EnrollmentID && evt.PersonID == cmd.PersonID
+				return evt.EnrollmentID == cmd.EnrollmentID && evt.StudentID == cmd.StudentID
 			})).Return(expectedErr)
 			resultErr = seatHandler.HandlePoisonedAllocateSeatCmd(msg)
 		})

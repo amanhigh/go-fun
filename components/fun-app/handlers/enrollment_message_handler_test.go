@@ -46,7 +46,7 @@ var _ = Describe("EnrollmentMessageHandler", func() {
 		BeforeEach(func() {
 			cmd = fun.EnrollCmdV1{
 				EnrollmentID: "enr-1",
-				PersonID:     "person-1",
+				StudentID:     "student-1",
 				Grade:        3,
 				RequestedAt:  time.Now().UTC(),
 			}
@@ -72,7 +72,7 @@ var _ = Describe("EnrollmentMessageHandler", func() {
 				Expect(common.CorrelationFrom(capturedCtx)).To(Equal(cmd.EnrollmentID))
 				Expect(common.CausationFrom(capturedCtx)).To(Equal(msg.UUID))
 				Expect(capturedCmd.EnrollmentID).To(Equal(cmd.EnrollmentID))
-				Expect(capturedCmd.PersonID).To(Equal(cmd.PersonID))
+				Expect(capturedCmd.StudentID).To(Equal(cmd.StudentID))
 				Expect(capturedCmd.Grade).To(Equal(cmd.Grade))
 			})
 		})

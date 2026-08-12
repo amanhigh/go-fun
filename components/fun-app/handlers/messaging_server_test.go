@@ -65,7 +65,7 @@ var _ = Describe("MessagingServer learning scenarios", func() {
 		BeforeEach(func() {
 			cmd = fun.AllocateSeatCmdV1{
 				EnrollmentID: "enr-1",
-				PersonID:     "person-1",
+				StudentID:     "student-1",
 				Grade:        3,
 				RequestedAt:  time.Now().UTC(),
 			}
@@ -76,7 +76,7 @@ var _ = Describe("MessagingServer learning scenarios", func() {
 				mock.Anything,
 				mock.MatchedBy(func(evt fun.EnrollmentCancelledEvtV1) bool {
 					return evt.EnrollmentID == cmd.EnrollmentID &&
-						evt.PersonID == cmd.PersonID &&
+						evt.StudentID == cmd.StudentID &&
 						evt.Reason == fun.EnrollmentCancellationReasonSeatAllocationFailed
 				}),
 			).Run(func(_ context.Context, _ fun.EnrollmentCancelledEvtV1) {

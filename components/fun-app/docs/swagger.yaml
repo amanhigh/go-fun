@@ -8,7 +8,7 @@ definitions:
       total:
         type: integer
     type: object
-  fun.Person:
+  fun.Student:
     properties:
       age:
         maximum: 150
@@ -31,7 +31,7 @@ definitions:
     - gender
     - name
     type: object
-  fun.PersonAudit:
+  fun.StudentAudit:
     properties:
       age:
         type: integer
@@ -52,16 +52,16 @@ definitions:
       operation:
         type: string
     type: object
-  fun.PersonList:
+  fun.StudentList:
     properties:
       metadata:
         $ref: '#/definitions/common.PaginatedResponse'
       records:
         items:
-          $ref: '#/definitions/fun.Person'
+          $ref: '#/definitions/fun.Student'
         type: array
     type: object
-  fun.PersonRequest:
+  fun.StudentRequest:
     properties:
       age:
         maximum: 150
@@ -85,21 +85,21 @@ definitions:
 info:
   contact: {}
 paths:
-  /person:
+  /student:
     get:
       consumes:
       - application/json
-      description: List Person and Optionally Search
+      description: List Student and Optionally Search
       parameters:
-      - description: Filter persons by name
+      - description: Filter students by name
         in: query
         name: name
         type: string
-      - description: Filter persons by gender
+      - description: Filter students by gender
         in: query
         name: gender
         type: string
-      - description: Filter persons by age
+      - description: Filter students by age
         in: query
         name: age
         type: integer
@@ -124,30 +124,30 @@ paths:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/fun.PersonList'
+            $ref: '#/definitions/fun.StudentList'
         "500":
           description: Internal Server Error
           schema:
             type: string
-      summary: List Person and Search
+      summary: List Student and Search
       tags:
-      - Person
+      - Student
     post:
       consumes:
       - application/json
-      description: Create a new person with the provided data
+      description: Create a new student with the provided data
       parameters:
-      - description: Person Request
+      - description: Student Request
         in: body
         name: request
         required: true
         schema:
-          $ref: '#/definitions/fun.PersonRequest'
+          $ref: '#/definitions/fun.StudentRequest'
       produces:
       - application/json
       responses:
         "201":
-          description: Id of created person
+          description: Id of created student
           schema:
             type: string
         "400":
@@ -158,16 +158,16 @@ paths:
           description: Internal Server Error
           schema:
             type: string
-      summary: Create a new person
+      summary: Create a new student
       tags:
-      - Person
-  /person/{id}:
+      - Student
+  /student/{id}:
     delete:
       consumes:
       - application/json
-      description: Delete persons by their ID
+      description: Delete students by their ID
       parameters:
-      - description: Person ID
+      - description: Student ID
         in: path
         name: id
         required: true
@@ -187,15 +187,15 @@ paths:
           description: Internal Server Error
           schema:
             type: string
-      summary: Delete persons by ID
+      summary: Delete students by ID
       tags:
-      - Person
+      - Student
     get:
       consumes:
       - application/json
-      description: Get a person's details by their ID
+      description: Get a student's details by their ID
       parameters:
-      - description: Person ID
+      - description: Student ID
         in: path
         name: id
         required: true
@@ -206,30 +206,30 @@ paths:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/fun.Person'
+            $ref: '#/definitions/fun.Student'
         "500":
           description: Internal Server Error
           schema:
             type: string
-      summary: Get a person by ID
+      summary: Get a student by ID
       tags:
-      - Person
+      - Student
     put:
       consumes:
       - application/json
-      description: Update a person's details
+      description: Update a student's details
       parameters:
-      - description: Person ID
+      - description: Student ID
         in: path
         name: id
         required: true
         type: string
-      - description: Person Request
+      - description: Student Request
         in: body
         name: request
         required: true
         schema:
-          $ref: '#/definitions/fun.PersonRequest'
+          $ref: '#/definitions/fun.StudentRequest'
       produces:
       - application/json
       responses:
@@ -249,16 +249,16 @@ paths:
           description: Internal Server Error
           schema:
             type: string
-      summary: Update a person
+      summary: Update a student
       tags:
-      - Person
-  /person/{id}/audit:
+      - Student
+  /student/{id}/audit:
     get:
       consumes:
       - application/json
-      description: List Person Audit by ID
+      description: List Student Audit by ID
       parameters:
-      - description: Person ID
+      - description: Student ID
         in: path
         name: id
         required: true
@@ -270,13 +270,13 @@ paths:
           description: OK
           schema:
             items:
-              $ref: '#/definitions/fun.PersonAudit'
+              $ref: '#/definitions/fun.StudentAudit'
             type: array
         "500":
           description: Internal Server Error
           schema:
             type: string
-      summary: List Person Audit
+      summary: List Student Audit
       tags:
-      - Person
+      - Student
 swagger: "2.0"

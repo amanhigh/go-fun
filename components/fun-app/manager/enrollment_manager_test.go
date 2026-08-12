@@ -25,7 +25,7 @@ func TestEnrollmentManager(t *testing.T) {
 
 var _ = Describe("EnrollmentManager", func() {
 	var (
-		personMgr *managermocks.PersonManagerInterface
+		studentMgr *managermocks.StudentManagerInterface
 		dao       *daomocks.EnrollmentDaoInterface
 		publisher *pubmocks.EnrollmentPublisher
 		seatMgr   *managermocks.SeatManagerInterface
@@ -33,11 +33,11 @@ var _ = Describe("EnrollmentManager", func() {
 	)
 
 	BeforeEach(func() {
-		personMgr = managermocks.NewPersonManagerInterface(GinkgoT())
+		studentMgr = managermocks.NewStudentManagerInterface(GinkgoT())
 		dao = daomocks.NewEnrollmentDaoInterface(GinkgoT())
 		publisher = pubmocks.NewEnrollmentPublisher(GinkgoT())
 		seatMgr = managermocks.NewSeatManagerInterface(GinkgoT())
-		em = manager.NewEnrollmentManager(personMgr, dao, publisher, seatMgr)
+		em = manager.NewEnrollmentManager(studentMgr, dao, publisher, seatMgr)
 	})
 
 	Context("EnrollCmd", func() {
@@ -50,7 +50,7 @@ var _ = Describe("EnrollmentManager", func() {
 			ctx = context.Background()
 			ctx = common.WithCorrelation(ctx, "corr-123")
 			ctx = common.WithCausation(ctx, "cause-456")
-			cmd = fun.EnrollCmdV1{EnrollmentID: "enr-101", PersonID: "person-1", Grade: 5, RequestedAt: time.Now().UTC()}
+			cmd = fun.EnrollCmdV1{EnrollmentID: "enr-101", StudentID: "student-1", Grade: 5, RequestedAt: time.Now().UTC()}
 		})
 
 		It("delegates to SeatManager with ctx unchanged", func() {
@@ -58,7 +58,7 @@ var _ = Describe("EnrollmentManager", func() {
 				return common.CorrelationFrom(c) == "corr-123" && common.CausationFrom(c) == "cause-456"
 			})
 			enrMatcher := mock.MatchedBy(func(e fun.Enrollment) bool {
-				return e.ID == cmd.EnrollmentID && e.PersonID == cmd.PersonID && e.Grade == cmd.Grade
+				return e.ID == cmd.EnrollmentID && e.StudentID == cmd.StudentID && e.Grade == cmd.Grade
 			})
 			seatMgr.EXPECT().PublishAllocateSeat(ctxMatcher, enrMatcher).Return(nil)
 
@@ -71,7 +71,7 @@ var _ = Describe("EnrollmentManager", func() {
 				return c != nil && common.CorrelationFrom(c) == "" && common.CausationFrom(c) == ""
 			})
 			enrMatcher := mock.MatchedBy(func(e fun.Enrollment) bool {
-				return e.ID == cmd.EnrollmentID && e.PersonID == cmd.PersonID && e.Grade == cmd.Grade
+				return e.ID == cmd.EnrollmentID && e.StudentID == cmd.StudentID && e.Grade == cmd.Grade
 			})
 			seatMgr.EXPECT().PublishAllocateSeat(ctxMatcher, enrMatcher).Return(nil)
 

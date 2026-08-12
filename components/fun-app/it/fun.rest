@@ -30,15 +30,15 @@
 
 ### List 
 
-GET http://{{host}}:{{port}}/{{version}}/person?offset=0&limit={{limit}}&sort_by=name&order=asc
+GET http://{{host}}:{{port}}/{{version}}/student?offset=0&limit={{limit}}&sort_by=name&order=asc
 
 ### Audit
 
-GET http://{{host}}:{{port}}/{{version}}/person/1/audit
+GET http://{{host}}:{{port}}/{{version}}/student/1/audit
 
 ### Create
-# @name createPerson
-POST http://{{host}}:{{port}}/{{version}}/person
+# @name createStudent
+POST http://{{host}}:{{port}}/{{version}}/student
 Content-Type: application/json
 
 {
@@ -48,12 +48,12 @@ Content-Type: application/json
 }
 
 ### Get
-@personId= {{createPerson.response.body.$.id}}
-GET http://{{host}}:{{port}}/{{version}}/person/{{personId}}
+@studentId= {{createStudent.response.body.$.id}}
+GET http://{{host}}:{{port}}/{{version}}/student/{{studentId}}
 
 ### Update
-@personId= {{createPerson.response.body.$.id}}
-PUT http://{{host}}:{{port}}/{{version}}/person/{{personId}}
+@studentId= {{createStudent.response.body.$.id}}
+PUT http://{{host}}:{{port}}/{{version}}/student/{{studentId}}
 Content-Type: application/json
 
 {
@@ -64,7 +64,7 @@ Content-Type: application/json
 
 ### Delete
 # @prompt userId
-DELETE http://{{host}}:{{port}}/{{version}}/person/{{userId}}
+DELETE http://{{host}}:{{port}}/{{version}}/student/{{userId}}
 
 ### Play
 POST http://localhost:11434/api/generate

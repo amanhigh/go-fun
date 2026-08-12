@@ -19,10 +19,10 @@ import (
 	. "github.com/onsi/gomega"
 )
 
-var _ = Describe("Person", func() {
-	Context("PersonRequest", func() {
+var _ = Describe("Student", func() {
+	Context("StudentRequest", func() {
 		It("should have correct struct fields and tags", func() {
-			request := fun.PersonRequest{
+			request := fun.StudentRequest{
 				Name:   "John Doe",
 				Age:    30,
 				Gender: "MALE",
@@ -34,7 +34,7 @@ var _ = Describe("Person", func() {
 		})
 
 		It("should work with female gender", func() {
-			request := fun.PersonRequest{
+			request := fun.StudentRequest{
 				Name:   "Jane Doe",
 				Age:    25,
 				Gender: "FEMALE",
@@ -44,9 +44,9 @@ var _ = Describe("Person", func() {
 		})
 	})
 
-	Context("PersonPath", func() {
+	Context("StudentPath", func() {
 		It("should have Id field for URI binding", func() {
-			path := fun.PersonPath{
+			path := fun.StudentPath{
 				Id: "abc123",
 			}
 
@@ -54,9 +54,9 @@ var _ = Describe("Person", func() {
 		})
 	})
 
-	Context("PersonQuery", func() {
+	Context("StudentQuery", func() {
 		It("should embed Pagination and Sort", func() {
-			query := fun.PersonQuery{
+			query := fun.StudentQuery{
 				Pagination: common.Pagination{
 					Offset: 10,
 					Limit:  5,
@@ -78,15 +78,15 @@ var _ = Describe("Person", func() {
 		})
 	})
 
-	Context("PersonList", func() {
+	Context("StudentList", func() {
 		It("should contain records and metadata", func() {
-			persons := []fun.Person{
-				{PersonRequest: fun.PersonRequest{Name: "John", Age: 30, Gender: "MALE"}, Id: "1"},
-				{PersonRequest: fun.PersonRequest{Name: "Jane", Age: 25, Gender: "FEMALE"}, Id: "2"},
+			students := []fun.Student{
+				{StudentRequest: fun.StudentRequest{Name: "John", Age: 30, Gender: "MALE"}, Id: "1"},
+				{StudentRequest: fun.StudentRequest{Name: "Jane", Age: 25, Gender: "FEMALE"}, Id: "2"},
 			}
 
-			personList := fun.PersonList{
-				Records: persons,
+			studentList := fun.StudentList{
+				Records: students,
 				Metadata: common.PaginatedResponse{
 					Total:  2,
 					Offset: 0,
@@ -94,19 +94,19 @@ var _ = Describe("Person", func() {
 				},
 			}
 
-			Expect(personList.Records).To(HaveLen(2))
-			Expect(personList.Records[0].Name).To(Equal("John"))
-			Expect(personList.Records[1].Name).To(Equal("Jane"))
-			Expect(personList.Metadata.Total).To(Equal(int64(2)))
-			Expect(personList.Metadata.Offset).To(Equal(0))
-			Expect(personList.Metadata.Limit).To(Equal(20))
+			Expect(studentList.Records).To(HaveLen(2))
+			Expect(studentList.Records[0].Name).To(Equal("John"))
+			Expect(studentList.Records[1].Name).To(Equal("Jane"))
+			Expect(studentList.Metadata.Total).To(Equal(int64(2)))
+			Expect(studentList.Metadata.Offset).To(Equal(0))
+			Expect(studentList.Metadata.Limit).To(Equal(20))
 		})
 	})
 
-	Context("Person", func() {
-		It("should embed PersonRequest and have Id field", func() {
-			person := fun.Person{
-				PersonRequest: fun.PersonRequest{
+	Context("Student", func() {
+		It("should embed StudentRequest and have Id field", func() {
+			student := fun.Student{
+				StudentRequest: fun.StudentRequest{
 					Name:   "John Doe",
 					Age:    30,
 					Gender: "MALE",
@@ -114,46 +114,46 @@ var _ = Describe("Person", func() {
 				Id: "abc123",
 			}
 
-			Expect(person.Name).To(Equal("John Doe"))
-			Expect(person.Age).To(Equal(30))
-			Expect(person.Gender).To(Equal("MALE"))
-			Expect(person.Id).To(Equal("abc123"))
+			Expect(student.Name).To(Equal("John Doe"))
+			Expect(student.Age).To(Equal(30))
+			Expect(student.Gender).To(Equal("MALE"))
+			Expect(student.Id).To(Equal("abc123"))
 		})
 
 		Context("BeforeCreate", func() {
 			It("should generate 8-character UUID for Id", func() {
-				person := &fun.Person{
-					PersonRequest: fun.PersonRequest{
-						Name:   "Test Person",
+				student := &fun.Student{
+					StudentRequest: fun.StudentRequest{
+						Name:   "Test Student",
 						Age:    25,
 						Gender: "MALE",
 					},
 				}
 
-				err := person.BeforeCreate(nil)
+				err := student.BeforeCreate(nil)
 				Expect(err).NotTo(HaveOccurred())
-				Expect(person.Id).NotTo(BeEmpty())
-				Expect(person.Id).To(HaveLen(8))
+				Expect(student.Id).NotTo(BeEmpty())
+				Expect(student.Id).To(HaveLen(8))
 			})
 
-			It("should generate different Ids for different persons", func() {
-				person1 := &fun.Person{}
-				person2 := &fun.Person{}
+			It("should generate different Ids for different students", func() {
+				student1 := &fun.Student{}
+				student2 := &fun.Student{}
 
-				err1 := person1.BeforeCreate(nil)
-				err2 := person2.BeforeCreate(nil)
+				err1 := student1.BeforeCreate(nil)
+				err2 := student2.BeforeCreate(nil)
 
 				Expect(err1).NotTo(HaveOccurred())
 				Expect(err2).NotTo(HaveOccurred())
-				Expect(person1.Id).NotTo(Equal(person2.Id))
+				Expect(student1.Id).NotTo(Equal(student2.Id))
 			})
 		})
 	})
 
-	Context("CreatePersonAudit", func() {
-		It("should create audit from person", func() {
-			person := fun.Person{
-				PersonRequest: fun.PersonRequest{
+	Context("CreateStudentAudit", func() {
+		It("should create audit from student", func() {
+			student := fun.Student{
+				StudentRequest: fun.StudentRequest{
 					Name:   "John Doe",
 					Age:    30,
 					Gender: "MALE",
@@ -161,21 +161,21 @@ var _ = Describe("Person", func() {
 				Id: "abc123",
 			}
 
-			audit := fun.CreatePersonAudit(person)
+			audit := fun.CreateStudentAudit(student)
 
-			Expect(audit.Id).To(Equal(person.Id))
-			Expect(audit.Name).To(Equal(person.Name))
-			Expect(audit.Age).To(Equal(person.Age))
-			Expect(audit.Gender).To(Equal(person.Gender))
+			Expect(audit.Id).To(Equal(student.Id))
+			Expect(audit.Name).To(Equal(student.Name))
+			Expect(audit.Age).To(Equal(student.Age))
+			Expect(audit.Gender).To(Equal(student.Gender))
 			// Audit-specific fields should be empty as they're set elsewhere
 			Expect(audit.Operation).To(BeEmpty())
 			Expect(audit.CreatedBy).To(BeEmpty())
 		})
 	})
 
-	Context("PersonAudit", func() {
+	Context("StudentAudit", func() {
 		It("should have all required fields", func() {
-			audit := fun.PersonAudit{
+			audit := fun.StudentAudit{
 				Id:        "abc123",
 				Name:      "John Doe",
 				Age:       30,
@@ -200,7 +200,7 @@ var _ = Describe("Person", func() {
 			operations := []string{"CREATE", "UPDATE", "DELETE"}
 
 			for _, op := range operations {
-				audit := fun.PersonAudit{
+				audit := fun.StudentAudit{
 					Operation: op,
 				}
 				Expect(audit.Operation).To(Equal(op))
@@ -211,8 +211,8 @@ var _ = Describe("Person", func() {
 	Context("GORM Hooks Integration", func() {
 		Context("Audit Creation Logic", func() {
 			It("should create proper audit for CREATE operation", func() {
-				person := fun.Person{
-					PersonRequest: fun.PersonRequest{
+				student := fun.Student{
+					StudentRequest: fun.StudentRequest{
 						Name:   "Test User",
 						Age:    25,
 						Gender: "FEMALE",
@@ -220,7 +220,7 @@ var _ = Describe("Person", func() {
 					Id: "test123",
 				}
 
-				audit := fun.CreatePersonAudit(person)
+				audit := fun.CreateStudentAudit(student)
 				audit.Operation = "CREATE"
 				audit.CreatedBy = fun.CreatedByAman
 				audit.CreatedAt = time.Now()
@@ -235,8 +235,8 @@ var _ = Describe("Person", func() {
 			})
 
 			It("should create proper audit for UPDATE operation", func() {
-				person := fun.Person{
-					PersonRequest: fun.PersonRequest{
+				student := fun.Student{
+					StudentRequest: fun.StudentRequest{
 						Name:   "Updated User",
 						Age:    30,
 						Gender: "MALE",
@@ -244,7 +244,7 @@ var _ = Describe("Person", func() {
 					Id: "update123",
 				}
 
-				audit := fun.CreatePersonAudit(person)
+				audit := fun.CreateStudentAudit(student)
 				audit.Operation = "UPDATE"
 				audit.CreatedBy = fun.CreatedByAman
 				audit.CreatedAt = time.Now()
@@ -253,8 +253,8 @@ var _ = Describe("Person", func() {
 			})
 
 			It("should create proper audit for DELETE operation", func() {
-				person := fun.Person{
-					PersonRequest: fun.PersonRequest{
+				student := fun.Student{
+					StudentRequest: fun.StudentRequest{
 						Name:   "Deleted User",
 						Age:    35,
 						Gender: "MALE",
@@ -262,7 +262,7 @@ var _ = Describe("Person", func() {
 					Id: "delete123",
 				}
 
-				audit := fun.CreatePersonAudit(person)
+				audit := fun.CreateStudentAudit(student)
 				audit.Operation = "DELETE"
 				audit.CreatedBy = fun.CreatedByAman
 				audit.CreatedAt = time.Now()
@@ -273,8 +273,8 @@ var _ = Describe("Person", func() {
 	})
 
 	Context("Gin Binding Validation", func() {
-		var testPersonJSON func(personJSON string, expectedStatus int)
-		var testPersonStruct func(person fun.PersonRequest, expectedStatus int)
+		var testStudentJSON func(studentJSON string, expectedStatus int)
+		var testStudentStruct func(student fun.StudentRequest, expectedStatus int)
 
 		BeforeEach(func() {
 			gin.SetMode(gin.TestMode)
@@ -285,12 +285,12 @@ var _ = Describe("Person", func() {
 				Expect(err).NotTo(HaveOccurred())
 			}
 
-			testPersonJSON = func(personJSON string, expectedStatus int) {
+			testStudentJSON = func(studentJSON string, expectedStatus int) {
 				router := gin.New()
 				w := httptest.NewRecorder()
 
 				router.POST("/test", func(c *gin.Context) {
-					var request fun.PersonRequest
+					var request fun.StudentRequest
 					if err := c.ShouldBindJSON(&request); err != nil {
 						c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 						return
@@ -298,18 +298,18 @@ var _ = Describe("Person", func() {
 					c.JSON(http.StatusOK, request)
 				})
 
-				req, _ := http.NewRequest("POST", "/test", strings.NewReader(personJSON))
+				req, _ := http.NewRequest("POST", "/test", strings.NewReader(studentJSON))
 				req.Header.Set("Content-Type", "application/json")
 				router.ServeHTTP(w, req)
 				Expect(w.Code).To(Equal(expectedStatus))
 			}
 
-			testPersonStruct = func(person fun.PersonRequest, expectedStatus int) {
+			testStudentStruct = func(student fun.StudentRequest, expectedStatus int) {
 				router := gin.New()
 				w := httptest.NewRecorder()
 
 				router.POST("/test", func(c *gin.Context) {
-					var request fun.PersonRequest
+					var request fun.StudentRequest
 					if err := c.ShouldBindJSON(&request); err != nil {
 						c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 						return
@@ -317,7 +317,7 @@ var _ = Describe("Person", func() {
 					c.JSON(http.StatusOK, request)
 				})
 
-				jsonData, err := json.Marshal(person)
+				jsonData, err := json.Marshal(student)
 				Expect(err).NotTo(HaveOccurred())
 
 				req, _ := http.NewRequest("POST", "/test", bytes.NewBuffer(jsonData))
@@ -328,64 +328,64 @@ var _ = Describe("Person", func() {
 		})
 
 		Context("Valid JSON Binding", func() {
-			It("should validate valid PersonRequest", func() {
-				validPerson := fun.PersonRequest{
+			It("should validate valid StudentRequest", func() {
+				validStudent := fun.StudentRequest{
 					Name:   "John Smith",
 					Age:    25,
 					Gender: "MALE",
 				}
-				testPersonStruct(validPerson, http.StatusOK)
+				testStudentStruct(validStudent, http.StatusOK)
 			})
 
-			It("should accept valid female person", func() {
-				validPerson := fun.PersonRequest{
+			It("should accept valid female student", func() {
+				validStudent := fun.StudentRequest{
 					Name:   "Jane Doe",
 					Age:    30,
 					Gender: "FEMALE",
 				}
-				testPersonStruct(validPerson, http.StatusOK)
+				testStudentStruct(validStudent, http.StatusOK)
 			})
 		})
 
 		Context("Invalid JSON Binding", func() {
 			It("should reject empty name", func() {
-				invalidPerson := fun.PersonRequest{
+				invalidStudent := fun.StudentRequest{
 					Name:   "",
 					Age:    25,
 					Gender: "MALE",
 				}
-				testPersonStruct(invalidPerson, http.StatusBadRequest)
+				testStudentStruct(invalidStudent, http.StatusBadRequest)
 			})
 
 			It("should reject age below minimum", func() {
-				invalidPerson := fun.PersonRequest{
+				invalidStudent := fun.StudentRequest{
 					Name:   "John Smith",
 					Age:    0,
 					Gender: "MALE",
 				}
-				testPersonStruct(invalidPerson, http.StatusBadRequest)
+				testStudentStruct(invalidStudent, http.StatusBadRequest)
 			})
 
 			It("should reject age above maximum", func() {
-				invalidPerson := fun.PersonRequest{
+				invalidStudent := fun.StudentRequest{
 					Name:   "John Smith",
 					Age:    151,
 					Gender: "MALE",
 				}
-				testPersonStruct(invalidPerson, http.StatusBadRequest)
+				testStudentStruct(invalidStudent, http.StatusBadRequest)
 			})
 
 			It("should reject invalid gender", func() {
-				testPersonJSON(`{"name":"John Smith","age":25,"gender":"INVALID"}`, http.StatusBadRequest)
+				testStudentJSON(`{"name":"John Smith","age":25,"gender":"INVALID"}`, http.StatusBadRequest)
 			})
 
 			It("should reject name longer than 25 characters", func() {
-				invalidPerson := fun.PersonRequest{
+				invalidStudent := fun.StudentRequest{
 					Name:   "ABCDEFGHIJKLMNOPQRSTUVWXYZ", // 26 characters
 					Age:    25,
 					Gender: "MALE",
 				}
-				testPersonStruct(invalidPerson, http.StatusBadRequest)
+				testStudentStruct(invalidStudent, http.StatusBadRequest)
 			})
 		})
 
@@ -400,12 +400,12 @@ var _ = Describe("Person", func() {
 				}
 
 				for _, validName := range validNames {
-					validPerson := fun.PersonRequest{
+					validStudent := fun.StudentRequest{
 						Name:   validName,
 						Age:    25,
 						Gender: "MALE",
 					}
-					testPersonStruct(validPerson, http.StatusOK)
+					testStudentStruct(validStudent, http.StatusOK)
 				}
 			})
 
@@ -419,23 +419,23 @@ var _ = Describe("Person", func() {
 				}
 
 				for _, invalidName := range invalidNames {
-					invalidPerson := fun.PersonRequest{
+					invalidStudent := fun.StudentRequest{
 						Name:   invalidName,
 						Age:    25,
 						Gender: "MALE",
 					}
-					testPersonStruct(invalidPerson, http.StatusBadRequest)
+					testStudentStruct(invalidStudent, http.StatusBadRequest)
 				}
 			})
 		})
 
 		Context("URI Binding", func() {
-			It("should bind PersonPath correctly", func() {
+			It("should bind StudentPath correctly", func() {
 				router := gin.New()
 				w := httptest.NewRecorder()
 
-				router.GET("/person/:id", func(c *gin.Context) {
-					var path fun.PersonPath
+				router.GET("/student/:id", func(c *gin.Context) {
+					var path fun.StudentPath
 					if err := c.ShouldBindUri(&path); err != nil {
 						c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 						return
@@ -443,11 +443,11 @@ var _ = Describe("Person", func() {
 					c.JSON(http.StatusOK, path)
 				})
 
-				req, _ := http.NewRequest("GET", "/person/abc123", nil)
+				req, _ := http.NewRequest("GET", "/student/abc123", nil)
 				router.ServeHTTP(w, req)
 
 				Expect(w.Code).To(Equal(http.StatusOK))
-				var response fun.PersonPath
+				var response fun.StudentPath
 				err := json.Unmarshal(w.Body.Bytes(), &response)
 				Expect(err).NotTo(HaveOccurred())
 				Expect(response.Id).To(Equal("abc123"))
@@ -455,12 +455,12 @@ var _ = Describe("Person", func() {
 		})
 
 		Context("Query Parameter Binding", func() {
-			It("should bind PersonQuery correctly", func() {
+			It("should bind StudentQuery correctly", func() {
 				router := gin.New()
 				w := httptest.NewRecorder()
 
-				router.GET("/persons", func(c *gin.Context) {
-					var query fun.PersonQuery
+				router.GET("/students", func(c *gin.Context) {
+					var query fun.StudentQuery
 					if err := c.ShouldBindQuery(&query); err != nil {
 						c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 						return
@@ -476,11 +476,11 @@ var _ = Describe("Person", func() {
 				params.Add("name", "John")
 				params.Add("gender", "MALE")
 
-				req, _ := http.NewRequest("GET", "/persons?"+params.Encode(), nil)
+				req, _ := http.NewRequest("GET", "/students?"+params.Encode(), nil)
 				router.ServeHTTP(w, req)
 
 				Expect(w.Code).To(Equal(http.StatusOK))
-				var response fun.PersonQuery
+				var response fun.StudentQuery
 				err := json.Unmarshal(w.Body.Bytes(), &response)
 				Expect(err).NotTo(HaveOccurred())
 				Expect(response.Offset).To(Equal(10))
@@ -495,8 +495,8 @@ var _ = Describe("Person", func() {
 				router := gin.New()
 				w := httptest.NewRecorder()
 
-				router.GET("/persons", func(c *gin.Context) {
-					var query fun.PersonQuery
+				router.GET("/students", func(c *gin.Context) {
+					var query fun.StudentQuery
 					if err := c.ShouldBindQuery(&query); err != nil {
 						c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 						return
@@ -504,7 +504,7 @@ var _ = Describe("Person", func() {
 					c.JSON(http.StatusOK, query)
 				})
 
-				req, _ := http.NewRequest("GET", "/persons?offset=-1&limit=5", nil)
+				req, _ := http.NewRequest("GET", "/students?offset=-1&limit=5", nil)
 				router.ServeHTTP(w, req)
 				Expect(w.Code).To(Equal(http.StatusBadRequest))
 			})
@@ -513,8 +513,8 @@ var _ = Describe("Person", func() {
 				router := gin.New()
 				w := httptest.NewRecorder()
 
-				router.GET("/persons", func(c *gin.Context) {
-					var query fun.PersonQuery
+				router.GET("/students", func(c *gin.Context) {
+					var query fun.StudentQuery
 					if err := c.ShouldBindQuery(&query); err != nil {
 						c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 						return
@@ -522,7 +522,7 @@ var _ = Describe("Person", func() {
 					c.JSON(http.StatusOK, query)
 				})
 
-				req, _ := http.NewRequest("GET", "/persons?offset=0&limit=101", nil)
+				req, _ := http.NewRequest("GET", "/students?offset=0&limit=101", nil)
 				router.ServeHTTP(w, req)
 				Expect(w.Code).To(Equal(http.StatusBadRequest))
 			})
@@ -531,8 +531,8 @@ var _ = Describe("Person", func() {
 				router := gin.New()
 				w := httptest.NewRecorder()
 
-				router.GET("/persons", func(c *gin.Context) {
-					var query fun.PersonQuery
+				router.GET("/students", func(c *gin.Context) {
+					var query fun.StudentQuery
 					if err := c.ShouldBindQuery(&query); err != nil {
 						c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 						return
@@ -540,7 +540,7 @@ var _ = Describe("Person", func() {
 					c.JSON(http.StatusOK, query)
 				})
 
-				req, _ := http.NewRequest("GET", "/persons?sort_by=invalid&order=asc", nil)
+				req, _ := http.NewRequest("GET", "/students?sort_by=invalid&order=asc", nil)
 				router.ServeHTTP(w, req)
 				Expect(w.Code).To(Equal(http.StatusBadRequest))
 			})
@@ -549,8 +549,8 @@ var _ = Describe("Person", func() {
 				router := gin.New()
 				w := httptest.NewRecorder()
 
-				router.GET("/persons", func(c *gin.Context) {
-					var query fun.PersonQuery
+				router.GET("/students", func(c *gin.Context) {
+					var query fun.StudentQuery
 					if err := c.ShouldBindQuery(&query); err != nil {
 						c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 						return
@@ -558,7 +558,7 @@ var _ = Describe("Person", func() {
 					c.JSON(http.StatusOK, query)
 				})
 
-				req, _ := http.NewRequest("GET", "/persons?gender=INVALID", nil)
+				req, _ := http.NewRequest("GET", "/students?gender=INVALID", nil)
 				router.ServeHTTP(w, req)
 				Expect(w.Code).To(Equal(http.StatusBadRequest))
 			})

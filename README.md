@@ -64,7 +64,7 @@ This repository follows the philosophy of Learning by Doing. It includes plays, 
 				- Clean: `just --justfile components/fun-app/charts/Justfile --working-directory components/fun-app/charts clean` (or `info`)
 			- Access
 				- Open: http://localhost:9090/metrics  (Tunnel required for forwarding:  `minikube tunnel`)
-				- Load Test (From Vegeta Container):  `echo 'GET http://fun-app:9090/person/all' | vegeta attack | vegeta report`
+				- Load Test (From Vegeta Container):  `echo 'GET http://fun-app:9090/student/all' | vegeta attack | vegeta report`
 				- Log Analyzer : `just --justfile components/fun-app/charts/Justfile --working-directory components/fun-app/charts analyse`
 			- ![Helm](common/images/fun-app/helm.gif)
 - ## Tools

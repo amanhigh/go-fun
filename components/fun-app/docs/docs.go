@@ -15,9 +15,9 @@ const docTemplate = `{
     "host": "{{.Host}}",
     "basePath": "{{.BasePath}}",
     "paths": {
-        "/person": {
+        "/student": {
             "get": {
-                "description": "List Person and Optionally Search",
+                "description": "List Student and Optionally Search",
                 "consumes": [
                     "application/json"
                 ],
@@ -25,25 +25,25 @@ const docTemplate = `{
                     "application/json"
                 ],
                 "tags": [
-                    "Person"
+                    "Student"
                 ],
-                "summary": "List Person and Search",
+                "summary": "List Student and Search",
                 "parameters": [
                     {
                         "type": "string",
-                        "description": "Filter persons by name",
+                        "description": "Filter students by name",
                         "name": "name",
                         "in": "query"
                     },
                     {
                         "type": "string",
-                        "description": "Filter persons by gender",
+                        "description": "Filter students by gender",
                         "name": "gender",
                         "in": "query"
                     },
                     {
                         "type": "integer",
-                        "description": "Filter persons by age",
+                        "description": "Filter students by age",
                         "name": "age",
                         "in": "query"
                     },
@@ -73,7 +73,7 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/fun.PersonList"
+                            "$ref": "#/definitions/fun.StudentList"
                         }
                     },
                     "500": {
@@ -85,7 +85,7 @@ const docTemplate = `{
                 }
             },
             "post": {
-                "description": "Create a new person with the provided data",
+                "description": "Create a new student with the provided data",
                 "consumes": [
                     "application/json"
                 ],
@@ -93,23 +93,23 @@ const docTemplate = `{
                     "application/json"
                 ],
                 "tags": [
-                    "Person"
+                    "Student"
                 ],
-                "summary": "Create a new person",
+                "summary": "Create a new student",
                 "parameters": [
                     {
-                        "description": "Person Request",
+                        "description": "Student Request",
                         "name": "request",
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/fun.PersonRequest"
+                            "$ref": "#/definitions/fun.StudentRequest"
                         }
                     }
                 ],
                 "responses": {
                     "201": {
-                        "description": "Id of created person",
+                        "description": "Id of created student",
                         "schema": {
                             "type": "string"
                         }
@@ -129,9 +129,9 @@ const docTemplate = `{
                 }
             }
         },
-        "/person/{id}": {
+        "/student/{id}": {
             "get": {
-                "description": "Get a person's details by their ID",
+                "description": "Get a student's details by their ID",
                 "consumes": [
                     "application/json"
                 ],
@@ -139,13 +139,13 @@ const docTemplate = `{
                     "application/json"
                 ],
                 "tags": [
-                    "Person"
+                    "Student"
                 ],
-                "summary": "Get a person by ID",
+                "summary": "Get a student by ID",
                 "parameters": [
                     {
                         "type": "string",
-                        "description": "Person ID",
+                        "description": "Student ID",
                         "name": "id",
                         "in": "path",
                         "required": true
@@ -155,7 +155,7 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/fun.Person"
+                            "$ref": "#/definitions/fun.Student"
                         }
                     },
                     "500": {
@@ -167,7 +167,7 @@ const docTemplate = `{
                 }
             },
             "put": {
-                "description": "Update a person's details",
+                "description": "Update a student's details",
                 "consumes": [
                     "application/json"
                 ],
@@ -175,24 +175,24 @@ const docTemplate = `{
                     "application/json"
                 ],
                 "tags": [
-                    "Person"
+                    "Student"
                 ],
-                "summary": "Update a person",
+                "summary": "Update a student",
                 "parameters": [
                     {
                         "type": "string",
-                        "description": "Person ID",
+                        "description": "Student ID",
                         "name": "id",
                         "in": "path",
                         "required": true
                     },
                     {
-                        "description": "Person Request",
+                        "description": "Student Request",
                         "name": "request",
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/fun.PersonRequest"
+                            "$ref": "#/definitions/fun.StudentRequest"
                         }
                     }
                 ],
@@ -224,7 +224,7 @@ const docTemplate = `{
                 }
             },
             "delete": {
-                "description": "Delete persons by their ID",
+                "description": "Delete students by their ID",
                 "consumes": [
                     "application/json"
                 ],
@@ -232,13 +232,13 @@ const docTemplate = `{
                     "application/json"
                 ],
                 "tags": [
-                    "Person"
+                    "Student"
                 ],
-                "summary": "Delete persons by ID",
+                "summary": "Delete students by ID",
                 "parameters": [
                     {
                         "type": "string",
-                        "description": "Person ID",
+                        "description": "Student ID",
                         "name": "id",
                         "in": "path",
                         "required": true
@@ -266,9 +266,9 @@ const docTemplate = `{
                 }
             }
         },
-        "/person/{id}/audit": {
+        "/student/{id}/audit": {
             "get": {
-                "description": "List Person Audit by ID",
+                "description": "List Student Audit by ID",
                 "consumes": [
                     "application/json"
                 ],
@@ -276,13 +276,13 @@ const docTemplate = `{
                     "application/json"
                 ],
                 "tags": [
-                    "Person"
+                    "Student"
                 ],
-                "summary": "List Person Audit",
+                "summary": "List Student Audit",
                 "parameters": [
                     {
                         "type": "string",
-                        "description": "Person ID",
+                        "description": "Student ID",
                         "name": "id",
                         "in": "path",
                         "required": true
@@ -294,7 +294,7 @@ const docTemplate = `{
                         "schema": {
                             "type": "array",
                             "items": {
-                                "$ref": "#/definitions/fun.PersonAudit"
+                                "$ref": "#/definitions/fun.StudentAudit"
                             }
                         }
                     },
@@ -323,7 +323,7 @@ const docTemplate = `{
                 }
             }
         },
-        "fun.Person": {
+        "fun.Student": {
             "type": "object",
             "required": [
                 "age",
@@ -354,7 +354,7 @@ const docTemplate = `{
                 }
             }
         },
-        "fun.PersonAudit": {
+        "fun.StudentAudit": {
             "type": "object",
             "properties": {
                 "age": {
@@ -385,7 +385,7 @@ const docTemplate = `{
                 }
             }
         },
-        "fun.PersonList": {
+        "fun.StudentList": {
             "type": "object",
             "properties": {
                 "metadata": {
@@ -394,12 +394,12 @@ const docTemplate = `{
                 "records": {
                     "type": "array",
                     "items": {
-                        "$ref": "#/definitions/fun.Person"
+                        "$ref": "#/definitions/fun.Student"
                     }
                 }
             }
         },
-        "fun.PersonRequest": {
+        "fun.StudentRequest": {
             "type": "object",
             "required": [
                 "age",

@@ -37,7 +37,7 @@ const (
 
 const (
 	MetadataEnrollmentID = "enrollment_id"
-	MetadataPersonID     = "person_id"
+	MetadataStudentID     = "student_id"
 )
 
 // ---------------------------------------------------------------------------
