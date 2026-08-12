@@ -23,7 +23,7 @@ This repository follows the philosophy of Learning by Doing. It includes plays, 
 	- ### Play
 		Easy ways to Play with **FunApp** without Dev Setup.  
 		- Start
-			- Golang: `just --justfile components/fun-app/Justfile --working-directory components/fun-app run`
+			- Golang: `just components/fun-app/run`
 				![Go Run](common/images/fun-app/go-run.gif)  
 			- Docker [Image](https://hub.docker.com/r/amanfdk/fun-app): `docker run amanfdk/fun-app`
 		- Testing

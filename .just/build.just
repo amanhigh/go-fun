@@ -1,10 +1,10 @@
 [group('build')]
 _build-fun:
-    just --justfile components/fun-app/Justfile --working-directory components/fun-app build
+    just components/fun-app/build
 
 [group('build')]
 _build-fun-cover:
-    just --justfile components/fun-app/Justfile --working-directory components/fun-app build-cover
+    just components/fun-app/build-cover
 
 [group('build')]
 _build-kohan:
@@ -33,6 +33,5 @@ info: _info-release _info-docker
 [group('info')]
 [doc('Show release info plus devspace information')]
 infos: info space-info
-
 
 
