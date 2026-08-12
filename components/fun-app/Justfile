@@ -1,6 +1,7 @@
 set shell := ["bash", "-cu"]
 
 import '../../.just/lib.just'
+import './docker.just'
 
 fun_app_binary := root + "/bin/fun"
 

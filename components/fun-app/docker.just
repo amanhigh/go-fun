@@ -16,19 +16,19 @@ release-docker: docker-build
 
 [doc('Build the Fun App Docker image locally')]
 [group('docker')]
-docker-build: _docker-fun
+docker-build: _docker
     just _info "Docker Hub" "https://hub.docker.com/r/amanfdk/fun-app/tags"
 
 [group('docker')]
-_docker-fun: _build-fun
+_docker: build
     just _title "Docker" "Building FunApp"
-    cp bin/fun components/fun-app/fun
-    just _run "docker buildx build -t amanfdk/fun-app -f components/fun-app/Dockerfile components/fun-app"
-    rm components/fun-app/fun
+    cp {{fun_app_binary}} fun
+    just _run "docker buildx build -t amanfdk/fun-app -f Dockerfile ."
+    rm fun
 
 [doc('Run the Fun App Docker image interactively')]
 [group('docker')]
-docker-run: _docker-fun
+docker-run: docker-build
     just _title "Docker" "Running FunApp"
     docker run -it amanfdk/fun-app
 
@@ -44,8 +44,9 @@ docker-clean:
     just _warn "Docker" "Deleting FunApp"
     -just _run "docker rmi -f $(docker images amanfdk/fun-app -q)"
 
+[doc('Show Fun App Docker image information')]
 [group('info')]
-_info-docker:
+docker-info:
     just _info "INFO" "FunApp DockerHub: https://hub.docker.com/r/amanfdk/fun-app/tags"
     curl -s "https://hub.docker.com/v2/repositories/amanfdk/fun-app/tags/?page_size=25&page=1&name&ordering" | jq -r '.results[]|.name' | head -3
     just _info "INFO" "Docker Images: amanfdk/fun-app"
