@@ -13,12 +13,14 @@ RUN go install github.com/remyoudompheng/go-misc/deadcode@latest && \
     go install golang.org/x/tools/cmd/goimports@latest && \
     go install github.com/vektra/mockery/v2@v2.51.1
 
-# Install X11 dependencies for clipboard support
+# Install display dependencies for clipboard support in desktop and headless environments
 RUN apt-get update && \
     apt-get install -y --no-install-recommends \
     libx11-dev \
     libxcb1-dev \
     libxau-dev \
-    libxdmcp-dev && \
+    libxdmcp-dev \
+    xvfb \
+    xauth && \
     apt-get clean && \
     rm -rf /var/lib/apt/lists/*

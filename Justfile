@@ -21,8 +21,19 @@ format:
 	just _format {{root}}
 
 [group('setup')]
-[doc('Install local development tools and Kubernetes prerequisites')]
-prepare: _setup-gotools _setup-k8
+[doc('Install local development tools and validate the environment')]
+prepare:
+    just _setup-gotools
+    just doctor
+
+[group('setup')]
+[doc('Validate tools, display support, and optional environment dependencies')]
+doctor:
+    just _doctor
+
+[group('setup')]
+[doc('Configure Helm repositories and local Kubernetes ingress hosts')]
+prepare-k8s: _setup-k8
 
 [group('setup')]
 [doc('Run the full local setup workflow')]

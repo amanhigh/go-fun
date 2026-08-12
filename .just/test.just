@@ -13,7 +13,7 @@ _test-operator:
 _test-unit:
     just _title "TEST" "Running Unit Tests"
     mkdir -p /tmp/cover/unit
-    just _run "{{ginkgo}} -r --label-filter=\!setup\ \&\&\ \!slow --skip-package=components/fun-app/it -cover . -- -test.gocoverdir=/tmp/cover/unit"
+    just _run-with-display "{{ginkgo}} -r --label-filter=\!setup\ \&\&\ \!slow --skip-package=components/fun-app/it -cover . -- -test.gocoverdir=/tmp/cover/unit"
 
 [group('quality')]
 [doc('Run slow test suites')]

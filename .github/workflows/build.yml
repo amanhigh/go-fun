@@ -49,7 +49,7 @@ jobs:
       - name: SETUP -> Build
         run: |
           export GOTOOLCHAIN=local
-          xvfb-run -a just reset
+          just reset
 
       - name: COVERAGE -> Report
         uses: codecov/codecov-action@v3
