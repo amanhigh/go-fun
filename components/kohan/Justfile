@@ -16,10 +16,14 @@ default:
 # Build Kohan binary.
 [doc('Build the Kohan binary and UI assets')]
 [group('build')]
-build: _templ _css _format _js
+build: _templ _css _format _js build-bin
+    just _title "BUILD" "Kohan Ready"
+
+[doc('Build the Kohan binary without regenerating UI assets')]
+[group('build')]
+build-bin:
     mkdir -p {{root}}/bin
     CGO_ENABLED=1 GOARCH=amd64 go build -o {{binary}} .
-    just _title "BUILD" "Kohan Ready"
 
 [doc('Install the Kohan CLI locally')]
 [group('setup')]

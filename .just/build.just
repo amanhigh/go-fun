@@ -4,7 +4,7 @@ _build-fun:
 
 [group('build')]
 _build-kohan:
-    just components/kohan/build
+    just components/kohan/build-bin
 
 [group('core')]
 [doc('Build the Fun App and Kohan binaries')]
