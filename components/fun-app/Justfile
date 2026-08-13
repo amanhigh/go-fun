@@ -43,6 +43,7 @@ watch:
     set -euo pipefail
     cmd="${CMD:-ls}"
     just _title "Watch (entr)" "${cmd}"
+    cd "{{root}}"
     find . | entr -s "date +%M:%S; ${cmd}"
 
 [doc('Build the Fun App Docker image locally')]

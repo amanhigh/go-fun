@@ -3,10 +3,6 @@ _build-fun:
     just components/fun-app/build
 
 [group('build')]
-_build-fun-cover:
-    just components/fun-app/build-cover
-
-[group('build')]
 _build-kohan:
     just components/kohan/build
 
