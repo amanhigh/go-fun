@@ -28,6 +28,23 @@ run: build
     just _title "RUN" "Running Fun App"
     just _run "{{fun_app_binary}}"
 
+[doc('Build and run the Fun App with coverage instrumentation')]
+[group('run')]
+run-cover: build-cover
+    just _title "COVER" "Running Fun App with Coverage"
+    mkdir -p /tmp/cover/integration
+    just _run "GOCOVERDIR=/tmp/cover/integration PORT=8085 {{fun_app_binary}} &"
+
+# TODO: Replace with Air instead of entr.
+[doc('Watch files and rerun a command with entr')]
+[group('run')]
+watch:
+    #!/usr/bin/env bash
+    set -euo pipefail
+    cmd="${CMD:-ls}"
+    just _title "Watch (entr)" "${cmd}"
+    find . | entr -s "date +%M:%S; ${cmd}"
+
 [doc('Build the Fun App Docker image locally')]
 [group('docker')]
 docker-build: build
@@ -80,3 +97,70 @@ release-docker: docker-build
     just _detail "RELEASE" "Docker Push"
     docker push amanfdk/fun-app:latest
     docker push amanfdk/fun-app:${VER}
+
+[doc('Generate Fun App Swagger documentation')]
+[group('generate')]
+generate-swagger:
+    just _title "Generate" "Swagger"
+    just _run "{{swag}} i --parseDependency true"
+    just _info "Swagger" "http://localhost:8080/swagger/index.html"
+
+[doc('Run the focused verification flow for the Fun App')]
+[group('quality')]
+verify:
+    just _title "TEST" "Running Focus Tests"
+    {{ginkgo}} --focus='should create & get person' it
+
+[doc('Run the Fun App integration load tests')]
+[group('ops')]
+load:
+    just _title "Load" "Test Fun App"
+    just _run "just it/all"
+
+[doc('Open heap and CPU pprof sessions for the running app')]
+[group('ops')]
+profile:
+    #!/usr/bin/env bash
+    set -euo pipefail
+    endpoint="${ENDPOINT:-http://localhost:8080}"
+    just _title "PROFILE" "ENDPOINT=${endpoint} | http://app.docker/app"
+    just _detail "PROFILE" "Profiling Heap"
+    just _run-no-output "go tool pprof -http=:8001 '${endpoint}/debug/pprof/heap' &"
+    just _detail "PROFILE" "Profiling CPU"
+    just _run-no-output "go tool pprof -http=:8000 --seconds=30 '${endpoint}/debug/pprof/profile'"
+    just _warn "PROFILE" "Killing Profilers"
+    kill %1
+
+[doc('Analyse Fun App logs with GoAccess')]
+[group('ops')]
+analyse: build
+    just _title "Analyse" "Fun App Logs"
+    {{fun_app_binary}} 2>/dev/null | grep GIN | goaccess --log-format='%^ %d - %t | %s | %~%D | %b | %~%h | %^ | %m %U' --date-format='%Y/%m/%d' --time-format='%H:%M:%S'
+
+[doc('Start the DevSpace development environment')]
+[group('devspace')]
+space: space-purge
+    just _title "Starting" "Devspace"
+    cd {{root}} && devspace use namespace fun-app
+    cd {{root}} && devspace dev
+
+[doc('Purge the current DevSpace environment')]
+[group('devspace')]
+space-purge:
+    just _title "Purging" "Devspace"
+    -just _run "cd {{root}} && devspace purge"
+
+[doc('Run the DevSpace Ginkgo test workflow')]
+[group('devspace')]
+space-test:
+    just _title "TEST" "Devspace Tests"
+    just _run "cd {{root}} && devspace run ginkgo"
+    CMD="devspace run fun-test" just watch
+
+[doc('Display information about the DevSpace environment')]
+[group('devspace')]
+space-info:
+    just _title "INFO" "Devspace"
+    cd {{root}} && devspace list vars --var DB="mysql-primary",RATE_LIMIT=-1
+    just _detail "INFO" "http://localhost:8080/metrics"
+    just _detail "INFO" "Login: devspace enter"

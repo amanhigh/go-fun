@@ -18,11 +18,6 @@ _setup-gotools:
     GOBIN={{gobin}} go install {{deadcode_install}}
 
 [group('setup')]
-_setup-k8:
-    just _title "SETUP" "Kubernetes Setup"
-    make -C ./Kubernetes/services helm hosts
-
-[group('setup')]
 _doctor:
     #!/usr/bin/env bash
     set -u

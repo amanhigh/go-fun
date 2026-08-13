@@ -16,11 +16,17 @@ default:
 
 ### Lifecycle
 
+[group('setup')]
+[doc('Prepare Kubernetes services')]
+prepare-services:
+    just _title "SETUP" "Kubernetes Services"
+    make -C ./services prepare
+
 _prepare:
     just _title "MINIKUBE" "Preparing"
     mkdir -p /tmp/mini
     chmod 777 /tmp/mini
-    make -C ./services prepare > /dev/null
+    just prepare-services > /dev/null
 
 [doc('Start Minikube cluster')]
 start:

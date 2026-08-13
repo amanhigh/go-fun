@@ -31,4 +31,5 @@ info: _info-release
 
 [group('info')]
 [doc('Show release info plus devspace information')]
-infos: info space-info
+infos: info
+    just components/fun-app/space-info
