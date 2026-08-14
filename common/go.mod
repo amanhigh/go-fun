@@ -15,7 +15,7 @@ require (
 	github.com/failsafe-go/failsafe-go v0.6.8
 	github.com/fatih/color v1.18.0
 	github.com/gin-gonic/gin v1.12.0
-	github.com/go-resty/resty/v2 v2.10.0
+	github.com/go-resty/resty/v2 v2.17.2
 	github.com/go-sql-driver/mysql v1.7.1
 	github.com/golang-migrate/migrate/v4 v4.16.2
 	github.com/google/uuid v1.6.0
@@ -62,8 +62,8 @@ require (
 	github.com/itchyny/gojq v0.12.12 // indirect
 	github.com/itchyny/timefmt-go v0.1.5 // indirect
 	github.com/jackc/pgpassfile v1.0.0 // indirect
-	github.com/jackc/pgservicefile v0.0.0-20221227161230-091c0ba34f0a // indirect
-	github.com/jackc/pgx/v5 v5.4.3 // indirect
+	github.com/jackc/pgservicefile v0.0.0-20240606120523-5a60cdf6a761 // indirect
+	github.com/jackc/pgx/v5 v5.10.0 // indirect
 	github.com/lib/pq v1.10.9 // indirect
 	github.com/lithammer/shortuuid/v3 v3.0.7 // indirect
 	github.com/mattn/go-sqlite3 v1.14.18 // indirect
@@ -147,7 +147,7 @@ require (
 	github.com/opencontainers/go-digest v1.0.0 // indirect
 	github.com/opencontainers/image-spec v1.1.1 // indirect
 	github.com/pelletier/go-toml/v2 v2.2.4 // indirect
-	github.com/pkg/errors v0.9.1
+	github.com/pkg/errors v0.9.1 // indirect
 	github.com/power-devops/perfstat v0.0.0-20210106213030-5aafc221ea8c // indirect
 	github.com/tklauser/go-sysconf v0.3.12 // indirect
 	github.com/tklauser/numcpus v0.6.1 // indirect

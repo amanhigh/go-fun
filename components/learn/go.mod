@@ -18,7 +18,7 @@ require (
 	github.com/go-co-op/gocron-redis-lock/v2 v2.2.1
 	github.com/go-co-op/gocron/v2 v2.19.1
 	github.com/go-playground/validator/v10 v10.30.1
-	github.com/go-resty/resty/v2 v2.10.0
+	github.com/go-resty/resty/v2 v2.17.2
 	github.com/go-zookeeper/zk v1.0.3
 	github.com/golang-sql/civil v0.0.0-20220223132316-b832511892a9
 	github.com/hashicorp/consul/api v1.18.0
@@ -250,7 +250,7 @@ require (
 	golang.org/x/sys v0.41.0 // indirect
 	golang.org/x/term v0.40.0 // indirect
 	golang.org/x/text v0.34.0 // indirect
-	golang.org/x/time v0.3.0 // indirect
+	golang.org/x/time v0.12.0 // indirect
 	golang.org/x/tools v0.41.0 // indirect
 	gomodules.xyz/jsonpatch/v2 v2.2.0 // indirect
 	google.golang.org/protobuf v1.36.10 // indirect

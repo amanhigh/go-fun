@@ -10,7 +10,7 @@ require (
 	github.com/gdamore/tcell/v2 v2.7.1
 	github.com/gin-gonic/gin v1.12.0
 	github.com/go-playground/validator/v10 v10.30.1
-	github.com/go-resty/resty/v2 v2.10.0
+	github.com/go-resty/resty/v2 v2.17.2
 	github.com/gocarina/gocsv v0.0.0-20240520201108-78e41c74b4b1
 	github.com/golang-sql/civil v0.0.0-20220223132316-b832511892a9
 	github.com/golobby/container/v3 v3.3.2
