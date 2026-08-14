@@ -110,7 +110,7 @@ generate-swagger:
 [group('quality')]
 verify:
     just _title "TEST" "Running Focus Tests"
-    {{ginkgo}} --focus='should create & get person' it
+    {{ginkgo}} --focus='should create & get student' it
 
 [doc('Run the Fun App integration load tests')]
 [group('ops')]
