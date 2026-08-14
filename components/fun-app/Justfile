@@ -3,6 +3,7 @@ set shell := ["bash", "-cu"]
 import '../../.just/lib.just'
 
 fun_app_binary := root + "/bin/fun"
+fun_app_dir := justfile_directory()
 
 [doc('Show available Fun App recipes')]
 help:
@@ -35,16 +36,10 @@ run-cover: build-cover
     mkdir -p /tmp/cover/integration
     just _run "GOCOVERDIR=/tmp/cover/integration PORT=8085 {{fun_app_binary}} &"
 
-# TODO: Replace with Air instead of entr.
-[doc('Watch files and rerun a command with entr')]
+[doc('Run the Fun App with Air hot reload')]
 [group('run')]
-watch:
-    #!/usr/bin/env bash
-    set -euo pipefail
-    cmd="${CMD:-ls}"
-    just _title "Watch (entr)" "${cmd}"
-    cd "{{root}}"
-    find . | entr -s "date +%M:%S; ${cmd}"
+air:
+    just _air-run {{fun_app_dir}}
 
 [doc('Build the Fun App Docker image locally')]
 [group('docker')]
@@ -156,7 +151,6 @@ space-purge:
 space-test:
     just _title "TEST" "Devspace Tests"
     just _run "cd {{root}} && devspace run ginkgo"
-    CMD="devspace run fun-test" just watch
 
 [doc('Display information about the DevSpace environment')]
 [group('devspace')]
