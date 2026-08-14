@@ -47,9 +47,9 @@ This repository follows the philosophy of Learning by Doing. It includes plays, 
 			- It is configured to Auto Reload Code Changes.
 			- This Sets Up Dev Container in `fun-app` Namespace.
 			- Try:
-				- Run `just space`, Open http://localhost:8080/metrics
-				- Tests: `just space-test`
-				- Cleanup: `just space-purge`
+				- Run `just components/fun-app/space`, Open http://localhost:8080/metrics
+				- Tests: `just components/fun-app/space-test`
+				- Cleanup: `just components/fun-app/space-purge`
 				- Check Environment Vars: `just infos`
 				- Override Vars:  `devspace list vars --var DB="mysql-primary",RATE_LIMIT=10`
 			- ![Devcode](common/images/fun-app/devcode.gif)

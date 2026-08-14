@@ -3,12 +3,8 @@ _build-fun:
     just components/fun-app/build
 
 [group('build')]
-_build-fun-cover:
-    just components/fun-app/build-cover
-
-[group('build')]
 _build-kohan:
-    just components/kohan/build
+    just components/kohan/build-bin
 
 [group('core')]
 [doc('Build the Fun App and Kohan binaries')]
@@ -31,4 +27,5 @@ info: _info-release
 
 [group('info')]
 [doc('Show release info plus devspace information')]
-infos: info space-info
+infos: info
+    just components/fun-app/space-info

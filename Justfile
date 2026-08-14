@@ -7,8 +7,6 @@ import './.just/generate.just'
 import './.just/quality.just'
 import './.just/test.just'
 import './.just/release.just'
-import './.just/devspace.just'
-import './.just/ops.just'
 
 [doc('Show available recipes')]
 default:
@@ -29,7 +27,8 @@ doctor: _doctor
 
 [group('setup')]
 [doc('Configure Helm repositories and local Kubernetes ingress hosts')]
-prepare-k8s: _setup-k8
+prepare-k8s:
+    just Kubernetes/prepare-services
 
 [group('setup')]
 [doc('Run the full local setup workflow')]
