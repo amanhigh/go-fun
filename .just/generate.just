@@ -1,6 +1,6 @@
 [doc('Generate mocks, swagger, and templ files')]
 [group('core')]
-generate: _generate-mocks _generate-swagger _generate-templ
+generate: _generate-mocks _generate-fun-swagger _generate-templ
 
 [group('generate')]
 _generate-mocks:
@@ -8,10 +8,8 @@ _generate-mocks:
     just _run "{{mockery}}"
 
 [group('generate')]
-_generate-swagger:
-    just _title "Generate" "Swagger"
-    just _run "cd components/fun-app && {{swag}} i --parseDependency true"
-    just _info "Swagger" "http://localhost:8080/swagger/index.html"
+_generate-fun-swagger:
+    just components/fun-app/generate-swagger
 
 [group('generate')]
 _generate-templ:

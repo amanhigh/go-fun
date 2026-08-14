@@ -3,7 +3,7 @@ set shell := ["bash", "-cu"]
 # Import shared library
 import '../../.just/lib.just'
 
-binary := "/tmp/kohan-server"
+binary := root + "/bin/kohan"
 port := "9091"
 kohan_dir := justfile_directory()
 pics_dir := "/tmp/pics"
@@ -16,9 +16,20 @@ default:
 # Build Kohan binary.
 [doc('Build the Kohan binary and UI assets')]
 [group('build')]
-build: _templ _css _format _js
-    go build -o {{binary}} {{kohan_dir}}
+build: _templ _css _format _js build-bin
     just _title "BUILD" "Kohan Ready"
+
+[doc('Build the Kohan binary without regenerating UI assets')]
+[group('build')]
+build-bin:
+    mkdir -p {{root}}/bin
+    CGO_ENABLED=1 GOARCH=amd64 go build -o {{binary}} .
+
+[doc('Install the Kohan CLI locally')]
+[group('setup')]
+install:
+    just _title "Installing" "Kohan"
+    CGO_ENABLED=1 GOARCH=amd64 go install .
 
 # Run Kohan server with Air hot reload.
 [doc('Run Kohan with Air hot reload')]

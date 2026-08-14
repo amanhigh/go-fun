@@ -1,10 +1,4 @@
 [group('setup')]
-[doc('Install the Kohan CLI locally')]
-install:
-    just _title "Installing" "Kohan"
-    CGO_ENABLED=1 GOARCH=amd64 go install ./components/kohan
-
-[group('setup')]
 _setup-gotools:
     just _title "SETUP" "Installing ginkgo"
     GOBIN={{gobin}} go install {{ginkgo_install}}
@@ -22,11 +16,6 @@ _setup-gotools:
     GOBIN={{gobin}} go install {{air_install}}
     just _title "SETUP" "Installing deadcode"
     GOBIN={{gobin}} go install {{deadcode_install}}
-
-[group('setup')]
-_setup-k8:
-    just _title "SETUP" "Kubernetes Setup"
-    make -C ./Kubernetes/services helm hosts
 
 [group('setup')]
 _doctor:
