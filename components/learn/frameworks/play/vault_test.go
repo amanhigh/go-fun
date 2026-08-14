@@ -217,6 +217,7 @@ var _ = Describe("Vault", Ordered, Label(models.GINKGO_SLOW), func() {
 						AAD        = []byte("additional authenticated data")
 						nonce      []byte
 						ciphertext []byte
+						decrypted  []byte
 					)
 					BeforeEach(func() {
 						block, err := aes.NewCipher(key)
@@ -232,18 +233,13 @@ var _ = Describe("Vault", Ordered, Label(models.GINKGO_SLOW), func() {
 						ciphertext = gcm.Seal(nil, nonce, []byte(plainText), AAD)
 						Expect(ciphertext).ToNot(BeNil())
 						Expect(nonce).ToNot(BeNil())
+
+						decrypted, err = gcm.Open(nil, nonce, ciphertext, AAD)
+						Expect(err).ToNot(HaveOccurred())
 					})
 
 					It("should decrypt data", func() {
-						block, err := aes.NewCipher(key)
-						Expect(err).ToNot(HaveOccurred())
-
-						gcm, err := cipher.NewGCM(block)
-						Expect(err).ToNot(HaveOccurred())
-
-						decryptedText, err := gcm.Open(nil, nonce, ciphertext, AAD)
-						Expect(err).ToNot(HaveOccurred())
-						Expect(string(decryptedText)).To(Equal(plainText))
+						Expect(string(decrypted)).To(Equal(plainText))
 					})
 
 				})
