@@ -2,20 +2,56 @@ package play_test
 
 import (
 	"context"
+	"crypto/aes"
+	"crypto/cipher"
+	"crypto/rand"
 	"encoding/base64"
 	"encoding/json"
+	"io"
 	"time"
 
 	"github.com/amanhigh/go-fun/common/util"
 	"github.com/amanhigh/go-fun/models"
 	vault "github.com/hashicorp/vault-client-go"
 	"github.com/hashicorp/vault-client-go/schema"
-	"github.com/hashicorp/vault/helper/dhutil"
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
 	"github.com/rs/zerolog/log"
 	"github.com/testcontainers/testcontainers-go"
 )
+
+func encryptAES(key, plaintext, aad []byte) (ciphertext, nonce []byte, err error) {
+	block, err := aes.NewCipher(key)
+	if err != nil {
+		return nil, nil, err
+	}
+
+	gcm, err := cipher.NewGCM(block)
+	if err != nil {
+		return nil, nil, err
+	}
+
+	nonce = make([]byte, gcm.NonceSize())
+	if _, err = io.ReadFull(rand.Reader, nonce); err != nil {
+		return nil, nil, err
+	}
+
+	return gcm.Seal(nil, nonce, plaintext, aad), nonce, nil
+}
+
+func decryptAES(key, ciphertext, nonce, aad []byte) ([]byte, error) {
+	block, err := aes.NewCipher(key)
+	if err != nil {
+		return nil, err
+	}
+
+	gcm, err := cipher.NewGCM(block)
+	if err != nil {
+		return nil, err
+	}
+
+	return gcm.Open(nil, nonce, ciphertext, aad)
+}
 
 var _ = Describe("Vault", Ordered, Label(models.GINKGO_SLOW), func() {
 
@@ -216,14 +252,14 @@ var _ = Describe("Vault", Ordered, Label(models.GINKGO_SLOW), func() {
 					)
 					BeforeEach(func() {
 						// Encrypt Data
-						cipher, noonce, err = dhutil.EncryptAES(key, []byte(plainText), AAD)
+						cipher, noonce, err = encryptAES(key, []byte(plainText), AAD)
 						Expect(err).ToNot(HaveOccurred())
 						Expect(cipher).ToNot(BeNil())
 						Expect(noonce).ToNot(BeNil())
 					})
 
 					It("should decrypt data", func() {
-						decryptedText, err := dhutil.DecryptAES(key, cipher, noonce, AAD)
+						decryptedText, err := decryptAES(key, cipher, noonce, AAD)
 						Expect(err).ToNot(HaveOccurred())
 						Expect(string(decryptedText)).To(Equal(plainText))
 					})

@@ -11,7 +11,6 @@ require (
 	github.com/bxcodec/faker/v3 v3.8.1
 	github.com/caarlos0/env/v6 v6.10.1
 	github.com/casbin/casbin/v2 v2.61.0
-	github.com/dgrijalva/jwt-go v3.2.0+incompatible
 	github.com/etcinit/speedbump v2.0.0+incompatible
 	github.com/facebookgo/inject v0.0.0-20180706035515-f23751cae28b
 	github.com/gin-gonic/gin v1.12.0
@@ -20,9 +19,9 @@ require (
 	github.com/go-playground/validator/v10 v10.30.1
 	github.com/go-resty/resty/v2 v2.17.2
 	github.com/go-zookeeper/zk v1.0.3
+	github.com/golang-jwt/jwt/v5 v5.3.1
 	github.com/golang-sql/civil v0.0.0-20220223132316-b832511892a9
 	github.com/hashicorp/consul/api v1.18.0
-	github.com/hashicorp/vault v1.13.12
 	github.com/jinzhu/copier v0.4.0
 	github.com/jonboulle/clockwork v0.5.0
 	github.com/lib/pq v1.10.9
