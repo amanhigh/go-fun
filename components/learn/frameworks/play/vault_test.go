@@ -20,39 +20,6 @@ import (
 	"github.com/testcontainers/testcontainers-go"
 )
 
-func encryptAES(key, plaintext, aad []byte) (ciphertext, nonce []byte, err error) {
-	block, err := aes.NewCipher(key)
-	if err != nil {
-		return nil, nil, err
-	}
-
-	gcm, err := cipher.NewGCM(block)
-	if err != nil {
-		return nil, nil, err
-	}
-
-	nonce = make([]byte, gcm.NonceSize())
-	if _, err = io.ReadFull(rand.Reader, nonce); err != nil {
-		return nil, nil, err
-	}
-
-	return gcm.Seal(nil, nonce, plaintext, aad), nonce, nil
-}
-
-func decryptAES(key, ciphertext, nonce, aad []byte) ([]byte, error) {
-	block, err := aes.NewCipher(key)
-	if err != nil {
-		return nil, err
-	}
-
-	gcm, err := cipher.NewGCM(block)
-	if err != nil {
-		return nil, err
-	}
-
-	return gcm.Open(nil, nonce, ciphertext, aad)
-}
-
 var _ = Describe("Vault", Ordered, Label(models.GINKGO_SLOW), func() {
 
 	var (
@@ -230,8 +197,7 @@ var _ = Describe("Vault", Ordered, Label(models.GINKGO_SLOW), func() {
 
 			Context("Export Encryption Key", func() {
 				var (
-					key    []byte
-					cipher []byte
+					key []byte
 				)
 
 				BeforeEach(func() {
@@ -243,23 +209,39 @@ var _ = Describe("Vault", Ordered, Label(models.GINKGO_SLOW), func() {
 					// Decode Base64 Key
 					key, err = base64.StdEncoding.DecodeString(baseKey)
 					Expect(err).ToNot(HaveOccurred())
+					Expect(key).To(HaveLen(32))
 				})
 
 				Context("AES", func() {
 					var (
-						AAD    = []byte("additional authenticated data")
-						noonce []byte
+						AAD        = []byte("additional authenticated data")
+						nonce      []byte
+						ciphertext []byte
 					)
 					BeforeEach(func() {
-						// Encrypt Data
-						cipher, noonce, err = encryptAES(key, []byte(plainText), AAD)
+						block, err := aes.NewCipher(key)
 						Expect(err).ToNot(HaveOccurred())
-						Expect(cipher).ToNot(BeNil())
-						Expect(noonce).ToNot(BeNil())
+
+						gcm, err := cipher.NewGCM(block)
+						Expect(err).ToNot(HaveOccurred())
+
+						nonce = make([]byte, gcm.NonceSize())
+						_, err = io.ReadFull(rand.Reader, nonce)
+						Expect(err).ToNot(HaveOccurred())
+
+						ciphertext = gcm.Seal(nil, nonce, []byte(plainText), AAD)
+						Expect(ciphertext).ToNot(BeNil())
+						Expect(nonce).ToNot(BeNil())
 					})
 
 					It("should decrypt data", func() {
-						decryptedText, err := decryptAES(key, cipher, noonce, AAD)
+						block, err := aes.NewCipher(key)
+						Expect(err).ToNot(HaveOccurred())
+
+						gcm, err := cipher.NewGCM(block)
+						Expect(err).ToNot(HaveOccurred())
+
+						decryptedText, err := gcm.Open(nil, nonce, ciphertext, AAD)
 						Expect(err).ToNot(HaveOccurred())
 						Expect(string(decryptedText)).To(Equal(plainText))
 					})
