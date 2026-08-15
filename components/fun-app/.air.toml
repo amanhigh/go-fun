@@ -6,7 +6,7 @@ tmp_dir = "/tmp/go-fun-air"
   entrypoint = ["./bin/fun"]
   delay = 1000
   include_ext = ["*"]
-  exclude_dir = [".git", "bin", "tmp", "vendor", "node_modules", ".devspace", ".idea", ".vscode", ".opencode", "processed"]
+  exclude_dir = [".git", "bin", "tmp", "vendor", "node_modules", ".devspace", "processed"]
 
 [log]
   time = false
