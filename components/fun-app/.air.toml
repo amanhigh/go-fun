@@ -1,0 +1,21 @@
+root = "../.."
+tmp_dir = "/tmp/go-fun-air"
+
+[build]
+  cmd = "cd ../.. && just components/fun-app/build"
+  entrypoint = ["./bin/fun"]
+  delay = 1000
+  include_ext = ["*"]
+  exclude_dir = [".git", "bin", "tmp", "vendor", "node_modules", ".devspace", "processed"]
+
+[log]
+  time = false
+
+[color]
+  main = "magenta"
+  watcher = "cyan"
+  build = "yellow"
+  runner = "green"
+
+[misc]
+  clean_on_exit = true
