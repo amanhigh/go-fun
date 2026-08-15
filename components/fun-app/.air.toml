@@ -2,7 +2,7 @@ root = "../.."
 tmp_dir = "/tmp/go-fun-air"
 
 [build]
-  cmd = "just components/fun-app/build"
+  cmd = "cd ../.. && just components/fun-app/build"
   entrypoint = ["./bin/fun"]
   delay = 1000
   include_ext = ["*"]
