@@ -46,6 +46,85 @@ jobs:
           export GOTOOLCHAIN=local
           just prepare
 
+      - name: VERIFY -> FunApp Air reload
+        timeout-minutes: 2
+        shell: bash
+        run: |
+          set -euo pipefail
+
+          log=/tmp/fun-air-reload.log
+          source_file=common/util/metadata.go
+          backup=$(mktemp)
+          air_pid=
+          cleanup() {
+            set +e
+            if [[ -n "$air_pid" ]]; then
+              kill "$air_pid" 2>/dev/null || true
+              wait "$air_pid" 2>/dev/null || true
+            fi
+            pkill -TERM -f "$PWD/bin/fun" 2>/dev/null || true
+            cp "$backup" "$source_file"
+            rm -f "$backup"
+          }
+          trap cleanup EXIT
+
+          cp "$source_file" "$backup"
+          timeout --foreground 90s just components/fun-app/air >"$log" 2>&1 &
+          air_pid=$!
+
+          for _ in $(seq 1 60); do
+            if [[ -x bin/fun ]] && curl -fsS http://localhost:8080/metrics >/dev/null; then
+              break
+            fi
+            if ! kill -0 "$air_pid" 2>/dev/null; then
+              cat "$log"
+              exit 1
+            fi
+            sleep 1
+          done
+
+          [[ -x bin/fun ]]
+          curl -fsS http://localhost:8080/metrics >/dev/null
+          initial_mtime=$(stat -c '%y' bin/fun)
+          initial_pid=$(pgrep -n -f '[/]bin/fun([[:space:]]|$)' || true)
+          initial_builds=$(grep -Eic 'building[.][.][.]' "$log" || true)
+          [[ -n "$initial_pid" ]]
+          (( initial_builds >= 1 ))
+
+          sed -i '1i// FunApp Air reload verification' "$source_file"
+
+          for _ in $(seq 1 60); do
+            current_mtime=$(stat -c '%y' bin/fun)
+            current_pid=$(pgrep -n -f '[/]bin/fun([[:space:]]|$)' || true)
+            current_builds=$(grep -Eic 'building[.][.][.]' "$log" || true)
+            if [[ "$current_mtime" != "$initial_mtime" ]] && [[ "$current_pid" != "$initial_pid" ]] && (( current_builds > initial_builds )); then
+              break
+            fi
+            sleep 1
+          done
+
+          final_mtime=$(stat -c '%y' bin/fun)
+          final_pid=$(pgrep -n -f '[/]bin/fun([[:space:]]|$)' || true)
+          final_builds=$(grep -Eic 'building[.][.][.]' "$log" || true)
+          [[ "$final_mtime" != "$initial_mtime" ]]
+          [[ "$final_pid" != "$initial_pid" ]]
+          (( final_builds > initial_builds ))
+          curl -fsS http://localhost:8080/metrics >/dev/null
+
+          printf 'Initial build count: %s\\n' "$initial_builds"
+          printf 'Final build count: %s\\n' "$final_builds"
+          printf 'Initial bin/fun mtime: %s\\n' "$initial_mtime"
+          printf 'Reloaded bin/fun mtime: %s\\n' "$final_mtime"
+          printf 'Initial FunApp PID: %s\\n' "$initial_pid"
+          printf 'Reloaded FunApp PID: %s\\n' "$final_pid"
+          sed -n '1,220p' "$log"
+
+          cleanup
+          trap - EXIT
+          [[ ! -e "$source_file" ]] || git diff --exit-code -- "$source_file"
+          ! pgrep -f "$PWD/bin/fun" >/dev/null
+          ! pgrep -f '[/]air([[:space:]]|$)' >/dev/null
+
       - name: SETUP -> Kubernetes
         run: |
           export GOTOOLCHAIN=local
