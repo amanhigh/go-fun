@@ -53,7 +53,7 @@ jobs:
           set -euo pipefail
 
           log=/tmp/fun-air-reload.log
-          source_file=common/util/metadata.go
+          source_file=models/common/metadata.go
           backup=$(mktemp)
           air_pid=
           cleanup() {
