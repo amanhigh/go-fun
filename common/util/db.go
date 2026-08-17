@@ -176,6 +176,10 @@ type SortOptions struct {
 // It resolves API sort-by fields to DB column names, applies the default when SortBy is empty,
 // and sets the correct ascending/descending direction.
 //
+// When SortBy is empty, the utility uses DefaultSortBy and DefaultSortOrder, so any supplied
+// SortOrder on the options struct is ignored in this case. Only when SortBy is non-empty does
+// the SortOrder field take effect.
+//
 // Returns the query unchanged when both SortBy and DefaultSortBy are empty.
 func ApplySort(tx *gorm.DB, options SortOptions) *gorm.DB {
 	sortBy := options.SortBy

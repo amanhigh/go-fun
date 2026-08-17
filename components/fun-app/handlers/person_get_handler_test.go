@@ -271,7 +271,8 @@ var _ = Describe("Person Handler Integration - GET Tests", func() {
 				BeforeEach(func() {
 					requests := make([]fun.PersonRequest, 22)
 					for i := range requests {
-						requests[i] = fun.PersonRequest{Name: "Person " + string(rune('A'+i)), Age: i + 1, Gender: "FEMALE"}
+						// Descending name order: Person V, Person U, ..., Person A
+						requests[i] = fun.PersonRequest{Name: "Person " + string(rune('V'-i)), Age: 22 - i, Gender: "FEMALE"}
 					}
 					createPersons(requests...)
 					response = listPersons("")
@@ -283,6 +284,8 @@ var _ = Describe("Person Handler Integration - GET Tests", func() {
 					Expect(response.Metadata.Offset).To(Equal(0))
 					Expect(response.Metadata.Limit).To(Equal(20))
 					Expect(response.Metadata.Total).To(Equal(int64(22)))
+					Expect(response.Records[0].Name).To(Equal("Person A"))
+					Expect(response.Records[19].Name).To(Equal("Person T"))
 				})
 			})
 

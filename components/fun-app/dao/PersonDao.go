@@ -30,10 +30,9 @@ func NewPersonDao(baseRepo util.BaseDbRepository) *PersonDao {
 
 func (pd *PersonDao) ListPerson(c context.Context, personQuery fun.PersonQuery) (personList fun.PersonList, err common.HttpError) {
 	var txErr error
-	// Add Pagination to Query
-	txn := pd.SafeTx(c).Offset(personQuery.Offset).Limit(personQuery.Limit)
 
-	// Add Query Params if Supplied
+	// Build base filtered query (no pagination)
+	txn := pd.SafeTx(c)
 	if personQuery.Name != "" {
 		txn = txn.Where("name like ?", "%"+personQuery.Name+"%")
 	}
@@ -41,14 +40,22 @@ func (pd *PersonDao) ListPerson(c context.Context, personQuery fun.PersonQuery) 
 		txn = txn.Where("gender = ?", personQuery.Gender)
 	}
 
-	// Add Sorting to Query
-	txn = util.ApplySort(txn, util.SortOptions{
-		SortBy:    personQuery.SortBy,
-		SortOrder: personQuery.SortOrder,
+	// Count total filtered records before applying offset/limit
+	if txErr = txn.Model(&fun.Person{}).Count(&personList.Metadata.Total).Error; txErr != nil && !errors.Is(txErr, gorm.ErrRecordNotFound) {
+		zerolog.Ctx(c).Error().Any("Query", personQuery).Err(txErr).Msg("Error Counting Person List")
+		err = util.GormErrorMapper(txErr)
+		return
+	}
+
+	// Apply pagination and sorting, then fetch records
+	txn = util.ApplySort(txn.Offset(personQuery.Offset).Limit(personQuery.Limit), util.SortOptions{
+		SortBy:           personQuery.SortBy,
+		SortOrder:        personQuery.SortOrder,
+		DefaultSortBy:    "name",
+		DefaultSortOrder: common.SortOrderAsc,
 	})
 
-	// Execute Query to Get Records and Count
-	if txErr = txn.Find(&personList.Records).Count(&personList.Metadata.Total).Error; txErr != nil && !errors.Is(txErr, gorm.ErrRecordNotFound) {
+	if txErr = txn.Find(&personList.Records).Error; txErr != nil && !errors.Is(txErr, gorm.ErrRecordNotFound) {
 		zerolog.Ctx(c).Error().Any("Query", personQuery).Err(txErr).Msg("Error Fetching Person List")
 		err = util.GormErrorMapper(txErr)
 	}
@@ -65,7 +72,12 @@ func (pd *PersonDao) ListPersonAudit(c context.Context, id string) (personAuditL
 	audit := fun.PersonAudit{Id: id}
 
 	// Fetch Person Audit Records ordered deterministically by audit_id
-	if txErr = pd.SafeTx(c).Where(audit).Order("audit_id asc").Find(&personAuditList).Error; txErr != nil && !errors.Is(txErr, gorm.ErrRecordNotFound) {
+	query := pd.SafeTx(c).Where(audit)
+	query = util.ApplySort(query, util.SortOptions{
+		DefaultSortBy:    "audit_id",
+		DefaultSortOrder: common.SortOrderAsc,
+	})
+	if txErr = query.Find(&personAuditList).Error; txErr != nil && !errors.Is(txErr, gorm.ErrRecordNotFound) {
 		zerolog.Ctx(c).Error().Str("Id", id).Err(txErr).Msg("Error Fetching Person Audit List")
 		err = util.GormErrorMapper(txErr)
 	}

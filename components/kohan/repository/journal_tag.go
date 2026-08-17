@@ -42,7 +42,11 @@ func (r *TagRepositoryImpl) ListTags(ctx context.Context, journalID uint64, tagT
 		where.Type = tagType
 	}
 	query := r.SafeTx(ctx).Where(&where)
-	if txErr = query.Order("created_at").Find(&tags).Error; txErr != nil && !errors.Is(txErr, gorm.ErrRecordNotFound) {
+	query = util.ApplySort(query, util.SortOptions{
+		DefaultSortBy:    "created_at",
+		DefaultSortOrder: common.SortOrderAsc,
+	})
+	if txErr = query.Find(&tags).Error; txErr != nil && !errors.Is(txErr, gorm.ErrRecordNotFound) {
 		return nil, util.GormErrorMapper(txErr)
 	}
 	return tags, nil
