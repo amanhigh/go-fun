@@ -4,6 +4,8 @@ import (
 	"context"
 	"encoding/json"
 	"net/http"
+	"slices"
+	"sync"
 	"time"
 
 	"github.com/ThreeDotsLabs/watermill"
@@ -15,11 +17,48 @@ import (
 	"github.com/stretchr/testify/mock"
 
 	"github.com/amanhigh/go-fun/common/util"
+	daomocks "github.com/amanhigh/go-fun/components/fun-app/dao/mocks"
 	"github.com/amanhigh/go-fun/components/fun-app/handlers"
+	"github.com/amanhigh/go-fun/components/fun-app/manager"
 	managermocks "github.com/amanhigh/go-fun/components/fun-app/manager/mocks"
+	"github.com/amanhigh/go-fun/components/fun-app/publisher"
 	common "github.com/amanhigh/go-fun/models/common"
 	"github.com/amanhigh/go-fun/models/fun"
 )
+
+type recordedPublish struct {
+	topic string
+	msg   *message.Message
+}
+
+type recordingPublisher struct {
+	delegate message.Publisher
+	mu       sync.Mutex
+	records  []recordedPublish
+}
+
+func (p *recordingPublisher) Publish(topic string, msg ...*message.Message) error {
+	p.mu.Lock()
+	for _, item := range msg {
+		p.records = append(p.records, recordedPublish{topic: topic, msg: item})
+	}
+	p.mu.Unlock()
+	return p.delegate.Publish(topic, msg...)
+}
+
+func (p *recordingPublisher) Close() error { return p.delegate.Close() }
+
+func (p *recordingPublisher) messages(topics ...string) []recordedPublish {
+	p.mu.Lock()
+	defer p.mu.Unlock()
+	var result []recordedPublish
+	for _, record := range p.records {
+		if slices.Contains(topics, record.topic) {
+			result = append(result, record)
+		}
+	}
+	return result
+}
 
 var _ = Describe("MessagingServer learning scenarios", func() {
 	var (
@@ -72,63 +111,188 @@ var _ = Describe("MessagingServer learning scenarios", func() {
 			cancelled = make(chan struct{})
 			seatMock.EXPECT().AllocateSeat(mock.Anything, cmd).
 				Return(common.NewHttpError("seat service unavailable", http.StatusInternalServerError)).Times(3)
-			enrollmentMock.EXPECT().CancelEnrollmentAndPublish(
+			seatMock.EXPECT().PublishSeatAllocationFailed(
 				mock.Anything,
-				mock.MatchedBy(func(evt fun.EnrollmentCancelledEvtV1) bool {
-					return evt.EnrollmentID == cmd.EnrollmentID &&
-						evt.StudentID == cmd.StudentID &&
-						evt.Reason == fun.EnrollmentCancellationReasonSeatAllocationFailed
+				fun.Enrollment{ID: cmd.EnrollmentID, StudentID: cmd.StudentID},
+				mock.MatchedBy(func(reason string) bool {
+					return reason != ""
 				}),
-			).Run(func(_ context.Context, _ fun.EnrollmentCancelledEvtV1) {
+			).Run(func(_ context.Context, enrollment fun.Enrollment, reason string) {
+				evtPayload, err := json.Marshal(fun.SeatAllocationFailedEvtV1{
+					EnrollmentID: enrollment.ID,
+					StudentID:     enrollment.StudentID,
+					Reason:       reason,
+					FailedAt:     time.Now().UTC(),
+				})
+				if err != nil {
+					return
+				}
+				Expect(channel.Publish(fun.TopicSeatAllocationFailedEvt, message.NewMessage("allocation-failed-1", evtPayload))).To(Succeed())
+			}).Return(nil).Once()
+			enrollmentMock.EXPECT().CancelEnrollment(mock.Anything, cmd.EnrollmentID).Run(func(context.Context, string) {
 				close(cancelled)
 			}).Return(nil).Once()
 
 			payload, err := json.Marshal(cmd)
 			Expect(err).ToNot(HaveOccurred())
-			Expect(channel.Publish(fun.TopicAllocateSeatCmd, message.NewMessage("allocate-1", payload))).To(Succeed())
+			msg := message.NewMessage("allocate-1", payload)
+			Expect(channel.Publish(fun.TopicAllocateSeatCmd, msg)).To(Succeed())
 			Eventually(cancelled, 10*time.Second).Should(BeClosed())
 		})
 
-		It("retries allocation twice before compensating once", func() {
+		It("retries allocation twice before publishing one failure", func() {
 			seatMock.AssertNumberOfCalls(GinkgoT(), "AllocateSeat", 3)
-			enrollmentMock.AssertNumberOfCalls(GinkgoT(), "CancelEnrollmentAndPublish", 1)
+			seatMock.AssertNumberOfCalls(GinkgoT(), "PublishSeatAllocationFailed", 1)
 		})
 	})
 
 	Context("malformed allocation", func() {
-		var poisonMessages <-chan *message.Message
+		var (
+			deadLetterMessages <-chan *message.Message
+			deadLetterMessage  *message.Message
+		)
 
 		BeforeEach(func() {
 			var err error
-			poisonMessages, err = channel.Subscribe(routerCtx, util.PoisonTopic(fun.TopicAllocateSeatCmd))
+			deadLetterMessages, err = channel.Subscribe(routerCtx, util.DeadLetterTopic(fun.TopicAllocateSeatCmd))
 			Expect(err).ToNot(HaveOccurred())
 			Expect(channel.Publish(fun.TopicAllocateSeatCmd, message.NewMessage("allocate-malformed", []byte("not-json")))).To(Succeed())
-			var poisonMessage *message.Message
-			Eventually(poisonMessages).Should(Receive(&poisonMessage))
+			Eventually(deadLetterMessages).Should(Receive(&deadLetterMessage))
 		})
 
-		It("acknowledges permanently malformed allocation without retry or compensation", func() {
+		It("quarantines malformed allocation without retry or compensation", func() {
+			Expect(string(deadLetterMessage.Payload)).To(Equal("not-json"))
+			Expect(deadLetterMessage.Metadata.Get(middleware.PoisonedTopicKey)).To(Equal(fun.TopicAllocateSeatCmd))
+			Consistently(deadLetterMessages, "200ms", "50ms").ShouldNot(Receive())
 			seatMock.AssertNotCalled(GinkgoT(), "AllocateSeat", mock.Anything, mock.Anything)
-			enrollmentMock.AssertNotCalled(GinkgoT(), "CancelEnrollmentAndPublish", mock.Anything, mock.Anything)
+			seatMock.AssertNotCalled(GinkgoT(), "PublishSeatAllocationFailed", mock.Anything, mock.Anything, mock.Anything)
+			enrollmentMock.AssertNotCalled(GinkgoT(), "CancelEnrollment", mock.Anything, mock.Anything)
 		})
 	})
 
-	Context("terminal enrollment confirmation DLQ", func() {
-		var poisonMessage *message.Message
+	Context("malformed allocation dead-letter recovery", func() {
+		var nestedDeadLetterMessages <-chan *message.Message
 
 		BeforeEach(func() {
-			poisonMessages, err := channel.Subscribe(routerCtx, util.PoisonTopic(fun.TopicEnrollmentConfirmedEvt))
+			var err error
+			nestedDeadLetterMessages, err = channel.Subscribe(routerCtx, util.DeadLetterTopic(util.DeadLetterTopic(fun.TopicAllocateSeatCmd)))
 			Expect(err).ToNot(HaveOccurred())
-			payload := []byte("not-json")
-			Expect(channel.Publish(fun.TopicEnrollmentConfirmedEvt, message.NewMessage("confirmation-malformed", payload))).To(Succeed())
-			Eventually(poisonMessages).Should(Receive(&poisonMessage))
+			Expect(channel.Publish(util.DeadLetterTopic(fun.TopicAllocateSeatCmd), message.NewMessage("allocate-malformed-recovery", []byte("not-json")))).To(Succeed())
 		})
 
-		It("publishes one terminal poison record with source metadata", func() {
-			Expect(string(poisonMessage.Payload)).To(Equal("not-json"))
-			Expect(poisonMessage.Metadata.Get(middleware.PoisonedTopicKey)).To(Equal(fun.TopicEnrollmentConfirmedEvt))
-			enrollmentMock.AssertNotCalled(GinkgoT(), "OnEnrollmentConfirmedEvt", mock.Anything, mock.Anything)
+		It("does not retry malformed allocation recovery", func() {
+			Consistently(nestedDeadLetterMessages, "200ms", "50ms").ShouldNot(Receive())
 			seatMock.AssertNotCalled(GinkgoT(), "AllocateSeat", mock.Anything, mock.Anything)
+			seatMock.AssertNotCalled(GinkgoT(), "PublishSeatAllocationFailed", mock.Anything, mock.Anything, mock.Anything)
 		})
+	})
+
+	Context("allocation failure compensation", func() {
+		var (
+			deadLetterMessages <-chan *message.Message
+			deadLetterMessage  *message.Message
+		)
+
+		BeforeEach(func() {
+			failed := fun.SeatAllocationFailedEvtV1{
+				EnrollmentID: "enr-1",
+				StudentID:     "student-1",
+				Reason:       "capacity unavailable",
+				FailedAt:     time.Now().UTC(),
+			}
+			payload, err := json.Marshal(failed)
+			Expect(err).ToNot(HaveOccurred())
+			enrollmentMock.EXPECT().CancelEnrollment(mock.Anything, mock.Anything).
+				Return(common.NewHttpError("database unavailable", http.StatusInternalServerError)).Times(3)
+			deadLetterMessages, err = channel.Subscribe(routerCtx, util.DeadLetterTopic(fun.TopicSeatAllocationFailedEvt))
+			Expect(err).ToNot(HaveOccurred())
+			Expect(channel.Publish(fun.TopicSeatAllocationFailedEvt, message.NewMessage("failed-1", payload))).To(Succeed())
+			Eventually(deadLetterMessages, 10*time.Second).Should(Receive(&deadLetterMessage))
+		})
+
+		It("bounds cancellation retries and preserves a terminal dead-letter record", func() {
+			Expect(deadLetterMessage.Metadata.Get(middleware.PoisonedTopicKey)).To(Equal(fun.TopicSeatAllocationFailedEvt))
+			enrollmentMock.AssertNumberOfCalls(GinkgoT(), "CancelEnrollment", 3)
+		})
+	})
+
+})
+
+var _ = Describe("MessagingServer causal-chain scenario", func() {
+	var (
+		m1, m2, m3   *message.Message
+		recorder     *recordingPublisher
+		chainChannel *gochannel.GoChannel
+		server       *handlers.MessagingServer
+		routerCtx    context.Context
+		routerCancel context.CancelFunc
+	)
+
+	BeforeEach(func() {
+		logger := watermill.NewStdLogger(false, false)
+		chainChannel = gochannel.NewGoChannel(gochannel.Config{}, logger)
+		recorder = &recordingPublisher{delegate: chainChannel}
+		enrollmentDAO := daomocks.NewEnrollmentDaoInterface(GinkgoT())
+		enrollment := fun.Enrollment{ID: "enr-chain", StudentID: "student-chain", Grade: 3, Status: fun.EnrollmentStatusSeatAllocationInitiated}
+		enrollmentDAO.EXPECT().UseOrCreateTx(mock.Anything, mock.Anything).RunAndReturn(func(ctx context.Context, run util.DbRun, _ ...bool) common.HttpError {
+			return run(ctx)
+		}).Once()
+		enrollmentDAO.EXPECT().FindById(mock.Anything, enrollment.ID, mock.Anything).Run(func(_ context.Context, _ any, entity any) {
+			entityValue, ok := entity.(*fun.Enrollment)
+			Expect(ok).To(BeTrue())
+			*entityValue = enrollment
+		}).Return(nil).Once()
+		enrollmentDAO.EXPECT().Update(mock.Anything, mock.Anything).Return(nil).Once()
+
+		enrollmentPublisher := publisher.NewEnrollmentPublisher(publisher.NewBasePublisher(recorder))
+		seatPublisher := publisher.NewSeatAllocationPublisher(publisher.NewBasePublisher(recorder))
+		seatManager := manager.NewSeatManager(seatPublisher)
+		enrollmentManager := manager.NewEnrollmentManager(nil, enrollmentDAO, enrollmentPublisher, seatManager)
+		var err error
+		server, err = handlers.NewMessagingServer(logger, recorder, chainChannel,
+			handlers.NewEnrollmentMessageHandler(enrollmentManager),
+			handlers.NewSeatMessageHandler(seatManager, enrollmentManager),
+		)
+		Expect(err).ToNot(HaveOccurred())
+		routerCtx, routerCancel = context.WithCancel(context.Background())
+		go func() { _ = server.Router().Run(routerCtx) }()
+		<-server.Router().Running()
+
+		Expect(enrollmentPublisher.Enroll(context.Background(), enrollment)).ToNot(HaveOccurred())
+		chainTopics := []string{fun.TopicEnrollCmd, fun.TopicAllocateSeatCmd, fun.TopicSeatReservedEvt}
+		var chain []recordedPublish
+		Eventually(func() []recordedPublish {
+			chain = recorder.messages(chainTopics...)
+			return chain
+		}).Should(HaveLen(3))
+		m1, m2, m3 = chain[0].msg, chain[1].msg, chain[2].msg
+	})
+
+	AfterEach(func() {
+		routerCancel()
+		_ = server.Router().Close()
+		_ = chainChannel.Close()
+	})
+
+	It("preserves correlation and immediate-message causation across the saga", func() {
+		// M1: every message has a distinct transport identity.
+		Expect(m1.UUID).ToNot(BeEmpty())
+		Expect(m2.UUID).ToNot(BeEmpty())
+		Expect(m3.UUID).ToNot(BeEmpty())
+		Expect(m1.UUID).ToNot(Equal(m2.UUID))
+		Expect(m1.UUID).ToNot(Equal(m3.UUID))
+		Expect(m2.UUID).ToNot(Equal(m3.UUID))
+
+		// M2: correlation is propagated across the complete chain.
+		correlationID := middleware.MessageCorrelationID(m1)
+		Expect(correlationID).NotTo(BeEmpty())
+		Expect(middleware.MessageCorrelationID(m2)).To(Equal(correlationID))
+		Expect(middleware.MessageCorrelationID(m3)).To(Equal(correlationID))
+
+		// M3: the first downstream message records its immediate predecessor.
+		Expect(m2.Metadata.Get("causation_id")).To(Equal(m1.UUID))
+
+		// M3: the terminal message records the preceding event.
+		Expect(m3.Metadata.Get("causation_id")).To(Equal(m2.UUID))
 	})
 })

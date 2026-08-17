@@ -39,17 +39,17 @@ func (_m *EnrollmentManagerInterface) EXPECT() *EnrollmentManagerInterface_Expec
 	return &EnrollmentManagerInterface_Expecter{mock: &_m.Mock}
 }
 
-// CancelEnrollmentAndPublish provides a mock function for the type EnrollmentManagerInterface
-func (_mock *EnrollmentManagerInterface) CancelEnrollmentAndPublish(ctx context.Context, evt fun.EnrollmentCancelledEvtV1) common.HttpError {
-	ret := _mock.Called(ctx, evt)
+// CancelEnrollment provides a mock function for the type EnrollmentManagerInterface
+func (_mock *EnrollmentManagerInterface) CancelEnrollment(ctx context.Context, enrollmentID string) common.HttpError {
+	ret := _mock.Called(ctx, enrollmentID)
 
 	if len(ret) == 0 {
-		panic("no return value specified for CancelEnrollmentAndPublish")
+		panic("no return value specified for CancelEnrollment")
 	}
 
 	var r0 common.HttpError
-	if returnFunc, ok := ret.Get(0).(func(context.Context, fun.EnrollmentCancelledEvtV1) common.HttpError); ok {
-		r0 = returnFunc(ctx, evt)
+	if returnFunc, ok := ret.Get(0).(func(context.Context, string) common.HttpError); ok {
+		r0 = returnFunc(ctx, enrollmentID)
 	} else {
 		if ret.Get(0) != nil {
 			r0 = ret.Get(0).(common.HttpError)
@@ -58,27 +58,27 @@ func (_mock *EnrollmentManagerInterface) CancelEnrollmentAndPublish(ctx context.
 	return r0
 }
 
-// EnrollmentManagerInterface_CancelEnrollmentAndPublish_Call is a *mock.Call that shadows Run/Return methods with type explicit version for method 'CancelEnrollmentAndPublish'
-type EnrollmentManagerInterface_CancelEnrollmentAndPublish_Call struct {
+// EnrollmentManagerInterface_CancelEnrollment_Call is a *mock.Call that shadows Run/Return methods with type explicit version for method 'CancelEnrollment'
+type EnrollmentManagerInterface_CancelEnrollment_Call struct {
 	*mock.Call
 }
 
-// CancelEnrollmentAndPublish is a helper method to define mock.On call
+// CancelEnrollment is a helper method to define mock.On call
 //   - ctx context.Context
-//   - evt fun.EnrollmentCancelledEvtV1
-func (_e *EnrollmentManagerInterface_Expecter) CancelEnrollmentAndPublish(ctx interface{}, evt interface{}) *EnrollmentManagerInterface_CancelEnrollmentAndPublish_Call {
-	return &EnrollmentManagerInterface_CancelEnrollmentAndPublish_Call{Call: _e.mock.On("CancelEnrollmentAndPublish", ctx, evt)}
+//   - enrollmentID string
+func (_e *EnrollmentManagerInterface_Expecter) CancelEnrollment(ctx interface{}, enrollmentID interface{}) *EnrollmentManagerInterface_CancelEnrollment_Call {
+	return &EnrollmentManagerInterface_CancelEnrollment_Call{Call: _e.mock.On("CancelEnrollment", ctx, enrollmentID)}
 }
 
-func (_c *EnrollmentManagerInterface_CancelEnrollmentAndPublish_Call) Run(run func(ctx context.Context, evt fun.EnrollmentCancelledEvtV1)) *EnrollmentManagerInterface_CancelEnrollmentAndPublish_Call {
+func (_c *EnrollmentManagerInterface_CancelEnrollment_Call) Run(run func(ctx context.Context, enrollmentID string)) *EnrollmentManagerInterface_CancelEnrollment_Call {
 	_c.Call.Run(func(args mock.Arguments) {
 		var arg0 context.Context
 		if args[0] != nil {
 			arg0 = args[0].(context.Context)
 		}
-		var arg1 fun.EnrollmentCancelledEvtV1
+		var arg1 string
 		if args[1] != nil {
-			arg1 = args[1].(fun.EnrollmentCancelledEvtV1)
+			arg1 = args[1].(string)
 		}
 		run(
 			arg0,
@@ -88,12 +88,12 @@ func (_c *EnrollmentManagerInterface_CancelEnrollmentAndPublish_Call) Run(run fu
 	return _c
 }
 
-func (_c *EnrollmentManagerInterface_CancelEnrollmentAndPublish_Call) Return(httpError common.HttpError) *EnrollmentManagerInterface_CancelEnrollmentAndPublish_Call {
+func (_c *EnrollmentManagerInterface_CancelEnrollment_Call) Return(httpError common.HttpError) *EnrollmentManagerInterface_CancelEnrollment_Call {
 	_c.Call.Return(httpError)
 	return _c
 }
 
-func (_c *EnrollmentManagerInterface_CancelEnrollmentAndPublish_Call) RunAndReturn(run func(ctx context.Context, evt fun.EnrollmentCancelledEvtV1) common.HttpError) *EnrollmentManagerInterface_CancelEnrollmentAndPublish_Call {
+func (_c *EnrollmentManagerInterface_CancelEnrollment_Call) RunAndReturn(run func(ctx context.Context, enrollmentID string) common.HttpError) *EnrollmentManagerInterface_CancelEnrollment_Call {
 	_c.Call.Return(run)
 	return _c
 }
@@ -295,124 +295,6 @@ func (_c *EnrollmentManagerInterface_GetEnrollment_Call) Return(enrollment fun.E
 }
 
 func (_c *EnrollmentManagerInterface_GetEnrollment_Call) RunAndReturn(run func(ctx context.Context, studentID string) (fun.Enrollment, common.HttpError)) *EnrollmentManagerInterface_GetEnrollment_Call {
-	_c.Call.Return(run)
-	return _c
-}
-
-// OnEnrollmentCancelledEvt provides a mock function for the type EnrollmentManagerInterface
-func (_mock *EnrollmentManagerInterface) OnEnrollmentCancelledEvt(ctx context.Context, evt fun.EnrollmentCancelledEvtV1) common.HttpError {
-	ret := _mock.Called(ctx, evt)
-
-	if len(ret) == 0 {
-		panic("no return value specified for OnEnrollmentCancelledEvt")
-	}
-
-	var r0 common.HttpError
-	if returnFunc, ok := ret.Get(0).(func(context.Context, fun.EnrollmentCancelledEvtV1) common.HttpError); ok {
-		r0 = returnFunc(ctx, evt)
-	} else {
-		if ret.Get(0) != nil {
-			r0 = ret.Get(0).(common.HttpError)
-		}
-	}
-	return r0
-}
-
-// EnrollmentManagerInterface_OnEnrollmentCancelledEvt_Call is a *mock.Call that shadows Run/Return methods with type explicit version for method 'OnEnrollmentCancelledEvt'
-type EnrollmentManagerInterface_OnEnrollmentCancelledEvt_Call struct {
-	*mock.Call
-}
-
-// OnEnrollmentCancelledEvt is a helper method to define mock.On call
-//   - ctx context.Context
-//   - evt fun.EnrollmentCancelledEvtV1
-func (_e *EnrollmentManagerInterface_Expecter) OnEnrollmentCancelledEvt(ctx interface{}, evt interface{}) *EnrollmentManagerInterface_OnEnrollmentCancelledEvt_Call {
-	return &EnrollmentManagerInterface_OnEnrollmentCancelledEvt_Call{Call: _e.mock.On("OnEnrollmentCancelledEvt", ctx, evt)}
-}
-
-func (_c *EnrollmentManagerInterface_OnEnrollmentCancelledEvt_Call) Run(run func(ctx context.Context, evt fun.EnrollmentCancelledEvtV1)) *EnrollmentManagerInterface_OnEnrollmentCancelledEvt_Call {
-	_c.Call.Run(func(args mock.Arguments) {
-		var arg0 context.Context
-		if args[0] != nil {
-			arg0 = args[0].(context.Context)
-		}
-		var arg1 fun.EnrollmentCancelledEvtV1
-		if args[1] != nil {
-			arg1 = args[1].(fun.EnrollmentCancelledEvtV1)
-		}
-		run(
-			arg0,
-			arg1,
-		)
-	})
-	return _c
-}
-
-func (_c *EnrollmentManagerInterface_OnEnrollmentCancelledEvt_Call) Return(httpError common.HttpError) *EnrollmentManagerInterface_OnEnrollmentCancelledEvt_Call {
-	_c.Call.Return(httpError)
-	return _c
-}
-
-func (_c *EnrollmentManagerInterface_OnEnrollmentCancelledEvt_Call) RunAndReturn(run func(ctx context.Context, evt fun.EnrollmentCancelledEvtV1) common.HttpError) *EnrollmentManagerInterface_OnEnrollmentCancelledEvt_Call {
-	_c.Call.Return(run)
-	return _c
-}
-
-// OnEnrollmentConfirmedEvt provides a mock function for the type EnrollmentManagerInterface
-func (_mock *EnrollmentManagerInterface) OnEnrollmentConfirmedEvt(ctx context.Context, evt fun.EnrollmentConfirmedEvtV1) common.HttpError {
-	ret := _mock.Called(ctx, evt)
-
-	if len(ret) == 0 {
-		panic("no return value specified for OnEnrollmentConfirmedEvt")
-	}
-
-	var r0 common.HttpError
-	if returnFunc, ok := ret.Get(0).(func(context.Context, fun.EnrollmentConfirmedEvtV1) common.HttpError); ok {
-		r0 = returnFunc(ctx, evt)
-	} else {
-		if ret.Get(0) != nil {
-			r0 = ret.Get(0).(common.HttpError)
-		}
-	}
-	return r0
-}
-
-// EnrollmentManagerInterface_OnEnrollmentConfirmedEvt_Call is a *mock.Call that shadows Run/Return methods with type explicit version for method 'OnEnrollmentConfirmedEvt'
-type EnrollmentManagerInterface_OnEnrollmentConfirmedEvt_Call struct {
-	*mock.Call
-}
-
-// OnEnrollmentConfirmedEvt is a helper method to define mock.On call
-//   - ctx context.Context
-//   - evt fun.EnrollmentConfirmedEvtV1
-func (_e *EnrollmentManagerInterface_Expecter) OnEnrollmentConfirmedEvt(ctx interface{}, evt interface{}) *EnrollmentManagerInterface_OnEnrollmentConfirmedEvt_Call {
-	return &EnrollmentManagerInterface_OnEnrollmentConfirmedEvt_Call{Call: _e.mock.On("OnEnrollmentConfirmedEvt", ctx, evt)}
-}
-
-func (_c *EnrollmentManagerInterface_OnEnrollmentConfirmedEvt_Call) Run(run func(ctx context.Context, evt fun.EnrollmentConfirmedEvtV1)) *EnrollmentManagerInterface_OnEnrollmentConfirmedEvt_Call {
-	_c.Call.Run(func(args mock.Arguments) {
-		var arg0 context.Context
-		if args[0] != nil {
-			arg0 = args[0].(context.Context)
-		}
-		var arg1 fun.EnrollmentConfirmedEvtV1
-		if args[1] != nil {
-			arg1 = args[1].(fun.EnrollmentConfirmedEvtV1)
-		}
-		run(
-			arg0,
-			arg1,
-		)
-	})
-	return _c
-}
-
-func (_c *EnrollmentManagerInterface_OnEnrollmentConfirmedEvt_Call) Return(httpError common.HttpError) *EnrollmentManagerInterface_OnEnrollmentConfirmedEvt_Call {
-	_c.Call.Return(httpError)
-	return _c
-}
-
-func (_c *EnrollmentManagerInterface_OnEnrollmentConfirmedEvt_Call) RunAndReturn(run func(ctx context.Context, evt fun.EnrollmentConfirmedEvtV1) common.HttpError) *EnrollmentManagerInterface_OnEnrollmentConfirmedEvt_Call {
 	_c.Call.Return(run)
 	return _c
 }

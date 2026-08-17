@@ -11,17 +11,18 @@ import (
 	"github.com/stretchr/testify/mock"
 
 	"github.com/ThreeDotsLabs/watermill/message"
+	"github.com/ThreeDotsLabs/watermill/message/router/middleware"
 	"github.com/amanhigh/go-fun/components/fun-app/publisher"
 	"github.com/amanhigh/go-fun/models/common"
 )
 
-// mockPublisher follows testify style used across the repo.
 type mockPublisher struct{ mock.Mock }
 
 func (m *mockPublisher) Publish(topic string, messages ...*message.Message) error {
 	args := m.Called(topic, messages)
 	return args.Error(0)
 }
+
 func (m *mockPublisher) Close() error { return nil }
 
 func TestBasePublisher(t *testing.T) {
@@ -29,106 +30,108 @@ func TestBasePublisher(t *testing.T) {
 	RunSpecs(t, "BasePublisher Suite")
 }
 
-var _ = Describe("BasePublisher.PublishWithExtras", func() {
+var _ = Describe("BasePublisher", func() {
 	var (
-		pub     *mockPublisher
-		base    publisher.BasePublisher
-		ctx     context.Context
-		result  common.HttpError
-		extras  map[string]string
-		topic   string
-		payload any
+		pub       *mockPublisher
+		base      publisher.BasePublisher
+		published *message.Message
+		result    common.HttpError
 	)
 
 	BeforeEach(func() {
 		pub = &mockPublisher{}
 		base = publisher.NewBasePublisher(pub)
-		topic = "enrollments.enroll_cmd"
-		payload = struct{ ID string }{ID: "p-1"}
-		extras = nil
-		ctx = common.WithCorrelation(context.Background(), "corr-123")
 	})
 
-	Context("without causation and extras", func() {
+	Context("root publication", func() {
 		BeforeEach(func() {
-			msgMatcher := mock.MatchedBy(func(msgs []*message.Message) bool {
-				if len(msgs) == 0 || msgs[0] == nil {
-					return false
-				}
-				md := msgs[0].Metadata
-				return md.Get(common.MetadataCorrelationIDKey) == "corr-123" &&
-					md.Get(common.MetadataCausationIDKey) == "" &&
-					md.Get(common.MetadataMessageIDKey) != ""
-			})
-			pub.On("Publish", topic, msgMatcher).Return(nil)
-			result = base.PublishWithExtras(ctx, topic, payload, extras)
+			pub.On("Publish", "topic", mock.Anything).Return(nil)
+			result = base.PublishRoot(context.Background(), "topic", struct{ ID string }{ID: "p-1"})
+			args := pub.Calls[0].Arguments
+			publishedMessages, ok := args.Get(1).([]*message.Message)
+			Expect(ok).To(BeTrue())
+			published = publishedMessages[0]
 		})
 
-		It("publishes with correlation metadata and message id", func() {
+		It("publishes with fresh message and correlation IDs", func() {
 			Expect(result).ToNot(HaveOccurred())
+			Expect(published.UUID).NotTo(BeEmpty())
+			Expect(middleware.MessageCorrelationID(published)).NotTo(BeEmpty())
+			Expect(published.Metadata.Get("causation_id")).To(BeEmpty())
 			pub.AssertExpectations(GinkgoT())
 		})
 	})
 
-	Context("with causation and extras", func() {
+	Context("child publication", func() {
+		var parent common.Metadata
+
 		BeforeEach(func() {
-			ctx = common.WithCausation(ctx, "cause-456")
-			extras = map[string]string{"k1": "v1", "empty": ""}
-			msgMatcher := mock.MatchedBy(func(msgs []*message.Message) bool {
-				if len(msgs) == 0 || msgs[0] == nil {
-					return false
-				}
-				md := msgs[0].Metadata
-				return md.Get(common.MetadataCorrelationIDKey) == "corr-123" &&
-					md.Get(common.MetadataCausationIDKey) == "cause-456" &&
-					md.Get("k1") == "v1" &&
-					md.Get("empty") == ""
-			})
-			pub.On("Publish", topic, msgMatcher).Return(nil)
-			result = base.PublishWithExtras(ctx, topic, payload, extras)
+			parent = common.NewRootMetadata("parent-message", "correlation-1")
+			ctx := common.WithMetadata(context.Background(), parent)
+			pub.On("Publish", "topic", mock.Anything).Return(nil)
+			result = base.PublishChild(ctx, "topic", struct{ ID string }{ID: "p-1"})
+			args := pub.Calls[0].Arguments
+			publishedMessages, ok := args.Get(1).([]*message.Message)
+			Expect(ok).To(BeTrue())
+			published = publishedMessages[0]
 		})
 
-		It("includes correlation, causation and merges non-empty extras", func() {
+		It("uses the parent correlation and message IDs", func() {
 			Expect(result).ToNot(HaveOccurred())
+			Expect(published.UUID).NotTo(Equal(parent.MessageID))
+			Expect(middleware.MessageCorrelationID(published)).To(Equal(parent.CorrelationID))
+			Expect(published.Metadata.Get("causation_id")).To(Equal(parent.MessageID))
+		})
+	})
+
+	Context("degraded child publication", func() {
+		BeforeEach(func() {
+			pub.On("Publish", "topic", mock.Anything).Return(nil)
+			result = base.PublishChild(context.Background(), "topic", struct{}{})
+			args := pub.Calls[0].Arguments
+			publishedMessages, ok := args.Get(1).([]*message.Message)
+			Expect(ok).To(BeTrue())
+			published = publishedMessages[0]
+		})
+
+		It("uses fresh identity metadata", func() {
+			Expect(result).ToNot(HaveOccurred())
+			Expect(published.UUID).NotTo(BeEmpty())
+			Expect(middleware.MessageCorrelationID(published)).NotTo(BeEmpty())
+			Expect(published.Metadata.Get("causation_id")).To(BeEmpty())
 			pub.AssertExpectations(GinkgoT())
 		})
 	})
 
-	Context("missing correlation in context", func() {
+	Context("degraded child with a parent message ID", func() {
+		var parent common.Metadata
+
 		BeforeEach(func() {
-			// no correlation set
-			ctx = context.Background()
-			result = base.PublishWithExtras(ctx, topic, payload, extras)
+			parent = common.NewRootMetadata("parent-message", "")
+			ctx := common.WithMetadata(context.Background(), parent)
+			pub.On("Publish", "topic", mock.Anything).Return(nil)
+			result = base.PublishChild(ctx, "topic", struct{}{})
+			args := pub.Calls[0].Arguments
+			publishedMessages, ok := args.Get(1).([]*message.Message)
+			Expect(ok).To(BeTrue())
+			published = publishedMessages[0]
 		})
 
-		It("returns 500 and does not publish", func() {
-			Expect(result).To(HaveOccurred())
-			Expect(result.Code()).To(Equal(http.StatusInternalServerError))
-			pub.AssertNotCalled(GinkgoT(), "Publish", mock.Anything, mock.Anything)
+		It("keeps the parent message ID as child causation", func() {
+			Expect(result).ToNot(HaveOccurred())
+			Expect(middleware.MessageCorrelationID(published)).NotTo(BeEmpty())
+			Expect(published.Metadata.Get("causation_id")).To(Equal(parent.MessageID))
+			pub.AssertExpectations(GinkgoT())
 		})
 	})
 
-	Context("payload marshal failure", func() {
+	Context("publisher failure", func() {
 		BeforeEach(func() {
-			// json cannot marshal functions/channels
-			payload = func() {}
-			result = base.PublishWithExtras(ctx, topic, payload, extras)
+			pub.On("Publish", "topic", mock.Anything).Return(errors.New("pub-fail"))
+			result = base.PublishRoot(context.Background(), "topic", struct{}{})
 		})
 
-		It("returns 500 and does not publish", func() {
-			Expect(result).To(HaveOccurred())
-			Expect(result.Code()).To(Equal(http.StatusInternalServerError))
-			pub.AssertNotCalled(GinkgoT(), "Publish", mock.Anything, mock.Anything)
-		})
-	})
-
-	Context("publisher returns error", func() {
-		BeforeEach(func() {
-			pub.On("Publish", topic, mock.Anything).Return(errors.New("pub-fail"))
-			result = base.PublishWithExtras(ctx, topic, payload, extras)
-		})
-
-		It("wraps and returns server error", func() {
+		It("returns a server error", func() {
 			Expect(result).To(HaveOccurred())
 			Expect(result.Code()).To(Equal(http.StatusInternalServerError))
 			pub.AssertExpectations(GinkgoT())

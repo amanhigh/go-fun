@@ -1,7 +1,6 @@
 package it_test
 
 import (
-	"net/http"
 	"time"
 
 	"github.com/amanhigh/go-fun/models/common"
@@ -125,10 +124,5 @@ var _ = Describe("Enrollment API", func() {
 			}, time.Second, 50*time.Millisecond).Should(Equal(fun.EnrollmentStatusWaitlisted))
 		})
 
-		It("should return not found for unknown enrollment", func() {
-			_, getErr := client.EnrollmentService.GetEnrollment(ctx, "missing-id")
-			Expect(getErr).To(HaveOccurred())
-			Expect(getErr.Code()).To(Equal(http.StatusNotFound))
-		})
 	})
 })

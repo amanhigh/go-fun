@@ -42,11 +42,6 @@ func FocusMonitor(id int) (err error) {
 	return
 }
 
-func FocusLastWindow() (err error) {
-	err = HyperDispatch("focuscurrentorlast")
-	return
-}
-
 func GetActiveWindow() (title string, err error) {
 	var window HyperWindow
 	window, err = GetHyperWindow()

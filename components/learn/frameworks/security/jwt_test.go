@@ -5,7 +5,7 @@ import (
 	"crypto/rand"
 	"crypto/rsa"
 
-	"github.com/dgrijalva/jwt-go"
+	"github.com/golang-jwt/jwt/v5"
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
 )
@@ -88,16 +88,16 @@ var _ = Describe("Jwt", func() {
 			// Parse Token
 			parsedToken, err := jwt.Parse(token, func(_ *jwt.Token) (i any, err error) {
 				return publicKey, nil
-			})
+			}, jwt.WithValidMethods([]string{jwt.SigningMethodRS256.Alg()}))
 			Expect(err).ToNot(HaveOccurred())
 			Expect(parsedToken).To(Not(BeNil()))
+			Expect(parsedToken.Valid).To(BeTrue())
 
 			By("Claims")
 
 			claims := parsedToken.Claims.(jwt.MapClaims)
 			Expect(claims).To(HaveKeyWithValue("purpose", "jwtfun"))
 			Expect(claims).To(HaveKeyWithValue("iss", "aman"))
-			Expect(claims.Valid()).To(Succeed())
 		})
 	})
 

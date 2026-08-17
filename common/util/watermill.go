@@ -13,7 +13,10 @@ import (
 	"github.com/ThreeDotsLabs/watermill/message/router/middleware"
 	"github.com/ThreeDotsLabs/watermill/pubsub/gochannel"
 	modelcommon "github.com/amanhigh/go-fun/models/common"
+	"github.com/go-playground/validator/v10"
 )
+
+var messageValidator = validator.New()
 
 // WatermillLifecycle abstracts router lifecycle management.
 // NewStdWatermillLogger returns Watermill's default stdout logger.
@@ -26,38 +29,22 @@ func NewGoChannel(logger watermill.LoggerAdapter) *gochannel.GoChannel {
 	return gochannel.NewGoChannel(gochannel.Config{}, logger)
 }
 
-// NewRouter creates a Watermill router with default middleware.
+// NewRouter creates a Watermill router without correlation middleware.
 //
-// FIXME: CorrelationID only propagates for messages that pass through the router
-// (i.e. returned by handlers). Direct publishing via BasePublisher / stampCtx
-// bypasses the router and must carry its own correlation metadata.
+// This application uses NoPublishHandlerFunc handlers and publishes directly
+// through managers and publishers, so correlation metadata is set at publish time.
 func NewRouter(logger watermill.LoggerAdapter) (*message.Router, error) {
 	router, err := message.NewRouter(message.RouterConfig{}, logger)
 	if err != nil {
 		return nil, fmt.Errorf("new watermill router: %w", err)
 	}
 
-	router.AddMiddleware(
-		middleware.CorrelationID,
-	)
-
 	return router, nil
 }
 
-// PoisonTopic returns the derived poison-topic name for the given source topic.
-func PoisonTopic(topic string) string {
-	return topic + ".poison"
-}
-
-// ConsumerConfig optionally configures retry, DLQ, and poison handling for a
-// consumer registered via AddConsumerHandler.
-type ConsumerConfig struct {
-	// Retry is opt-in: MaxRetries > 0 enables retry.
-	Retry middleware.Retry
-	// DeadLetterPublisher enables immediate DLQ publishing when MaxRetries is zero.
-	DeadLetterPublisher message.Publisher
-	// PoisonHandler requires DeadLetterPublisher to be configured.
-	PoisonHandler message.NoPublishHandlerFunc
+// DeadLetterTopic returns the derived dead-letter topic name for the given source topic.
+func DeadLetterTopic(topic string) string {
+	return topic + ".dead-letter"
 }
 
 // DefaultRetryConfig returns the default retry configuration: two retries with
@@ -82,7 +69,6 @@ func DefaultRetryConfig() middleware.Retry {
 // and unknown errors.
 func shouldRetry(params middleware.RetryParams) bool {
 	err := params.Err
-
 	// HTTP error classification.
 	var httpErr modelcommon.HttpError
 	if errors.As(err, &httpErr) {
@@ -115,60 +101,6 @@ func shouldRetry(params middleware.RetryParams) bool {
 	return true
 }
 
-// AddConsumerHandler registers a no-publish handler on the router that
-// subscribes to topic using the supplied subscriber. The handler is identified
-// by topic (used as both the Watermill handler name and the subscription
-// topic).
-//
-// An optional ConsumerConfig enables selected middleware in this order:
-// PoisonQueue → Retry → Recoverer; omitted stages are skipped.
-//
-// Returns the Watermill *Handler for further configuration if needed.
-func AddConsumerHandler(
-	router *message.Router,
-	topic string,
-	subscriber message.Subscriber,
-	handler message.NoPublishHandlerFunc,
-	config ...ConsumerConfig,
-) *message.Handler {
-	var cfg ConsumerConfig
-	if len(config) > 0 {
-		cfg = config[0]
-	}
-
-	h := router.AddConsumerHandler(topic, topic, subscriber, handler)
-
-	hasRetry := cfg.Retry.MaxRetries > 0
-
-	// Apply default ShouldRetry classification when retry is active and caller
-	// has not provided their own.
-	if hasRetry && cfg.Retry.ShouldRetry == nil {
-		cfg.Retry.ShouldRetry = shouldRetry
-	}
-
-	// 1. PoisonQueue outermost (when DLQ publisher is configured).
-	if cfg.DeadLetterPublisher != nil {
-		poisonTopic := PoisonTopic(topic)
-		// PoisonTopic always appends ".poison", so PoisonQueue receives a non-empty topic.
-		poisonMiddleware, _ := middleware.PoisonQueue(cfg.DeadLetterPublisher, poisonTopic)
-		h.AddMiddleware(poisonMiddleware)
-		// Register poison handler on the derived topic if provided.
-		if cfg.PoisonHandler != nil {
-			AddConsumerHandler(router, poisonTopic, subscriber, cfg.PoisonHandler)
-		}
-	}
-
-	// 2. Retry in the middle (when retry is active).
-	if hasRetry {
-		h.AddMiddleware(cfg.Retry.Middleware)
-	}
-
-	// 3. Recoverer innermost (always).
-	h.AddMiddleware(middleware.Recoverer)
-
-	return h
-}
-
 // PublishJSONMessage marshals payload, attaches metadata, and publishes to the topic.
 func PublishJSONMessage(_ context.Context, publisher message.Publisher, topic string, payload any, metadata modelcommon.Metadata) error {
 	data, err := json.Marshal(payload)
@@ -176,24 +108,69 @@ func PublishJSONMessage(_ context.Context, publisher message.Publisher, topic st
 		return fmt.Errorf("marshal payload: %w", err)
 	}
 
-	// Correlation is mandatory for all saga messages.
-	if c := metadata[modelcommon.MetadataCorrelationIDKey]; c == "" {
-		return fmt.Errorf("missing %s", modelcommon.MetadataCorrelationIDKey)
+	if metadata.MessageID == "" {
+		return fmt.Errorf("missing message id")
+	}
+	if metadata.CorrelationID == "" {
+		return fmt.Errorf("missing correlation id")
 	}
 
-	id := watermill.NewUUID()
-	msg := message.NewMessage(id, data)
-
-	// Copy provided metadata.
-	for key, value := range metadata {
-		msg.Metadata.Set(key, value)
+	msg := message.NewMessage(metadata.MessageID, data)
+	middleware.SetCorrelationID(metadata.CorrelationID, msg)
+	if metadata.CausationID != "" {
+		msg.Metadata.Set("causation_id", metadata.CausationID)
 	}
-
-	// Always mirror the message id for downstream consumers.
-	msg.Metadata.Set(modelcommon.MetadataMessageIDKey, id)
 
 	if err = publisher.Publish(topic, msg); err != nil {
 		return fmt.Errorf("publish topic %s: %w", topic, err)
 	}
 	return nil
+}
+
+// DecodeAndValidateMessage unmarshals a Watermill message payload into T and
+// validates it using the payload's validate tags.
+func DecodeAndValidateMessage[T any](msg *message.Message) (T, error) {
+	var payload T
+	if err := json.Unmarshal(msg.Payload, &payload); err != nil {
+		return payload, ProcessValidationError(err)
+	}
+	if err := messageValidator.Struct(payload); err != nil {
+		return payload, ProcessValidationError(err)
+	}
+	return payload, nil
+}
+
+// metadataFromMessage normalizes transport identity and returns typed saga
+// metadata. Malformed transport metadata is recovered rather than treated as
+// a business failure.
+func metadataFromMessage(msg *message.Message) modelcommon.Metadata {
+	if msg == nil {
+		return modelcommon.Metadata{}
+	}
+
+	if msg.UUID == "" {
+		msg.UUID = watermill.NewUUID()
+	}
+
+	correlationID := middleware.MessageCorrelationID(msg)
+	if correlationID == "" {
+		correlationID = watermill.NewUUID()
+		middleware.SetCorrelationID(correlationID, msg)
+	}
+
+	return modelcommon.NewMetadata(msg.UUID, correlationID, msg.Metadata.Get("causation_id"))
+}
+
+// SagaMetadataMiddleware attaches normalized typed metadata before the
+// wrapped handler. Recovery is fail-open so metadata cannot block delivery.
+func SagaMetadataMiddleware() message.HandlerMiddleware {
+	return func(next message.HandlerFunc) message.HandlerFunc {
+		return func(msg *message.Message) ([]*message.Message, error) {
+			if msg != nil {
+				metadata := metadataFromMessage(msg)
+				msg.SetContext(modelcommon.WithMetadata(msg.Context(), metadata))
+			}
+			return next(msg)
+		}
+	}
 }

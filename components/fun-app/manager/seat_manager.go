@@ -16,6 +16,7 @@ import (
 type SeatManagerInterface interface {
 	PublishAllocateSeat(ctx context.Context, enrollment fun.Enrollment) common.HttpError
 	AllocateSeat(ctx context.Context, cmd fun.AllocateSeatCmdV1) common.HttpError
+	PublishSeatAllocationFailed(ctx context.Context, enrollment fun.Enrollment, reason string) common.HttpError
 }
 
 type SeatManager struct {
@@ -41,6 +42,12 @@ func (sm *SeatManager) PublishAllocateSeat(ctx context.Context, enrollment fun.E
 	return sm.SeatPublisher.AllocateSeat(ctx, enrollment)
 }
 
+// PublishSeatAllocationFailed emits the terminal seat-allocation failure event.
+func (sm *SeatManager) PublishSeatAllocationFailed(ctx context.Context, enrollment fun.Enrollment, reason string) common.HttpError {
+	return sm.SeatPublisher.SeatAllocationFailed(ctx, enrollment, reason)
+}
+
+// FIXME: Retry/DLQ infra on AllocateSeatCmd is wired but only exercised in tests — add real allocation check that can fail externally.
 // AllocateSeat processes AllocateSeat command and emits SeatReserved or SeatWaitlisted.
 // On technical failure it returns an error; waitlist is not a failure.
 // No DB writes here; persistence happens in subsequent event handlers.

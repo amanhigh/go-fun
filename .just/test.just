@@ -90,7 +90,17 @@ cover: _clean-test _test-unit _run-fun-cover _combine-coverage
 
 [group('core')]
 [doc('Run the main test suite including operator tests')]
-test: cover _test-operator
+test target='':
+    #!/usr/bin/env bash
+    set -euo pipefail
+    target={{quote(target)}}
+    target="${target#target=}"
+
+    if [ -z "$target" ]; then
+        just cover _test-operator
+    else
+        just _test-target "$target"
+    fi
 
 [group('quality')]
 _combine-coverage:

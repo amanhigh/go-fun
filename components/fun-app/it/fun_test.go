@@ -18,6 +18,7 @@ import (
 // -s (use Shell), -c (Clear), Space/Q to Run, Quit.
 // Watch Mode: find `git rev-parse --show-toplevel` | entr -s "date +%M:%S;ginkgo $PWD | grep Pending"
 var _ = Describe("Student Integration Test", func() {
+	// FIXME: Merge with enrollment_test.go and limit integration tests to only important ones
 	const (
 		invalidNameValue  = "A*B"
 		expectedGenderErr = "FEMALE"
@@ -525,7 +526,7 @@ var _ = Describe("Student Integration Test", func() {
 		})
 	})
 
-	// TODO: Break up Fun App Test logically and move to Handler Masterspec (Journal)
+	// FIXME: Break up Fun App Test logically and move to Handler Masterspec (Journal)
 	Context("Admin", func() {
 		It("should serve metrics", func() {
 			err = client.AdminService.HealthCheck(testCtx)
