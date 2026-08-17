@@ -119,10 +119,12 @@ var _ = Describe("MessagingServer learning scenarios", func() {
 				}),
 			).Run(func(_ context.Context, enrollment fun.Enrollment, reason string) {
 				evtPayload, err := json.Marshal(fun.SeatAllocationFailedEvtV1{
-					EnrollmentID: enrollment.ID,
-					PersonID:     enrollment.PersonID,
-					Reason:       reason,
-					FailedAt:     time.Now().UTC(),
+					EnrollmentEvent: fun.EnrollmentEvent{
+						EnrollmentID: enrollment.ID,
+						PersonID:     enrollment.PersonID,
+					},
+					Reason:   reason,
+					FailedAt: time.Now().UTC(),
 				})
 				if err != nil {
 					return
@@ -195,10 +197,12 @@ var _ = Describe("MessagingServer learning scenarios", func() {
 
 		BeforeEach(func() {
 			failed := fun.SeatAllocationFailedEvtV1{
-				EnrollmentID: "enr-1",
-				PersonID:     "person-1",
-				Reason:       "capacity unavailable",
-				FailedAt:     time.Now().UTC(),
+				EnrollmentEvent: fun.EnrollmentEvent{
+					EnrollmentID: "enr-1",
+					PersonID:     "person-1",
+				},
+				Reason:   "capacity unavailable",
+				FailedAt: time.Now().UTC(),
 			}
 			payload, err := json.Marshal(failed)
 			Expect(err).ToNot(HaveOccurred())

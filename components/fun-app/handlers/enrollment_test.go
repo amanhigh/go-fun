@@ -882,10 +882,12 @@ var _ = Describe("Enrollments", func() {
 			}
 			Expect(enrollmentDao.Create(ctx, &enrollment)).ToNot(HaveOccurred())
 			event = fun.SeatReservedEvtV1{
-				EnrollmentID: enrollment.ID,
-				PersonID:     enrollment.PersonID,
-				Grade:        enrollment.Grade,
-				ReservedAt:   time.Now().UTC(),
+				EnrollmentEvent: fun.EnrollmentEvent{
+					EnrollmentID: enrollment.ID,
+					PersonID:     enrollment.PersonID,
+				},
+				Grade:      enrollment.Grade,
+				ReservedAt: time.Now().UTC(),
 			}
 		})
 
@@ -1088,8 +1090,11 @@ var _ = Describe("Enrollments", func() {
 			enrollment = fun.Enrollment{PersonID: person.Id, Grade: 4, Status: fun.EnrollmentStatusSeatAllocationInitiated}
 			Expect(enrollmentDao.Create(ctx, &enrollment)).ToNot(HaveOccurred())
 			event = fun.SeatWaitlistedEvtV1{
-				EnrollmentID: enrollment.ID, PersonID: enrollment.PersonID, Grade: enrollment.Grade,
-				Reason: "capacity reached", WaitlistedAt: time.Now().UTC(),
+				EnrollmentEvent: fun.EnrollmentEvent{
+					EnrollmentID: enrollment.ID,
+					PersonID:     enrollment.PersonID,
+				},
+				Grade: enrollment.Grade, Reason: "capacity reached", WaitlistedAt: time.Now().UTC(),
 			}
 		})
 
@@ -1270,7 +1275,7 @@ var _ = Describe("Enrollments", func() {
 		BeforeEach(func() {
 			enrollment = fun.Enrollment{PersonID: person.Id, Grade: 4, Status: fun.EnrollmentStatusSeatAllocationInitiated}
 			Expect(enrollmentDao.Create(ctx, &enrollment)).ToNot(HaveOccurred())
-			event = fun.SeatAllocationFailedEvtV1{EnrollmentID: enrollment.ID, PersonID: enrollment.PersonID, Reason: "allocation failed", FailedAt: time.Now().UTC()}
+			event = fun.SeatAllocationFailedEvtV1{EnrollmentEvent: fun.EnrollmentEvent{EnrollmentID: enrollment.ID, PersonID: enrollment.PersonID}, Reason: "allocation failed", FailedAt: time.Now().UTC()}
 		})
 
 		execute := func() {
