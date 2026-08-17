@@ -25,29 +25,29 @@ import (
 	gormlogger "gorm.io/gorm/logger"
 )
 
-func decodePersonResponse(responseRecorder *httptest.ResponseRecorder) fun.Person {
+func decodeStudentResponse(responseRecorder *httptest.ResponseRecorder) fun.Student {
 	Expect(responseRecorder.Code).To(Equal(http.StatusCreated))
 
-	var response fun.Person
+	var response fun.Student
 	Expect(json.Unmarshal(responseRecorder.Body.Bytes(), &response)).To(Succeed())
 
 	return response
 }
 
-var _ = Describe("PersonHandler CUD", func() {
+var _ = Describe("StudentHandler CUD", func() {
 	var (
 		ctx              context.Context
 		db               *gorm.DB
 		dbSQL            *sql.DB
-		personManager    manager.PersonManagerInterface
+		studentManager    manager.StudentManagerInterface
 		router           *gin.Engine
-		request          fun.PersonRequest
-		updateRequest    fun.PersonRequest
-		existingPerson   fun.Person
-		response         fun.Person
-		persisted        fun.Person
+		request          fun.StudentRequest
+		updateRequest    fun.StudentRequest
+		existingStudent   fun.Student
+		response         fun.Student
+		persisted        fun.Student
 		persistedErr     common.HttpError
-		audit            []fun.PersonAudit
+		audit            []fun.StudentAudit
 		responseRecorder *httptest.ResponseRecorder
 	)
 
@@ -57,31 +57,31 @@ var _ = Describe("PersonHandler CUD", func() {
 		var err error
 		db, err = util.CreateTestDb(gormlogger.Warn)
 		Expect(err).ToNot(HaveOccurred())
-		Expect(db.AutoMigrate(&fun.Person{}, &fun.PersonAudit{})).To(Succeed())
+		Expect(db.AutoMigrate(&fun.Student{}, &fun.StudentAudit{})).To(Succeed())
 		dbSQL, err = db.DB()
 		Expect(err).ToNot(HaveOccurred())
 
-		tracer := otel.Tracer("fun-app-person-handler-test")
-		personManager = manager.NewPersonManager(dao.NewPersonDao(util.NewBaseDbRepository(db)), tracer)
-		meter := noop.NewMeterProvider().Meter("fun-app-person-handler-test")
-		createCounter, err := meter.Int64Counter("create_person")
+		tracer := otel.Tracer("fun-app-student-handler-test")
+		studentManager = manager.NewStudentManager(dao.NewStudentDao(util.NewBaseDbRepository(db)), tracer)
+		meter := noop.NewMeterProvider().Meter("fun-app-student-handler-test")
+		createCounter, err := meter.Int64Counter("create_student")
 		Expect(err).ToNot(HaveOccurred())
-		personCounter, err := meter.Int64UpDownCounter("person_count")
+		studentCounter, err := meter.Int64UpDownCounter("student_count")
 		Expect(err).ToNot(HaveOccurred())
-		personCreateTime, err := meter.Float64Histogram("person_create_time")
+		studentCreateTime, err := meter.Float64Histogram("student_create_time")
 		Expect(err).ToNot(HaveOccurred())
-		personHandler := &handlers.PersonHandlerImpl{
-			Manager:          personManager,
+		studentHandler := &handlers.StudentHandlerImpl{
+			Manager:          studentManager,
 			Tracer:           tracer,
 			CreateCounter:    createCounter,
-			PersonCounter:    personCounter,
-			PersonCreateTime: personCreateTime,
+			StudentCounter:    studentCounter,
+			StudentCreateTime: studentCreateTime,
 		}
 
 		router = util.CreateTestGinRouter()
-		router.POST("/v1/person", personHandler.CreatePerson)
-		router.PUT("/v1/person/:id", personHandler.UpdatePerson)
-		router.DELETE("/v1/person/:id", personHandler.DeletePersons)
+		router.POST("/v1/student", studentHandler.CreateStudent)
+		router.PUT("/v1/student/:id", studentHandler.UpdateStudent)
+		router.DELETE("/v1/student/:id", studentHandler.DeleteStudents)
 	})
 
 	AfterEach(func() {
@@ -90,28 +90,28 @@ var _ = Describe("PersonHandler CUD", func() {
 		}
 	})
 
-	Context("POST /v1/person", func() {
-		postPerson := func(personRequest fun.PersonRequest) *httptest.ResponseRecorder {
-			req, recorder := util.CreateTestRequest(http.MethodPost, "/v1/person", personRequest)
+	Context("POST /v1/student", func() {
+		postStudent := func(studentRequest fun.StudentRequest) *httptest.ResponseRecorder {
+			req, recorder := util.CreateTestRequest(http.MethodPost, "/v1/student", studentRequest)
 			router.ServeHTTP(recorder, req)
 			return recorder
 		}
 
 		Context("Happy Path", func() {
 			BeforeEach(func() {
-				request = fun.PersonRequest{Name: "Ada Lovelace", Age: 36, Gender: "FEMALE"}
-				req, recorder := util.CreateTestRequest(http.MethodPost, "/v1/person", request)
+				request = fun.StudentRequest{Name: "Ada Lovelace", Age: 36, Gender: "FEMALE"}
+				req, recorder := util.CreateTestRequest(http.MethodPost, "/v1/student", request)
 				responseRecorder = recorder
 				router.ServeHTTP(responseRecorder, req)
 				Expect(json.Unmarshal(responseRecorder.Body.Bytes(), &response)).To(Succeed())
 				var err error
-				persisted, err = personManager.GetPerson(ctx, response.Id)
+				persisted, err = studentManager.GetStudent(ctx, response.Id)
 				Expect(err).ToNot(HaveOccurred())
-				audit, err = personManager.ListPersonAudit(ctx, response.Id)
+				audit, err = studentManager.ListStudentAudit(ctx, response.Id)
 				Expect(err).ToNot(HaveOccurred())
 			})
 
-			It("creates and persists the person with a CREATE audit", func() {
+			It("creates and persists the student with a CREATE audit", func() {
 				Expect(responseRecorder.Code).To(Equal(http.StatusCreated))
 				Expect(response.Id).ToNot(BeEmpty())
 				Expect(response.Name).To(Equal(request.Name))
@@ -135,60 +135,60 @@ var _ = Describe("PersonHandler CUD", func() {
 				Context("Allowed Values", func() {
 					Context("with the minimum length", func() {
 						BeforeEach(func() {
-							request = fun.PersonRequest{Name: "A", Age: 36, Gender: "FEMALE"}
-							responseRecorder = postPerson(request)
+							request = fun.StudentRequest{Name: "A", Age: 36, Gender: "FEMALE"}
+							responseRecorder = postStudent(request)
 						})
 
 						It("accepts a one-character Name", func() {
-							response := decodePersonResponse(responseRecorder)
+							response := decodeStudentResponse(responseRecorder)
 							Expect(response.Name).To(Equal("A"))
 						})
 					})
 
 					Context("with letters and spaces", func() {
 						BeforeEach(func() {
-							request = fun.PersonRequest{Name: "Ada Lovelace", Age: 36, Gender: "FEMALE"}
-							responseRecorder = postPerson(request)
+							request = fun.StudentRequest{Name: "Ada Lovelace", Age: 36, Gender: "FEMALE"}
+							responseRecorder = postStudent(request)
 						})
 
 						It("accepts a Name with letters and spaces", func() {
-							response := decodePersonResponse(responseRecorder)
+							response := decodeStudentResponse(responseRecorder)
 							Expect(response.Name).To(Equal("Ada Lovelace"))
 						})
 					})
 
 					Context("with a hyphen", func() {
 						BeforeEach(func() {
-							request = fun.PersonRequest{Name: "Jean-Luc Picard", Age: 36, Gender: "MALE"}
-							responseRecorder = postPerson(request)
+							request = fun.StudentRequest{Name: "Jean-Luc Picard", Age: 36, Gender: "MALE"}
+							responseRecorder = postStudent(request)
 						})
 
 						It("accepts a hyphenated Name", func() {
-							response := decodePersonResponse(responseRecorder)
+							response := decodeStudentResponse(responseRecorder)
 							Expect(response.Name).To(Equal("Jean-Luc Picard"))
 						})
 					})
 
 					Context("with digits", func() {
 						BeforeEach(func() {
-							request = fun.PersonRequest{Name: "Agent 007", Age: 36, Gender: "MALE"}
-							responseRecorder = postPerson(request)
+							request = fun.StudentRequest{Name: "Agent 007", Age: 36, Gender: "MALE"}
+							responseRecorder = postStudent(request)
 						})
 
 						It("accepts a Name with digits", func() {
-							response := decodePersonResponse(responseRecorder)
+							response := decodeStudentResponse(responseRecorder)
 							Expect(response.Name).To(Equal("Agent 007"))
 						})
 					})
 
 					Context("with the maximum length", func() {
 						BeforeEach(func() {
-							request = fun.PersonRequest{Name: strings.Repeat("A", 25), Age: 36, Gender: "FEMALE"}
-							responseRecorder = postPerson(request)
+							request = fun.StudentRequest{Name: strings.Repeat("A", 25), Age: 36, Gender: "FEMALE"}
+							responseRecorder = postStudent(request)
 						})
 
 						It("accepts a 25-character Name", func() {
-							response := decodePersonResponse(responseRecorder)
+							response := decodeStudentResponse(responseRecorder)
 							Expect(response.Name).To(Equal(strings.Repeat("A", 25)))
 						})
 					})
@@ -197,8 +197,8 @@ var _ = Describe("PersonHandler CUD", func() {
 				Context("Bad Values", func() {
 					Context("with a missing Name", func() {
 						BeforeEach(func() {
-							request = fun.PersonRequest{Age: 36, Gender: "FEMALE"}
-							responseRecorder = postPerson(request)
+							request = fun.StudentRequest{Age: 36, Gender: "FEMALE"}
+							responseRecorder = postStudent(request)
 						})
 
 						It("returns a required Name validation error", func() {
@@ -208,8 +208,8 @@ var _ = Describe("PersonHandler CUD", func() {
 
 					Context("with an invalid character", func() {
 						BeforeEach(func() {
-							request = fun.PersonRequest{Name: "A*B", Age: 36, Gender: "FEMALE"}
-							responseRecorder = postPerson(request)
+							request = fun.StudentRequest{Name: "A*B", Age: 36, Gender: "FEMALE"}
+							responseRecorder = postStudent(request)
 						})
 
 						It("returns a Name character validation error", func() {
@@ -219,8 +219,8 @@ var _ = Describe("PersonHandler CUD", func() {
 
 					Context("with a 26-character Name", func() {
 						BeforeEach(func() {
-							request = fun.PersonRequest{Name: strings.Repeat("A", 26), Age: 36, Gender: "FEMALE"}
-							responseRecorder = postPerson(request)
+							request = fun.StudentRequest{Name: strings.Repeat("A", 26), Age: 36, Gender: "FEMALE"}
+							responseRecorder = postStudent(request)
 						})
 
 						It("returns a maximum Name validation error", func() {
@@ -234,24 +234,24 @@ var _ = Describe("PersonHandler CUD", func() {
 				Context("Allowed Values", func() {
 					Context("with the minimum age", func() {
 						BeforeEach(func() {
-							request = fun.PersonRequest{Name: "Ada", Age: 1, Gender: "FEMALE"}
-							responseRecorder = postPerson(request)
+							request = fun.StudentRequest{Name: "Ada", Age: 1, Gender: "FEMALE"}
+							responseRecorder = postStudent(request)
 						})
 
 						It("accepts age 1", func() {
-							response := decodePersonResponse(responseRecorder)
+							response := decodeStudentResponse(responseRecorder)
 							Expect(response.Age).To(Equal(1))
 						})
 					})
 
 					Context("with the maximum age", func() {
 						BeforeEach(func() {
-							request = fun.PersonRequest{Name: "Ada", Age: 150, Gender: "FEMALE"}
-							responseRecorder = postPerson(request)
+							request = fun.StudentRequest{Name: "Ada", Age: 150, Gender: "FEMALE"}
+							responseRecorder = postStudent(request)
 						})
 
 						It("accepts age 150", func() {
-							response := decodePersonResponse(responseRecorder)
+							response := decodeStudentResponse(responseRecorder)
 							Expect(response.Age).To(Equal(150))
 						})
 					})
@@ -260,8 +260,8 @@ var _ = Describe("PersonHandler CUD", func() {
 				Context("Bad Values", func() {
 					Context("with missing or zero age", func() {
 						BeforeEach(func() {
-							request = fun.PersonRequest{Name: "Ada", Gender: "FEMALE"}
-							responseRecorder = postPerson(request)
+							request = fun.StudentRequest{Name: "Ada", Gender: "FEMALE"}
+							responseRecorder = postStudent(request)
 						})
 
 						It("returns a required Age validation error", func() {
@@ -271,8 +271,8 @@ var _ = Describe("PersonHandler CUD", func() {
 
 					Context("below the minimum age", func() {
 						BeforeEach(func() {
-							request = fun.PersonRequest{Name: "Ada", Age: -1, Gender: "FEMALE"}
-							responseRecorder = postPerson(request)
+							request = fun.StudentRequest{Name: "Ada", Age: -1, Gender: "FEMALE"}
+							responseRecorder = postStudent(request)
 						})
 
 						It("returns a minimum Age validation error", func() {
@@ -282,8 +282,8 @@ var _ = Describe("PersonHandler CUD", func() {
 
 					Context("above the maximum age", func() {
 						BeforeEach(func() {
-							request = fun.PersonRequest{Name: "Ada", Age: 151, Gender: "FEMALE"}
-							responseRecorder = postPerson(request)
+							request = fun.StudentRequest{Name: "Ada", Age: 151, Gender: "FEMALE"}
+							responseRecorder = postStudent(request)
 						})
 
 						It("returns a maximum Age validation error", func() {
@@ -297,24 +297,24 @@ var _ = Describe("PersonHandler CUD", func() {
 				Context("Allowed Values", func() {
 					Context("with MALE", func() {
 						BeforeEach(func() {
-							request = fun.PersonRequest{Name: "Ada", Age: 36, Gender: "MALE"}
-							responseRecorder = postPerson(request)
+							request = fun.StudentRequest{Name: "Ada", Age: 36, Gender: "MALE"}
+							responseRecorder = postStudent(request)
 						})
 
 						It("accepts MALE", func() {
-							response := decodePersonResponse(responseRecorder)
+							response := decodeStudentResponse(responseRecorder)
 							Expect(response.Gender).To(Equal("MALE"))
 						})
 					})
 
 					Context("with FEMALE", func() {
 						BeforeEach(func() {
-							request = fun.PersonRequest{Name: "Ada", Age: 36, Gender: "FEMALE"}
-							responseRecorder = postPerson(request)
+							request = fun.StudentRequest{Name: "Ada", Age: 36, Gender: "FEMALE"}
+							responseRecorder = postStudent(request)
 						})
 
 						It("accepts FEMALE", func() {
-							response := decodePersonResponse(responseRecorder)
+							response := decodeStudentResponse(responseRecorder)
 							Expect(response.Gender).To(Equal("FEMALE"))
 						})
 					})
@@ -323,8 +323,8 @@ var _ = Describe("PersonHandler CUD", func() {
 				Context("Bad Values", func() {
 					Context("with a missing Gender", func() {
 						BeforeEach(func() {
-							request = fun.PersonRequest{Name: "Ada", Age: 36}
-							responseRecorder = postPerson(request)
+							request = fun.StudentRequest{Name: "Ada", Age: 36}
+							responseRecorder = postStudent(request)
 						})
 
 						It("returns a required Gender validation error", func() {
@@ -334,8 +334,8 @@ var _ = Describe("PersonHandler CUD", func() {
 
 					Context("with an unsupported Gender", func() {
 						BeforeEach(func() {
-							request = fun.PersonRequest{Name: "Ada", Age: 36, Gender: "OTHER"}
-							responseRecorder = postPerson(request)
+							request = fun.StudentRequest{Name: "Ada", Age: 36, Gender: "OTHER"}
+							responseRecorder = postStudent(request)
 						})
 
 						It("returns an equality Gender validation error", func() {
@@ -345,8 +345,8 @@ var _ = Describe("PersonHandler CUD", func() {
 
 					Context("with lowercase gender", func() {
 						BeforeEach(func() {
-							request = fun.PersonRequest{Name: "Ada", Age: 36, Gender: "female"}
-							responseRecorder = postPerson(request)
+							request = fun.StudentRequest{Name: "Ada", Age: 36, Gender: "female"}
+							responseRecorder = postStudent(request)
 						})
 
 						It("returns an equality Gender validation error", func() {
@@ -360,7 +360,7 @@ var _ = Describe("PersonHandler CUD", func() {
 		Context("Errors", func() {
 			Context("malformed JSON", func() {
 				BeforeEach(func() {
-					req := httptest.NewRequestWithContext(ctx, http.MethodPost, "/v1/person", strings.NewReader(`{"name":`))
+					req := httptest.NewRequestWithContext(ctx, http.MethodPost, "/v1/student", strings.NewReader(`{"name":`))
 					req.Header.Set("Content-Type", "application/json")
 					responseRecorder = httptest.NewRecorder()
 					router.ServeHTTP(responseRecorder, req)
@@ -373,45 +373,45 @@ var _ = Describe("PersonHandler CUD", func() {
 		})
 	})
 
-	Describe("PUT /v1/person/:id", func() {
-		submitPersonUpdate := func(personRequest fun.PersonRequest) {
+	Describe("PUT /v1/student/:id", func() {
+		submitStudentUpdate := func(studentRequest fun.StudentRequest) {
 			var err error
-			existingPerson, err = personManager.CreatePerson(ctx, fun.PersonRequest{
+			existingStudent, err = studentManager.CreateStudent(ctx, fun.StudentRequest{
 				Name:   "Ada Lovelace",
 				Age:    36,
 				Gender: "FEMALE",
 			})
 			Expect(err).ToNot(HaveOccurred())
 
-			req, recorder := util.CreateTestRequest(http.MethodPut, "/v1/person/"+existingPerson.Id, personRequest)
+			req, recorder := util.CreateTestRequest(http.MethodPut, "/v1/student/"+existingStudent.Id, studentRequest)
 			responseRecorder = recorder
 			router.ServeHTTP(responseRecorder, req)
 
-			persisted, err = personManager.GetPerson(ctx, existingPerson.Id)
+			persisted, err = studentManager.GetStudent(ctx, existingStudent.Id)
 			Expect(err).ToNot(HaveOccurred())
 		}
 
 		Context("Happy Path", func() {
 			BeforeEach(func() {
-				updateRequest = fun.PersonRequest{Name: "Grace Hopper", Age: 85, Gender: "FEMALE"}
-				submitPersonUpdate(updateRequest)
+				updateRequest = fun.StudentRequest{Name: "Grace Hopper", Age: 85, Gender: "FEMALE"}
+				submitStudentUpdate(updateRequest)
 
 				var err error
-				audit, err = personManager.ListPersonAudit(ctx, existingPerson.Id)
+				audit, err = studentManager.ListStudentAudit(ctx, existingStudent.Id)
 				Expect(err).ToNot(HaveOccurred())
 			})
 
-			It("updates and persists the person with CREATE then UPDATE audits", func() {
+			It("updates and persists the student with CREATE then UPDATE audits", func() {
 				Expect(responseRecorder.Code).To(Equal(http.StatusOK))
 				Expect(responseRecorder.Body.String()).To(Equal(`"UPDATED"`))
-				Expect(persisted.Id).To(Equal(existingPerson.Id))
+				Expect(persisted.Id).To(Equal(existingStudent.Id))
 				Expect(persisted.Name).To(Equal(updateRequest.Name))
 				Expect(persisted.Age).To(Equal(updateRequest.Age))
 				Expect(persisted.Gender).To(Equal(updateRequest.Gender))
 
 				Expect(audit).To(HaveLen(2))
 				Expect(audit[0].Operation).To(Equal("CREATE"))
-				Expect(audit[1].Id).To(Equal(existingPerson.Id))
+				Expect(audit[1].Id).To(Equal(existingStudent.Id))
 				Expect(audit[1].Name).To(Equal(updateRequest.Name))
 				Expect(audit[1].Age).To(Equal(updateRequest.Age))
 				Expect(audit[1].Gender).To(Equal(updateRequest.Gender))
@@ -426,8 +426,8 @@ var _ = Describe("PersonHandler CUD", func() {
 				Context("Allowed Values", func() {
 					Context("with the minimum length", func() {
 						BeforeEach(func() {
-							updateRequest = fun.PersonRequest{Name: "A", Age: 36, Gender: "FEMALE"}
-							submitPersonUpdate(updateRequest)
+							updateRequest = fun.StudentRequest{Name: "A", Age: 36, Gender: "FEMALE"}
+							submitStudentUpdate(updateRequest)
 						})
 
 						It("accepts a one-character Name", func() {
@@ -439,8 +439,8 @@ var _ = Describe("PersonHandler CUD", func() {
 
 					Context("with letters and spaces", func() {
 						BeforeEach(func() {
-							updateRequest = fun.PersonRequest{Name: "Grace Hopper", Age: 36, Gender: "FEMALE"}
-							submitPersonUpdate(updateRequest)
+							updateRequest = fun.StudentRequest{Name: "Grace Hopper", Age: 36, Gender: "FEMALE"}
+							submitStudentUpdate(updateRequest)
 						})
 
 						It("accepts a Name with letters and spaces", func() {
@@ -452,8 +452,8 @@ var _ = Describe("PersonHandler CUD", func() {
 
 					Context("with a hyphen", func() {
 						BeforeEach(func() {
-							updateRequest = fun.PersonRequest{Name: "Jean-Luc Picard", Age: 36, Gender: "MALE"}
-							submitPersonUpdate(updateRequest)
+							updateRequest = fun.StudentRequest{Name: "Jean-Luc Picard", Age: 36, Gender: "MALE"}
+							submitStudentUpdate(updateRequest)
 						})
 
 						It("accepts a hyphenated Name", func() {
@@ -465,8 +465,8 @@ var _ = Describe("PersonHandler CUD", func() {
 
 					Context("with digits", func() {
 						BeforeEach(func() {
-							updateRequest = fun.PersonRequest{Name: "Agent 007", Age: 36, Gender: "MALE"}
-							submitPersonUpdate(updateRequest)
+							updateRequest = fun.StudentRequest{Name: "Agent 007", Age: 36, Gender: "MALE"}
+							submitStudentUpdate(updateRequest)
 						})
 
 						It("accepts a Name with digits", func() {
@@ -478,8 +478,8 @@ var _ = Describe("PersonHandler CUD", func() {
 
 					Context("with the maximum length", func() {
 						BeforeEach(func() {
-							updateRequest = fun.PersonRequest{Name: strings.Repeat("A", 25), Age: 36, Gender: "FEMALE"}
-							submitPersonUpdate(updateRequest)
+							updateRequest = fun.StudentRequest{Name: strings.Repeat("A", 25), Age: 36, Gender: "FEMALE"}
+							submitStudentUpdate(updateRequest)
 						})
 
 						It("accepts a 25-character Name", func() {
@@ -493,8 +493,8 @@ var _ = Describe("PersonHandler CUD", func() {
 				Context("Bad Values", func() {
 					Context("with a missing Name", func() {
 						BeforeEach(func() {
-							updateRequest = fun.PersonRequest{Age: 36, Gender: "FEMALE"}
-							submitPersonUpdate(updateRequest)
+							updateRequest = fun.StudentRequest{Age: 36, Gender: "FEMALE"}
+							submitStudentUpdate(updateRequest)
 						})
 
 						It("returns a required Name validation error", func() {
@@ -504,8 +504,8 @@ var _ = Describe("PersonHandler CUD", func() {
 
 					Context("with an invalid character", func() {
 						BeforeEach(func() {
-							updateRequest = fun.PersonRequest{Name: "A*B", Age: 36, Gender: "FEMALE"}
-							submitPersonUpdate(updateRequest)
+							updateRequest = fun.StudentRequest{Name: "A*B", Age: 36, Gender: "FEMALE"}
+							submitStudentUpdate(updateRequest)
 						})
 
 						It("returns a Name character validation error", func() {
@@ -515,8 +515,8 @@ var _ = Describe("PersonHandler CUD", func() {
 
 					Context("with a 26-character Name", func() {
 						BeforeEach(func() {
-							updateRequest = fun.PersonRequest{Name: strings.Repeat("A", 26), Age: 36, Gender: "FEMALE"}
-							submitPersonUpdate(updateRequest)
+							updateRequest = fun.StudentRequest{Name: strings.Repeat("A", 26), Age: 36, Gender: "FEMALE"}
+							submitStudentUpdate(updateRequest)
 						})
 
 						It("returns a maximum Name validation error", func() {
@@ -530,8 +530,8 @@ var _ = Describe("PersonHandler CUD", func() {
 				Context("Allowed Values", func() {
 					Context("with the minimum age", func() {
 						BeforeEach(func() {
-							updateRequest = fun.PersonRequest{Name: "Ada", Age: 1, Gender: "FEMALE"}
-							submitPersonUpdate(updateRequest)
+							updateRequest = fun.StudentRequest{Name: "Ada", Age: 1, Gender: "FEMALE"}
+							submitStudentUpdate(updateRequest)
 						})
 
 						It("accepts age 1", func() {
@@ -543,8 +543,8 @@ var _ = Describe("PersonHandler CUD", func() {
 
 					Context("with the maximum age", func() {
 						BeforeEach(func() {
-							updateRequest = fun.PersonRequest{Name: "Ada", Age: 150, Gender: "FEMALE"}
-							submitPersonUpdate(updateRequest)
+							updateRequest = fun.StudentRequest{Name: "Ada", Age: 150, Gender: "FEMALE"}
+							submitStudentUpdate(updateRequest)
 						})
 
 						It("accepts age 150", func() {
@@ -558,8 +558,8 @@ var _ = Describe("PersonHandler CUD", func() {
 				Context("Bad Values", func() {
 					Context("with missing or zero age", func() {
 						BeforeEach(func() {
-							updateRequest = fun.PersonRequest{Name: "Ada", Gender: "FEMALE"}
-							submitPersonUpdate(updateRequest)
+							updateRequest = fun.StudentRequest{Name: "Ada", Gender: "FEMALE"}
+							submitStudentUpdate(updateRequest)
 						})
 
 						It("returns a required Age validation error", func() {
@@ -569,8 +569,8 @@ var _ = Describe("PersonHandler CUD", func() {
 
 					Context("below the minimum age", func() {
 						BeforeEach(func() {
-							updateRequest = fun.PersonRequest{Name: "Ada", Age: -1, Gender: "FEMALE"}
-							submitPersonUpdate(updateRequest)
+							updateRequest = fun.StudentRequest{Name: "Ada", Age: -1, Gender: "FEMALE"}
+							submitStudentUpdate(updateRequest)
 						})
 
 						It("returns a minimum Age validation error", func() {
@@ -580,8 +580,8 @@ var _ = Describe("PersonHandler CUD", func() {
 
 					Context("above the maximum age", func() {
 						BeforeEach(func() {
-							updateRequest = fun.PersonRequest{Name: "Ada", Age: 151, Gender: "FEMALE"}
-							submitPersonUpdate(updateRequest)
+							updateRequest = fun.StudentRequest{Name: "Ada", Age: 151, Gender: "FEMALE"}
+							submitStudentUpdate(updateRequest)
 						})
 
 						It("returns a maximum Age validation error", func() {
@@ -595,8 +595,8 @@ var _ = Describe("PersonHandler CUD", func() {
 				Context("Allowed Values", func() {
 					Context("with MALE", func() {
 						BeforeEach(func() {
-							updateRequest = fun.PersonRequest{Name: "Ada", Age: 36, Gender: "MALE"}
-							submitPersonUpdate(updateRequest)
+							updateRequest = fun.StudentRequest{Name: "Ada", Age: 36, Gender: "MALE"}
+							submitStudentUpdate(updateRequest)
 						})
 
 						It("accepts MALE", func() {
@@ -608,8 +608,8 @@ var _ = Describe("PersonHandler CUD", func() {
 
 					Context("with FEMALE", func() {
 						BeforeEach(func() {
-							updateRequest = fun.PersonRequest{Name: "Ada", Age: 36, Gender: "FEMALE"}
-							submitPersonUpdate(updateRequest)
+							updateRequest = fun.StudentRequest{Name: "Ada", Age: 36, Gender: "FEMALE"}
+							submitStudentUpdate(updateRequest)
 						})
 
 						It("accepts FEMALE", func() {
@@ -623,8 +623,8 @@ var _ = Describe("PersonHandler CUD", func() {
 				Context("Bad Values", func() {
 					Context("with a missing Gender", func() {
 						BeforeEach(func() {
-							updateRequest = fun.PersonRequest{Name: "Ada", Age: 36}
-							submitPersonUpdate(updateRequest)
+							updateRequest = fun.StudentRequest{Name: "Ada", Age: 36}
+							submitStudentUpdate(updateRequest)
 						})
 
 						It("returns a required Gender validation error", func() {
@@ -634,8 +634,8 @@ var _ = Describe("PersonHandler CUD", func() {
 
 					Context("with an unsupported Gender", func() {
 						BeforeEach(func() {
-							updateRequest = fun.PersonRequest{Name: "Ada", Age: 36, Gender: "OTHER"}
-							submitPersonUpdate(updateRequest)
+							updateRequest = fun.StudentRequest{Name: "Ada", Age: 36, Gender: "OTHER"}
+							submitStudentUpdate(updateRequest)
 						})
 
 						It("returns an equality Gender validation error", func() {
@@ -645,8 +645,8 @@ var _ = Describe("PersonHandler CUD", func() {
 
 					Context("with lowercase gender", func() {
 						BeforeEach(func() {
-							updateRequest = fun.PersonRequest{Name: "Ada", Age: 36, Gender: "female"}
-							submitPersonUpdate(updateRequest)
+							updateRequest = fun.StudentRequest{Name: "Ada", Age: 36, Gender: "female"}
+							submitStudentUpdate(updateRequest)
 						})
 
 						It("returns an equality Gender validation error", func() {
@@ -661,14 +661,14 @@ var _ = Describe("PersonHandler CUD", func() {
 			Context("malformed JSON", func() {
 				BeforeEach(func() {
 					var err error
-					existingPerson, err = personManager.CreatePerson(ctx, fun.PersonRequest{
+					existingStudent, err = studentManager.CreateStudent(ctx, fun.StudentRequest{
 						Name:   "Ada Lovelace",
 						Age:    36,
 						Gender: "FEMALE",
 					})
 					Expect(err).ToNot(HaveOccurred())
 
-					req := httptest.NewRequestWithContext(ctx, http.MethodPut, "/v1/person/"+existingPerson.Id, strings.NewReader(`{"name":`))
+					req := httptest.NewRequestWithContext(ctx, http.MethodPut, "/v1/student/"+existingStudent.Id, strings.NewReader(`{"name":`))
 					req.Header.Set("Content-Type", "application/json")
 					responseRecorder = httptest.NewRecorder()
 					router.ServeHTTP(responseRecorder, req)
@@ -681,11 +681,11 @@ var _ = Describe("PersonHandler CUD", func() {
 		})
 	})
 
-	Describe("DELETE /v1/person/:id", func() {
+	Describe("DELETE /v1/student/:id", func() {
 		Context("Errors", func() {
 			Context("with an empty ID", func() {
 				BeforeEach(func() {
-					req := httptest.NewRequestWithContext(ctx, http.MethodDelete, "/v1/person/", nil)
+					req := httptest.NewRequestWithContext(ctx, http.MethodDelete, "/v1/student/", nil)
 					responseRecorder = httptest.NewRecorder()
 					router.ServeHTTP(responseRecorder, req)
 				})
@@ -697,7 +697,7 @@ var _ = Describe("PersonHandler CUD", func() {
 
 			Context("with a syntactically valid but absent ID", func() {
 				BeforeEach(func() {
-					req := httptest.NewRequestWithContext(ctx, http.MethodDelete, "/v1/person/missing-id", nil)
+					req := httptest.NewRequestWithContext(ctx, http.MethodDelete, "/v1/student/missing-id", nil)
 					responseRecorder = httptest.NewRecorder()
 					router.ServeHTTP(responseRecorder, req)
 				})
@@ -711,34 +711,34 @@ var _ = Describe("PersonHandler CUD", func() {
 		Context("Happy Path", func() {
 			BeforeEach(func() {
 				var err common.HttpError
-				existingPerson, err = personManager.CreatePerson(ctx, fun.PersonRequest{
+				existingStudent, err = studentManager.CreateStudent(ctx, fun.StudentRequest{
 					Name:   "Ada Lovelace",
 					Age:    36,
 					Gender: "FEMALE",
 				})
 				Expect(err).ToNot(HaveOccurred())
 
-				req := httptest.NewRequestWithContext(ctx, http.MethodDelete, "/v1/person/"+existingPerson.Id, nil)
+				req := httptest.NewRequestWithContext(ctx, http.MethodDelete, "/v1/student/"+existingStudent.Id, nil)
 				responseRecorder = httptest.NewRecorder()
 				router.ServeHTTP(responseRecorder, req)
 
-				persisted, persistedErr = personManager.GetPerson(ctx, existingPerson.Id)
-				audit, err = personManager.ListPersonAudit(ctx, existingPerson.Id)
+				persisted, persistedErr = studentManager.GetStudent(ctx, existingStudent.Id)
+				audit, err = studentManager.ListStudentAudit(ctx, existingStudent.Id)
 				Expect(err).ToNot(HaveOccurred())
 			})
 
-			It("deletes the person with HTTP 204", func() {
+			It("deletes the student with HTTP 204", func() {
 				Expect(responseRecorder.Code).To(Equal(http.StatusNoContent))
 				Expect(persistedErr).To(Equal(common.ErrNotFound))
 			})
 
-			PIt("records CREATE then DELETE audits [BUG: DELETE does not preserve the deleted person's audit identity]", func() {
+			PIt("records CREATE then DELETE audits [BUG: DELETE does not preserve the deleted student's audit identity]", func() {
 				Expect(audit).To(HaveLen(2))
 				Expect(audit[0].Operation).To(Equal("CREATE"))
-				Expect(audit[1].Id).To(Equal(existingPerson.Id))
-				Expect(audit[1].Name).To(Equal(existingPerson.Name))
-				Expect(audit[1].Age).To(Equal(existingPerson.Age))
-				Expect(audit[1].Gender).To(Equal(existingPerson.Gender))
+				Expect(audit[1].Id).To(Equal(existingStudent.Id))
+				Expect(audit[1].Name).To(Equal(existingStudent.Name))
+				Expect(audit[1].Age).To(Equal(existingStudent.Age))
+				Expect(audit[1].Gender).To(Equal(existingStudent.Gender))
 				Expect(audit[1].Operation).To(Equal("DELETE"))
 				Expect(audit[1].CreatedBy).To(Equal(fun.CreatedByAman))
 				Expect(audit[1].CreatedAt).ToNot(BeZero())
