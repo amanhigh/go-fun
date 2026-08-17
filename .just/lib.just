@@ -50,6 +50,22 @@ _run command:
         }; \
     fi
 
+_run-with-display command:
+    #!/usr/bin/env bash
+    set -euo pipefail
+    run_command='{{command}}'
+
+    if [[ -z "${DISPLAY:-}" && -z "${WAYLAND_DISPLAY:-}" ]]; then
+        if ! command -v xvfb-run >/dev/null 2>&1 || ! command -v xauth >/dev/null 2>&1; then
+            echo "No graphical display is available and xvfb-run/xauth is not installed." >&2
+            echo "Run 'just doctor' for the Debian/Ubuntu installation command." >&2
+            exit 1
+        fi
+        run_command="xvfb-run -a ${run_command}"
+    fi
+
+    just _run "${run_command}"
+
 _run-no-output command:
     eval '{{command}}' >/dev/null 2>&1
 

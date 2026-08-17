@@ -14,6 +14,8 @@ var (
 	ErrCipherTooShort = errors.New("ciphertext too short")
 )
 
+// FIXME: AES-CTR provides confidentiality but no authentication. Migrate Encrypt/Decrypt
+// to an authenticated mode such as AES-GCM in a dedicated follow-up, updating cipher_test.go.
 func Encrypt(key, text string) (encryptedText string, err error) {
 	keyBytes := []byte(key)
 	textBytes := []byte(text)

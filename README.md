@@ -13,23 +13,27 @@ This repository follows the philosophy of Learning by Doing. It includes plays, 
 	- ### Setup
 		- #### Onetime
 			- We will use [Just](https://github.com/casey/just) for project management.
-			- Installs required dependencies and tools, `just prepare`
+			- Install repository development tools and validate the environment: `just prepare`
+			- Check external display and environment dependencies without changing the system: `just doctor`
+			- Configure Kubernetes Helm repositories and local `.docker` ingress hosts when needed: `just prepare-k8s`
+			- If `just doctor` reports missing headless display support, install it on Debian/Ubuntu with `sudo apt-get update && sudo apt-get install -y xvfb xauth`.
 			- To check what all is available run `just` to display help.
-		- Run `just reset` to do a complete build, test, coverage, and info pass.
+		- Run `just reset` to do a complete build, test, coverage, and info pass. Run `just prepare-k8s` first when Helm chart packaging or Kubernetes integration is required.
 		- Use `just info` (or `infos`) for displaying info.
 	- ### Play
 		Easy ways to Play with **FunApp** without Dev Setup.  
 		- Start
-			- Golang: `just run`
+			- Golang: `just components/fun-app/run`
 				![Go Run](common/images/fun-app/go-run.gif)  
 			- Docker [Image](https://hub.docker.com/r/amanfdk/fun-app): `docker run amanfdk/fun-app`
 		- Testing
 			- Unit and Integration Testing is done via [Ginkgo](https://github.com/onsi/ginkgo).
 			- Run Tests: `just test test-slow` (Excludes suites that require separate setup.)
+			- `just test` automatically uses the current Wayland/X11 session or `xvfb-run` in a headless environment.
 			- Performance Test
 				[Vegeta](https://github.com/tsenart/vegeta) is the tool of choice here. [Gum](https://github.com/charmbracelet/gum) helps in prompts.  
 				- Installation: `brew install gum vegeta`
-				- Run: `just --justfile components/fun-app/it/Justfile --working-directory components/fun-app/it all`
+				- Run: `just components/fun-app/it/all`
 		- Linting
 			- `just lint` will do code linting using [golangci-lint](https://github.com/golangci/golangci-lint)
 	- ### Dev Setup
@@ -43,9 +47,9 @@ This repository follows the philosophy of Learning by Doing. It includes plays, 
 			- It is configured to Auto Reload Code Changes.
 			- This Sets Up Dev Container in `fun-app` Namespace.
 			- Try:
-				- Run `just space`, Open http://localhost:8080/metrics
-				- Tests: `just space-test`
-				- Cleanup: `just space-purge`
+				- Run `just components/fun-app/space`, Open http://localhost:8080/metrics
+				- Tests: `just components/fun-app/space-test`
+				- Cleanup: `just components/fun-app/space-purge`
 				- Check Environment Vars: `just infos`
 				- Override Vars:  `devspace list vars --var DB="mysql-primary",RATE_LIMIT=10`
 			- ![Devcode](common/images/fun-app/devcode.gif)
@@ -56,12 +60,12 @@ This repository follows the philosophy of Learning by Doing. It includes plays, 
 				- Cleanup: `helm -n fun-app delete fun-app`
 			- Via Local
 				- Deploys FunApp and Vegeta Container (for Load Test).
-				- Setup: `just --justfile components/fun-app/charts/Justfile --working-directory components/fun-app/charts setup` (or `reset`)
-				- Clean: `just --justfile components/fun-app/charts/Justfile --working-directory components/fun-app/charts clean` (or `info`)
+				- Setup: `just components/fun-app/charts/setup` (or `just components/fun-app/charts/reset`)
+				- Clean: `just components/fun-app/charts/clean` (or `just components/fun-app/charts/info`)
 			- Access
 				- Open: http://localhost:9090/metrics  (Tunnel required for forwarding:  `minikube tunnel`)
 				- Load Test (From Vegeta Container):  `echo 'GET http://fun-app:9090/person/all' | vegeta attack | vegeta report`
-				- Log Analyzer : `just --justfile components/fun-app/charts/Justfile --working-directory components/fun-app/charts analyse`
+				- Log Analyzer : `just components/fun-app/charts/analyse`
 			- ![Helm](common/images/fun-app/helm.gif)
 - ## Tools
 	- ## Kubernetes
@@ -69,7 +73,7 @@ This repository follows the philosophy of Learning by Doing. It includes plays, 
 		- ### Minikube
 			- To setup kubernetes there are multiple options available like minikube, kind, k89, k3s etc. In this project we are using [minikube](https://minikube.sigs.k8s.io/docs/).
 			- This will also setup [traifik](https://github.com/traefik/traefik) ingress for easy access.
-				- DNS Mapping via `/etc/hosts` is done as part of Onetime Prepration.
+				- DNS Mapping via `/etc/hosts` is configured by `just prepare-k8s`.
 				- User needs to give sudo for port 80 forward.
 			- Setup - `make -C ./Kubernetes setup` (or `reset` for clean and setup)
 			- Teardown - `make -C ./Kubernetes clean`
@@ -131,6 +135,6 @@ This repository follows the philosophy of Learning by Doing. It includes plays, 
 			- Remove Release involves deleting Tag with `git push --delete origin common/v1.0.0`
 	- ### Release Management
 	  Release management includes  build and release of Artifacts like binaries, dockers etc.  
-		- Build Only - `just build docker-build` (add `clean` to remove residue)
-		- Release - `just release release-docker VER=v1.0.3`
+		- Build Only - `just build` and `just components/fun-app/docker-build` (add `clean` to remove residue)
+		- Release - `just release` and `VER=v1.0.3 just components/fun-app/release-docker`
 		- Delete Release - `just unrelease VER=v1.0.3` (Not Recommended)

@@ -8,7 +8,7 @@ import (
 	"errors"
 	"time"
 
-	"github.com/dgrijalva/jwt-go"
+	"github.com/golang-jwt/jwt/v5"
 )
 
 func GenerateToken(privateKey *rsa.PrivateKey) (string, error) {

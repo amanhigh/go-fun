@@ -2,15 +2,18 @@ package play_test
 
 import (
 	"context"
+	"crypto/aes"
+	"crypto/cipher"
+	"crypto/rand"
 	"encoding/base64"
 	"encoding/json"
+	"io"
 	"time"
 
 	"github.com/amanhigh/go-fun/common/util"
 	"github.com/amanhigh/go-fun/models"
 	vault "github.com/hashicorp/vault-client-go"
 	"github.com/hashicorp/vault-client-go/schema"
-	"github.com/hashicorp/vault/helper/dhutil"
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
 	"github.com/rs/zerolog/log"
@@ -194,8 +197,7 @@ var _ = Describe("Vault", Ordered, Label(models.GINKGO_SLOW), func() {
 
 			Context("Export Encryption Key", func() {
 				var (
-					key    []byte
-					cipher []byte
+					key []byte
 				)
 
 				BeforeEach(func() {
@@ -207,25 +209,37 @@ var _ = Describe("Vault", Ordered, Label(models.GINKGO_SLOW), func() {
 					// Decode Base64 Key
 					key, err = base64.StdEncoding.DecodeString(baseKey)
 					Expect(err).ToNot(HaveOccurred())
+					Expect(key).To(HaveLen(32))
 				})
 
 				Context("AES", func() {
 					var (
-						AAD    = []byte("additional authenticated data")
-						noonce []byte
+						AAD        = []byte("additional authenticated data")
+						nonce      []byte
+						ciphertext []byte
+						decrypted  []byte
 					)
 					BeforeEach(func() {
-						// Encrypt Data
-						cipher, noonce, err = dhutil.EncryptAES(key, []byte(plainText), AAD)
+						block, err := aes.NewCipher(key)
 						Expect(err).ToNot(HaveOccurred())
-						Expect(cipher).ToNot(BeNil())
-						Expect(noonce).ToNot(BeNil())
+
+						gcm, err := cipher.NewGCM(block)
+						Expect(err).ToNot(HaveOccurred())
+
+						nonce = make([]byte, gcm.NonceSize())
+						_, err = io.ReadFull(rand.Reader, nonce)
+						Expect(err).ToNot(HaveOccurred())
+
+						ciphertext = gcm.Seal(nil, nonce, []byte(plainText), AAD)
+						Expect(ciphertext).ToNot(BeNil())
+						Expect(nonce).ToNot(BeNil())
+
+						decrypted, err = gcm.Open(nil, nonce, ciphertext, AAD)
+						Expect(err).ToNot(HaveOccurred())
 					})
 
 					It("should decrypt data", func() {
-						decryptedText, err := dhutil.DecryptAES(key, cipher, noonce, AAD)
-						Expect(err).ToNot(HaveOccurred())
-						Expect(string(decryptedText)).To(Equal(plainText))
+						Expect(string(decrypted)).To(Equal(plainText))
 					})
 
 				})

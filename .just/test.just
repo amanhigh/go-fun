@@ -1,8 +1,3 @@
-[group('run')]
-[doc('Run the focused verification flow for the Fun App')]
-verify: _test-focus
-    just _info "INFO" "just watch cmd='just verify'"
-
 [group('quality')]
 _test-operator:
     just _title "TEST" "Running Operator Tests"
@@ -13,7 +8,7 @@ _test-operator:
 _test-unit:
     just _title "TEST" "Running Unit Tests"
     mkdir -p /tmp/cover/unit
-    just _run "{{ginkgo}} -r --label-filter=\!setup\ \&\&\ \!slow --skip-package=components/fun-app/it -cover . -- -test.gocoverdir=/tmp/cover/unit"
+    just _run-with-display "{{ginkgo}} -r --label-filter=\!setup\ \&\&\ \!slow --skip-package=components/fun-app/it -cover . -- -test.gocoverdir=/tmp/cover/unit"
 
 [group('quality')]
 [doc('Run slow test suites')]
@@ -23,10 +18,8 @@ test-slow:
     just _run "{{ginkgo}} -r '--label-filter=slow' -cover . -- -test.gocoverdir=/tmp/cover/slow"
 
 [group('quality')]
-_run-fun-cover: _build-fun-cover
-    just _title "COVER" "Running Fun App with Coverage"
-    mkdir -p /tmp/cover/integration
-    just _run "GOCOVERDIR=/tmp/cover/integration PORT=8085 bin/fun &"
+_run-fun-cover:
+    just components/fun-app/run-cover
 
 [group('quality')]
 _cover-report:
@@ -132,8 +125,3 @@ _combine-coverage:
 _clean-test:
     just _warn "CLEAN" "Cleaning Tests"
     rm -rf /tmp/cover
-
-[group('quality')]
-_test-focus:
-    just _title "TEST" "Running Focus Tests"
-    just _run "{{ginkgo}} --focus 'should create & get person' components/fun-app/it"
