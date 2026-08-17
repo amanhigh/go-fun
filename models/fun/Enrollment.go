@@ -37,5 +37,15 @@ type Enrollment struct {
 
 func (e *Enrollment) BeforeCreate(_ *gorm.DB) (err error) {
 	e.ID = uuid.NewString()[:8]
+
+	// Keep persisted timestamps comparable after JSON serialization.
+	now := time.Now().UTC().Round(0)
+	if e.CreatedAt.IsZero() {
+		e.CreatedAt = now
+	}
+	if e.UpdatedAt.IsZero() {
+		e.UpdatedAt = now
+	}
+
 	return
 }
