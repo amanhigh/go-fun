@@ -10,7 +10,7 @@ type SeatReservedEvtV1 struct {
 	ReservedAt   time.Time `json:"reservedAt" validate:"required"`
 }
 
-// TODO: Reorganise around Domain names not Event.
+// HACK: Reorganise around Domain names not Event.
 type SeatWaitlistedEvtV1 struct {
 	EnrollmentID string    `json:"enrollmentId" validate:"required"`
 	PersonID     string    `json:"personId" validate:"required"`
