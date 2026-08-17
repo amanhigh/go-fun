@@ -18,6 +18,7 @@ import (
 // -s (use Shell), -c (Clear), Space/Q to Run, Quit.
 // Watch Mode: find `git rev-parse --show-toplevel` | entr -s "date +%M:%S;ginkgo $PWD | grep Pending"
 var _ = Describe("Person Integration Test", func() {
+	// FIXME: Merge with enrollment_test.go and limit integration tests to only important ones
 	const (
 		invalidNameValue  = "A*B"
 		expectedGenderErr = "FEMALE"
