@@ -13,6 +13,7 @@ type SeatAllocationPublisher interface {
 	AllocateSeat(ctx context.Context, enrollment fun.Enrollment) common.HttpError
 	SeatReserved(ctx context.Context, enrollment fun.Enrollment) common.HttpError
 	SeatWaitlisted(ctx context.Context, enrollment fun.Enrollment, reason string) common.HttpError
+	SeatAllocationFailed(ctx context.Context, enrollment fun.Enrollment, reason string) common.HttpError
 }
 
 type seatAllocationPublisher struct {
@@ -32,12 +33,7 @@ func (sap *seatAllocationPublisher) AllocateSeat(ctx context.Context, enrollment
 		RequestedAt:  time.Now().UTC(),
 	}
 
-	extras := map[string]string{
-		fun.MetadataEnrollmentID: enrollment.ID,
-		fun.MetadataPersonID:     enrollment.PersonID,
-	}
-
-	return sap.base.PublishWithExtras(ctx, fun.TopicAllocateSeatCmd, payload, extras)
+	return sap.base.PublishChild(ctx, fun.TopicAllocateSeatCmd, payload)
 }
 
 func (sap *seatAllocationPublisher) SeatReserved(ctx context.Context, enrollment fun.Enrollment) common.HttpError {
@@ -48,12 +44,7 @@ func (sap *seatAllocationPublisher) SeatReserved(ctx context.Context, enrollment
 		ReservedAt:   time.Now().UTC(),
 	}
 
-	extras := map[string]string{
-		fun.MetadataEnrollmentID: enrollment.ID,
-		fun.MetadataPersonID:     enrollment.PersonID,
-	}
-
-	return sap.base.PublishWithExtras(ctx, fun.TopicSeatReservedEvt, payload, extras)
+	return sap.base.PublishChild(ctx, fun.TopicSeatReservedEvt, payload)
 }
 
 func (sap *seatAllocationPublisher) SeatWaitlisted(ctx context.Context, enrollment fun.Enrollment, reason string) common.HttpError {
@@ -65,10 +56,16 @@ func (sap *seatAllocationPublisher) SeatWaitlisted(ctx context.Context, enrollme
 		WaitlistedAt: time.Now().UTC(),
 	}
 
-	extras := map[string]string{
-		fun.MetadataEnrollmentID: enrollment.ID,
-		fun.MetadataPersonID:     enrollment.PersonID,
+	return sap.base.PublishChild(ctx, fun.TopicSeatWaitlistedEvt, payload)
+}
+
+func (sap *seatAllocationPublisher) SeatAllocationFailed(ctx context.Context, enrollment fun.Enrollment, reason string) common.HttpError {
+	payload := fun.SeatAllocationFailedEvtV1{
+		EnrollmentID: enrollment.ID,
+		PersonID:     enrollment.PersonID,
+		Reason:       reason,
+		FailedAt:     time.Now().UTC(),
 	}
 
-	return sap.base.PublishWithExtras(ctx, fun.TopicSeatWaitlistedEvt, payload, extras)
+	return sap.base.PublishChild(ctx, fun.TopicSeatAllocationFailedEvt, payload)
 }

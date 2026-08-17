@@ -52,20 +52,8 @@ var kohanServerCmd = &cobra.Command{
 	},
 }
 
-var openTickerCmd = &cobra.Command{
-	Use:   "open-ticker [Ticker]",
-	Short: "Opens Ticker",
-	Args:  cobra.ExactArgs(1),
-	RunE: func(cmd *cobra.Command, args []string) (err error) {
-		osManager := core.GetKohanInterface().GetOSManager()
-		osManager.TryOpenTicker(cmd.Context(), args[0])
-		return
-	},
-}
-
 func init() {
 	autoCmd.AddCommand(runOrFocusCmd)
 	autoCmd.AddCommand(kohanServerCmd)
-	autoCmd.AddCommand(openTickerCmd)
 	RootCmd.AddCommand(autoCmd)
 }

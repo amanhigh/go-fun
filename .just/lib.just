@@ -122,3 +122,47 @@ _air-run dir port="8080":
     just _title "Air" "Starting server"
     just _detail "URL" "http://localhost:{{port}}"
     cd {{dir}} && {{air}} -c .air.toml
+
+[group('quality')]
+_test-target target='':
+    #!/usr/bin/env bash
+    set -euo pipefail
+    target={{quote(target)}}
+    target="${target#target=}"
+
+    if [ -z "$target" ]; then
+        echo "error: test target is required" >&2
+        exit 1
+    fi
+
+    if [ -f "$target" ]; then
+        case "$target" in
+            *_test.go) ;;
+            *.go)
+                echo "error: test file target must end with _test.go: $target" >&2
+                exit 1
+                ;;
+            *)
+                echo "error: test target is not a Go test file: $target" >&2
+                exit 1
+                ;;
+        esac
+        test_dir=$(dirname "$target")
+        test_file=$(basename "$target")
+        if ! go list "$test_dir" >/dev/null 2>&1; then
+            echo "error: invalid package directory: $test_dir" >&2
+            exit 1
+        fi
+        {{ginkgo}} --focus-file "$test_file" "$test_dir"
+        exit 0
+    fi
+
+    if [ ! -d "$target" ]; then
+        echo "error: test target is not an existing file or directory: $target" >&2
+        exit 1
+    fi
+    if ! go list "$target" >/dev/null 2>&1; then
+        echo "error: invalid package directory: $target" >&2
+        exit 1
+    fi
+    {{ginkgo}} "$target"
