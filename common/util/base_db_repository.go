@@ -80,10 +80,22 @@ func (b *BaseDbRepository) Update(c context.Context, entity any, omit ...string)
 	return
 }
 
-// DeleteBy deletes an entity by a configurable condition and returns ErrNotFound if no rows affected.
+// DeleteBy enforces a single-record delete contract: it loads exactly one
+// matching entity via Take (which limits the query to one row), returns
+// not-found or database errors before deletion, then deletes the hydrated
+// entity so GORM delete hooks see persisted values. Callers must provide a
+// condition that identifies the intended single record.
 func (b *BaseDbRepository) DeleteBy(c context.Context, entity any, condition string, arg any) common.HttpError {
 	query := b.SafeTx(c)
-	result := query.Delete(entity, condition, arg)
+
+	// Load exactly one matching entity; Take limits the query to one row
+	// (appending LIMIT 1) and returns ErrRecordNotFound for zero rows.
+	if txErr := query.Take(entity, condition, arg).Error; txErr != nil {
+		return GormErrorMapper(txErr)
+	}
+
+	// Delete the hydrated entity by primary key so hooks see real values.
+	result := query.Delete(entity)
 	if result.Error != nil {
 		return GormErrorMapper(result.Error)
 	}
