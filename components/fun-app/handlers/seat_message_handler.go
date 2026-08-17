@@ -58,7 +58,7 @@ func (h *SeatMessageHandlerImpl) HandleSeatWaitlistedEvt(msg *message.Message) e
 		return err
 	}
 	enrollment := fun.Enrollment{ID: evt.EnrollmentID, PersonID: evt.PersonID, Grade: evt.Grade}
-	// FIXME: Waitlisted flow ends here — add exponential backoff retry to re-check seat availability before terminal failure.
+	// TODO: Waitlisted flow ends here — add exponential backoff retry to re-check seat availability before terminal failure.
 	// Persist WAITLISTED state via manager sink (idempotent).
 	return h.EnrollmentManager.UpdateToWaitlisted(msg.Context(), enrollment)
 }
