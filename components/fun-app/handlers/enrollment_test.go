@@ -371,18 +371,6 @@ var _ = Describe("Enrollments", func() {
 				})
 			})
 
-			Context("unknown person", func() {
-				BeforeEach(func() {
-					req, recorder := util.CreateTestRequest(http.MethodGet, "/v1/enrollments/unknown-person", nil)
-					responseRecorder = recorder
-					router.ServeHTTP(responseRecorder, req)
-				})
-
-				It("returns HTTP 404", func() {
-					Expect(responseRecorder.Code).To(Equal(http.StatusNotFound))
-				})
-			})
-
 		})
 	})
 

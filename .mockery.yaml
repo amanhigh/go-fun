@@ -22,11 +22,9 @@ packages:
     interfaces:
       Shutdown:
   "github.com/amanhigh/go-fun/components/fun-app/manager":
-    config:
-      all: true
+    interfaces:
+      EnrollmentManagerInterface:
+      SeatManagerInterface:
   "github.com/amanhigh/go-fun/components/fun-app/dao":
     interfaces:
       EnrollmentDaoInterface:
-  "github.com/amanhigh/go-fun/components/fun-app/publisher":
-    interfaces:
-      EnrollmentPublisher:
