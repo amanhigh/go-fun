@@ -64,8 +64,8 @@ func (pd *PersonDao) ListPersonAudit(c context.Context, id string) (personAuditL
 	var txErr error
 	audit := fun.PersonAudit{Id: id}
 
-	// Fetch Person Audit Records
-	if txErr = pd.SafeTx(c).Where(audit).Find(&personAuditList).Error; txErr != nil && !errors.Is(txErr, gorm.ErrRecordNotFound) {
+	// Fetch Person Audit Records ordered deterministically by audit_id
+	if txErr = pd.SafeTx(c).Where(audit).Order("audit_id asc").Find(&personAuditList).Error; txErr != nil && !errors.Is(txErr, gorm.ErrRecordNotFound) {
 		zerolog.Ctx(c).Error().Str("Id", id).Err(txErr).Msg("Error Fetching Person Audit List")
 		err = util.GormErrorMapper(txErr)
 	}
