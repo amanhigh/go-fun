@@ -157,26 +157,26 @@ func (_c *EnrollmentManagerInterface_EnrollCmd_Call) RunAndReturn(run func(ctx c
 	return _c
 }
 
-// EnrollPerson provides a mock function for the type EnrollmentManagerInterface
-func (_mock *EnrollmentManagerInterface) EnrollPerson(ctx context.Context, personID string, grade int) (fun.Enrollment, common.HttpError) {
-	ret := _mock.Called(ctx, personID, grade)
+// EnrollStudent provides a mock function for the type EnrollmentManagerInterface
+func (_mock *EnrollmentManagerInterface) EnrollStudent(ctx context.Context, studentID string, grade int) (fun.Enrollment, common.HttpError) {
+	ret := _mock.Called(ctx, studentID, grade)
 
 	if len(ret) == 0 {
-		panic("no return value specified for EnrollPerson")
+		panic("no return value specified for EnrollStudent")
 	}
 
 	var r0 fun.Enrollment
 	var r1 common.HttpError
 	if returnFunc, ok := ret.Get(0).(func(context.Context, string, int) (fun.Enrollment, common.HttpError)); ok {
-		return returnFunc(ctx, personID, grade)
+		return returnFunc(ctx, studentID, grade)
 	}
 	if returnFunc, ok := ret.Get(0).(func(context.Context, string, int) fun.Enrollment); ok {
-		r0 = returnFunc(ctx, personID, grade)
+		r0 = returnFunc(ctx, studentID, grade)
 	} else {
 		r0 = ret.Get(0).(fun.Enrollment)
 	}
 	if returnFunc, ok := ret.Get(1).(func(context.Context, string, int) common.HttpError); ok {
-		r1 = returnFunc(ctx, personID, grade)
+		r1 = returnFunc(ctx, studentID, grade)
 	} else {
 		if ret.Get(1) != nil {
 			r1 = ret.Get(1).(common.HttpError)
@@ -185,20 +185,20 @@ func (_mock *EnrollmentManagerInterface) EnrollPerson(ctx context.Context, perso
 	return r0, r1
 }
 
-// EnrollmentManagerInterface_EnrollPerson_Call is a *mock.Call that shadows Run/Return methods with type explicit version for method 'EnrollPerson'
-type EnrollmentManagerInterface_EnrollPerson_Call struct {
+// EnrollmentManagerInterface_EnrollStudent_Call is a *mock.Call that shadows Run/Return methods with type explicit version for method 'EnrollStudent'
+type EnrollmentManagerInterface_EnrollStudent_Call struct {
 	*mock.Call
 }
 
-// EnrollPerson is a helper method to define mock.On call
+// EnrollStudent is a helper method to define mock.On call
 //   - ctx context.Context
-//   - personID string
+//   - studentID string
 //   - grade int
-func (_e *EnrollmentManagerInterface_Expecter) EnrollPerson(ctx interface{}, personID interface{}, grade interface{}) *EnrollmentManagerInterface_EnrollPerson_Call {
-	return &EnrollmentManagerInterface_EnrollPerson_Call{Call: _e.mock.On("EnrollPerson", ctx, personID, grade)}
+func (_e *EnrollmentManagerInterface_Expecter) EnrollStudent(ctx interface{}, studentID interface{}, grade interface{}) *EnrollmentManagerInterface_EnrollStudent_Call {
+	return &EnrollmentManagerInterface_EnrollStudent_Call{Call: _e.mock.On("EnrollStudent", ctx, studentID, grade)}
 }
 
-func (_c *EnrollmentManagerInterface_EnrollPerson_Call) Run(run func(ctx context.Context, personID string, grade int)) *EnrollmentManagerInterface_EnrollPerson_Call {
+func (_c *EnrollmentManagerInterface_EnrollStudent_Call) Run(run func(ctx context.Context, studentID string, grade int)) *EnrollmentManagerInterface_EnrollStudent_Call {
 	_c.Call.Run(func(args mock.Arguments) {
 		var arg0 context.Context
 		if args[0] != nil {
@@ -221,19 +221,19 @@ func (_c *EnrollmentManagerInterface_EnrollPerson_Call) Run(run func(ctx context
 	return _c
 }
 
-func (_c *EnrollmentManagerInterface_EnrollPerson_Call) Return(enrollment fun.Enrollment, httpError common.HttpError) *EnrollmentManagerInterface_EnrollPerson_Call {
+func (_c *EnrollmentManagerInterface_EnrollStudent_Call) Return(enrollment fun.Enrollment, httpError common.HttpError) *EnrollmentManagerInterface_EnrollStudent_Call {
 	_c.Call.Return(enrollment, httpError)
 	return _c
 }
 
-func (_c *EnrollmentManagerInterface_EnrollPerson_Call) RunAndReturn(run func(ctx context.Context, personID string, grade int) (fun.Enrollment, common.HttpError)) *EnrollmentManagerInterface_EnrollPerson_Call {
+func (_c *EnrollmentManagerInterface_EnrollStudent_Call) RunAndReturn(run func(ctx context.Context, studentID string, grade int) (fun.Enrollment, common.HttpError)) *EnrollmentManagerInterface_EnrollStudent_Call {
 	_c.Call.Return(run)
 	return _c
 }
 
 // GetEnrollment provides a mock function for the type EnrollmentManagerInterface
-func (_mock *EnrollmentManagerInterface) GetEnrollment(ctx context.Context, personID string) (fun.Enrollment, common.HttpError) {
-	ret := _mock.Called(ctx, personID)
+func (_mock *EnrollmentManagerInterface) GetEnrollment(ctx context.Context, studentID string) (fun.Enrollment, common.HttpError) {
+	ret := _mock.Called(ctx, studentID)
 
 	if len(ret) == 0 {
 		panic("no return value specified for GetEnrollment")
@@ -242,15 +242,15 @@ func (_mock *EnrollmentManagerInterface) GetEnrollment(ctx context.Context, pers
 	var r0 fun.Enrollment
 	var r1 common.HttpError
 	if returnFunc, ok := ret.Get(0).(func(context.Context, string) (fun.Enrollment, common.HttpError)); ok {
-		return returnFunc(ctx, personID)
+		return returnFunc(ctx, studentID)
 	}
 	if returnFunc, ok := ret.Get(0).(func(context.Context, string) fun.Enrollment); ok {
-		r0 = returnFunc(ctx, personID)
+		r0 = returnFunc(ctx, studentID)
 	} else {
 		r0 = ret.Get(0).(fun.Enrollment)
 	}
 	if returnFunc, ok := ret.Get(1).(func(context.Context, string) common.HttpError); ok {
-		r1 = returnFunc(ctx, personID)
+		r1 = returnFunc(ctx, studentID)
 	} else {
 		if ret.Get(1) != nil {
 			r1 = ret.Get(1).(common.HttpError)
@@ -266,12 +266,12 @@ type EnrollmentManagerInterface_GetEnrollment_Call struct {
 
 // GetEnrollment is a helper method to define mock.On call
 //   - ctx context.Context
-//   - personID string
-func (_e *EnrollmentManagerInterface_Expecter) GetEnrollment(ctx interface{}, personID interface{}) *EnrollmentManagerInterface_GetEnrollment_Call {
-	return &EnrollmentManagerInterface_GetEnrollment_Call{Call: _e.mock.On("GetEnrollment", ctx, personID)}
+//   - studentID string
+func (_e *EnrollmentManagerInterface_Expecter) GetEnrollment(ctx interface{}, studentID interface{}) *EnrollmentManagerInterface_GetEnrollment_Call {
+	return &EnrollmentManagerInterface_GetEnrollment_Call{Call: _e.mock.On("GetEnrollment", ctx, studentID)}
 }
 
-func (_c *EnrollmentManagerInterface_GetEnrollment_Call) Run(run func(ctx context.Context, personID string)) *EnrollmentManagerInterface_GetEnrollment_Call {
+func (_c *EnrollmentManagerInterface_GetEnrollment_Call) Run(run func(ctx context.Context, studentID string)) *EnrollmentManagerInterface_GetEnrollment_Call {
 	_c.Call.Run(func(args mock.Arguments) {
 		var arg0 context.Context
 		if args[0] != nil {
@@ -294,7 +294,7 @@ func (_c *EnrollmentManagerInterface_GetEnrollment_Call) Return(enrollment fun.E
 	return _c
 }
 
-func (_c *EnrollmentManagerInterface_GetEnrollment_Call) RunAndReturn(run func(ctx context.Context, personID string) (fun.Enrollment, common.HttpError)) *EnrollmentManagerInterface_GetEnrollment_Call {
+func (_c *EnrollmentManagerInterface_GetEnrollment_Call) RunAndReturn(run func(ctx context.Context, studentID string) (fun.Enrollment, common.HttpError)) *EnrollmentManagerInterface_GetEnrollment_Call {
 	_c.Call.Return(run)
 	return _c
 }

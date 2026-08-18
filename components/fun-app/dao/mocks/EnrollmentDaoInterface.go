@@ -309,17 +309,17 @@ func (_c *EnrollmentDaoInterface_FindById_Call) RunAndReturn(run func(c context.
 	return _c
 }
 
-// FindByPersonID provides a mock function for the type EnrollmentDaoInterface
-func (_mock *EnrollmentDaoInterface) FindByPersonID(ctx context.Context, personID string, enrollment *fun.Enrollment) common.HttpError {
-	ret := _mock.Called(ctx, personID, enrollment)
+// FindByStudentID provides a mock function for the type EnrollmentDaoInterface
+func (_mock *EnrollmentDaoInterface) FindByStudentID(ctx context.Context, studentID string, enrollment *fun.Enrollment) common.HttpError {
+	ret := _mock.Called(ctx, studentID, enrollment)
 
 	if len(ret) == 0 {
-		panic("no return value specified for FindByPersonID")
+		panic("no return value specified for FindByStudentID")
 	}
 
 	var r0 common.HttpError
 	if returnFunc, ok := ret.Get(0).(func(context.Context, string, *fun.Enrollment) common.HttpError); ok {
-		r0 = returnFunc(ctx, personID, enrollment)
+		r0 = returnFunc(ctx, studentID, enrollment)
 	} else {
 		if ret.Get(0) != nil {
 			r0 = ret.Get(0).(common.HttpError)
@@ -328,20 +328,20 @@ func (_mock *EnrollmentDaoInterface) FindByPersonID(ctx context.Context, personI
 	return r0
 }
 
-// EnrollmentDaoInterface_FindByPersonID_Call is a *mock.Call that shadows Run/Return methods with type explicit version for method 'FindByPersonID'
-type EnrollmentDaoInterface_FindByPersonID_Call struct {
+// EnrollmentDaoInterface_FindByStudentID_Call is a *mock.Call that shadows Run/Return methods with type explicit version for method 'FindByStudentID'
+type EnrollmentDaoInterface_FindByStudentID_Call struct {
 	*mock.Call
 }
 
-// FindByPersonID is a helper method to define mock.On call
+// FindByStudentID is a helper method to define mock.On call
 //   - ctx context.Context
-//   - personID string
+//   - studentID string
 //   - enrollment *fun.Enrollment
-func (_e *EnrollmentDaoInterface_Expecter) FindByPersonID(ctx interface{}, personID interface{}, enrollment interface{}) *EnrollmentDaoInterface_FindByPersonID_Call {
-	return &EnrollmentDaoInterface_FindByPersonID_Call{Call: _e.mock.On("FindByPersonID", ctx, personID, enrollment)}
+func (_e *EnrollmentDaoInterface_Expecter) FindByStudentID(ctx interface{}, studentID interface{}, enrollment interface{}) *EnrollmentDaoInterface_FindByStudentID_Call {
+	return &EnrollmentDaoInterface_FindByStudentID_Call{Call: _e.mock.On("FindByStudentID", ctx, studentID, enrollment)}
 }
 
-func (_c *EnrollmentDaoInterface_FindByPersonID_Call) Run(run func(ctx context.Context, personID string, enrollment *fun.Enrollment)) *EnrollmentDaoInterface_FindByPersonID_Call {
+func (_c *EnrollmentDaoInterface_FindByStudentID_Call) Run(run func(ctx context.Context, studentID string, enrollment *fun.Enrollment)) *EnrollmentDaoInterface_FindByStudentID_Call {
 	_c.Call.Run(func(args mock.Arguments) {
 		var arg0 context.Context
 		if args[0] != nil {
@@ -364,12 +364,12 @@ func (_c *EnrollmentDaoInterface_FindByPersonID_Call) Run(run func(ctx context.C
 	return _c
 }
 
-func (_c *EnrollmentDaoInterface_FindByPersonID_Call) Return(httpError common.HttpError) *EnrollmentDaoInterface_FindByPersonID_Call {
+func (_c *EnrollmentDaoInterface_FindByStudentID_Call) Return(httpError common.HttpError) *EnrollmentDaoInterface_FindByStudentID_Call {
 	_c.Call.Return(httpError)
 	return _c
 }
 
-func (_c *EnrollmentDaoInterface_FindByPersonID_Call) RunAndReturn(run func(ctx context.Context, personID string, enrollment *fun.Enrollment) common.HttpError) *EnrollmentDaoInterface_FindByPersonID_Call {
+func (_c *EnrollmentDaoInterface_FindByStudentID_Call) RunAndReturn(run func(ctx context.Context, studentID string, enrollment *fun.Enrollment) common.HttpError) *EnrollmentDaoInterface_FindByStudentID_Call {
 	_c.Call.Return(run)
 	return _c
 }

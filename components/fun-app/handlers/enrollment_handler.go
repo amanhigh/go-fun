@@ -29,7 +29,7 @@ func NewEnrollmentHandler(manager manager.EnrollmentManagerInterface, tracer tra
 	return h
 }
 
-// CreateEnrollment orchestrates enrollment using an existing person record.
+// CreateEnrollment orchestrates enrollment using an existing student record.
 func (eh *EnrollmentHandlerImpl) CreateEnrollment(c *gin.Context) {
 	ctx, span := eh.Tracer.Start(c.Request.Context(), "CreateEnrollment.Handler")
 	defer span.End()
@@ -43,7 +43,7 @@ func (eh *EnrollmentHandlerImpl) CreateEnrollment(c *gin.Context) {
 		return
 	}
 
-	enrollment, err := eh.Manager.EnrollPerson(ctx, request.PersonID, request.Grade)
+	enrollment, err := eh.Manager.EnrollStudent(ctx, request.StudentID, request.Grade)
 	if err != nil {
 		span.RecordError(err)
 		span.SetStatus(codes.Error, err.Error())
@@ -51,12 +51,12 @@ func (eh *EnrollmentHandlerImpl) CreateEnrollment(c *gin.Context) {
 		return
 	}
 
-	c.Header("Location", fmt.Sprintf("/v1/enrollments/%s", enrollment.PersonID))
+	c.Header("Location", fmt.Sprintf("/v1/enrollments/%s", enrollment.StudentID))
 	span.SetStatus(codes.Ok, "Enrollment accepted")
 	c.JSON(http.StatusAccepted, enrollment)
 }
 
-// GetEnrollment fetches enrollment status for a person.
+// GetEnrollment fetches enrollment status for a student.
 func (eh *EnrollmentHandlerImpl) GetEnrollment(c *gin.Context) {
 	ctx, span := eh.Tracer.Start(c.Request.Context(), "GetEnrollment.Handler")
 	defer span.End()
@@ -70,7 +70,7 @@ func (eh *EnrollmentHandlerImpl) GetEnrollment(c *gin.Context) {
 		return
 	}
 
-	enrollment, err := eh.Manager.GetEnrollment(ctx, path.PersonID)
+	enrollment, err := eh.Manager.GetEnrollment(ctx, path.StudentID)
 	if err != nil {
 		span.RecordError(err)
 		span.SetStatus(codes.Error, err.Error())

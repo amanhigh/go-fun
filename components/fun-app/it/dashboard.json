@@ -157,7 +157,7 @@
           },
           "editorMode": "builder",
           "exemplar": false,
-          "expr": "rate(fun_app_person_count[5m])",
+          "expr": "rate(fun_app_student_count[5m])",
           "format": "time_series",
           "instant": false,
           "legendFormat": "{{pod}}",
@@ -165,7 +165,7 @@
           "refId": "A"
         }
       ],
-      "title": "GetAll: Person Count",
+      "title": "GetAll: Student Count",
       "type": "timeseries"
     },
     {
@@ -252,14 +252,14 @@
             "uid": "${DS_PROMETHEUS}"
           },
           "editorMode": "builder",
-          "expr": "fun_app_person_create_time_bucket",
+          "expr": "fun_app_student_create_time_bucket",
           "format": "time_series",
           "legendFormat": "{{le}}",
           "range": true,
           "refId": "$tag_le"
         }
       ],
-      "title": "PersonCreate: TimeBuckets",
+      "title": "StudentCreate: TimeBuckets",
       "type": "timeseries"
     },
     {

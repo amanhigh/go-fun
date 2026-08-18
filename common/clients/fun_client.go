@@ -1,4 +1,4 @@
-// SDK for FunApp with API's for Person Handler using Resty
+// SDK for FunApp with API's for Student Handler using Resty
 package clients
 
 import (
@@ -14,23 +14,23 @@ import (
 )
 
 type FunClient struct {
-	PersonService     PersonServiceInterface
+	StudentService     StudentServiceInterface
 	AdminService      AdminServiceInterface
 	EnrollmentService EnrollmentServiceInterface
 }
 
-type PersonServiceInterface interface {
-	GetPerson(ctx context.Context, name string) (person fun.Person, err common.HttpError)
-	CreatePerson(ctx context.Context, request fun.PersonRequest) (person fun.Person, err common.HttpError)
-	UpdatePerson(ctx context.Context, id string, person fun.PersonRequest) (err common.HttpError)
-	ListPerson(ctx context.Context, query fun.PersonQuery) (personList fun.PersonList, err common.HttpError)
-	ListPersonAudit(ctx context.Context, id string) (personAuditList []fun.PersonAudit, err common.HttpError)
-	DeletePerson(ctx context.Context, name string) (err common.HttpError)
+type StudentServiceInterface interface {
+	GetStudent(ctx context.Context, name string) (student fun.Student, err common.HttpError)
+	CreateStudent(ctx context.Context, request fun.StudentRequest) (student fun.Student, err common.HttpError)
+	UpdateStudent(ctx context.Context, id string, student fun.StudentRequest) (err common.HttpError)
+	ListStudent(ctx context.Context, query fun.StudentQuery) (studentList fun.StudentList, err common.HttpError)
+	ListStudentAudit(ctx context.Context, id string) (studentAuditList []fun.StudentAudit, err common.HttpError)
+	DeleteStudent(ctx context.Context, name string) (err common.HttpError)
 }
 
 type EnrollmentServiceInterface interface {
 	CreateEnrollment(ctx context.Context, request fun.EnrollmentRequest) (enrollment fun.Enrollment, err common.HttpError)
-	GetEnrollment(ctx context.Context, personID string) (enrollment fun.Enrollment, err common.HttpError)
+	GetEnrollment(ctx context.Context, studentID string) (enrollment fun.Enrollment, err common.HttpError)
 }
 
 type AdminServiceInterface interface {
@@ -60,7 +60,7 @@ func (bs *BaseService) request(ctx context.Context) *resty.Request {
 	return bs.client.R().SetContext(ctx).SetError(common.HttpErrorImpl{})
 }
 
-type PersonService struct {
+type StudentService struct {
 	BaseService
 }
 
@@ -91,46 +91,46 @@ func NewFunAppClient(baseUrl string, httpConfig config.HttpClientConfig) *FunCli
 	baseService := BaseService{client: client, VersionUrl: "/v1"}
 
 	return &FunClient{
-		PersonService:     &PersonService{BaseService: baseService},
+		StudentService:     &StudentService{BaseService: baseService},
 		AdminService:      &AdminService{BaseService: baseService},
 		EnrollmentService: &EnrollmentService{BaseService: baseService},
 	}
 }
 
-func (c *PersonService) CreatePerson(ctx context.Context, request fun.PersonRequest) (person fun.Person, err common.HttpError) {
+func (c *StudentService) CreateStudent(ctx context.Context, request fun.StudentRequest) (student fun.Student, err common.HttpError) {
 	response, err1 := c.request(ctx).SetHeader("Content-Type", "application/json").
-		SetBody(request).SetResult(&person).Post(c.VersionUrl + "/person")
+		SetBody(request).SetResult(&student).Post(c.VersionUrl + "/student")
 	err = util.ResponseProcessor(response, err1)
 	return
 }
 
-func (c *PersonService) GetPerson(ctx context.Context, name string) (person fun.Person, err common.HttpError) {
-	url := fmt.Sprintf(c.VersionUrl+"/person/%s", name)
-	response, err1 := c.request(ctx).SetResult(&person).Get(url)
+func (c *StudentService) GetStudent(ctx context.Context, name string) (student fun.Student, err common.HttpError) {
+	url := fmt.Sprintf(c.VersionUrl+"/student/%s", name)
+	response, err1 := c.request(ctx).SetResult(&student).Get(url)
 	err = util.ResponseProcessor(response, err1)
 	return
 }
 
-func (c *PersonService) ListPerson(ctx context.Context, personQuery fun.PersonQuery) (personList fun.PersonList, err common.HttpError) {
-	response, err1 := c.request(ctx).SetResult(&personList).Get(c.listPersonUrl(personQuery))
+func (c *StudentService) ListStudent(ctx context.Context, studentQuery fun.StudentQuery) (studentList fun.StudentList, err common.HttpError) {
+	response, err1 := c.request(ctx).SetResult(&studentList).Get(c.listStudentUrl(studentQuery))
 	err = util.ResponseProcessor(response, err1)
 	return
 }
 
-func (c *PersonService) ListPersonAudit(ctx context.Context, id string) (personAuditList []fun.PersonAudit, err common.HttpError) {
-	response, err1 := c.request(ctx).SetResult(&personAuditList).Get(fmt.Sprintf(c.VersionUrl+"/person/%s/audit", id))
+func (c *StudentService) ListStudentAudit(ctx context.Context, id string) (studentAuditList []fun.StudentAudit, err common.HttpError) {
+	response, err1 := c.request(ctx).SetResult(&studentAuditList).Get(fmt.Sprintf(c.VersionUrl+"/student/%s/audit", id))
 	err = util.ResponseProcessor(response, err1)
 	return
 }
 
-func (c *PersonService) UpdatePerson(ctx context.Context, id string, person fun.PersonRequest) (err common.HttpError) {
-	response, err1 := c.request(ctx).SetBody(person).Put(fmt.Sprintf(c.VersionUrl+"/person/%s", id))
+func (c *StudentService) UpdateStudent(ctx context.Context, id string, student fun.StudentRequest) (err common.HttpError) {
+	response, err1 := c.request(ctx).SetBody(student).Put(fmt.Sprintf(c.VersionUrl+"/student/%s", id))
 	err = util.ResponseProcessor(response, err1)
 	return
 }
 
-func (c *PersonService) DeletePerson(ctx context.Context, name string) (err common.HttpError) {
-	response, err1 := c.request(ctx).Delete(fmt.Sprintf(c.VersionUrl+"/person/%s", name))
+func (c *StudentService) DeleteStudent(ctx context.Context, name string) (err common.HttpError) {
+	response, err1 := c.request(ctx).Delete(fmt.Sprintf(c.VersionUrl+"/student/%s", name))
 	err = util.ResponseProcessor(response, err1)
 	return
 }
@@ -142,31 +142,31 @@ func (e *EnrollmentService) CreateEnrollment(ctx context.Context, request fun.En
 	return
 }
 
-func (e *EnrollmentService) GetEnrollment(ctx context.Context, personID string) (enrollment fun.Enrollment, err common.HttpError) {
-	res, err1 := e.request(ctx).SetResult(&enrollment).Get(fmt.Sprintf(e.VersionUrl+"/enrollments/%s", personID))
+func (e *EnrollmentService) GetEnrollment(ctx context.Context, studentID string) (enrollment fun.Enrollment, err common.HttpError) {
+	res, err1 := e.request(ctx).SetResult(&enrollment).Get(fmt.Sprintf(e.VersionUrl+"/enrollments/%s", studentID))
 	err = util.ResponseProcessor(res, err1)
 	return
 }
 
-// Build Url from personQuery
-func (c *PersonService) listPersonUrl(personQuery fun.PersonQuery) (url string) {
-	url = c.VersionUrl + "/person?"
+// Build Url from studentQuery
+func (c *StudentService) listStudentUrl(studentQuery fun.StudentQuery) (url string) {
+	url = c.VersionUrl + "/student?"
 
 	// Add Pagination Params
-	url += c.getPaginationParams(personQuery.Offset, personQuery.Limit)
+	url += c.getPaginationParams(studentQuery.Offset, studentQuery.Limit)
 
 	// Add Sort Params
-	if personQuery.SortBy != "" {
-		url += "&sort_by=" + personQuery.SortBy
-		url += "&sort-order=" + string(personQuery.SortOrder)
+	if studentQuery.SortBy != "" {
+		url += "&sort_by=" + studentQuery.SortBy
+		url += "&sort-order=" + string(studentQuery.SortOrder)
 	}
 
 	// Add Name and Gender if Provided
-	if personQuery.Name != "" {
-		url += "&name=" + personQuery.Name
+	if studentQuery.Name != "" {
+		url += "&name=" + studentQuery.Name
 	}
-	if personQuery.Gender != "" {
-		url += "&gender=" + personQuery.Gender
+	if studentQuery.Gender != "" {
+		url += "&gender=" + studentQuery.Gender
 	}
 	return
 }

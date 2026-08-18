@@ -10,42 +10,42 @@ import (
 
 const CreatedByAman = "AMAN"
 
-type PersonRequest struct {
+type StudentRequest struct {
 	// Validations - https://gin-gonic.com/docs/examples/binding-and-validation/
-	Name   string `json:"name" gorm:"not null" binding:"required,min=1,max=25,name=person"`
+	Name   string `json:"name" gorm:"not null" binding:"required,min=1,max=25,name=student"`
 	Age    int    `json:"age" gorm:"not null" binding:"required,min=1,max=150"`
 	Gender string `json:"gender" gorm:"not null" binding:"required,eq=MALE|eq=FEMALE" enums:"MALE,FEMALE"`
 }
 
-type PersonPath struct {
+type StudentPath struct {
 	Id string `uri:"id" binding:"required"`
 }
 
-type PersonQuery struct {
+type StudentQuery struct {
 	common.Pagination
 	common.Sort
-	Name   string `form:"name" binding:"omitempty,min=1,max=25,name=person"`
+	Name   string `form:"name" binding:"omitempty,min=1,max=25,name=student"`
 	Gender string `form:"gender" binding:"omitempty,eq=MALE|eq=FEMALE"`
 	SortBy string `form:"sort_by" binding:"omitempty,eq=name|eq=age|eq=gender"`
 }
 
-type PersonList struct {
-	Records  []Person                 `json:"records"`
+type StudentList struct {
+	Records  []Student                 `json:"records"`
 	Metadata common.PaginatedResponse `json:"metadata"`
 }
 
-type Person struct {
-	PersonRequest
+type Student struct {
+	StudentRequest
 	Id string `gorm:"primaryKey" json:"id"`
 }
 
-func (p *Person) BeforeCreate(_ *gorm.DB) (err error) {
+func (p *Student) BeforeCreate(_ *gorm.DB) (err error) {
 	p.Id = uuid.NewString()[:8]
 	return
 }
 
 // Audit Hooks
-func CreatePersonAudit(p Person) (audit PersonAudit) {
+func CreateStudentAudit(p Student) (audit StudentAudit) {
 	audit.Id = p.Id
 	audit.Name = p.Name
 	audit.Age = p.Age
@@ -54,8 +54,8 @@ func CreatePersonAudit(p Person) (audit PersonAudit) {
 	return
 }
 
-func (p *Person) AfterCreate(tx *gorm.DB) (err error) {
-	audit := CreatePersonAudit(*p)
+func (p *Student) AfterCreate(tx *gorm.DB) (err error) {
+	audit := CreateStudentAudit(*p)
 	audit.Operation = "CREATE"
 	audit.CreatedBy = CreatedByAman
 	audit.CreatedAt = time.Now()
@@ -63,8 +63,8 @@ func (p *Person) AfterCreate(tx *gorm.DB) (err error) {
 	return tx.Create(&audit).Error
 }
 
-func (p *Person) AfterUpdate(tx *gorm.DB) (err error) {
-	audit := CreatePersonAudit(*p)
+func (p *Student) AfterUpdate(tx *gorm.DB) (err error) {
+	audit := CreateStudentAudit(*p)
 	audit.Operation = "UPDATE"
 	audit.CreatedBy = CreatedByAman
 	audit.CreatedAt = time.Now()
@@ -72,8 +72,8 @@ func (p *Person) AfterUpdate(tx *gorm.DB) (err error) {
 	return tx.Create(&audit).Error
 }
 
-func (p *Person) AfterDelete(tx *gorm.DB) (err error) {
-	audit := CreatePersonAudit(*p)
+func (p *Student) AfterDelete(tx *gorm.DB) (err error) {
+	audit := CreateStudentAudit(*p)
 	audit.Operation = "DELETE"
 	audit.CreatedBy = CreatedByAman
 	audit.CreatedAt = time.Now()
@@ -81,9 +81,9 @@ func (p *Person) AfterDelete(tx *gorm.DB) (err error) {
 	return tx.Create(&audit).Error
 }
 
-// No embedding to decopule Audit and Person
+// No embedding to decopule Audit and Student
 // Also causes issue during save with save loops
-type PersonAudit struct {
+type StudentAudit struct {
 	Id     string `gorm:"not null"`
 	Name   string `gorm:"not null"`
 	Age    int    `gorm:"not null"`

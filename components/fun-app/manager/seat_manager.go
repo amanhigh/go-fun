@@ -51,7 +51,7 @@ func (sm *SeatManager) PublishSeatAllocationFailed(ctx context.Context, enrollme
 // On technical failure it returns an error; waitlist is not a failure.
 // No DB writes here; persistence happens in subsequent event handlers.
 func (sm *SeatManager) AllocateSeat(ctx context.Context, cmd fun.AllocateSeatCmdV1) common.HttpError {
-	enrollment := fun.Enrollment{ID: cmd.EnrollmentID, PersonID: cmd.PersonID, Grade: cmd.Grade}
+	enrollment := fun.Enrollment{ID: cmd.EnrollmentID, StudentID: cmd.StudentID, Grade: cmd.Grade}
 	if cmd.Grade >= seatWaitlistThreshold {
 		return sm.SeatPublisher.SeatWaitlisted(ctx, enrollment, seatWaitlistedReasonCapacity)
 	}

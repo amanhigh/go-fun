@@ -21,12 +21,12 @@ clean-file:
 [doc('Run the read load test')]
 load-read:
     just _title "LOAD" "Get Load Test"
-    URL="{{url}}" jq -R -ncM 'inputs as $id | {method: "GET", url: "\(env.URL)/person/\($id)"}' < {{id_file}} | vegeta attack -format=json -duration={{duration}} | vegeta report
+    URL="{{url}}" jq -R -ncM 'inputs as $id | {method: "GET", url: "\(env.URL)/student/\($id)"}' < {{id_file}} | vegeta attack -format=json -duration={{duration}} | vegeta report
 
 [doc('Run the list load test')]
 load-list:
     just _title "LOAD" "List Load Test"
-    URL="{{url}}" BATCH_SIZE="{{batch_size}}" TOTAL_RECORDS="{{total_records}}" jq -ncM 'range(0; env.TOTAL_RECORDS | tonumber; env.BATCH_SIZE | tonumber) | {method: "GET", url: "\(env.URL)/person?offset=\(. | tostring)&limit=\(env.BATCH_SIZE)&sort_by=name&order=asc"}' | vegeta attack -format=json -duration={{duration}} | vegeta report
+    URL="{{url}}" BATCH_SIZE="{{batch_size}}" TOTAL_RECORDS="{{total_records}}" jq -ncM 'range(0; env.TOTAL_RECORDS | tonumber; env.BATCH_SIZE | tonumber) | {method: "GET", url: "\(env.URL)/student?offset=\(. | tostring)&limit=\(env.BATCH_SIZE)&sort_by=name&order=asc"}' | vegeta attack -format=json -duration={{duration}} | vegeta report
 
 [doc('Run the write load test')]
 load-write:
@@ -34,7 +34,7 @@ load-write:
     set -euo pipefail
     just _title "LOAD" "Write Load Test"
     URL="{{url}}" jq -ncM --slurpfile a payload.json \
-        'while(true; .+1) as $i | $a | $a[0].name="\($a[0].name)-\($i)" | {method: "POST", header: {"Content-Type": ["application/json"]}, url: "\(env.URL)/person", body: .[0] | @base64}' \
+        'while(true; .+1) as $i | $a | $a[0].name="\($a[0].name)-\($i)" | {method: "POST", header: {"Content-Type": ["application/json"]}, url: "\(env.URL)/student", body: .[0] | @base64}' \
         | vegeta attack -lazy -format=json -duration={{duration}} -output={{result_file}}
     just _detail "LOAD" "Extracting IDs"
     vegeta encode {{result_file}} | jq -r '.body | @base64d | fromjson | .id' > {{id_file}}

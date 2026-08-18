@@ -11,13 +11,13 @@ import (
 // Manager providers return interfaces while delegating to pointer-returning constructors.
 
 func (fi *FunAppInjector) registerManager() {
-	container.MustSingleton(fi.di, fi.providePersonManager)
+	container.MustSingleton(fi.di, fi.provideStudentManager)
 	container.MustSingleton(fi.di, fi.provideSeatManager)
 	container.MustSingleton(fi.di, fi.provideEnrollmentManager)
 }
 
-func (fi *FunAppInjector) providePersonManager(personDao dao.PersonDaoInterface, tracer trace.Tracer) manager.PersonManagerInterface {
-	return manager.NewPersonManager(personDao, tracer)
+func (fi *FunAppInjector) provideStudentManager(studentDao dao.StudentDaoInterface, tracer trace.Tracer) manager.StudentManagerInterface {
+	return manager.NewStudentManager(studentDao, tracer)
 }
 
 func (fi *FunAppInjector) provideSeatManager(seatPublisher publisher.SeatAllocationPublisher) manager.SeatManagerInterface {
@@ -25,10 +25,10 @@ func (fi *FunAppInjector) provideSeatManager(seatPublisher publisher.SeatAllocat
 }
 
 func (fi *FunAppInjector) provideEnrollmentManager(
-	personManager manager.PersonManagerInterface,
+	studentManager manager.StudentManagerInterface,
 	enrollmentDao dao.EnrollmentDaoInterface,
 	enrollmentPublisher publisher.EnrollmentPublisher,
 	seatManager manager.SeatManagerInterface,
 ) manager.EnrollmentManagerInterface {
-	return manager.NewEnrollmentManager(personManager, enrollmentDao, enrollmentPublisher, seatManager)
+	return manager.NewEnrollmentManager(studentManager, enrollmentDao, enrollmentPublisher, seatManager)
 }

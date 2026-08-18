@@ -11,7 +11,7 @@ import (
 type EnrollmentDaoInterface interface {
 	// TODO: Rename to BaseDbRepository Interface & Files and use across Repo in FunApp and Kohan where GORM is used.
 	util.BaseDbRepositoryInterface
-	FindByPersonID(ctx context.Context, personID string, enrollment *fun.Enrollment) common.HttpError
+	FindByStudentID(ctx context.Context, studentID string, enrollment *fun.Enrollment) common.HttpError
 }
 
 type EnrollmentDao struct {
@@ -24,6 +24,6 @@ func NewEnrollmentDao(baseRepo util.BaseDbRepository) *EnrollmentDao {
 	return &EnrollmentDao{BaseDbRepository: baseRepo}
 }
 
-func (ed *EnrollmentDao) FindByPersonID(ctx context.Context, personID string, enrollment *fun.Enrollment) common.HttpError {
-	return util.GormErrorMapper(ed.SafeTx(ctx).Where("person_id = ?", personID).First(enrollment).Error)
+func (ed *EnrollmentDao) FindByStudentID(ctx context.Context, studentID string, enrollment *fun.Enrollment) common.HttpError {
+	return util.GormErrorMapper(ed.SafeTx(ctx).Where("student_id = ?", studentID).First(enrollment).Error)
 }

@@ -38,7 +38,7 @@ deployments:
           - image: go-fun
         service:
           ports:
-            - port: 8080 #curl http://app:9000/person/all
+            - port: 8080 #curl http://app:9000/student/all
 
 vars:
   DB: fun-app-mysql-primary

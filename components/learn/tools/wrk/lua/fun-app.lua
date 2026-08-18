@@ -7,16 +7,16 @@
 --
 require "lua.lib.library"
 
-local personCount = 1000
-local api = "/person"
+local studentCount = 1000
+local api = "/student"
 
 init = function()
-    payload = file_get_contents("./request/person.json")
+    payload = file_get_contents("./request/student.json")
     req = JSON:decode(payload);
 end
 
 request = function()
-    --local age = math.random(1,personCount)
+    --local age = math.random(1,studentCount)
     --req.name="Aman-" .. age
     --req.age=age
     --payload=JSON:encode(req)

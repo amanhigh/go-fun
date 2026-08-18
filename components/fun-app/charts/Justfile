@@ -63,16 +63,16 @@ _info-fun-notes:
 _info-vegeta:
     just _info "INFO" "Vegeta Info"
     just _detail "INFO" "Login Vegeta Pod"
-    just _detail "HELM" "echo 'GET http://fun-app:9090/v1/person/all' | vegeta attack | vegeta report"
-    just _detail "DEVSPACE" "echo 'GET http://app:8080/v1/person/all' | vegeta attack | vegeta report"
+    just _detail "HELM" "echo 'GET http://fun-app:9090/v1/student/all' | vegeta attack | vegeta report"
+    just _detail "DEVSPACE" "echo 'GET http://app:8080/v1/student/all' | vegeta attack | vegeta report"
     just _detail "LOAD" "Portforward 8080: http://localhost:8080/metrics and fun-app/it Justfile"
-    just _detail "PROMETHEUS" "http://prometheus.docker/graph?g0.expr=funapp_create_person&g0.tab=0&g0.display_mode=stacked&g0.show_exemplars=0&g0.range_input=15m"
+    just _detail "PROMETHEUS" "http://prometheus.docker/graph?g0.expr=funapp_create_student&g0.tab=0&g0.display_mode=stacked&g0.show_exemplars=0&g0.range_input=15m"
 
 [doc('Show Istio and Grafana references for the chart')]
 _info-istio:
     just _info "INFO" "Istio Info"
     just _detail "INFO" "Grafana Import: /fun-app/it/dashboard.json"
-    just _detail "INFO" "Prometheus: : http://localhost:9090/graph?g0.expr=rate(fun_app_person_count%5B5m%5D)&g0.tab=0&g0.stacked=0&g0.show_exemplars=0&g0.range_input=5m&g1.expr=fun_app_person_create_time_bucket&g1.tab=0&g1.stacked=1&g1.show_exemplars=1&g1.range_input=1h&g2.expr=rate(fun_app_person_create_time_count%5B5m%5D)&g0.tab=0&g0.stacked=0&g0.show_exemplars=0&g0.range_input=1h"
+    just _detail "INFO" "Prometheus: : http://localhost:9090/graph?g0.expr=rate(fun_app_student_count%5B5m%5D)&g0.tab=0&g0.stacked=0&g0.show_exemplars=0&g0.range_input=5m&g1.expr=fun_app_student_create_time_bucket&g1.tab=0&g1.stacked=1&g1.show_exemplars=1&g1.range_input=1h&g2.expr=rate(fun_app_student_create_time_count%5B5m%5D)&g0.tab=0&g0.stacked=0&g0.show_exemplars=0&g0.range_input=1h"
 
 [doc('Delete the installed Fun App Helm release')]
 _clean-fun:

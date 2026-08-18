@@ -19,7 +19,7 @@ type FunAppServerLifecycle struct {
 	Tracer trace.Tracer `container:"type"`
 
 	/* Handlers */
-	PersonHandler     PersonHandler     `container:"type"`
+	StudentHandler     StudentHandler     `container:"type"`
 	EnrollmentHandler EnrollmentHandler `container:"type"`
 	AdminHandler      AdminHandler      `container:"type"`
 
@@ -34,25 +34,25 @@ func (fs *FunAppServerLifecycle) RegisterRoutes(engine *gin.Engine) {
 	// Version Group
 	v1 := engine.Group("/v1")
 
-	personGroup := v1.Group("/person")
-	personGroup.GET("/", fs.PersonHandler.ListPersons)
-	personGroup.GET("/:id/audit", fs.PersonHandler.ListPersonAudit)
-	personGroup.GET("/:id", fs.PersonHandler.GetPerson)
-	personGroup.PUT("/:id", fs.PersonHandler.UpdatePerson)
-	personGroup.POST("", fs.PersonHandler.CreatePerson)
-	personGroup.DELETE(":id", fs.PersonHandler.DeletePersons)
+	studentGroup := v1.Group("/student")
+	studentGroup.GET("/", fs.StudentHandler.ListStudents)
+	studentGroup.GET("/:id/audit", fs.StudentHandler.ListStudentAudit)
+	studentGroup.GET("/:id", fs.StudentHandler.GetStudent)
+	studentGroup.PUT("/:id", fs.StudentHandler.UpdateStudent)
+	studentGroup.POST("", fs.StudentHandler.CreateStudent)
+	studentGroup.DELETE(":id", fs.StudentHandler.DeleteStudents)
 
 	enrollmentGroup := v1.Group("/enrollments")
 	enrollmentGroup.POST("", fs.EnrollmentHandler.CreateEnrollment)
-	enrollmentGroup.GET(":personId", fs.EnrollmentHandler.GetEnrollment)
+	enrollmentGroup.GET(":studentId", fs.EnrollmentHandler.GetEnrollment)
 
 	adminGroup := engine.Group("/admin")
 	adminGroup.GET("/stop", fs.AdminHandler.Stop)
 
 	// Pprof (Use: http://localhost:8080/debug/pprof/)
 	// make profile
-	// Load Test:  wrk2 http://localhost:8080/v1/person/all/ -t 2 -c 100 -d 1m -R2000
-	// Vegeta: echo "GET http://localhost:9000/v1/person/all" | vegeta attack -max-workers=2 -max-connections=100 -duration=1m -rate=2000/1s | tee results.bin | vegeta report
+	// Load Test:  wrk2 http://localhost:8080/v1/student/all/ -t 2 -c 100 -d 1m -R2000
+	// Vegeta: echo "GET http://localhost:9000/v1/student/all" | vegeta attack -max-workers=2 -max-connections=100 -duration=1m -rate=2000/1s | tee results.bin | vegeta report
 	// Vegeta Plot: vegeta plot results.bin > ~/Downloads/plot.html
 	pprof.Register(engine)
 }

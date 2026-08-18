@@ -9,7 +9,7 @@ API_VERSION = "v1"
 # https://docs.locust.io/en/stable/writing-a-locustfile.html
 class FunAppUser(HttpUser):
     wait_time = between(1, 5)
-    person_ids = []
+    student_ids = []
 
     # Task with Weight 1 which is Least Frequent, Higher the number, more frequent the task
     @task(1)
@@ -19,80 +19,80 @@ class FunAppUser(HttpUser):
 
     @task(3)
     @tag('write')
-    def create_person(self):
-        payload = self._generate_person_payload()
-        with self.client.post(f"/{API_VERSION}/person", json=payload, catch_response=True) as response:
+    def create_student(self):
+        payload = self._generate_student_payload()
+        with self.client.post(f"/{API_VERSION}/student", json=payload, catch_response=True) as response:
             if self._handle_response(response, "create") == 201:
-                person_id = response.json().get('id')
-                if person_id:
-                    self.person_ids.append(person_id)
+                student_id = response.json().get('id')
+                if student_id:
+                    self.student_ids.append(student_id)
                 else:
-                    logging.error(f"Person created but no ID found in response. Response: {response.text}")
+                    logging.error(f"Student created but no ID found in response. Response: {response.text}")
 
     @task(5)
     @tag('read')
-    def get_person(self):
-        if self.person_ids:
-            person_id = random.choice(self.person_ids)
-            self.client.get(f"/{API_VERSION}/person/{person_id}")
+    def get_student(self):
+        if self.student_ids:
+            student_id = random.choice(self.student_ids)
+            self.client.get(f"/{API_VERSION}/student/{student_id}")
         else:
-            # If no persons have been created yet, create one
-            self.create_person()
+            # If no students have been created yet, create one
+            self.create_student()
             
     @task(4)
     @tag('read')
-    def list_persons(self):
+    def list_students(self):
         params = {
             "offset": random.randint(1, 50),
             "limit": random.randint(2, 5)
         }
-        self.client.get(f"/{API_VERSION}/person", params=params)
+        self.client.get(f"/{API_VERSION}/student", params=params)
     
     @task(3)
     @tag('search')
-    def get_person_audit(self):
-        if self.person_ids:
-            person_id = random.choice(self.person_ids)
-            with self.client.get(f"/{API_VERSION}/person/{person_id}/audit", catch_response=True) as response:
+    def get_student_audit(self):
+        if self.student_ids:
+            student_id = random.choice(self.student_ids)
+            with self.client.get(f"/{API_VERSION}/student/{student_id}/audit", catch_response=True) as response:
                 if response.status_code != 200:
-                    error_msg = f"Failed to get audit for person {person_id}. Status code: {response.status_code}, Response: {response.text}"
+                    error_msg = f"Failed to get audit for student {student_id}. Status code: {response.status_code}, Response: {response.text}"
                     logging.error(error_msg)
                     response.failure(error_msg)
         else:
-            # If no persons have been created yet, create one
-            self.create_person()
+            # If no students have been created yet, create one
+            self.create_student()
 
     @task(2)
     @tag('write')
-    def update_person(self):
-        if self.person_ids:
-            person_id = random.choice(self.person_ids)
-            payload = self._generate_person_payload()
+    def update_student(self):
+        if self.student_ids:
+            student_id = random.choice(self.student_ids)
+            payload = self._generate_student_payload()
             payload["name"] = f"Updated {payload['name']}"
-            with self.client.put(f"/{API_VERSION}/person/{person_id}", json=payload, catch_response=True) as response:
-                self._handle_response(response, "update", person_id)
+            with self.client.put(f"/{API_VERSION}/student/{student_id}", json=payload, catch_response=True) as response:
+                self._handle_response(response, "update", student_id)
         else:
-            self.create_person()
+            self.create_student()
     
     @task(1)
     @tag('write')
-    def delete_person(self):
-        if self.person_ids:
-            person_id = random.choice(self.person_ids)
-            with self.client.delete(f"/{API_VERSION}/person/{person_id}", catch_response=True) as response:
+    def delete_student(self):
+        if self.student_ids:
+            student_id = random.choice(self.student_ids)
+            with self.client.delete(f"/{API_VERSION}/student/{student_id}", catch_response=True) as response:
                 if response.status_code == 204:
-                    self.person_ids.remove(person_id)
+                    self.student_ids.remove(student_id)
                 else:
-                    error_msg = f"Failed to delete person {person_id}. Status code: {response.status_code}, Response: {response.text}"
+                    error_msg = f"Failed to delete student {student_id}. Status code: {response.status_code}, Response: {response.text}"
                     logging.error(error_msg)
                     response.failure(error_msg)
         else:
-            # If no persons have been created yet, create one
-            self.create_person()
+            # If no students have been created yet, create one
+            self.create_student()
 
     @task(3)
     @tag('search')
-    def list_persons_with_sorting(self):
+    def list_students_with_sorting(self):
         sort_by = random.choice(["name", "gender", "age"])
         order = random.choice(["asc", "desc"])
         params = {
@@ -101,23 +101,23 @@ class FunAppUser(HttpUser):
             "sort_by": sort_by,
             "order": order
         }
-        with self.client.get(f"/{API_VERSION}/person", params=params, catch_response=True) as response:
+        with self.client.get(f"/{API_VERSION}/student", params=params, catch_response=True) as response:
             if response.status_code != 200:
-                error_msg = f"Failed to list persons with sorting. Status code: {response.status_code}, Response: {response.text}"
+                error_msg = f"Failed to list students with sorting. Status code: {response.status_code}, Response: {response.text}"
                 logging.error(error_msg)
                 response.failure(error_msg)
 
     @task(3)
     @tag('search')
-    def list_persons_with_filtering(self):
+    def list_students_with_filtering(self):
         params = self._get_filter_params()
-        with self.client.get(f"/{API_VERSION}/person", params=params, catch_response=True) as response:
+        with self.client.get(f"/{API_VERSION}/student", params=params, catch_response=True) as response:
             self._handle_response(response, "list with filtering")
 
 ### Helpers
-    def _handle_response(self, response, action, person_id=None):
+    def _handle_response(self, response, action, student_id=None):
         if response.status_code not in [200, 201, 204]:
-            error_msg = f"Failed to {action} person{' ' + str(person_id) if person_id else ''}. Status code: {response.status_code}, Response: {response.text}"
+            error_msg = f"Failed to {action} student{' ' + str(student_id) if student_id else ''}. Status code: {response.status_code}, Response: {response.text}"
             logging.error(error_msg)
             response.failure(error_msg)
         return response.status_code
@@ -149,7 +149,7 @@ class FunAppUser(HttpUser):
         return random.choice(["MALE", "FEMALE"])
 
     @staticmethod
-    def _generate_person_payload():
+    def _generate_student_payload():
         return {
             "name": FunAppUser._generate_username(),
             "age": FunAppUser._generate_age(),

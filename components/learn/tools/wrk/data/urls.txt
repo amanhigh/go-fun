@@ -1,1 +1,1 @@
-/person/all
+/student/all

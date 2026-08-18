@@ -12,11 +12,11 @@ const NAME_REGEX = `^[0-9a-zA-Z- ]+$`
 
 var nameMatcher = regexp.MustCompile(NAME_REGEX)
 var matcherMap = map[string]*regexp.Regexp{
-	"person": nameMatcher,
+	"student": nameMatcher,
 }
 
 /*
-	Validate Person Name
+	Validate Student Name
 
 Checks if Name is AlphaNum.
 Allowed Chars -,_

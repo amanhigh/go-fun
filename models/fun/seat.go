@@ -5,7 +5,7 @@ import "time"
 // AllocateSeatCmdV1 requests seat allocation for an enrollment.
 type AllocateSeatCmdV1 struct {
 	EnrollmentID string    `json:"enrollmentId" validate:"required"`
-	PersonID     string    `json:"personId" validate:"required"`
+	StudentID    string    `json:"studentId" validate:"required"`
 	Grade        int       `json:"grade" validate:"required,min=1,max=12"`
 	RequestedAt  time.Time `json:"requestedAt" validate:"required"`
 }

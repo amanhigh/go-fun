@@ -18,8 +18,8 @@ func newDb(config config.FunAppConfig) (db *gorm.DB, err error) {
 
 	/** Gorm AutoMigrate Schema */
 	err = db.AutoMigrate(
-		&fun.Person{},
-		&fun.PersonAudit{},
+		&fun.Student{},
+		&fun.StudentAudit{},
 		&fun.Enrollment{},
 	)
 	return
@@ -29,12 +29,12 @@ func newDb(config config.FunAppConfig) (db *gorm.DB, err error) {
 
 func (fi *FunAppInjector) registerDao() {
 	container.MustSingleton(fi.di, util.NewBaseDbRepository)
-	container.MustSingleton(fi.di, fi.providePersonDao)
+	container.MustSingleton(fi.di, fi.provideStudentDao)
 	container.MustSingleton(fi.di, fi.provideEnrollmentDao)
 }
 
-func (fi *FunAppInjector) providePersonDao(base util.BaseDbRepository) dao.PersonDaoInterface {
-	return dao.NewPersonDao(base)
+func (fi *FunAppInjector) provideStudentDao(base util.BaseDbRepository) dao.StudentDaoInterface {
+	return dao.NewStudentDao(base)
 }
 
 func (fi *FunAppInjector) provideEnrollmentDao(base util.BaseDbRepository) dao.EnrollmentDaoInterface {

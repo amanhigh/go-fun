@@ -104,7 +104,7 @@ var _ = Describe("MessagingServer learning scenarios", func() {
 		BeforeEach(func() {
 			cmd = fun.AllocateSeatCmdV1{
 				EnrollmentID: "enr-1",
-				PersonID:     "person-1",
+				StudentID:     "student-1",
 				Grade:        3,
 				RequestedAt:  time.Now().UTC(),
 			}
@@ -113,7 +113,7 @@ var _ = Describe("MessagingServer learning scenarios", func() {
 				Return(common.NewHttpError("seat service unavailable", http.StatusInternalServerError)).Times(3)
 			seatMock.EXPECT().PublishSeatAllocationFailed(
 				mock.Anything,
-				fun.Enrollment{ID: cmd.EnrollmentID, PersonID: cmd.PersonID},
+				fun.Enrollment{ID: cmd.EnrollmentID, StudentID: cmd.StudentID},
 				mock.MatchedBy(func(reason string) bool {
 					return reason != ""
 				}),
@@ -121,10 +121,10 @@ var _ = Describe("MessagingServer learning scenarios", func() {
 				evtPayload, err := json.Marshal(fun.SeatAllocationFailedEvtV1{
 					EnrollmentEvent: fun.EnrollmentEvent{
 						EnrollmentID: enrollment.ID,
-						PersonID:     enrollment.PersonID,
+						StudentID:     enrollment.StudentID,
 					},
-					Reason:   reason,
-					FailedAt: time.Now().UTC(),
+					Reason:       reason,
+					FailedAt:     time.Now().UTC(),
 				})
 				if err != nil {
 					return
@@ -199,10 +199,10 @@ var _ = Describe("MessagingServer learning scenarios", func() {
 			failed := fun.SeatAllocationFailedEvtV1{
 				EnrollmentEvent: fun.EnrollmentEvent{
 					EnrollmentID: "enr-1",
-					PersonID:     "person-1",
+					StudentID:     "student-1",
 				},
-				Reason:   "capacity unavailable",
-				FailedAt: time.Now().UTC(),
+				Reason:       "capacity unavailable",
+				FailedAt:     time.Now().UTC(),
 			}
 			payload, err := json.Marshal(failed)
 			Expect(err).ToNot(HaveOccurred())
@@ -237,7 +237,7 @@ var _ = Describe("MessagingServer causal-chain scenario", func() {
 		chainChannel = gochannel.NewGoChannel(gochannel.Config{}, logger)
 		recorder = &recordingPublisher{delegate: chainChannel}
 		enrollmentDAO := daomocks.NewEnrollmentDaoInterface(GinkgoT())
-		enrollment := fun.Enrollment{ID: "enr-chain", PersonID: "person-chain", Grade: 3, Status: fun.EnrollmentStatusSeatAllocationInitiated}
+		enrollment := fun.Enrollment{ID: "enr-chain", StudentID: "student-chain", Grade: 3, Status: fun.EnrollmentStatusSeatAllocationInitiated}
 		enrollmentDAO.EXPECT().UseOrCreateTx(mock.Anything, mock.Anything).RunAndReturn(func(ctx context.Context, run util.DbRun, _ ...bool) common.HttpError {
 			return run(ctx)
 		}).Once()

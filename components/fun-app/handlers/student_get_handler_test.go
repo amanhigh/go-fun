@@ -23,51 +23,51 @@ import (
 	gormlogger "gorm.io/gorm/logger"
 )
 
-type personGetEnrollmentHandlerStub struct{}
+type studentGetEnrollmentHandlerStub struct{}
 
-func (personGetEnrollmentHandlerStub) CreateEnrollment(c *gin.Context) {
+func (studentGetEnrollmentHandlerStub) CreateEnrollment(c *gin.Context) {
 	c.Status(http.StatusNotImplemented)
 }
-func (personGetEnrollmentHandlerStub) GetEnrollment(c *gin.Context) {
+func (studentGetEnrollmentHandlerStub) GetEnrollment(c *gin.Context) {
 	c.Status(http.StatusNotImplemented)
 }
 
-type personGetAdminHandlerStub struct{}
+type studentGetAdminHandlerStub struct{}
 
-func (personGetAdminHandlerStub) Stop(c *gin.Context) { c.Status(http.StatusNotImplemented) }
+func (studentGetAdminHandlerStub) Stop(c *gin.Context) { c.Status(http.StatusNotImplemented) }
 
-func decodePersonGetResponse(responseRecorder *httptest.ResponseRecorder) fun.Person {
-	var response fun.Person
+func decodeStudentGetResponse(responseRecorder *httptest.ResponseRecorder) fun.Student {
+	var response fun.Student
 	Expect(json.Unmarshal(responseRecorder.Body.Bytes(), &response)).To(Succeed())
 	return response
 }
 
-func decodePersonListResponse(responseRecorder *httptest.ResponseRecorder) fun.PersonList {
-	var response fun.PersonList
+func decodeStudentListResponse(responseRecorder *httptest.ResponseRecorder) fun.StudentList {
+	var response fun.StudentList
 	Expect(json.Unmarshal(responseRecorder.Body.Bytes(), &response)).To(Succeed())
 	return response
 }
 
-func decodePersonAuditResponse(responseRecorder *httptest.ResponseRecorder) []fun.PersonAudit {
-	var response []fun.PersonAudit
+func decodeStudentAuditResponse(responseRecorder *httptest.ResponseRecorder) []fun.StudentAudit {
+	var response []fun.StudentAudit
 	Expect(json.Unmarshal(responseRecorder.Body.Bytes(), &response)).To(Succeed())
 	return response
 }
 
-func decodePersonGetError(responseRecorder *httptest.ResponseRecorder) map[string]any {
+func decodeStudentGetError(responseRecorder *httptest.ResponseRecorder) map[string]any {
 	var response map[string]any
 	Expect(json.Unmarshal(responseRecorder.Body.Bytes(), &response)).To(Succeed())
 	return response
 }
 
-var _ = Describe("Person Handler Integration - GET Tests", func() {
+var _ = Describe("Student Handler Integration - GET Tests", func() {
 	var (
 		ctx              context.Context
 		db               *gorm.DB
 		dbSQL            *sql.DB
-		personManager    manager.PersonManagerInterface
+		studentManager    manager.StudentManagerInterface
 		router           *gin.Engine
-		existingPerson   fun.Person
+		existingStudent   fun.Student
 		responseRecorder *httptest.ResponseRecorder
 	)
 
@@ -76,31 +76,31 @@ var _ = Describe("Person Handler Integration - GET Tests", func() {
 		var err error
 		db, err = util.CreateTestDb(gormlogger.Warn)
 		Expect(err).ToNot(HaveOccurred())
-		Expect(db.AutoMigrate(&fun.Person{}, &fun.PersonAudit{})).To(Succeed())
+		Expect(db.AutoMigrate(&fun.Student{}, &fun.StudentAudit{})).To(Succeed())
 		dbSQL, err = db.DB()
 		Expect(err).ToNot(HaveOccurred())
 
-		tracer := otel.Tracer("fun-app-person-get-handler-test")
-		personManager = manager.NewPersonManager(dao.NewPersonDao(util.NewBaseDbRepository(db)), tracer)
-		meter := noop.NewMeterProvider().Meter("fun-app-person-get-handler-test")
-		createCounter, err := meter.Int64Counter("get_test_create_person")
+		tracer := otel.Tracer("fun-app-student-get-handler-test")
+		studentManager = manager.NewStudentManager(dao.NewStudentDao(util.NewBaseDbRepository(db)), tracer)
+		meter := noop.NewMeterProvider().Meter("fun-app-student-get-handler-test")
+		createCounter, err := meter.Int64Counter("get_test_create_student")
 		Expect(err).ToNot(HaveOccurred())
-		personCounter, err := meter.Int64UpDownCounter("get_test_person_count")
+		studentCounter, err := meter.Int64UpDownCounter("get_test_student_count")
 		Expect(err).ToNot(HaveOccurred())
-		personCreateTime, err := meter.Float64Histogram("get_test_person_create_time")
+		studentCreateTime, err := meter.Float64Histogram("get_test_student_create_time")
 		Expect(err).ToNot(HaveOccurred())
-		personHandler := &handlers.PersonHandlerImpl{
-			Manager:          personManager,
+		studentHandler := &handlers.StudentHandlerImpl{
+			Manager:          studentManager,
 			Tracer:           tracer,
 			CreateCounter:    createCounter,
-			PersonCounter:    personCounter,
-			PersonCreateTime: personCreateTime,
+			StudentCounter:    studentCounter,
+			StudentCreateTime: studentCreateTime,
 		}
 
 		lifecycle := &handlers.FunAppServerLifecycle{
-			PersonHandler:     personHandler,
-			EnrollmentHandler: personGetEnrollmentHandlerStub{},
-			AdminHandler:      personGetAdminHandlerStub{},
+			StudentHandler:     studentHandler,
+			EnrollmentHandler: studentGetEnrollmentHandlerStub{},
+			AdminHandler:      studentGetAdminHandlerStub{},
 		}
 		router = util.CreateTestGinRouter()
 		lifecycle.RegisterRoutes(router)
@@ -112,58 +112,58 @@ var _ = Describe("Person Handler Integration - GET Tests", func() {
 		}
 	})
 
-	Describe("GET /v1/person/:id", func() {
+	Describe("GET /v1/student/:id", func() {
 		Context("Happy Path", func() {
 			BeforeEach(func() {
 				var err error
-				existingPerson, err = personManager.CreatePerson(ctx, fun.PersonRequest{
+				existingStudent, err = studentManager.CreateStudent(ctx, fun.StudentRequest{
 					Name: "Ada Lovelace", Age: 36, Gender: "FEMALE",
 				})
 				Expect(err).ToNot(HaveOccurred())
-				req := httptest.NewRequestWithContext(ctx, http.MethodGet, "/v1/person/"+existingPerson.Id, nil)
+				req := httptest.NewRequestWithContext(ctx, http.MethodGet, "/v1/student/"+existingStudent.Id, nil)
 				responseRecorder = httptest.NewRecorder()
 				router.ServeHTTP(responseRecorder, req)
 			})
 
-			It("returns all persisted person fields", func() {
+			It("returns all persisted student fields", func() {
 				Expect(responseRecorder.Code).To(Equal(http.StatusOK))
-				response := decodePersonGetResponse(responseRecorder)
-				Expect(response.Id).To(Equal(existingPerson.Id))
-				Expect(response.Name).To(Equal(existingPerson.Name))
-				Expect(response.Age).To(Equal(existingPerson.Age))
-				Expect(response.Gender).To(Equal(existingPerson.Gender))
+				response := decodeStudentGetResponse(responseRecorder)
+				Expect(response.Id).To(Equal(existingStudent.Id))
+				Expect(response.Name).To(Equal(existingStudent.Name))
+				Expect(response.Age).To(Equal(existingStudent.Age))
+				Expect(response.Gender).To(Equal(existingStudent.Gender))
 			})
 		})
 
 		Context("Field Validations", func() {
-			Context("Person ID Field", func() {
+			Context("Student ID Field", func() {
 				Context("Allowed Values", func() {
 					BeforeEach(func() {
 						var err error
-						existingPerson, err = personManager.CreatePerson(ctx, fun.PersonRequest{Name: "Ada", Age: 36, Gender: "FEMALE"})
+						existingStudent, err = studentManager.CreateStudent(ctx, fun.StudentRequest{Name: "Ada", Age: 36, Gender: "FEMALE"})
 						Expect(err).ToNot(HaveOccurred())
-						req := httptest.NewRequestWithContext(ctx, http.MethodGet, "/v1/person/"+existingPerson.Id, nil)
+						req := httptest.NewRequestWithContext(ctx, http.MethodGet, "/v1/student/"+existingStudent.Id, nil)
 						responseRecorder = httptest.NewRecorder()
 						router.ServeHTTP(responseRecorder, req)
 					})
 
-					It("accepts a created and persisted person ID", func() {
+					It("accepts a created and persisted student ID", func() {
 						Expect(responseRecorder.Code).To(Equal(http.StatusOK))
-						response := decodePersonGetResponse(responseRecorder)
-						Expect(response.Id).To(Equal(existingPerson.Id))
+						response := decodeStudentGetResponse(responseRecorder)
+						Expect(response.Id).To(Equal(existingStudent.Id))
 					})
 				})
 
 				Context("Bad Values", func() {
 					BeforeEach(func() {
-						req := httptest.NewRequestWithContext(ctx, http.MethodGet, "/v1/person/missing-person", nil)
+						req := httptest.NewRequestWithContext(ctx, http.MethodGet, "/v1/student/missing-student", nil)
 						responseRecorder = httptest.NewRecorder()
 						router.ServeHTTP(responseRecorder, req)
 					})
 
 					It("returns a meaningful JSend not-found failure", func() {
 						Expect(responseRecorder.Code).To(Equal(http.StatusNotFound))
-						response := decodePersonGetError(responseRecorder)
+						response := decodeStudentGetError(responseRecorder)
 						Expect(response["status"]).To(Equal("fail"))
 						data, ok := response["data"].(map[string]any)
 						Expect(ok).To(BeTrue())
@@ -175,15 +175,15 @@ var _ = Describe("Person Handler Integration - GET Tests", func() {
 
 		Context("Errors", func() {
 			BeforeEach(func() {
-				Expect(db.Migrator().DropTable(&fun.Person{})).To(Succeed())
-				req := httptest.NewRequestWithContext(ctx, http.MethodGet, "/v1/person/fixed-id", nil)
+				Expect(db.Migrator().DropTable(&fun.Student{})).To(Succeed())
+				req := httptest.NewRequestWithContext(ctx, http.MethodGet, "/v1/student/fixed-id", nil)
 				responseRecorder = httptest.NewRecorder()
 				router.ServeHTTP(responseRecorder, req)
 			})
 
-			It("returns HTTP 500 for an unavailable person table", func() {
+			It("returns HTTP 500 for an unavailable student table", func() {
 				Expect(responseRecorder.Code).To(Equal(http.StatusInternalServerError))
-				response := decodePersonGetError(responseRecorder)
+				response := decodeStudentGetError(responseRecorder)
 				Expect(response["status"]).To(Equal("error"))
 				Expect(response["message"]).ToNot(BeEmpty())
 				Expect(response["code"]).To(Equal(float64(http.StatusInternalServerError)))
@@ -191,26 +191,26 @@ var _ = Describe("Person Handler Integration - GET Tests", func() {
 		})
 	})
 
-	Describe("GET /v1/person/:id/audit", func() {
+	Describe("GET /v1/student/:id/audit", func() {
 		Context("Happy Path", func() {
-			var audit []fun.PersonAudit
+			var audit []fun.StudentAudit
 
 			BeforeEach(func() {
 				var err error
-				existingPerson, err = personManager.CreatePerson(ctx, fun.PersonRequest{Name: "Ada Lovelace", Age: 36, Gender: "FEMALE"})
+				existingStudent, err = studentManager.CreateStudent(ctx, fun.StudentRequest{Name: "Ada Lovelace", Age: 36, Gender: "FEMALE"})
 				Expect(err).ToNot(HaveOccurred())
-				Expect(personManager.UpdatePerson(ctx, existingPerson.Id, fun.PersonRequest{Name: "Grace Hopper", Age: 85, Gender: "FEMALE"})).ToNot(HaveOccurred())
-				req := httptest.NewRequestWithContext(ctx, http.MethodGet, "/v1/person/"+existingPerson.Id+"/audit", nil)
+				Expect(studentManager.UpdateStudent(ctx, existingStudent.Id, fun.StudentRequest{Name: "Grace Hopper", Age: 85, Gender: "FEMALE"})).ToNot(HaveOccurred())
+				req := httptest.NewRequestWithContext(ctx, http.MethodGet, "/v1/student/"+existingStudent.Id+"/audit", nil)
 				responseRecorder = httptest.NewRecorder()
 				router.ServeHTTP(responseRecorder, req)
-				audit = decodePersonAuditResponse(responseRecorder)
+				audit = decodeStudentAuditResponse(responseRecorder)
 			})
 
 			It("returns ordered CREATE and UPDATE audit records", func() {
 				Expect(responseRecorder.Code).To(Equal(http.StatusOK))
 				Expect(audit).To(HaveLen(2))
 				Expect(audit[0].AuditID).ToNot(BeZero())
-				Expect(audit[0].Id).To(Equal(existingPerson.Id))
+				Expect(audit[0].Id).To(Equal(existingStudent.Id))
 				Expect(audit[0].Name).To(Equal("Ada Lovelace"))
 				Expect(audit[0].Age).To(Equal(36))
 				Expect(audit[0].Gender).To(Equal("FEMALE"))
@@ -218,7 +218,7 @@ var _ = Describe("Person Handler Integration - GET Tests", func() {
 				Expect(audit[0].CreatedBy).To(Equal(fun.CreatedByAman))
 				Expect(audit[0].CreatedAt).ToNot(BeZero())
 				Expect(audit[1].AuditID).ToNot(BeZero())
-				Expect(audit[1].Id).To(Equal(existingPerson.Id))
+				Expect(audit[1].Id).To(Equal(existingStudent.Id))
 				Expect(audit[1].Name).To(Equal("Grace Hopper"))
 				Expect(audit[1].Age).To(Equal(85))
 				Expect(audit[1].Gender).To(Equal("FEMALE"))
@@ -231,15 +231,15 @@ var _ = Describe("Person Handler Integration - GET Tests", func() {
 
 		Context("Errors", func() {
 			BeforeEach(func() {
-				Expect(db.Migrator().DropTable(&fun.PersonAudit{})).To(Succeed())
-				req := httptest.NewRequestWithContext(ctx, http.MethodGet, "/v1/person/missing-person/audit", nil)
+				Expect(db.Migrator().DropTable(&fun.StudentAudit{})).To(Succeed())
+				req := httptest.NewRequestWithContext(ctx, http.MethodGet, "/v1/student/missing-student/audit", nil)
 				responseRecorder = httptest.NewRecorder()
 				router.ServeHTTP(responseRecorder, req)
 			})
 
 			It("returns HTTP 500 for an unavailable audit table", func() {
 				Expect(responseRecorder.Code).To(Equal(http.StatusInternalServerError))
-				response := decodePersonGetError(responseRecorder)
+				response := decodeStudentGetError(responseRecorder)
 				Expect(response["status"]).To(Equal("error"))
 				Expect(response["message"]).ToNot(BeEmpty())
 				Expect(response["code"]).To(Equal(float64(http.StatusInternalServerError)))
@@ -247,35 +247,35 @@ var _ = Describe("Person Handler Integration - GET Tests", func() {
 		})
 	})
 
-	Describe("GET /v1/person/", func() {
-		createPersons := func(requests ...fun.PersonRequest) {
+	Describe("GET /v1/student/", func() {
+		createStudents := func(requests ...fun.StudentRequest) {
 			for _, request := range requests {
-				_, err := personManager.CreatePerson(ctx, request)
+				_, err := studentManager.CreateStudent(ctx, request)
 				Expect(err).ToNot(HaveOccurred())
 			}
 		}
-		listPersonsResponseOnly := func(query string) *httptest.ResponseRecorder {
-			req := httptest.NewRequestWithContext(ctx, http.MethodGet, "/v1/person/"+query, nil)
+		listStudentsResponseOnly := func(query string) *httptest.ResponseRecorder {
+			req := httptest.NewRequestWithContext(ctx, http.MethodGet, "/v1/student/"+query, nil)
 			responseRecorder = httptest.NewRecorder()
 			router.ServeHTTP(responseRecorder, req)
 			return responseRecorder
 		}
-		listPersons := func(query string) fun.PersonList {
-			return decodePersonListResponse(listPersonsResponseOnly(query))
+		listStudents := func(query string) fun.StudentList {
+			return decodeStudentListResponse(listStudentsResponseOnly(query))
 		}
 
 		Context("Happy Path", func() {
 			Context("with no optional query fields", func() {
-				var response fun.PersonList
+				var response fun.StudentList
 
 				BeforeEach(func() {
-					requests := make([]fun.PersonRequest, 22)
+					requests := make([]fun.StudentRequest, 22)
 					for i := range requests {
-						// Descending name order: Person V, Person U, ..., Person A
-						requests[i] = fun.PersonRequest{Name: "Person " + string(rune('V'-i)), Age: 22 - i, Gender: "FEMALE"}
+						// Descending name order: Student V, Student U, ..., Student A
+						requests[i] = fun.StudentRequest{Name: "Student " + string(rune('V'-i)), Age: 22 - i, Gender: "FEMALE"}
 					}
-					createPersons(requests...)
-					response = listPersons("")
+					createStudents(requests...)
+					response = listStudents("")
 				})
 
 				It("returns a raw list with default pagination and total metadata", func() {
@@ -284,17 +284,17 @@ var _ = Describe("Person Handler Integration - GET Tests", func() {
 					Expect(response.Metadata.Offset).To(Equal(0))
 					Expect(response.Metadata.Limit).To(Equal(20))
 					Expect(response.Metadata.Total).To(Equal(int64(22)))
-					Expect(response.Records[0].Name).To(Equal("Person A"))
-					Expect(response.Records[19].Name).To(Equal("Person T"))
+					Expect(response.Records[0].Name).To(Equal("Student A"))
+					Expect(response.Records[19].Name).To(Equal("Student T"))
 				})
 			})
 
 			Context("with combined name and gender filters proving AND semantics with empty result", func() {
-				var response fun.PersonList
+				var response fun.StudentList
 
 				BeforeEach(func() {
-					createPersons(fun.PersonRequest{Name: "Ada Lovelace", Age: 36, Gender: "FEMALE"})
-					response = listPersons("?name=Ada&gender=MALE")
+					createStudents(fun.StudentRequest{Name: "Ada Lovelace", Age: 36, Gender: "FEMALE"})
+					response = listStudents("?name=Ada&gender=MALE")
 				})
 
 				It("returns an empty list and zero total", func() {
@@ -309,16 +309,16 @@ var _ = Describe("Person Handler Integration - GET Tests", func() {
 			Context("Offset Field", func() {
 				Context("Allowed Values", func() {
 					Context("with offset 0 and limit 2", func() {
-						var response fun.PersonList
+						var response fun.StudentList
 
 						BeforeEach(func() {
-							createPersons(
-								fun.PersonRequest{Name: "Ada", Age: 36, Gender: "FEMALE"},
-								fun.PersonRequest{Name: "Bob", Age: 40, Gender: "MALE"},
-								fun.PersonRequest{Name: "Carol", Age: 28, Gender: "FEMALE"},
-								fun.PersonRequest{Name: "Dave", Age: 50, Gender: "MALE"},
+							createStudents(
+								fun.StudentRequest{Name: "Ada", Age: 36, Gender: "FEMALE"},
+								fun.StudentRequest{Name: "Bob", Age: 40, Gender: "MALE"},
+								fun.StudentRequest{Name: "Carol", Age: 28, Gender: "FEMALE"},
+								fun.StudentRequest{Name: "Dave", Age: 50, Gender: "MALE"},
 							)
-							response = listPersons("?offset=0&limit=2&sort_by=name&sort-order=asc")
+							response = listStudents("?offset=0&limit=2&sort_by=name&sort-order=asc")
 						})
 
 						It("returns the first page of records with correct metadata", func() {
@@ -333,16 +333,16 @@ var _ = Describe("Person Handler Integration - GET Tests", func() {
 					})
 
 					Context("with a positive offset and limit 2", func() {
-						var response fun.PersonList
+						var response fun.StudentList
 
 						BeforeEach(func() {
-							createPersons(
-								fun.PersonRequest{Name: "Ada", Age: 36, Gender: "FEMALE"},
-								fun.PersonRequest{Name: "Bob", Age: 40, Gender: "MALE"},
-								fun.PersonRequest{Name: "Carol", Age: 28, Gender: "FEMALE"},
-								fun.PersonRequest{Name: "Dave", Age: 50, Gender: "MALE"},
+							createStudents(
+								fun.StudentRequest{Name: "Ada", Age: 36, Gender: "FEMALE"},
+								fun.StudentRequest{Name: "Bob", Age: 40, Gender: "MALE"},
+								fun.StudentRequest{Name: "Carol", Age: 28, Gender: "FEMALE"},
+								fun.StudentRequest{Name: "Dave", Age: 50, Gender: "MALE"},
 							)
-							response = listPersons("?offset=2&limit=2&sort_by=name&sort-order=asc")
+							response = listStudents("?offset=2&limit=2&sort_by=name&sort-order=asc")
 						})
 
 						It("returns the second page of records with correct metadata", func() {
@@ -359,7 +359,7 @@ var _ = Describe("Person Handler Integration - GET Tests", func() {
 
 				Context("Bad Values", func() {
 					BeforeEach(func() {
-						responseRecorder = listPersonsResponseOnly("?offset=-1")
+						responseRecorder = listStudentsResponseOnly("?offset=-1")
 					})
 
 					It("returns a minimum Offset validation error", func() {
@@ -371,15 +371,15 @@ var _ = Describe("Person Handler Integration - GET Tests", func() {
 			Context("Limit Field", func() {
 				Context("Allowed Values", func() {
 					Context("with limit 1", func() {
-						var response fun.PersonList
+						var response fun.StudentList
 
 						BeforeEach(func() {
-							createPersons(
-								fun.PersonRequest{Name: "Ada", Age: 36, Gender: "FEMALE"},
-								fun.PersonRequest{Name: "Bob", Age: 40, Gender: "MALE"},
-								fun.PersonRequest{Name: "Carol", Age: 28, Gender: "FEMALE"},
+							createStudents(
+								fun.StudentRequest{Name: "Ada", Age: 36, Gender: "FEMALE"},
+								fun.StudentRequest{Name: "Bob", Age: 40, Gender: "MALE"},
+								fun.StudentRequest{Name: "Carol", Age: 28, Gender: "FEMALE"},
 							)
-							response = listPersons("?limit=1&sort_by=name&sort-order=asc")
+							response = listStudents("?limit=1&sort_by=name&sort-order=asc")
 						})
 
 						It("returns one record with correct metadata", func() {
@@ -393,15 +393,15 @@ var _ = Describe("Person Handler Integration - GET Tests", func() {
 					})
 
 					Context("with limit 100", func() {
-						var response fun.PersonList
+						var response fun.StudentList
 
 						BeforeEach(func() {
-							createPersons(
-								fun.PersonRequest{Name: "Ada", Age: 36, Gender: "FEMALE"},
-								fun.PersonRequest{Name: "Bob", Age: 40, Gender: "MALE"},
-								fun.PersonRequest{Name: "Carol", Age: 28, Gender: "FEMALE"},
+							createStudents(
+								fun.StudentRequest{Name: "Ada", Age: 36, Gender: "FEMALE"},
+								fun.StudentRequest{Name: "Bob", Age: 40, Gender: "MALE"},
+								fun.StudentRequest{Name: "Carol", Age: 28, Gender: "FEMALE"},
 							)
-							response = listPersons("?limit=100&sort_by=name&sort-order=asc")
+							response = listStudents("?limit=100&sort_by=name&sort-order=asc")
 						})
 
 						It("returns all records with correct metadata", func() {
@@ -419,7 +419,7 @@ var _ = Describe("Person Handler Integration - GET Tests", func() {
 
 				Context("Bad Values", func() {
 					Context("with limit 0", func() {
-						BeforeEach(func() { responseRecorder = listPersonsResponseOnly("?limit=0") })
+						BeforeEach(func() { responseRecorder = listStudentsResponseOnly("?limit=0") })
 
 						It("returns a minimum Limit validation error", func() {
 							util.AssertError(responseRecorder, "Limit", "min")
@@ -427,7 +427,7 @@ var _ = Describe("Person Handler Integration - GET Tests", func() {
 					})
 
 					Context("with limit 101", func() {
-						BeforeEach(func() { responseRecorder = listPersonsResponseOnly("?limit=101") })
+						BeforeEach(func() { responseRecorder = listStudentsResponseOnly("?limit=101") })
 
 						It("returns a maximum Limit validation error", func() {
 							util.AssertError(responseRecorder, "Limit", "max")
@@ -439,15 +439,15 @@ var _ = Describe("Person Handler Integration - GET Tests", func() {
 			Context("Name Field", func() {
 				Context("Allowed Values", func() {
 					Context("with a partial name", func() {
-						var response fun.PersonList
+						var response fun.StudentList
 
 						BeforeEach(func() {
-							createPersons(
-								fun.PersonRequest{Name: "Ada Lovelace", Age: 36, Gender: "FEMALE"},
-								fun.PersonRequest{Name: "Ada Byron", Age: 28, Gender: "FEMALE"},
-								fun.PersonRequest{Name: "Grace Hopper", Age: 85, Gender: "FEMALE"},
+							createStudents(
+								fun.StudentRequest{Name: "Ada Lovelace", Age: 36, Gender: "FEMALE"},
+								fun.StudentRequest{Name: "Ada Byron", Age: 28, Gender: "FEMALE"},
+								fun.StudentRequest{Name: "Grace Hopper", Age: 85, Gender: "FEMALE"},
 							)
-							response = listPersons("?name=Ada&sort_by=name")
+							response = listStudents("?name=Ada&sort_by=name")
 						})
 
 						It("returns matching records and total metadata", func() {
@@ -460,15 +460,15 @@ var _ = Describe("Person Handler Integration - GET Tests", func() {
 					})
 
 					Context("with a 25-character name", func() {
-						var response fun.PersonList
+						var response fun.StudentList
 
 						BeforeEach(func() {
 							name25 := strings.Repeat("A", 25)
-							createPersons(
-								fun.PersonRequest{Name: name25, Age: 30, Gender: "MALE"},
-								fun.PersonRequest{Name: "Bob", Age: 40, Gender: "MALE"},
+							createStudents(
+								fun.StudentRequest{Name: name25, Age: 30, Gender: "MALE"},
+								fun.StudentRequest{Name: "Bob", Age: 40, Gender: "MALE"},
 							)
-							response = listPersons("?name=" + name25)
+							response = listStudents("?name=" + name25)
 						})
 
 						It("returns the matching record", func() {
@@ -481,7 +481,7 @@ var _ = Describe("Person Handler Integration - GET Tests", func() {
 
 				Context("Bad Values", func() {
 					Context("with an invalid character", func() {
-						BeforeEach(func() { responseRecorder = listPersonsResponseOnly("?name=A%2AB") })
+						BeforeEach(func() { responseRecorder = listStudentsResponseOnly("?name=A%2AB") })
 
 						It("returns a Name character validation error", func() {
 							util.AssertError(responseRecorder, "Name", "name")
@@ -490,7 +490,7 @@ var _ = Describe("Person Handler Integration - GET Tests", func() {
 
 					Context("with a 26-character name", func() {
 						BeforeEach(func() {
-							responseRecorder = listPersonsResponseOnly("?name=" + strings.Repeat("A", 26))
+							responseRecorder = listStudentsResponseOnly("?name=" + strings.Repeat("A", 26))
 						})
 
 						It("returns a maximum Name validation error", func() {
@@ -503,15 +503,15 @@ var _ = Describe("Person Handler Integration - GET Tests", func() {
 			Context("Gender Field", func() {
 				Context("Allowed Values", func() {
 					Context("with MALE", func() {
-						var response fun.PersonList
+						var response fun.StudentList
 
 						BeforeEach(func() {
-							createPersons(
-								fun.PersonRequest{Name: "Alan", Age: 42, Gender: "MALE"},
-								fun.PersonRequest{Name: "Bob", Age: 30, Gender: "MALE"},
-								fun.PersonRequest{Name: "Ada", Age: 36, Gender: "FEMALE"},
+							createStudents(
+								fun.StudentRequest{Name: "Alan", Age: 42, Gender: "MALE"},
+								fun.StudentRequest{Name: "Bob", Age: 30, Gender: "MALE"},
+								fun.StudentRequest{Name: "Ada", Age: 36, Gender: "FEMALE"},
 							)
-							response = listPersons("?gender=MALE")
+							response = listStudents("?gender=MALE")
 						})
 
 						It("returns only MALE records with correct total", func() {
@@ -524,15 +524,15 @@ var _ = Describe("Person Handler Integration - GET Tests", func() {
 					})
 
 					Context("with FEMALE", func() {
-						var response fun.PersonList
+						var response fun.StudentList
 
 						BeforeEach(func() {
-							createPersons(
-								fun.PersonRequest{Name: "Ada", Age: 36, Gender: "FEMALE"},
-								fun.PersonRequest{Name: "Grace", Age: 85, Gender: "FEMALE"},
-								fun.PersonRequest{Name: "Bob", Age: 30, Gender: "MALE"},
+							createStudents(
+								fun.StudentRequest{Name: "Ada", Age: 36, Gender: "FEMALE"},
+								fun.StudentRequest{Name: "Grace", Age: 85, Gender: "FEMALE"},
+								fun.StudentRequest{Name: "Bob", Age: 30, Gender: "MALE"},
 							)
-							response = listPersons("?gender=FEMALE")
+							response = listStudents("?gender=FEMALE")
 						})
 
 						It("returns only FEMALE records with correct total", func() {
@@ -547,7 +547,7 @@ var _ = Describe("Person Handler Integration - GET Tests", func() {
 
 				Context("Bad Values", func() {
 					Context("with unsupported OTHER", func() {
-						BeforeEach(func() { responseRecorder = listPersonsResponseOnly("?gender=OTHER") })
+						BeforeEach(func() { responseRecorder = listStudentsResponseOnly("?gender=OTHER") })
 
 						It("returns an equality Gender validation error", func() {
 							util.AssertError(responseRecorder, "Gender", "eq")
@@ -555,7 +555,7 @@ var _ = Describe("Person Handler Integration - GET Tests", func() {
 					})
 
 					Context("with lowercase female", func() {
-						BeforeEach(func() { responseRecorder = listPersonsResponseOnly("?gender=female") })
+						BeforeEach(func() { responseRecorder = listStudentsResponseOnly("?gender=female") })
 
 						It("returns an equality Gender validation error", func() {
 							util.AssertError(responseRecorder, "Gender", "eq")
@@ -567,15 +567,15 @@ var _ = Describe("Person Handler Integration - GET Tests", func() {
 			Context("SortBy Field", func() {
 				Context("Allowed Values", func() {
 					Context("with name", func() {
-						var response fun.PersonList
+						var response fun.StudentList
 
 						BeforeEach(func() {
-							createPersons(
-								fun.PersonRequest{Name: "Charlie", Age: 30, Gender: "MALE"},
-								fun.PersonRequest{Name: "Alice", Age: 25, Gender: "FEMALE"},
-								fun.PersonRequest{Name: "Bob", Age: 40, Gender: "MALE"},
+							createStudents(
+								fun.StudentRequest{Name: "Charlie", Age: 30, Gender: "MALE"},
+								fun.StudentRequest{Name: "Alice", Age: 25, Gender: "FEMALE"},
+								fun.StudentRequest{Name: "Bob", Age: 40, Gender: "MALE"},
 							)
-							response = listPersons("?sort_by=name")
+							response = listStudents("?sort_by=name")
 						})
 
 						It("returns records in ascending name order", func() {
@@ -588,15 +588,15 @@ var _ = Describe("Person Handler Integration - GET Tests", func() {
 					})
 
 					Context("with age", func() {
-						var response fun.PersonList
+						var response fun.StudentList
 
 						BeforeEach(func() {
-							createPersons(
-								fun.PersonRequest{Name: "Older", Age: 42, Gender: "MALE"},
-								fun.PersonRequest{Name: "Youngest", Age: 18, Gender: "FEMALE"},
-								fun.PersonRequest{Name: "Middle", Age: 30, Gender: "FEMALE"},
+							createStudents(
+								fun.StudentRequest{Name: "Older", Age: 42, Gender: "MALE"},
+								fun.StudentRequest{Name: "Youngest", Age: 18, Gender: "FEMALE"},
+								fun.StudentRequest{Name: "Middle", Age: 30, Gender: "FEMALE"},
 							)
-							response = listPersons("?sort_by=age")
+							response = listStudents("?sort_by=age")
 						})
 
 						It("returns records in ascending age order", func() {
@@ -609,15 +609,15 @@ var _ = Describe("Person Handler Integration - GET Tests", func() {
 					})
 
 					Context("with gender", func() {
-						var response fun.PersonList
+						var response fun.StudentList
 
 						BeforeEach(func() {
-							createPersons(
-								fun.PersonRequest{Name: "Male One", Age: 30, Gender: "MALE"},
-								fun.PersonRequest{Name: "Female One", Age: 25, Gender: "FEMALE"},
-								fun.PersonRequest{Name: "Male Two", Age: 40, Gender: "MALE"},
+							createStudents(
+								fun.StudentRequest{Name: "Male One", Age: 30, Gender: "MALE"},
+								fun.StudentRequest{Name: "Female One", Age: 25, Gender: "FEMALE"},
+								fun.StudentRequest{Name: "Male Two", Age: 40, Gender: "MALE"},
 							)
-							response = listPersons("?sort_by=gender")
+							response = listStudents("?sort_by=gender")
 						})
 
 						It("returns records in ascending gender groups", func() {
@@ -631,7 +631,7 @@ var _ = Describe("Person Handler Integration - GET Tests", func() {
 				})
 
 				Context("Bad Values", func() {
-					BeforeEach(func() { responseRecorder = listPersonsResponseOnly("?sort_by=invalid") })
+					BeforeEach(func() { responseRecorder = listStudentsResponseOnly("?sort_by=invalid") })
 
 					It("returns an equality SortBy validation error", func() {
 						util.AssertError(responseRecorder, "SortBy", "eq")
@@ -642,15 +642,15 @@ var _ = Describe("Person Handler Integration - GET Tests", func() {
 			Context("SortOrder Field", func() {
 				Context("Allowed Values", func() {
 					Context("with asc", func() {
-						var response fun.PersonList
+						var response fun.StudentList
 
 						BeforeEach(func() {
-							createPersons(
-								fun.PersonRequest{Name: "Charlie", Age: 30, Gender: "MALE"},
-								fun.PersonRequest{Name: "Alice", Age: 25, Gender: "FEMALE"},
-								fun.PersonRequest{Name: "Bob", Age: 40, Gender: "MALE"},
+							createStudents(
+								fun.StudentRequest{Name: "Charlie", Age: 30, Gender: "MALE"},
+								fun.StudentRequest{Name: "Alice", Age: 25, Gender: "FEMALE"},
+								fun.StudentRequest{Name: "Bob", Age: 40, Gender: "MALE"},
 							)
-							response = listPersons("?sort_by=name&sort-order=asc")
+							response = listStudents("?sort_by=name&sort-order=asc")
 						})
 
 						It("returns records in ascending name order", func() {
@@ -663,15 +663,15 @@ var _ = Describe("Person Handler Integration - GET Tests", func() {
 					})
 
 					Context("with desc", func() {
-						var response fun.PersonList
+						var response fun.StudentList
 
 						BeforeEach(func() {
-							createPersons(
-								fun.PersonRequest{Name: "Charlie", Age: 30, Gender: "MALE"},
-								fun.PersonRequest{Name: "Alice", Age: 25, Gender: "FEMALE"},
-								fun.PersonRequest{Name: "Bob", Age: 40, Gender: "MALE"},
+							createStudents(
+								fun.StudentRequest{Name: "Charlie", Age: 30, Gender: "MALE"},
+								fun.StudentRequest{Name: "Alice", Age: 25, Gender: "FEMALE"},
+								fun.StudentRequest{Name: "Bob", Age: 40, Gender: "MALE"},
 							)
-							response = listPersons("?sort_by=name&sort-order=desc")
+							response = listStudents("?sort_by=name&sort-order=desc")
 						})
 
 						It("returns records in descending name order", func() {
@@ -685,7 +685,7 @@ var _ = Describe("Person Handler Integration - GET Tests", func() {
 				})
 
 				Context("Bad Values", func() {
-					BeforeEach(func() { responseRecorder = listPersonsResponseOnly("?sort-order=invalid") })
+					BeforeEach(func() { responseRecorder = listStudentsResponseOnly("?sort-order=invalid") })
 
 					It("returns a oneof SortOrder validation error", func() {
 						util.AssertError(responseRecorder, "SortOrder", "oneof")
@@ -696,8 +696,8 @@ var _ = Describe("Person Handler Integration - GET Tests", func() {
 
 		Context("Errors", func() {
 			BeforeEach(func() {
-				Expect(db.Migrator().DropTable(&fun.Person{})).To(Succeed())
-				responseRecorder = listPersonsResponseOnly("")
+				Expect(db.Migrator().DropTable(&fun.Student{})).To(Succeed())
+				responseRecorder = listStudentsResponseOnly("")
 			})
 
 			// Intentionally assert only status code: the raw response body format

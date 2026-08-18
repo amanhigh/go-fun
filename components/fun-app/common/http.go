@@ -65,12 +65,12 @@ func providePrometheus(engine *gin.Engine) (prometheus *ginprometheus.Prometheus
 
 func (fi *FunAppInjector) registerHandlers() {
 	container.MustSingleton(fi.di, handlers.NewAdminHandler)
-	container.MustSingleton(fi.di, fi.providePersonHandler)
+	container.MustSingleton(fi.di, fi.provideStudentHandler)
 	container.MustSingleton(fi.di, handlers.NewEnrollmentHandler)
 }
 
-func (fi *FunAppInjector) providePersonHandler() (handler handlers.PersonHandler, err error) {
-	impl := &handlers.PersonHandlerImpl{}
+func (fi *FunAppInjector) provideStudentHandler() (handler handlers.StudentHandler, err error) {
+	impl := &handlers.StudentHandlerImpl{}
 	err = fi.di.Fill(impl)
 	handler = impl
 	return

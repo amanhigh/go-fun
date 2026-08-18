@@ -48,7 +48,7 @@ func (h *SeatMessageHandlerImpl) HandleSeatReservedEvt(msg *message.Message) err
 	if err != nil {
 		return err
 	}
-	e := fun.Enrollment{ID: evt.EnrollmentID, PersonID: evt.PersonID, Grade: evt.Grade}
+	e := fun.Enrollment{ID: evt.EnrollmentID, StudentID: evt.StudentID, Grade: evt.Grade}
 	return h.EnrollmentManager.OnSeatReservedEvt(msg.Context(), e)
 }
 
@@ -57,7 +57,7 @@ func (h *SeatMessageHandlerImpl) HandleSeatWaitlistedEvt(msg *message.Message) e
 	if err != nil {
 		return err
 	}
-	enrollment := fun.Enrollment{ID: evt.EnrollmentID, PersonID: evt.PersonID, Grade: evt.Grade}
+	enrollment := fun.Enrollment{ID: evt.EnrollmentID, StudentID: evt.StudentID, Grade: evt.Grade}
 	// TODO: Waitlisted flow ends here — add exponential backoff retry to re-check seat availability before terminal failure.
 	// Persist WAITLISTED state via manager sink (idempotent).
 	return h.EnrollmentManager.UpdateToWaitlisted(msg.Context(), enrollment)
@@ -85,5 +85,5 @@ func (h *SeatMessageHandlerImpl) HandleDeadLetteredAllocateSeatCmd(msg *message.
 	if reason == "" {
 		reason = defaultSeatAllocationFailureReason
 	}
-	return h.SeatManager.PublishSeatAllocationFailed(msg.Context(), fun.Enrollment{ID: cmd.EnrollmentID, PersonID: cmd.PersonID}, reason)
+	return h.SeatManager.PublishSeatAllocationFailed(msg.Context(), fun.Enrollment{ID: cmd.EnrollmentID, StudentID: cmd.StudentID}, reason)
 }
