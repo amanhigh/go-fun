@@ -332,7 +332,12 @@ var _ = Describe("Enrollments", func() {
 
 			It("returns the persisted enrollment for the person", func() {
 				Expect(responseRecorder.Code).To(Equal(http.StatusOK))
-				Expect(response).To(Equal(enrollment))
+				Expect(response.ID).To(Equal(enrollment.ID))
+				Expect(response.PersonID).To(Equal(enrollment.PersonID))
+				Expect(response.Grade).To(Equal(enrollment.Grade))
+				Expect(response.Status).To(Equal(enrollment.Status))
+				Expect(response.CreatedAt.Equal(enrollment.CreatedAt)).To(BeTrue())
+				Expect(response.UpdatedAt.Equal(enrollment.UpdatedAt)).To(BeTrue())
 			})
 		})
 
