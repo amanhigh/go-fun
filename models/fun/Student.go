@@ -30,7 +30,7 @@ type StudentQuery struct {
 }
 
 type StudentList struct {
-	Records  []Student                 `json:"records"`
+	Records  []Student                `json:"records"`
 	Metadata common.PaginatedResponse `json:"metadata"`
 }
 
@@ -92,7 +92,7 @@ type StudentAudit struct {
 	// Audit Fields
 	AuditID   uint   `gorm:"primaryKey"`
 	Operation string `gorm:"not null"`
-	// TODO: Use Base Dao of Gorm for common Fields ?
+	// HACK: Use Base Dao of Gorm for common Fields ?
 	CreatedBy string    `gorm:"not null"`
 	CreatedAt time.Time `gorm:"not null"`
 }

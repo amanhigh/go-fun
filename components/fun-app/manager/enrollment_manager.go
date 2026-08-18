@@ -20,8 +20,6 @@ import (
 //   - OnSeatReservedEvt persists CONFIRMED status.
 //   - CancelEnrollment persists CANCELLED status for allocation failures.
 //   - SeatManager publishes only seat-related commands/events and never touches enrollment publishers.
-//
-// TODO: Rename Student usage to Student once the domain model is updated.
 type EnrollmentManagerInterface interface {
 	EnrollStudent(ctx context.Context, studentID string, grade int) (fun.Enrollment, common.HttpError)
 	GetEnrollment(ctx context.Context, studentID string) (fun.Enrollment, common.HttpError)
@@ -32,7 +30,7 @@ type EnrollmentManagerInterface interface {
 }
 
 type EnrollmentManager struct {
-	StudentManager       StudentManagerInterface
+	StudentManager      StudentManagerInterface
 	EnrollmentDao       dao.EnrollmentDaoInterface
 	EnrollmentPublisher publisher.EnrollmentPublisher
 	SeatManager         SeatManagerInterface
@@ -45,7 +43,7 @@ func NewEnrollmentManager(
 	seatManager SeatManagerInterface,
 ) *EnrollmentManager {
 	return &EnrollmentManager{
-		StudentManager:       studentManager,
+		StudentManager:      studentManager,
 		EnrollmentDao:       enrollmentDao,
 		EnrollmentPublisher: enrollmentPublisher,
 		SeatManager:         seatManager,
@@ -87,9 +85,9 @@ func (em *EnrollmentManager) EnrollCmd(ctx context.Context, cmd fun.EnrollCmdV1)
 	}
 
 	enrollment := fun.Enrollment{
-		ID:       cmd.EnrollmentID,
+		ID:        cmd.EnrollmentID,
 		StudentID: cmd.StudentID,
-		Grade:    cmd.Grade,
+		Grade:     cmd.Grade,
 	}
 
 	return em.SeatManager.PublishAllocateSeat(ctx, enrollment)
@@ -153,7 +151,7 @@ func (em *EnrollmentManager) upsertEnrollment(ctx context.Context, enrollment *f
 func (em *EnrollmentManager) buildEnrollment(studentID string, grade int) *fun.Enrollment {
 	return &fun.Enrollment{
 		StudentID: studentID,
-		Grade:    grade,
-		Status:   fun.EnrollmentStatusSeatAllocationInitiated,
+		Grade:     grade,
+		Status:    fun.EnrollmentStatusSeatAllocationInitiated,
 	}
 }

@@ -33,7 +33,6 @@ var kohanServerCmd = &cobra.Command{
 	Short: "Start Kohan Server",
 	Args:  cobra.NoArgs,
 	RunE: func(cmd *cobra.Command, _ []string) (err error) {
-		// TODO: Retry When Disk not Mounted, Watermill Exponential Backoff ?
 		osManager := core.GetKohanInterface().GetOSManager()
 		server, err := core.GetKohanInterface().GetKohanServer()
 		if err != nil {

@@ -71,7 +71,7 @@ func (s *KohanServerLifecycle) RegisterRoutes(engine *gin.Engine) {
 }
 
 func (s *KohanServerLifecycle) RegisterSwagger(engine *gin.Engine) {
-	// TODO: Generate swagger docs for Kohan handlers and add annotations
+	// TODO: #B Generate swagger docs for Kohan handlers and add annotations
 	// make swag-kohan
 	// Add Swagger - https://github.com/swaggo/gin-swagger
 	engine.GET("/swagger/*any", ginSwagger.WrapHandler(swaggerFiles.Handler))

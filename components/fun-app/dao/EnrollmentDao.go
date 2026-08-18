@@ -9,7 +9,7 @@ import (
 )
 
 type EnrollmentDaoInterface interface {
-	// TODO: Rename to BaseDbRepository Interface & Files and use across Repo in FunApp and Kohan where GORM is used.
+	// TODO: #C Rename to BaseDbRepository Interface & Files and use across Repo in FunApp and Kohan where GORM is used.
 	util.BaseDbRepositoryInterface
 	FindByStudentID(ctx context.Context, studentID string, enrollment *fun.Enrollment) common.HttpError
 }
