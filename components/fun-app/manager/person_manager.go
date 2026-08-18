@@ -127,8 +127,7 @@ func (p *PersonManager) DeletePerson(c context.Context, id string) (err common.H
 	defer span.End()
 
 	err = p.Dao.UseOrCreateTx(ctx, func(c context.Context) (err common.HttpError) {
-		span.AddEvent("Person Found for Deletion", trace.WithAttributes(attribute.String("id", id)))
-		// BUG: Deleting with an empty fun.Person{} prevents AfterDelete audit association with the deleted person.
+		span.AddEvent("Deleting Person", trace.WithAttributes(attribute.String("id", id)))
 		return p.Dao.DeleteById(c, id, &fun.Person{})
 	})
 

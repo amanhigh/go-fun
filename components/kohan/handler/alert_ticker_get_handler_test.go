@@ -204,7 +204,12 @@ var _ = Describe("AlertTickerHandler Integration - GET/List Tests - Section 2.2.
 					util.AssertSuccess(w, http.StatusOK, &envelope)
 					Expect(envelope.Status).To(Equal(common.EnvelopeSuccess))
 				})
-				It("should return alert_tickers array", func() { Expect(response.AlertTickers).To(HaveLen(3)) })
+				It("should return alert_tickers array", func() {
+					Expect(response.AlertTickers).To(HaveLen(3))
+					Expect(response.AlertTickers[0].Symbol).To(Equal("BTCUSD"))
+					Expect(response.AlertTickers[1].Symbol).To(Equal("GOLD1!"))
+					Expect(response.AlertTickers[2].Symbol).To(Equal("MCIX"))
+				})
 				It("should return metadata offset 0", func() { Expect(response.Metadata.Offset).To(Equal(0)) })
 				It("should return metadata limit 20", func() { Expect(response.Metadata.Limit).To(Equal(20)) })
 				It("should return metadata total", func() { Expect(response.Metadata.Total).To(Equal(int64(3))) })
@@ -550,6 +555,7 @@ var _ = Describe("AlertTickerHandler Integration - GET/List Tests - Section 2.2.
 						router.ServeHTTP(w, req)
 						response := decodeAlertTickerListResponse(w)
 						Expect(response.Metadata.Offset).To(Equal(1))
+						Expect(response.Metadata.Total).To(Equal(int64(3)))
 					})
 					It("should accept limit 1", func() {
 						req, w := util.CreateTestRequest(http.MethodGet, barkat.AlertTickerBase+"?limit=1", nil)

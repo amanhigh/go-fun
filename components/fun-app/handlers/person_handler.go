@@ -60,7 +60,7 @@ func (ph *PersonHandlerImpl) CreatePerson(c *gin.Context) {
 	if err := c.ShouldBind(&request); err == nil {
 		ph.CreateCounter.Add(ctx, 1, metric.WithAttributes(attribute.String("gender", request.Gender)))
 
-		// FIXME: Move Student Flows and API's to Envelope similar to kohan API's
+		// TODO: Move Student Flows and API's to Envelope similar to kohan API's
 		if person, err := ph.Manager.CreatePerson(ctx, request); err == nil {
 			c.JSON(http.StatusCreated, person)
 			span.SetStatus(codes.Ok, "Person Created")

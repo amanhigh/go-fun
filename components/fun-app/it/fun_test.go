@@ -1,544 +1,158 @@
 package it_test
 
 import (
-	"context"
 	"net/http"
-	"strconv"
-	"strings"
+	"time"
 
-	. "github.com/amanhigh/go-fun/common/clients"
-	"github.com/amanhigh/go-fun/models/common"
+	"github.com/amanhigh/go-fun/common/clients"
 	"github.com/amanhigh/go-fun/models/fun"
 
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
 )
 
-// Entr: http://eradman.com/entrproject/entr.1.html
-// -s (use Shell), -c (Clear), Space/Q to Run, Quit.
-// Watch Mode: find `git rev-parse --show-toplevel` | entr -s "date +%M:%S;ginkgo $PWD | grep Pending"
-var _ = Describe("Person Integration Test", func() {
-	// FIXME: Merge with enrollment_test.go and limit integration tests to only important ones
-	const (
-		invalidNameValue  = "A*B"
-		expectedGenderErr = "FEMALE"
-		nameFieldErr      = "Name"
-		maxValidationTag  = "max"
-		nameSortField     = "name"
-		reqdValidationTag = "required"
-	)
+var _ = Describe("FunApp Integration Smoke", func() {
 	var (
-		request fun.PersonRequest
+		createdPerson fun.Person
+		err           error
 
-		name        = "Amanpreet Singh"
-		maxName     = strings.Repeat("A", 31)
-		age         = 31
-		gender      = "MALE"
-		err         common.HttpError
-		testCtx     = context.Background()
-		expectedErr string
+		retrievedPerson fun.Person
+		updatedPerson   fun.Person
 	)
 
-	BeforeEach(func() {
-		expectedErr = "Bad Request"
-		request = fun.PersonRequest{
-			Name:   name,
-			Age:    age,
-			Gender: gender,
-		}
-	})
-
-	Context("Create", func() {
-		var (
-			createdPerson fun.Person
-			auditUser     = "AMAN"
-		)
-		BeforeEach(func() {
-			createdPerson, err = client.PersonService.CreatePerson(testCtx, request)
-			Expect(err).ToNot(HaveOccurred())
-			Expect(createdPerson.Id).Should(Not(BeEmpty()))
-		})
+	Context("Person lifecycle", func() {
 		AfterEach(func() {
-			// Delete Person
-			err = client.PersonService.DeletePerson(testCtx, createdPerson.Id)
+			if createdPerson.Id != "" {
+				err = client.PersonService.DeletePerson(ctx, createdPerson.Id)
+				Expect(err).ToNot(HaveOccurred())
+			}
+		})
+
+		BeforeEach(func() {
+			// 1. Create
+			createdPerson, err = client.PersonService.CreatePerson(ctx, fun.PersonRequest{
+				Name:   "Smoke Lifecycle",
+				Age:    12,
+				Gender: "MALE",
+			})
+			Expect(err).ToNot(HaveOccurred())
+			Expect(createdPerson.Id).ToNot(BeEmpty())
+
+			// 2. Retrieve
+			retrievedPerson, err = client.PersonService.GetPerson(ctx, createdPerson.Id)
 			Expect(err).ToNot(HaveOccurred())
 
-			// Delete Audit
-			auditList, listErr := client.PersonService.ListPersonAudit(testCtx, createdPerson.Id)
-			Expect(listErr).ShouldNot(HaveOccurred())
-			Expect(auditList).To(HaveLen(2))
+			// 3. Update
+			err = client.PersonService.UpdatePerson(ctx, createdPerson.Id, fun.PersonRequest{
+				Name:   "Updated Smoke",
+				Age:    20,
+				Gender: "FEMALE",
+			})
+			Expect(err).ToNot(HaveOccurred())
+
+			// 4. Retrieve updated
+			updatedPerson, err = client.PersonService.GetPerson(ctx, createdPerson.Id)
+			Expect(err).ToNot(HaveOccurred())
 		})
 
-		It("should create & get person", func() {
-			person, getErr := client.PersonService.GetPerson(testCtx, createdPerson.Id)
-			Expect(getErr).ShouldNot(HaveOccurred())
-			Expect(person).Should(Not(BeNil()))
+		It("should complete the person lifecycle", func() {
+			Expect(retrievedPerson.Id).To(Equal(createdPerson.Id))
+			Expect(retrievedPerson.Name).To(Equal("Smoke Lifecycle"))
+			Expect(retrievedPerson.Age).To(Equal(12))
+			Expect(retrievedPerson.Gender).To(Equal("MALE"))
 
-			// Match Person Fields
-			Expect(person.Id).To(Equal(createdPerson.Id))
-			Expect(person.Name).To(Equal(name))
-			Expect(person.Age).To(Equal(age))
-			Expect(person.Gender).To(Equal(gender))
+			Expect(updatedPerson.Id).To(Equal(createdPerson.Id))
+			Expect(updatedPerson.Name).To(Equal("Updated Smoke"))
+			Expect(updatedPerson.Age).To(Equal(20))
+			Expect(updatedPerson.Gender).To(Equal("FEMALE"))
 		})
 
-		It("should generate Audit", func() {
-			// List Audit
-			auditList, auditErr := client.PersonService.ListPersonAudit(testCtx, createdPerson.Id)
-			Expect(auditErr).ShouldNot(HaveOccurred())
-
-			// Check Audit
-			Expect(auditList).To(HaveLen(1))
-			audit := auditList[0]
-			Expect(audit.Id).To(Equal(createdPerson.Id))
-			Expect(audit.Name).To(Equal(name))
-			Expect(audit.Age).To(Equal(age))
-			Expect(audit.Gender).To(Equal(gender))
-
-			Expect(audit.Operation).To(Equal("CREATE"))
-			Expect(audit.CreatedBy).To(Equal(auditUser))
-			Expect(audit.CreatedAt).Should(Not(BeNil()))
-		})
-
-		Context("Update", func() {
+		Context("Enrollment lifecycle", func() {
 			var (
-				updateRequest fun.PersonRequest
-				updatedPerson fun.Person
-			)
-			BeforeEach(func() {
-				updateRequest = fun.PersonRequest{
-					Name:   "Jenny",
-					Age:    25,
-					Gender: "FEMALE",
-				}
-				updatedPerson, err = client.PersonService.CreatePerson(testCtx, request)
-				Expect(err).ShouldNot(HaveOccurred())
-			})
-
-			AfterEach(func() {
-				err = client.PersonService.DeletePerson(testCtx, updatedPerson.Id)
-				Expect(err).ToNot(HaveOccurred())
-			})
-
-			Context("Success", func() {
-				BeforeEach(func() {
-					updateErr := client.PersonService.UpdatePerson(testCtx, updatedPerson.Id, updateRequest)
-					Expect(updateErr).ShouldNot(HaveOccurred())
-				})
-
-				It("should update person", func() {
-					// Fetch Update Person
-					person, getErr := client.PersonService.GetPerson(testCtx, updatedPerson.Id)
-					Expect(getErr).ShouldNot(HaveOccurred())
-
-					// MatchFields
-					Expect(person.Id).To(Equal(updatedPerson.Id))
-					Expect(person.Name).To(Equal(updateRequest.Name))
-					Expect(person.Age).To(Equal(updateRequest.Age))
-					Expect(person.Gender).To(Equal(updateRequest.Gender))
-				})
-
-				It("should generate Audit", func() {
-					// List Audit
-					auditList, auditErr := client.PersonService.ListPersonAudit(testCtx, updatedPerson.Id)
-					Expect(auditErr).ShouldNot(HaveOccurred())
-
-					// Check Audit
-					Expect(auditList).To(HaveLen(2))
-					audit := auditList[1]
-					Expect(audit.Id).To(Equal(updatedPerson.Id))
-					Expect(audit.Name).To(Equal(updateRequest.Name))
-					Expect(audit.Age).To(Equal(updateRequest.Age))
-					Expect(audit.Gender).To(Equal(updateRequest.Gender))
-
-					Expect(audit.Operation).To(Equal("UPDATE"))
-					Expect(audit.CreatedBy).To(Equal(auditUser))
-					Expect(audit.CreatedAt).Should(Not(BeNil()))
-				})
-			})
-
-			Context("Bad Requests", func() {
-				AfterEach(func() {
-					err = client.PersonService.UpdatePerson(testCtx, updatedPerson.Id, updateRequest)
-					Expect(err).Should(HaveOccurred())
-					Expect(err.Error()).To(ContainSubstring(expectedErr))
-					Expect(err.Code()).To(Equal(http.StatusBadRequest))
-				})
-
-				It("should fail for missing Name", func() {
-					updateRequest.Name = ""
-					expectedErr = reqdValidationTag
-				})
-
-				It("should fail for invalid Name", func() {
-					updateRequest.Name = invalidNameValue
-					expectedErr = nameFieldErr
-				})
-
-				It("should fail for max Name", func() {
-					updateRequest.Name = maxName
-					expectedErr = maxValidationTag
-				})
-
-				It("should fail for missing Age", func() {
-					updateRequest.Age = 0
-					expectedErr = "Age"
-				})
-
-				It("should fail for invalid Age", func() {
-					updateRequest.Age = -1
-					expectedErr = "min"
-				})
-
-				It("should fail for max Age", func() {
-					updateRequest.Age = 200
-					expectedErr = maxValidationTag
-				})
-
-				It("should fail for missing Gender", func() {
-					updateRequest.Gender = ""
-					expectedErr = reqdValidationTag
-				})
-
-				It("should fail for invalid Gender", func() {
-					updateRequest.Gender = "GENDER"
-					expectedErr = expectedGenderErr
-				})
-
-			})
-		})
-
-		Context("Search", func() {
-			var (
-				offset      = 0
-				limit       = 5
-				total       = 15
-				personQuery fun.PersonQuery
-				names       = []string{"Jane", "Sardar", "Rahul"}
-				genders     = []string{"FEMALE", "MALE", "MALE"}
+				grade4Initial   fun.Enrollment
+				grade4Confirmed fun.Enrollment
+				grade6Initial   fun.Enrollment
+				grade6Final     fun.Enrollment
 			)
 
 			BeforeEach(func() {
-				// Create 15 Persons
-				for i := range total {
-					request.Name = names[i%3] + strconv.Itoa(i)
-					request.Gender = genders[i%3]
-					_, err = client.PersonService.CreatePerson(testCtx, request)
-					Expect(err).ToNot(HaveOccurred())
-				}
-
-				// Init Person Query
-				personQuery = fun.PersonQuery{
-					Pagination: common.Pagination{
-						Offset: offset,
-						Limit:  limit,
-					},
-				}
-			})
-
-			AfterEach(func() {
-				// Find Record By Names and Delete using UUID
-				for i, name := range names {
-					personQuery.Name = name
-					personQuery.Gender = genders[i]
-					personQuery.Limit = 10
-					personQuery.Offset = 0
-					personList, listErr := client.PersonService.ListPerson(testCtx, personQuery)
-					Expect(listErr).ToNot(HaveOccurred())
-
-					// Delete all Records of Name
-					for _, person := range personList.Records {
-						err = client.PersonService.DeletePerson(testCtx, person.Id)
-						Expect(err).ToNot(HaveOccurred())
-					}
-				}
-			})
-
-			It("should get all persons upto page Limit", func() {
-				var personList fun.PersonList
-				personList, err = client.PersonService.ListPerson(testCtx, personQuery)
+				// 1. Grade-4 enrollment
+				grade4Req := fun.EnrollmentRequest{PersonID: createdPerson.Id, Grade: 4}
+				grade4Initial, err = client.EnrollmentService.CreateEnrollment(ctx, grade4Req)
 				Expect(err).ToNot(HaveOccurred())
 
-				// Person Count should be same as Page Limit
-				Expect(personList.Records).To(HaveLen(limit))
-				Expect(personList.Metadata.Total).To(BeNumerically(">=", total))
-				Expect(personList.Metadata.Offset).To(Equal(0))
-				Expect(personList.Metadata.Limit).To(Equal(limit))
-			})
-
-			It("should fetch second Page", func() {
-				var personList fun.PersonList
-				personQuery.Offset = limit
-				personList, err = client.PersonService.ListPerson(testCtx, personQuery)
-
-				Expect(err).ToNot(HaveOccurred())
-				Expect(personList.Records).To(HaveLen(limit))
-				Expect(personList.Metadata.Offset).To(Equal(limit))
-				Expect(personList.Metadata.Limit).To(Equal(limit))
-			})
-
-			It("should search by Name", func() {
-				var personList fun.PersonList
-				personQuery.Name = names[0]
-				personList, err = client.PersonService.ListPerson(testCtx, personQuery)
-
-				Expect(err).ToNot(HaveOccurred())
-				Expect(personList.Records).To(HaveLen(limit))
-				Expect(personList.Metadata.Total).To(BeEquivalentTo(5))
-				Expect(personList.Metadata.Offset).To(Equal(0))
-				Expect(personList.Metadata.Limit).To(Equal(limit))
-			})
-
-			It("should search by Gender", func() {
-				var personList fun.PersonList
-				personQuery.Gender = genders[1]
-				personList, err = client.PersonService.ListPerson(testCtx, personQuery)
-
-				Expect(err).ToNot(HaveOccurred())
-				Expect(personList.Records).To(HaveLen(limit))
-				Expect(personList.Metadata.Total).To(BeEquivalentTo(11))
-				Expect(personList.Metadata.Offset).To(Equal(0))
-				Expect(personList.Metadata.Limit).To(Equal(limit))
-			})
-
-			It("should search by Name & Gender", func() {
-				var personList fun.PersonList
-				personQuery.Name = names[0]
-				personQuery.Gender = genders[1]
-				personList, err = client.PersonService.ListPerson(testCtx, personQuery)
-
-				Expect(err).ToNot(HaveOccurred())
-				Expect(personList.Records).To(BeEmpty())
-				Expect(personList.Metadata.Total).To(BeEquivalentTo(0))
-				Expect(personList.Metadata.Offset).To(Equal(0))
-				Expect(personList.Metadata.Limit).To(Equal(limit))
-			})
-
-			Context("Sort", func() {
-
-				It("should sort by Name in ascending order", func() {
-					var personList fun.PersonList
-					personQuery.SortBy = nameSortField
-					personQuery.SortOrder = common.SortOrderAsc
-					personList, err = client.PersonService.ListPerson(testCtx, personQuery)
-
-					Expect(err).ToNot(HaveOccurred())
-					Expect(personList.Records).To(HaveLen(limit))
-					Expect(personList.Metadata.Offset).To(Equal(0))
-					Expect(personList.Metadata.Limit).To(Equal(limit))
-					// Check if the records are sorted in ascending order by name
-					for i := 0; i < len(personList.Records)-1; i++ {
-						cur := personList.Records[i].Name
-						next := personList.Records[i+1].Name
-						Expect(cur <= next).To(BeTrue())
+				// 2. Poll until grade-4 enrollment is CONFIRMED
+				Eventually(func() string {
+					resp, pollErr := client.EnrollmentService.GetEnrollment(ctx, createdPerson.Id)
+					if pollErr != nil {
+						return ""
 					}
-				})
+					return resp.Status
+				}, 5*time.Second, 100*time.Millisecond).Should(Equal(fun.EnrollmentStatusConfirmed))
 
-				It("should sort by Name in descending order", func() {
-					var personList fun.PersonList
-					personQuery.SortBy = nameSortField
-					personQuery.SortOrder = common.SortOrderDesc
-					personList, err = client.PersonService.ListPerson(testCtx, personQuery)
+				grade4Confirmed, err = client.EnrollmentService.GetEnrollment(ctx, createdPerson.Id)
+				Expect(err).ToNot(HaveOccurred())
 
-					Expect(err).ToNot(HaveOccurred())
-					Expect(personList.Records).To(HaveLen(limit))
-					Expect(personList.Metadata.Offset).To(Equal(0))
-					Expect(personList.Metadata.Limit).To(Equal(limit))
+				// 3. Grade-6 re-enrollment
+				grade6Req := fun.EnrollmentRequest{PersonID: createdPerson.Id, Grade: 6}
+				grade6Initial, err = client.EnrollmentService.CreateEnrollment(ctx, grade6Req)
+				Expect(err).ToNot(HaveOccurred())
 
-					// Check if the records are sorted in descending order by name
-					for i := 0; i < len(personList.Records)-1; i++ {
-						cur := personList.Records[i].Name
-						next := personList.Records[i+1].Name
-						Expect(cur >= next).To(BeTrue())
+				// 4. Poll checking both grade and status to avoid stale first-enrollment state
+				Eventually(func() string {
+					resp, pollErr := client.EnrollmentService.GetEnrollment(ctx, createdPerson.Id)
+					if pollErr != nil {
+						return ""
 					}
-				})
-
-				It("should sort by Gender in ascending order", func() {
-					var personList fun.PersonList
-					personQuery.SortBy = "gender"
-					personQuery.SortOrder = common.SortOrderAsc
-					personList, err = client.PersonService.ListPerson(testCtx, personQuery)
-
-					Expect(err).ToNot(HaveOccurred())
-					Expect(personList.Records).To(HaveLen(limit))
-					Expect(personList.Metadata.Offset).To(Equal(0))
-					Expect(personList.Metadata.Limit).To(Equal(limit))
-
-					// Check if the records are sorted in ascending order by gender
-					for i := 0; i < len(personList.Records)-1; i++ {
-						cur := personList.Records[i].Gender
-						next := personList.Records[i+1].Gender
-						Expect(cur <= next).To(BeTrue())
+					if resp.Grade != 6 {
+						return ""
 					}
-				})
+					return resp.Status
+				}, 5*time.Second, 100*time.Millisecond).Should(Equal(fun.EnrollmentStatusWaitlisted))
 
-				It("should sort by Gender in descending order", func() {
-					var personList fun.PersonList
-					personQuery.SortBy = "gender"
-					personQuery.SortOrder = common.SortOrderDesc
-					personList, err = client.PersonService.ListPerson(testCtx, personQuery)
-
-					Expect(err).ToNot(HaveOccurred())
-					Expect(personList.Records).To(HaveLen(limit))
-					Expect(personList.Metadata.Offset).To(Equal(0))
-					Expect(personList.Metadata.Limit).To(Equal(limit))
-
-					// Check if the records are sorted in descending order by gender
-					for i := 0; i < len(personList.Records)-1; i++ {
-						cur := personList.Records[i].Gender
-						next := personList.Records[i+1].Gender
-						Expect(cur >= next).To(BeTrue())
-					}
-				})
+				grade6Final, err = client.EnrollmentService.GetEnrollment(ctx, createdPerson.Id)
+				Expect(err).ToNot(HaveOccurred())
 			})
 
-			Context("Bad Requests", func() {
-				AfterEach(func() {
-					_, err = client.PersonService.ListPerson(testCtx, personQuery)
-					Expect(err).Should(HaveOccurred())
-					Expect(err.Code()).To(Equal(http.StatusBadRequest))
-					Expect(err.Error()).To(ContainSubstring(expectedErr))
+			It("should complete the enrollment lifecycle using the existing person", func() {
+				// Grade-4 enrollment assertions
+				Expect(grade4Initial.ID).ToNot(BeEmpty())
+				Expect(grade4Initial.PersonID).To(Equal(createdPerson.Id))
+				Expect(grade4Initial.Grade).To(Equal(4))
+				Expect(grade4Initial.Status).To(Equal(fun.EnrollmentStatusSeatAllocationInitiated))
 
-					// Pollutes AfterEach Cleanup so Reset
-					personQuery.SortOrder = common.SortOrderNone
-					personQuery.SortBy = ""
-				})
+				Expect(grade4Confirmed.Grade).To(Equal(4))
+				Expect(grade4Confirmed.Status).To(Equal(fun.EnrollmentStatusConfirmed))
 
-				It("should fail for invalid Offset", func() {
-					personQuery.Offset = -1
-					expectedErr = "Offset"
-				})
+				// Grade-6 re-enrollment assertions (same enrollment ID reused)
+				Expect(grade6Initial.ID).To(Equal(grade4Initial.ID))
+				Expect(grade6Initial.Grade).To(Equal(6))
 
-				It("should fail for Lower Limit", func() {
-					personQuery.Limit = 0
-					expectedErr = "min (1)"
-				})
-
-				It("should fail for Max Limit", func() {
-					personQuery.Limit = 101
-					expectedErr = "max (100)"
-				})
-
-				It("should fail for invalid Name", func() {
-					personQuery.Name = invalidNameValue
-					expectedErr = nameFieldErr
-				})
-
-				It("should fail for max Name", func() {
-					personQuery.Name = maxName
-					expectedErr = maxValidationTag
-				})
-
-				It("should fail for invalid Gender", func() {
-					personQuery.Gender = "OTHER"
-					expectedErr = expectedGenderErr
-				})
-
-				It("should fail for invalid SortBy", func() {
-					personQuery.SortBy = "invalid"
-					expectedErr = "SortBy"
-				})
-
-				It("should fail for invalid Order", func() {
-					personQuery.SortBy = nameSortField
-					personQuery.SortOrder = common.SortOrder("invalid")
-					expectedErr = "asc"
-				})
-			})
-		})
-
-		Context("Bad Requests", func() {
-			AfterEach(func() {
-				_, err = client.PersonService.CreatePerson(testCtx, request)
-
-				Expect(err).Should(HaveOccurred())
-				Expect(err.Code()).To(Equal(http.StatusBadRequest))
-				Expect(err.Error()).To(ContainSubstring(expectedErr))
-			})
-
-			It("should fail for missing Name", func() {
-				request.Name = ""
-				expectedErr = reqdValidationTag
-			})
-
-			It("should fail for invalid Name", func() {
-				request.Name = invalidNameValue
-				expectedErr = nameFieldErr
-			})
-
-			It("should fail for max Name", func() {
-				request.Name = maxName
-				expectedErr = maxValidationTag
-			})
-
-			It("should fail for minimum Age", func() {
-				request.Age = 0
-				expectedErr = "Age"
-			})
-
-			It("should fail for max Age", func() {
-				request.Age = 200
-				expectedErr = maxValidationTag
-			})
-
-			It("should fail for missing Gender", func() {
-				request.Gender = ""
-				expectedErr = "Gender"
-			})
-
-			It("should fail for invalid Gender", func() {
-				request.Gender = "OTHER"
-				expectedErr = expectedGenderErr
+				Expect(grade6Final.Grade).To(Equal(6))
+				Expect(grade6Final.Status).To(Equal(fun.EnrollmentStatusWaitlisted))
 			})
 		})
 	})
 
-	Context("Bad Requests", func() {
+	Context("Operational endpoints", func() {
 		var (
-			emptyId   = ""
-			missingId = "missing-id"
+			metricsErr    error
+			swaggerStatus int
 		)
 
-		Context("Empty Id", func() {
-			AfterEach(func() {
-				Expect(err).Should(HaveOccurred())
-				Expect(err).To(Equal(common.ErrNotFound))
-				Expect(err.Code()).To(Equal(404))
-			})
+		BeforeEach(func() {
+			metricsErr = client.AdminService.HealthCheck(ctx)
 
-			It("should fail for delete", func() {
-				err = client.PersonService.DeletePerson(testCtx, emptyId)
-			})
+			resp, err := clients.DefaultHttpClient.R().
+				SetContext(ctx).
+				Get(serviceUrl + "/swagger/index.html")
+			Expect(err).ToNot(HaveOccurred())
+			swaggerStatus = resp.StatusCode()
 		})
 
-		Context("Missing Id", func() {
-			AfterEach(func() {
-				Expect(err).Should(HaveOccurred())
-				Expect(err).To(Equal(common.ErrNotFound))
-			})
-
-			It("should fail for get", func() {
-				_, err = client.PersonService.GetPerson(testCtx, missingId)
-			})
-
-			It("should fail for delete", func() {
-				err = client.PersonService.DeletePerson(testCtx, missingId)
-			})
+		It("should expose metrics and Swagger UI", func() {
+			Expect(metricsErr).ToNot(HaveOccurred())
+			Expect(swaggerStatus).To(Equal(http.StatusOK))
 		})
 	})
-
-	// FIXME: Break up Fun App Test logically and move to Handler Masterspec (Journal)
-	Context("Admin", func() {
-		It("should serve metrics", func() {
-			err = client.AdminService.HealthCheck(testCtx)
-			Expect(err).ToNot(HaveOccurred())
-		})
-
-		It("should serve swagger", func() {
-			resp, err := DefaultHttpClient.R().Get(serviceUrl + "/swagger/index.html")
-
-			Expect(err).ToNot(HaveOccurred())
-			Expect(resp.StatusCode()).To(Equal(200))
-		})
-	})
-
 })

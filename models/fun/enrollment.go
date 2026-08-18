@@ -8,7 +8,6 @@ import (
 )
 
 const (
-	// HACK: Smaller Name for Initial State ?
 	EnrollmentStatusSeatAllocationInitiated = "SEAT_ALLOCATION_INITIATED"
 	EnrollmentStatusWaitlisted              = "WAITLISTED"
 	EnrollmentStatusConfirmed               = "CONFIRMED"
@@ -38,4 +37,18 @@ type Enrollment struct {
 func (e *Enrollment) BeforeCreate(_ *gorm.DB) (err error) {
 	e.ID = uuid.NewString()[:8]
 	return
+}
+
+// EnrollCmdV1 triggers the enrollment saga flow.
+type EnrollCmdV1 struct {
+	EnrollmentID string    `json:"enrollmentId" validate:"required"`
+	PersonID     string    `json:"personId" validate:"required"`
+	Grade        int       `json:"grade" validate:"required,min=1,max=12"`
+	RequestedAt  time.Time `json:"requestedAt" validate:"required"`
+}
+
+// EnrollmentEvent is the shared base for all enrollment domain events.
+type EnrollmentEvent struct {
+	EnrollmentID string `json:"enrollmentId" validate:"required"`
+	PersonID     string `json:"personId" validate:"required"`
 }

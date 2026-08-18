@@ -732,7 +732,7 @@ var _ = Describe("PersonHandler CUD", func() {
 				Expect(persistedErr).To(Equal(common.ErrNotFound))
 			})
 
-			PIt("records CREATE then DELETE audits [BUG: DELETE does not preserve the deleted person's audit identity]", func() {
+			It("records CREATE then DELETE audits", func() {
 				Expect(audit).To(HaveLen(2))
 				Expect(audit[0].Operation).To(Equal("CREATE"))
 				Expect(audit[1].Id).To(Equal(existingPerson.Id))
