@@ -13,7 +13,7 @@ import (
 
 type BinAnyResponse struct {
 	Headers map[string]string `json:"headers"`
-	// Data db.Person `json:"data"`
+	// Data db.Student `json:"data"`
 	Method string `json:"verb"`
 }
 

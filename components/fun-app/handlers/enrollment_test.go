@@ -1099,8 +1099,7 @@ var _ = Describe("Enrollments", func() {
 					EnrollmentID: enrollment.ID,
 					StudentID:     enrollment.StudentID,
 				},
-				Grade: enrollment.Grade,
-				Reason: "capacity reached", WaitlistedAt: time.Now().UTC(),
+				Grade: enrollment.Grade, Reason: "capacity reached", WaitlistedAt: time.Now().UTC(),
 			}
 		})
 
@@ -1281,14 +1280,7 @@ var _ = Describe("Enrollments", func() {
 		BeforeEach(func() {
 			enrollment = fun.Enrollment{StudentID: student.Id, Grade: 4, Status: fun.EnrollmentStatusSeatAllocationInitiated}
 			Expect(enrollmentDao.Create(ctx, &enrollment)).ToNot(HaveOccurred())
-			event = fun.SeatAllocationFailedEvtV1{
-				EnrollmentEvent: fun.EnrollmentEvent{
-					EnrollmentID: enrollment.ID,
-					StudentID:     enrollment.StudentID,
-				},
-				Reason:   "allocation failed",
-				FailedAt: time.Now().UTC(),
-			}
+			event = fun.SeatAllocationFailedEvtV1{EnrollmentEvent: fun.EnrollmentEvent{EnrollmentID: enrollment.ID, StudentID: enrollment.StudentID}, Reason: "allocation failed", FailedAt: time.Now().UTC()}
 		})
 
 		execute := func() {
