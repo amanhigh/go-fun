@@ -637,6 +637,7 @@ var _ = Describe("TickerHandler Integration - GET/List Tests - Section 2.2.1 Pri
 						router.ServeHTTP(w, req)
 						response := decodeTickerListResponse(w)
 						Expect(response.Metadata.Offset).To(Equal(1))
+						Expect(response.Metadata.Total).To(Equal(int64(3)))
 					})
 					It("should accept limit 1", func() {
 						req, w := util.CreateTestRequest(http.MethodGet, barkat.TickerBase+"?limit=1", nil)

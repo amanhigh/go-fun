@@ -73,7 +73,7 @@ type PriceAlertQuery struct {
 	Limit     int              `form:"limit,default=10" binding:"min=1,max=10"`
 	SortOrder common.SortOrder `form:"sort-order,default=asc" binding:"omitempty,oneof=asc desc"`
 	Ticker    string           `form:"ticker" binding:"omitempty,ticker_path"`
-	SortBy    string           `form:"sort-by,default=trigger_price" binding:"omitempty,oneof=trigger_price created_at"`
+	SortBy    string           `form:"sort-by" binding:"omitempty,oneof=trigger_price created_at"`
 }
 
 // PriceAlertList is the paginated response for Price alerts.

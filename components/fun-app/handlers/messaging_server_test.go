@@ -119,8 +119,10 @@ var _ = Describe("MessagingServer learning scenarios", func() {
 				}),
 			).Run(func(_ context.Context, enrollment fun.Enrollment, reason string) {
 				evtPayload, err := json.Marshal(fun.SeatAllocationFailedEvtV1{
-					EnrollmentID: enrollment.ID,
-					StudentID:     enrollment.StudentID,
+					EnrollmentEvent: fun.EnrollmentEvent{
+						EnrollmentID: enrollment.ID,
+						StudentID:     enrollment.StudentID,
+					},
 					Reason:       reason,
 					FailedAt:     time.Now().UTC(),
 				})
@@ -195,8 +197,10 @@ var _ = Describe("MessagingServer learning scenarios", func() {
 
 		BeforeEach(func() {
 			failed := fun.SeatAllocationFailedEvtV1{
-				EnrollmentID: "enr-1",
-				StudentID:     "student-1",
+				EnrollmentEvent: fun.EnrollmentEvent{
+					EnrollmentID: "enr-1",
+					StudentID:     "student-1",
+				},
 				Reason:       "capacity unavailable",
 				FailedAt:     time.Now().UTC(),
 			}

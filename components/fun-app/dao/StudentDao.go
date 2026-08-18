@@ -30,10 +30,9 @@ func NewStudentDao(baseRepo util.BaseDbRepository) *StudentDao {
 
 func (pd *StudentDao) ListStudent(c context.Context, studentQuery fun.StudentQuery) (studentList fun.StudentList, err common.HttpError) {
 	var txErr error
-	// Add Pagination to Query
-	txn := pd.SafeTx(c).Offset(studentQuery.Offset).Limit(studentQuery.Limit)
 
-	// Add Query Params if Supplied
+	// Build base filtered query (no pagination)
+	txn := pd.SafeTx(c)
 	if studentQuery.Name != "" {
 		txn = txn.Where("name like ?", "%"+studentQuery.Name+"%")
 	}
@@ -41,14 +40,22 @@ func (pd *StudentDao) ListStudent(c context.Context, studentQuery fun.StudentQue
 		txn = txn.Where("gender = ?", studentQuery.Gender)
 	}
 
-	// Add Sorting to Query
-	txn = util.ApplySort(txn, util.SortOptions{
-		SortBy:    studentQuery.SortBy,
-		SortOrder: studentQuery.SortOrder,
+	// Count total filtered records before applying offset/limit
+	if txErr = txn.Model(&fun.Student{}).Count(&studentList.Metadata.Total).Error; txErr != nil && !errors.Is(txErr, gorm.ErrRecordNotFound) {
+		zerolog.Ctx(c).Error().Any("Query", studentQuery).Err(txErr).Msg("Error Counting Student List")
+		err = util.GormErrorMapper(txErr)
+		return
+	}
+
+	// Apply pagination and sorting, then fetch records
+	txn = util.ApplySort(txn.Offset(studentQuery.Offset).Limit(studentQuery.Limit), util.SortOptions{
+		SortBy:           studentQuery.SortBy,
+		SortOrder:        studentQuery.SortOrder,
+		DefaultSortBy:    "name",
+		DefaultSortOrder: common.SortOrderAsc,
 	})
 
-	// Execute Query to Get Records and Count
-	if txErr = txn.Find(&studentList.Records).Count(&studentList.Metadata.Total).Error; txErr != nil && !errors.Is(txErr, gorm.ErrRecordNotFound) {
+	if txErr = txn.Find(&studentList.Records).Error; txErr != nil && !errors.Is(txErr, gorm.ErrRecordNotFound) {
 		zerolog.Ctx(c).Error().Any("Query", studentQuery).Err(txErr).Msg("Error Fetching Student List")
 		err = util.GormErrorMapper(txErr)
 	}
@@ -64,8 +71,13 @@ func (pd *StudentDao) ListStudentAudit(c context.Context, id string) (studentAud
 	var txErr error
 	audit := fun.StudentAudit{Id: id}
 
-	// Fetch Student Audit Records
-	if txErr = pd.SafeTx(c).Where(audit).Find(&studentAuditList).Error; txErr != nil && !errors.Is(txErr, gorm.ErrRecordNotFound) {
+	// Fetch Student Audit Records ordered deterministically by audit_id
+	query := pd.SafeTx(c).Where(audit)
+	query = util.ApplySort(query, util.SortOptions{
+		DefaultSortBy:    "audit_id",
+		DefaultSortOrder: common.SortOrderAsc,
+	})
+	if txErr = query.Find(&studentAuditList).Error; txErr != nil && !errors.Is(txErr, gorm.ErrRecordNotFound) {
 		zerolog.Ctx(c).Error().Str("Id", id).Err(txErr).Msg("Error Fetching Student Audit List")
 		err = util.GormErrorMapper(txErr)
 	}

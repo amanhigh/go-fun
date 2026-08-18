@@ -38,8 +38,10 @@ func (sap *seatAllocationPublisher) AllocateSeat(ctx context.Context, enrollment
 
 func (sap *seatAllocationPublisher) SeatReserved(ctx context.Context, enrollment fun.Enrollment) common.HttpError {
 	payload := fun.SeatReservedEvtV1{
-		EnrollmentID: enrollment.ID,
-		StudentID:     enrollment.StudentID,
+		EnrollmentEvent: fun.EnrollmentEvent{
+			EnrollmentID: enrollment.ID,
+			StudentID:     enrollment.StudentID,
+		},
 		Grade:        enrollment.Grade,
 		ReservedAt:   time.Now().UTC(),
 	}
@@ -49,8 +51,10 @@ func (sap *seatAllocationPublisher) SeatReserved(ctx context.Context, enrollment
 
 func (sap *seatAllocationPublisher) SeatWaitlisted(ctx context.Context, enrollment fun.Enrollment, reason string) common.HttpError {
 	payload := fun.SeatWaitlistedEvtV1{
-		EnrollmentID: enrollment.ID,
-		StudentID:     enrollment.StudentID,
+		EnrollmentEvent: fun.EnrollmentEvent{
+			EnrollmentID: enrollment.ID,
+			StudentID:     enrollment.StudentID,
+		},
 		Grade:        enrollment.Grade,
 		Reason:       reason,
 		WaitlistedAt: time.Now().UTC(),
@@ -61,8 +65,10 @@ func (sap *seatAllocationPublisher) SeatWaitlisted(ctx context.Context, enrollme
 
 func (sap *seatAllocationPublisher) SeatAllocationFailed(ctx context.Context, enrollment fun.Enrollment, reason string) common.HttpError {
 	payload := fun.SeatAllocationFailedEvtV1{
-		EnrollmentID: enrollment.ID,
-		StudentID:     enrollment.StudentID,
+		EnrollmentEvent: fun.EnrollmentEvent{
+			EnrollmentID: enrollment.ID,
+			StudentID:     enrollment.StudentID,
+		},
 		Reason:       reason,
 		FailedAt:     time.Now().UTC(),
 	}

@@ -742,6 +742,7 @@ var _ = Describe("PriceAlertHandler Integration - Section 2.2.3 Price Alert APIs
 				Expect(listResponse.PriceAlerts).To(HaveLen(1))
 				Expect(listResponse.Metadata.Offset).To(Equal(1))
 				Expect(listResponse.Metadata.Limit).To(Equal(1))
+				Expect(listResponse.Metadata.Total).To(Equal(int64(2)))
 			})
 		})
 
@@ -818,16 +819,17 @@ var _ = Describe("PriceAlertHandler Integration - Section 2.2.3 Price Alert APIs
 
 			Context("Sort Order Field", func() {
 				Context("Allowed Values", func() {
-					It("should accept asc", func() {
-						req, w = util.CreateTestRequest(http.MethodGet, barkat.PriceAlertBase+"?sort-order=asc", nil)
-						router.ServeHTTP(w, req)
-						Expect(w.Code).To(Equal(http.StatusOK))
-					})
+					var listResponse barkat.PriceAlertList
 
-					It("should accept desc", func() {
+					BeforeEach(func() {
 						req, w = util.CreateTestRequest(http.MethodGet, barkat.PriceAlertBase+"?sort-order=desc", nil)
 						router.ServeHTTP(w, req)
-						Expect(w.Code).To(Equal(http.StatusOK))
+						listResponse = decodePriceAlertListResponse(w)
+					})
+
+					It("should ignore order-only input and return default ascending trigger_price order", func() {
+						Expect(listResponse.PriceAlerts).To(HaveLen(2))
+						Expect(listResponse.PriceAlerts[0].TriggerPrice).To(BeNumerically("<", listResponse.PriceAlerts[1].TriggerPrice))
 					})
 				})
 
@@ -848,6 +850,7 @@ var _ = Describe("PriceAlertHandler Integration - Section 2.2.3 Price Alert APIs
 						listResponse := decodePriceAlertListResponse(w)
 						Expect(listResponse.PriceAlerts).To(HaveLen(1))
 						Expect(listResponse.Metadata.Offset).To(Equal(1))
+						Expect(listResponse.Metadata.Total).To(Equal(int64(2)))
 					})
 				})
 

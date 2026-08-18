@@ -107,6 +107,41 @@ var _ = Describe("Enrollment API", func() {
 					Expect(getResp.Status).To(Equal(fun.EnrollmentStatusConfirmed))
 				})
 			})
+
+			Context("and is re-enrolled above capacity", func() {
+				var reEnrollResp fun.Enrollment
+
+				BeforeEach(func() {
+					Eventually(func() string {
+						resp, pollErr := client.EnrollmentService.GetEnrollment(ctx, createdStudent.Id)
+						if pollErr != nil {
+							return ""
+						}
+						return resp.Status
+					}, 3*time.Second, 50*time.Millisecond).Should(Equal(fun.EnrollmentStatusConfirmed))
+
+					reEnrollResp, err = client.EnrollmentService.CreateEnrollment(ctx, fun.EnrollmentRequest{
+						StudentID: createdStudent.Id,
+						Grade:     6,
+					})
+					Expect(err).ToNot(HaveOccurred())
+				})
+
+				It("reuses the enrollment and waitlists the student", func() {
+					Expect(reEnrollResp.ID).To(Equal(enrollResp.ID))
+					Expect(reEnrollResp.StudentID).To(Equal(createdStudent.Id))
+					Expect(reEnrollResp.Grade).To(Equal(6))
+					Expect(reEnrollResp.Status).To(Equal(fun.EnrollmentStatusSeatAllocationInitiated))
+
+					Eventually(func() string {
+						resp, pollErr := client.EnrollmentService.GetEnrollment(ctx, createdStudent.Id)
+						if pollErr != nil || resp.Grade != 6 {
+							return ""
+						}
+						return resp.Status
+					}, 3*time.Second, 50*time.Millisecond).Should(Equal(fun.EnrollmentStatusWaitlisted))
+				})
+			})
 		})
 
 		It("should waitlist when grade exceeds capacity", func() {

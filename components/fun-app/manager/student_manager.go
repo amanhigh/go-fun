@@ -127,8 +127,7 @@ func (p *StudentManager) DeleteStudent(c context.Context, id string) (err common
 	defer span.End()
 
 	err = p.Dao.UseOrCreateTx(ctx, func(c context.Context) (err common.HttpError) {
-		span.AddEvent("Student Found for Deletion", trace.WithAttributes(attribute.String("id", id)))
-		// BUG: Deleting with an empty fun.Student{} prevents AfterDelete audit association with the deleted student.
+		span.AddEvent("Deleting Student", trace.WithAttributes(attribute.String("id", id)))
 		return p.Dao.DeleteById(c, id, &fun.Student{})
 	})
 

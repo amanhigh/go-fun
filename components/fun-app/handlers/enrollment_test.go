@@ -332,7 +332,12 @@ var _ = Describe("Enrollments", func() {
 
 			It("returns the persisted enrollment for the student", func() {
 				Expect(responseRecorder.Code).To(Equal(http.StatusOK))
-				Expect(response).To(Equal(enrollment))
+				Expect(response.ID).To(Equal(enrollment.ID))
+				Expect(response.StudentID).To(Equal(enrollment.StudentID))
+				Expect(response.Grade).To(Equal(enrollment.Grade))
+				Expect(response.Status).To(Equal(enrollment.Status))
+				Expect(response.CreatedAt.Equal(enrollment.CreatedAt)).To(BeTrue())
+				Expect(response.UpdatedAt.Equal(enrollment.UpdatedAt)).To(BeTrue())
 			})
 		})
 
@@ -882,8 +887,10 @@ var _ = Describe("Enrollments", func() {
 			}
 			Expect(enrollmentDao.Create(ctx, &enrollment)).ToNot(HaveOccurred())
 			event = fun.SeatReservedEvtV1{
-				EnrollmentID: enrollment.ID,
-				StudentID:     enrollment.StudentID,
+				EnrollmentEvent: fun.EnrollmentEvent{
+					EnrollmentID: enrollment.ID,
+					StudentID:     enrollment.StudentID,
+				},
 				Grade:        enrollment.Grade,
 				ReservedAt:   time.Now().UTC(),
 			}
@@ -1088,7 +1095,11 @@ var _ = Describe("Enrollments", func() {
 			enrollment = fun.Enrollment{StudentID: student.Id, Grade: 4, Status: fun.EnrollmentStatusSeatAllocationInitiated}
 			Expect(enrollmentDao.Create(ctx, &enrollment)).ToNot(HaveOccurred())
 			event = fun.SeatWaitlistedEvtV1{
-				EnrollmentID: enrollment.ID, StudentID: enrollment.StudentID, Grade: enrollment.Grade,
+				EnrollmentEvent: fun.EnrollmentEvent{
+					EnrollmentID: enrollment.ID,
+					StudentID:     enrollment.StudentID,
+				},
+				Grade: enrollment.Grade,
 				Reason: "capacity reached", WaitlistedAt: time.Now().UTC(),
 			}
 		})
@@ -1270,7 +1281,14 @@ var _ = Describe("Enrollments", func() {
 		BeforeEach(func() {
 			enrollment = fun.Enrollment{StudentID: student.Id, Grade: 4, Status: fun.EnrollmentStatusSeatAllocationInitiated}
 			Expect(enrollmentDao.Create(ctx, &enrollment)).ToNot(HaveOccurred())
-			event = fun.SeatAllocationFailedEvtV1{EnrollmentID: enrollment.ID, StudentID: enrollment.StudentID, Reason: "allocation failed", FailedAt: time.Now().UTC()}
+			event = fun.SeatAllocationFailedEvtV1{
+				EnrollmentEvent: fun.EnrollmentEvent{
+					EnrollmentID: enrollment.ID,
+					StudentID:     enrollment.StudentID,
+				},
+				Reason:   "allocation failed",
+				FailedAt: time.Now().UTC(),
+			}
 		})
 
 		execute := func() {

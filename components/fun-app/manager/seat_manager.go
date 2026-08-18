@@ -47,7 +47,6 @@ func (sm *SeatManager) PublishSeatAllocationFailed(ctx context.Context, enrollme
 	return sm.SeatPublisher.SeatAllocationFailed(ctx, enrollment, reason)
 }
 
-// FIXME: Retry/DLQ infra on AllocateSeatCmd is wired but only exercised in tests — add real allocation check that can fail externally.
 // AllocateSeat processes AllocateSeat command and emits SeatReserved or SeatWaitlisted.
 // On technical failure it returns an error; waitlist is not a failure.
 // No DB writes here; persistence happens in subsequent event handlers.

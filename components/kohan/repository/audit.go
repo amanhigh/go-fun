@@ -32,12 +32,15 @@ func NewAuditRepository(db *gorm.DB) *AuditRepositoryImpl {
 
 func (r *AuditRepositoryImpl) ListStaleReviewTickers(ctx context.Context, cutoff time.Time) ([]barkat.Ticker, common.HttpError) {
 	var tickers []barkat.Ticker
-	err := r.SafeTx(ctx).Model(&barkat.Ticker{}).
+	query := r.SafeTx(ctx).Model(&barkat.Ticker{}).
 		Select("external_id, state, last_opened_at").
 		Where("last_opened_at < ?", cutoff).
-		Where("tickers.state != ?", "BLACKLIST").
-		Order("last_opened_at ASC").
-		Scan(&tickers).Error
+		Where("tickers.state != ?", "BLACKLIST")
+	query = util.ApplySort(query, util.SortOptions{
+		DefaultSortBy:    "last_opened_at",
+		DefaultSortOrder: common.SortOrderAsc,
+	})
+	err := query.Scan(&tickers).Error
 	return tickers, util.GormErrorMapper(err)
 }
 

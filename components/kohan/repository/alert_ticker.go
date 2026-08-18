@@ -53,7 +53,11 @@ func (r *AlertTickerRepositoryImpl) ListAlertTickers(ctx context.Context, query 
 	}
 
 	var alertTickers []barkat.AlertTicker
-	if err := tx.Preload("Ticker").Offset(query.Offset).Limit(query.Limit).Find(&alertTickers).Error; err != nil {
+	queryTx := util.ApplySort(tx.Preload("Ticker").Offset(query.Offset).Limit(query.Limit), util.SortOptions{
+		DefaultSortBy:    "external_id",
+		DefaultSortOrder: common.SortOrderAsc,
+	})
+	if err := queryTx.Find(&alertTickers).Error; err != nil {
 		return nil, 0, util.GormErrorMapper(err)
 	}
 
