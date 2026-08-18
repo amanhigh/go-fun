@@ -57,7 +57,7 @@ jobs:
       - name: SETUP -> Build
         run: |
           export GOTOOLCHAIN=local
-          just reset
+          just setup
 
       - name: COVERAGE -> Report
         uses: codecov/codecov-action@v7
