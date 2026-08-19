@@ -22,7 +22,6 @@ type BaseDbRepository interface {
 	DeleteBy(c context.Context, entity any, condition string, arg any) common.HttpError
 	DeleteById(c context.Context, id any, entity any) (err common.HttpError)
 	GetCount(c context.Context, entity any) (count int64, err common.HttpError)
-	SetPagination(query *gorm.DB, offset, limit int)
 	UseOrCreateTx(c context.Context, run DbRun, readOnly ...bool) (err common.HttpError)
 	SafeTx(c context.Context) *gorm.DB
 	GetByExternalId(c context.Context, externalId string, entity any) (err common.HttpError)

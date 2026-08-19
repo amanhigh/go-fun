@@ -706,58 +706,6 @@ func (_c *EnrollmentRepository_SafeTx_Call) RunAndReturn(run func(c context.Cont
 	return _c
 }
 
-// SetPagination provides a mock function for the type EnrollmentRepository
-func (_mock *EnrollmentRepository) SetPagination(query *gorm.DB, offset int, limit int) {
-	_mock.Called(query, offset, limit)
-	return
-}
-
-// EnrollmentRepository_SetPagination_Call is a *mock.Call that shadows Run/Return methods with type explicit version for method 'SetPagination'
-type EnrollmentRepository_SetPagination_Call struct {
-	*mock.Call
-}
-
-// SetPagination is a helper method to define mock.On call
-//   - query *gorm.DB
-//   - offset int
-//   - limit int
-func (_e *EnrollmentRepository_Expecter) SetPagination(query interface{}, offset interface{}, limit interface{}) *EnrollmentRepository_SetPagination_Call {
-	return &EnrollmentRepository_SetPagination_Call{Call: _e.mock.On("SetPagination", query, offset, limit)}
-}
-
-func (_c *EnrollmentRepository_SetPagination_Call) Run(run func(query *gorm.DB, offset int, limit int)) *EnrollmentRepository_SetPagination_Call {
-	_c.Call.Run(func(args mock.Arguments) {
-		var arg0 *gorm.DB
-		if args[0] != nil {
-			arg0 = args[0].(*gorm.DB)
-		}
-		var arg1 int
-		if args[1] != nil {
-			arg1 = args[1].(int)
-		}
-		var arg2 int
-		if args[2] != nil {
-			arg2 = args[2].(int)
-		}
-		run(
-			arg0,
-			arg1,
-			arg2,
-		)
-	})
-	return _c
-}
-
-func (_c *EnrollmentRepository_SetPagination_Call) Return() *EnrollmentRepository_SetPagination_Call {
-	_c.Call.Return()
-	return _c
-}
-
-func (_c *EnrollmentRepository_SetPagination_Call) RunAndReturn(run func(query *gorm.DB, offset int, limit int)) *EnrollmentRepository_SetPagination_Call {
-	_c.Run(run)
-	return _c
-}
-
 // Update provides a mock function for the type EnrollmentRepository
 func (_mock *EnrollmentRepository) Update(c context.Context, entity any, omit ...string) common.HttpError {
 	var tmpRet mock.Arguments
