@@ -368,7 +368,7 @@ const docTemplate = `{
                     "type": "string"
                 },
                 "createdBy": {
-                    "description": "TODO: Use a base GORM model for common fields.",
+                    "description": "TODO: Use a base GORM repository for common fields?",
                     "type": "string"
                 },
                 "gender": {

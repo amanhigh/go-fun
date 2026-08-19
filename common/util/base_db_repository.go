@@ -136,7 +136,7 @@ func (b *BaseDbRepositoryImpl) SetPagination(query *gorm.DB, offset, limit int) 
 
 /*
 Transaction Handling to use already created transaction or Init New.
-Needs State, hence placed in BaseDbRepository (Not Util)
+Needs state, hence placed in BaseDbRepositoryImpl (not Util)
 */
 func (b *BaseDbRepositoryImpl) UseOrCreateTx(c context.Context, run DbRun, readOnly ...bool) (err common.HttpError) {
 	// Check if Context has Tx
