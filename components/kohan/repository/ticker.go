@@ -11,7 +11,7 @@ import (
 
 // TickerRepository provides persistence operations for barkat tickers.
 type TickerRepository interface {
-	util.BaseDbRepositoryInterface
+	util.BaseDbRepository
 	// GetTicker retrieves a single ticker by external_id with AlertTickers preloaded.
 	GetTicker(ctx context.Context, ticker string) (barkat.Ticker, common.HttpError)
 	// ListTickers returns a filtered, paginated list of tickers.
@@ -25,9 +25,9 @@ type TickerRepositoryImpl struct {
 var _ TickerRepository = (*TickerRepositoryImpl)(nil)
 
 // NewTickerRepository creates a new TickerRepository backed by GORM.
-func NewTickerRepository(db *gorm.DB) *TickerRepositoryImpl {
+func NewTickerRepository(baseRepository util.BaseDbRepository) *TickerRepositoryImpl {
 	return &TickerRepositoryImpl{
-		BaseDbRepository: util.NewBaseDbRepository(db),
+		BaseDbRepository: baseRepository,
 	}
 }
 

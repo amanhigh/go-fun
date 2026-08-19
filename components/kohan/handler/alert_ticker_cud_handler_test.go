@@ -76,7 +76,7 @@ var _ = Describe("AlertTickerHandler Integration - CUD Tests - Section 2.2.2 Ale
 			Exchange: new("NSE"),
 			Type:     barkat.AlertTickerTypePrimary,
 		}
-		alertTickerRepo := repository.NewAlertTickerRepository(db)
+		alertTickerRepo := repository.NewAlertTickerRepository(util.NewBaseDbRepository(db))
 		alertTickerMgr := manager.NewAlertTickerManager(alertTickerRepo)
 		alertTickerHandler = handler.NewAlertTickerHandler(alertTickerMgr)
 		router = newAlertTickerTestRouter(alertTickerHandler)

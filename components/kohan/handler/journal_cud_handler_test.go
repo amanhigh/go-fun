@@ -82,7 +82,7 @@ var _ = Describe("JournalHandler Integration - CUD Tests", func() {
 		db, err = core.CreateTestBarkatDB()
 		Expect(err).ToNot(HaveOccurred())
 
-		journalRepo := repository.NewJournalRepository(db)
+		journalRepo := repository.NewJournalRepository(util.NewBaseDbRepository(db))
 		journalMgr = manager.NewJournalManager(journalRepo)
 		journalHandler = handler.NewJournalHandler(journalMgr)
 

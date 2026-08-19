@@ -25,6 +25,6 @@ packages:
     interfaces:
       EnrollmentManagerInterface:
       SeatManagerInterface:
-  "github.com/amanhigh/go-fun/components/fun-app/dao":
+  "github.com/amanhigh/go-fun/components/fun-app/repository":
     interfaces:
-      EnrollmentDaoInterface:
+      EnrollmentRepository:

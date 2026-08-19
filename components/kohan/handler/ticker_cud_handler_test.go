@@ -92,7 +92,7 @@ var _ = Describe("TickerHandler Integration - CUD Tests - Section 2.2.1 Primary 
 		core.RegisterJournalValidators()
 		db, err = core.CreateTestBarkatDB()
 		Expect(err).ToNot(HaveOccurred())
-		tickerRepo := repository.NewTickerRepository(db)
+		tickerRepo := repository.NewTickerRepository(util.NewBaseDbRepository(db))
 		tickerMgr := manager.NewBarkatTickerManager(tickerRepo)
 		tickerHandler = handler.NewTickerHandler(tickerMgr)
 		validTickerPayload = barkat.Ticker{

@@ -15,10 +15,10 @@ import (
 	"github.com/ThreeDotsLabs/watermill/message"
 	"github.com/ThreeDotsLabs/watermill/pubsub/gochannel"
 	"github.com/amanhigh/go-fun/common/util"
-	"github.com/amanhigh/go-fun/components/fun-app/dao"
 	"github.com/amanhigh/go-fun/components/fun-app/handlers"
 	"github.com/amanhigh/go-fun/components/fun-app/manager"
 	"github.com/amanhigh/go-fun/components/fun-app/publisher"
+	"github.com/amanhigh/go-fun/components/fun-app/repository"
 	common "github.com/amanhigh/go-fun/models/common"
 	"github.com/amanhigh/go-fun/models/fun"
 	"github.com/gin-gonic/gin"
@@ -33,16 +33,16 @@ const unknownEnrollmentID = "unknown-enrollment"
 
 var _ = Describe("Enrollments", func() {
 	var (
-		ctx               context.Context
-		db                *gorm.DB
-		dbSQL             *sql.DB
-		channel           *gochannel.GoChannel
-		router            *gin.Engine
-		student            fun.Student
-		enrollmentDao     dao.EnrollmentDaoInterface
-		enrollmentManager manager.EnrollmentManagerInterface
-		seatManager       manager.SeatManagerInterface
-		seatHandler       handlers.SeatMessageHandler
+		ctx                  context.Context
+		db                   *gorm.DB
+		dbSQL                *sql.DB
+		channel              *gochannel.GoChannel
+		router               *gin.Engine
+		student              fun.Student
+		enrollmentRepository repository.EnrollmentRepository
+		enrollmentManager    manager.EnrollmentManagerInterface
+		seatManager          manager.SeatManagerInterface
+		seatHandler          handlers.SeatMessageHandler
 	)
 
 	BeforeEach(func() {
@@ -58,13 +58,13 @@ var _ = Describe("Enrollments", func() {
 
 		baseRepository := util.NewBaseDbRepository(db)
 		tracer := otel.Tracer("fun-app-handler-test")
-		studentManager := manager.NewStudentManager(dao.NewStudentDao(baseRepository), tracer)
-		enrollmentDao = dao.NewEnrollmentDao(baseRepository)
+		studentManager := manager.NewStudentManager(repository.NewStudentRepository(baseRepository), tracer)
+		enrollmentRepository = repository.NewEnrollmentRepository(baseRepository)
 		enrollmentPublisher := publisher.NewEnrollmentPublisher(publisher.NewBasePublisher(channel))
 		seatManager = manager.NewSeatManager(publisher.NewSeatAllocationPublisher(publisher.NewBasePublisher(channel)))
 		enrollmentManager = manager.NewEnrollmentManager(
 			studentManager,
-			enrollmentDao,
+			enrollmentRepository,
 			enrollmentPublisher,
 			seatManager,
 		)
@@ -320,10 +320,10 @@ var _ = Describe("Enrollments", func() {
 			BeforeEach(func() {
 				enrollment = fun.Enrollment{
 					StudentID: student.Id,
-					Grade:    4,
-					Status:   fun.EnrollmentStatusSeatAllocationInitiated,
+					Grade:     4,
+					Status:    fun.EnrollmentStatusSeatAllocationInitiated,
 				}
-				Expect(enrollmentDao.Create(ctx, &enrollment)).ToNot(HaveOccurred())
+				Expect(enrollmentRepository.Create(ctx, &enrollment)).ToNot(HaveOccurred())
 				req, recorder := util.CreateTestRequest(http.MethodGet, "/v1/enrollments/"+student.Id, nil)
 				responseRecorder = recorder
 				router.ServeHTTP(responseRecorder, req)
@@ -347,10 +347,10 @@ var _ = Describe("Enrollments", func() {
 					BeforeEach(func() {
 						enrollment = fun.Enrollment{
 							StudentID: student.Id,
-							Grade:    4,
-							Status:   fun.EnrollmentStatusSeatAllocationInitiated,
+							Grade:     4,
+							Status:    fun.EnrollmentStatusSeatAllocationInitiated,
 						}
-						Expect(enrollmentDao.Create(ctx, &enrollment)).ToNot(HaveOccurred())
+						Expect(enrollmentRepository.Create(ctx, &enrollment)).ToNot(HaveOccurred())
 						req, recorder := util.CreateTestRequest(http.MethodGet, "/v1/enrollments/"+student.Id, nil)
 						responseRecorder = recorder
 						router.ServeHTTP(responseRecorder, req)
@@ -392,13 +392,13 @@ var _ = Describe("Enrollments", func() {
 		BeforeEach(func() {
 			enrollment = fun.Enrollment{
 				StudentID: student.Id,
-				Grade:    4,
-				Status:   fun.EnrollmentStatusSeatAllocationInitiated,
+				Grade:     4,
+				Status:    fun.EnrollmentStatusSeatAllocationInitiated,
 			}
-			Expect(enrollmentDao.Create(ctx, &enrollment)).ToNot(HaveOccurred())
+			Expect(enrollmentRepository.Create(ctx, &enrollment)).ToNot(HaveOccurred())
 			command = fun.EnrollCmdV1{
 				EnrollmentID: enrollment.ID,
-				StudentID:     enrollment.StudentID,
+				StudentID:    enrollment.StudentID,
 				Grade:        enrollment.Grade,
 				RequestedAt:  time.Now().UTC(),
 			}
@@ -649,7 +649,7 @@ var _ = Describe("Enrollments", func() {
 		BeforeEach(func() {
 			command = fun.AllocateSeatCmdV1{
 				EnrollmentID: "enrollment-1",
-				StudentID:     student.Id,
+				StudentID:    student.Id,
 				Grade:        4,
 				RequestedAt:  time.Now().UTC(),
 			}
@@ -882,17 +882,17 @@ var _ = Describe("Enrollments", func() {
 		BeforeEach(func() {
 			enrollment = fun.Enrollment{
 				StudentID: student.Id,
-				Grade:    4,
-				Status:   fun.EnrollmentStatusSeatAllocationInitiated,
+				Grade:     4,
+				Status:    fun.EnrollmentStatusSeatAllocationInitiated,
 			}
-			Expect(enrollmentDao.Create(ctx, &enrollment)).ToNot(HaveOccurred())
+			Expect(enrollmentRepository.Create(ctx, &enrollment)).ToNot(HaveOccurred())
 			event = fun.SeatReservedEvtV1{
 				EnrollmentEvent: fun.EnrollmentEvent{
 					EnrollmentID: enrollment.ID,
-					StudentID:     enrollment.StudentID,
+					StudentID:    enrollment.StudentID,
 				},
-				Grade:        enrollment.Grade,
-				ReservedAt:   time.Now().UTC(),
+				Grade:      enrollment.Grade,
+				ReservedAt: time.Now().UTC(),
 			}
 		})
 
@@ -1093,11 +1093,11 @@ var _ = Describe("Enrollments", func() {
 
 		BeforeEach(func() {
 			enrollment = fun.Enrollment{StudentID: student.Id, Grade: 4, Status: fun.EnrollmentStatusSeatAllocationInitiated}
-			Expect(enrollmentDao.Create(ctx, &enrollment)).ToNot(HaveOccurred())
+			Expect(enrollmentRepository.Create(ctx, &enrollment)).ToNot(HaveOccurred())
 			event = fun.SeatWaitlistedEvtV1{
 				EnrollmentEvent: fun.EnrollmentEvent{
 					EnrollmentID: enrollment.ID,
-					StudentID:     enrollment.StudentID,
+					StudentID:    enrollment.StudentID,
 				},
 				Grade: enrollment.Grade, Reason: "capacity reached", WaitlistedAt: time.Now().UTC(),
 			}
@@ -1129,7 +1129,7 @@ var _ = Describe("Enrollments", func() {
 			Context("duplicate waitlisting", func() {
 				BeforeEach(func() {
 					enrollment.Status = fun.EnrollmentStatusWaitlisted
-					Expect(enrollmentDao.Update(ctx, &enrollment)).ToNot(HaveOccurred())
+					Expect(enrollmentRepository.Update(ctx, &enrollment)).ToNot(HaveOccurred())
 					execute()
 				})
 				It("acknowledges the duplicate and preserves WAITLISTED", func() {
@@ -1141,7 +1141,7 @@ var _ = Describe("Enrollments", func() {
 				Context("CONFIRMED", func() {
 					BeforeEach(func() {
 						enrollment.Status = fun.EnrollmentStatusConfirmed
-						Expect(enrollmentDao.Update(ctx, &enrollment)).ToNot(HaveOccurred())
+						Expect(enrollmentRepository.Update(ctx, &enrollment)).ToNot(HaveOccurred())
 						execute()
 					})
 					It("acknowledges without overwriting CONFIRMED", func() {
@@ -1152,7 +1152,7 @@ var _ = Describe("Enrollments", func() {
 				Context("CANCELLED", func() {
 					BeforeEach(func() {
 						enrollment.Status = fun.EnrollmentStatusCancelled
-						Expect(enrollmentDao.Update(ctx, &enrollment)).ToNot(HaveOccurred())
+						Expect(enrollmentRepository.Update(ctx, &enrollment)).ToNot(HaveOccurred())
 						execute()
 					})
 					It("acknowledges without overwriting CANCELLED", func() {
@@ -1279,7 +1279,7 @@ var _ = Describe("Enrollments", func() {
 
 		BeforeEach(func() {
 			enrollment = fun.Enrollment{StudentID: student.Id, Grade: 4, Status: fun.EnrollmentStatusSeatAllocationInitiated}
-			Expect(enrollmentDao.Create(ctx, &enrollment)).ToNot(HaveOccurred())
+			Expect(enrollmentRepository.Create(ctx, &enrollment)).ToNot(HaveOccurred())
 			event = fun.SeatAllocationFailedEvtV1{EnrollmentEvent: fun.EnrollmentEvent{EnrollmentID: enrollment.ID, StudentID: enrollment.StudentID}, Reason: "allocation failed", FailedAt: time.Now().UTC()}
 		})
 
@@ -1309,7 +1309,7 @@ var _ = Describe("Enrollments", func() {
 			Context("duplicate cancellation", func() {
 				BeforeEach(func() {
 					enrollment.Status = fun.EnrollmentStatusCancelled
-					Expect(enrollmentDao.Update(ctx, &enrollment)).ToNot(HaveOccurred())
+					Expect(enrollmentRepository.Update(ctx, &enrollment)).ToNot(HaveOccurred())
 					execute()
 				})
 				It("acknowledges the duplicate and preserves CANCELLED", func() {
@@ -1321,7 +1321,7 @@ var _ = Describe("Enrollments", func() {
 				Context("CONFIRMED", func() {
 					BeforeEach(func() {
 						enrollment.Status = fun.EnrollmentStatusConfirmed
-						Expect(enrollmentDao.Update(ctx, &enrollment)).ToNot(HaveOccurred())
+						Expect(enrollmentRepository.Update(ctx, &enrollment)).ToNot(HaveOccurred())
 						execute()
 					})
 					It("acknowledges without overwriting CONFIRMED", func() {
@@ -1332,7 +1332,7 @@ var _ = Describe("Enrollments", func() {
 				Context("WAITLISTED", func() {
 					BeforeEach(func() {
 						enrollment.Status = fun.EnrollmentStatusWaitlisted
-						Expect(enrollmentDao.Update(ctx, &enrollment)).ToNot(HaveOccurred())
+						Expect(enrollmentRepository.Update(ctx, &enrollment)).ToNot(HaveOccurred())
 						execute()
 					})
 					It("acknowledges without overwriting WAITLISTED", func() {

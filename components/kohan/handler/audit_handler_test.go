@@ -40,7 +40,7 @@ func newAuditTestRouter(auditHandler handler.AuditHandler) *gin.Engine {
 }
 
 func newAuditTestHandler(db *gorm.DB) handler.AuditHandler {
-	auditRepo := repository.NewAuditRepository(db)
+	auditRepo := repository.NewAuditRepository(util.NewBaseDbRepository(db))
 	registry := audit.NewPluginRegistry()
 	Expect(registry.RegisterPlugin(audit.NewAlertCoveragePlugin(auditRepo))).ToNot(HaveOccurred())
 	Expect(registry.RegisterPlugin(audit.NewStaleReviewPlugin(auditRepo))).ToNot(HaveOccurred())

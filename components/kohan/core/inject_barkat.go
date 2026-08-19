@@ -1,19 +1,19 @@
 package core
 
 import (
+	"github.com/amanhigh/go-fun/common/util"
 	"github.com/amanhigh/go-fun/components/kohan/handler"
 	"github.com/amanhigh/go-fun/components/kohan/manager"
 	"github.com/amanhigh/go-fun/components/kohan/manager/audit"
 	"github.com/amanhigh/go-fun/components/kohan/repository"
 	"github.com/golobby/container/v3"
 	"github.com/rs/zerolog/log"
-	"gorm.io/gorm"
 )
 
 // ---- Ticker Providers ----
 
-func provideTickerRepository(db *gorm.DB) repository.TickerRepository {
-	return repository.NewTickerRepository(db)
+func provideTickerRepository(baseRepository util.BaseDbRepository) repository.TickerRepository {
+	return repository.NewTickerRepository(baseRepository)
 }
 
 func provideBarkatTickerManager(repo repository.TickerRepository) manager.BarkatTickerManager {
@@ -26,8 +26,8 @@ func provideTickerHandler(mgr manager.BarkatTickerManager) handler.TickerHandler
 
 // ---- Alert Ticker Providers ----
 
-func provideAlertTickerRepository(db *gorm.DB) repository.AlertTickerRepository {
-	return repository.NewAlertTickerRepository(db)
+func provideAlertTickerRepository(baseRepository util.BaseDbRepository) repository.AlertTickerRepository {
+	return repository.NewAlertTickerRepository(baseRepository)
 }
 
 func provideAlertTickerManager(repo repository.AlertTickerRepository) manager.AlertTickerManager {
@@ -40,8 +40,8 @@ func provideAlertTickerHandler(mgr manager.AlertTickerManager) handler.AlertTick
 
 // ---- Price Alert Providers ----
 
-func providePriceAlertRepository(db *gorm.DB) repository.PriceAlertRepository {
-	return repository.NewPriceAlertRepository(db)
+func providePriceAlertRepository(baseRepository util.BaseDbRepository) repository.PriceAlertRepository {
+	return repository.NewPriceAlertRepository(baseRepository)
 }
 
 func providePriceAlertManager(repo repository.PriceAlertRepository) manager.PriceAlertManager {
@@ -54,8 +54,8 @@ func providePriceAlertHandler(mgr manager.PriceAlertManager) handler.PriceAlertH
 
 // ---- Audit Providers ----
 
-func provideAuditRepository(db *gorm.DB) repository.AuditRepository {
-	return repository.NewAuditRepository(db)
+func provideAuditRepository(baseRepository util.BaseDbRepository) repository.AuditRepository {
+	return repository.NewAuditRepository(baseRepository)
 }
 
 func provideAuditPluginRegistry(repo repository.AuditRepository) *audit.PluginRegistry {

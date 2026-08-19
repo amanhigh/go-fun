@@ -65,9 +65,9 @@ var _ = Describe("NoteHandler Integration - Section 2.3 JournalNote APIs", func(
 		db, err = core.CreateTestBarkatDB()
 		Expect(err).ToNot(HaveOccurred())
 
-		journalRepo := repository.NewJournalRepository(db)
+		journalRepo := repository.NewJournalRepository(util.NewBaseDbRepository(db))
 		journalMgr = manager.NewJournalManager(journalRepo)
-		noteMgr = manager.NewNoteManager(journalMgr, repository.NewNoteRepository(db))
+		noteMgr = manager.NewNoteManager(journalMgr, repository.NewNoteRepository(util.NewBaseDbRepository(db)))
 		noteHandler = handler.NewNoteHandler(noteMgr)
 
 		router = util.CreateTestGinRouter()
