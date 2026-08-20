@@ -73,8 +73,8 @@ func (r *JournalRepositoryImpl) applyJournalFilters(tx *gorm.DB, query barkat.Jo
 	if query.Status != "" {
 		where.Status = query.Status
 	}
-	if query.Sequence != "" {
-		where.Sequence = query.Sequence
+	if query.TopTimeframe != "" {
+		where.TopTimeframe = query.TopTimeframe
 	}
 	tx = tx.Where(&where)
 

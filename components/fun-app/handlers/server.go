@@ -19,7 +19,7 @@ type FunAppServerLifecycle struct {
 	Tracer trace.Tracer `container:"type"`
 
 	/* Handlers */
-	StudentHandler     StudentHandler     `container:"type"`
+	StudentHandler    StudentHandler    `container:"type"`
 	EnrollmentHandler EnrollmentHandler `container:"type"`
 	AdminHandler      AdminHandler      `container:"type"`
 

@@ -14,7 +14,7 @@ import (
 var _ = Describe("FunApp Integration Smoke", func() {
 	var (
 		createdStudent fun.Student
-		err           error
+		err            error
 
 		retrievedStudent fun.Student
 		updatedStudent   fun.Student

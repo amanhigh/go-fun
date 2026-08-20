@@ -70,10 +70,10 @@ var _ = Describe("JournalHandler Integration - GET Tests", func() {
 
 		BeforeEach(func() {
 			journal := barkat.Journal{
-				Ticker:   "GRSE",
-				Sequence: "MWD",
-				Type:     "REJECTED",
-				Status:   "FAIL",
+				Ticker:       "GRSE",
+				TopTimeframe: "TMN",
+				Type:         "REJECTED",
+				Status:       "FAIL",
 				Images: []barkat.Image{
 					{Timeframe: "WK", CreatedAt: time.Date(2023, time.June, 1, 10, 0, 0, 0, time.UTC)},
 					{Timeframe: "DL", CreatedAt: time.Date(2023, time.June, 2, 10, 0, 0, 0, time.UTC)},
@@ -108,7 +108,7 @@ var _ = Describe("JournalHandler Integration - GET Tests", func() {
 				It("should return all journal fields including images", func() {
 					response = decodeJournal(w, http.StatusOK)
 					Expect(response.Ticker).To(Equal("GRSE"))
-					Expect(response.Sequence).To(Equal("MWD"))
+					Expect(response.TopTimeframe).To(Equal("TMN"))
 					Expect(response.Type).To(Equal("REJECTED"))
 					Expect(response.Status).To(Equal("FAIL"))
 					Expect(response.CreatedAt).ToNot(BeZero())
@@ -168,11 +168,11 @@ var _ = Describe("JournalHandler Integration - GET Tests", func() {
 			}
 
 			journals := []barkat.Journal{
-				{Ticker: "GRSE", Sequence: "MWD", Type: "REJECTED", Status: "FAIL"},
-				{Ticker: "PDSL", Sequence: "YR", Type: "TAKEN", Status: "SET"},
-				{Ticker: "SNF", Sequence: "MWD", Type: "TAKEN", Status: "SUCCESS"},
-				{Ticker: "TCS", Sequence: "YR", Type: "REJECTED", Status: "BROKEN"},
-				{Ticker: "INFY", Sequence: "MWD", Type: "TAKEN", Status: "RUNNING"},
+				{Ticker: "GRSE", TopTimeframe: "TMN", Type: "REJECTED", Status: "FAIL"},
+				{Ticker: "PDSL", TopTimeframe: "SMN", Type: "TAKEN", Status: "SET"},
+				{Ticker: "SNF", TopTimeframe: "TMN", Type: "TAKEN", Status: "SUCCESS"},
+				{Ticker: "TCS", TopTimeframe: "SMN", Type: "REJECTED", Status: "BROKEN"},
+				{Ticker: "INFY", TopTimeframe: "TMN", Type: "TAKEN", Status: "RUNNING"},
 			}
 
 			// Copy default images for each journal to avoid shared slice mutation
@@ -229,7 +229,7 @@ var _ = Describe("JournalHandler Integration - GET Tests", func() {
 					for _, journal := range response.Journals {
 						Expect(journal.ExternalID).To(HavePrefix("jrn_"))
 						Expect(journal.Ticker).ToNot(BeEmpty())
-						Expect(journal.Sequence).ToNot(BeEmpty())
+						Expect(journal.TopTimeframe).ToNot(BeEmpty())
 						Expect(journal.Type).ToNot(BeEmpty())
 						Expect(journal.Status).ToNot(BeEmpty())
 						Expect(journal.CreatedAt).ToNot(BeZero())
@@ -429,34 +429,46 @@ var _ = Describe("JournalHandler Integration - GET Tests", func() {
 				})
 			})
 
-			Context("Sequence Filter", func() {
+			Context("TopTimeframe Filter", func() {
 				Context("Allowed Values", func() {
-					It("should filter by sequence = MWD", func() {
-						req, w = util.CreateTestRequest("GET", barkat.JournalBase+"?sequence=MWD", nil)
+					It("should filter by top_timeframe = TMN", func() {
+						req, w = util.CreateTestRequest("GET", barkat.JournalBase+"?top_timeframe=TMN", nil)
 						router.ServeHTTP(w, req)
 						response := decodeJournalList(w, http.StatusOK)
 						Expect(response.Journals).To(HaveLen(3))
 						for _, journal := range response.Journals {
-							Expect(journal.Sequence).To(Equal("MWD"))
+							Expect(journal.TopTimeframe).To(Equal("TMN"))
 						}
 					})
 
-					It("should filter by sequence = YR", func() {
-						req, w = util.CreateTestRequest("GET", barkat.JournalBase+"?sequence=YR", nil)
+					It("should filter by top_timeframe = SMN", func() {
+						req, w = util.CreateTestRequest("GET", barkat.JournalBase+"?top_timeframe=SMN", nil)
 						router.ServeHTTP(w, req)
 						response := decodeJournalList(w, http.StatusOK)
 						Expect(response.Journals).To(HaveLen(2))
 						for _, journal := range response.Journals {
-							Expect(journal.Sequence).To(Equal("YR"))
+							Expect(journal.TopTimeframe).To(Equal("SMN"))
 						}
 					})
 				})
 
 				Context("Bad Values", func() {
-					It("should return 400 for invalid sequence enum", func() {
-						req, w = util.CreateTestRequest("GET", barkat.JournalBase+"?sequence=invalid", nil)
+					It("should return 400 for invalid top_timeframe enum", func() {
+						req, w = util.CreateTestRequest("GET", barkat.JournalBase+"?top_timeframe=invalid", nil)
 						router.ServeHTTP(w, req)
-						util.AssertError(w, "Sequence", "oneof")
+						util.AssertError(w, "TopTimeframe", "oneof")
+					})
+
+					It("should return 400 for top_timeframe = MN (migration-only value)", func() {
+						req, w = util.CreateTestRequest("GET", barkat.JournalBase+"?top_timeframe=MN", nil)
+						router.ServeHTTP(w, req)
+						util.AssertError(w, "TopTimeframe", "oneof")
+					})
+
+					It("should return 400 for lowercase top_timeframe", func() {
+						req, w = util.CreateTestRequest("GET", barkat.JournalBase+"?top_timeframe=tmn", nil)
+						router.ServeHTTP(w, req)
+						util.AssertError(w, "TopTimeframe", "oneof")
 					})
 				})
 			})
@@ -472,23 +484,23 @@ var _ = Describe("JournalHandler Integration - GET Tests", func() {
 					Expect(journals[0].Type).To(Equal("REJECTED"))
 				})
 
-				It("should apply sequence + status filters", func() {
-					req, w = util.CreateTestRequest("GET", barkat.JournalBase+"?sequence=YR&status=SET", nil)
+				It("should apply top_timeframe + status filters", func() {
+					req, w = util.CreateTestRequest("GET", barkat.JournalBase+"?top_timeframe=SMN&status=SET", nil)
 					router.ServeHTTP(w, req)
 					response := decodeJournalList(w, http.StatusOK)
 					Expect(response.Journals).To(HaveLen(1))
-					Expect(response.Journals[0].Sequence).To(Equal("YR"))
+					Expect(response.Journals[0].TopTimeframe).To(Equal("SMN"))
 					Expect(response.Journals[0].Status).To(Equal("SET"))
 				})
 
-				It("should apply type + status + sequence filters", func() {
-					req, w = util.CreateTestRequest("GET", barkat.JournalBase+"?type=TAKEN&status=RUNNING&sequence=MWD", nil)
+				It("should apply type + status + top_timeframe filters", func() {
+					req, w = util.CreateTestRequest("GET", barkat.JournalBase+"?type=TAKEN&status=RUNNING&top_timeframe=TMN", nil)
 					router.ServeHTTP(w, req)
 					response := decodeJournalList(w, http.StatusOK)
 					Expect(response.Journals).To(HaveLen(1))
 					Expect(response.Journals[0].Type).To(Equal("TAKEN"))
 					Expect(response.Journals[0].Status).To(Equal("RUNNING"))
-					Expect(response.Journals[0].Sequence).To(Equal("MWD"))
+					Expect(response.Journals[0].TopTimeframe).To(Equal("TMN"))
 				})
 			})
 
@@ -627,17 +639,17 @@ var _ = Describe("JournalHandler Integration - GET Tests", func() {
 						Expect(journals[4].Ticker).To(Equal("GRSE"))
 					})
 
-					It("should sort by sequence ascending", func() {
-						req, w = util.CreateTestRequest("GET", barkat.JournalBase+"?sort-by=sequence&sort-order=asc", nil)
+					It("should sort by top_timeframe ascending", func() {
+						req, w = util.CreateTestRequest("GET", barkat.JournalBase+"?sort-by=top_timeframe&sort-order=asc", nil)
 						router.ServeHTTP(w, req)
 						response := decodeJournalList(w, http.StatusOK)
 						Expect(response.Journals).To(HaveLen(5))
 						journals := response.Journals
-						for i := range 3 {
-							Expect(journals[i].Sequence).To(Equal("MWD"))
+						for i := range 2 {
+							Expect(journals[i].TopTimeframe).To(Equal("SMN"))
 						}
-						for i := 3; i < 5; i++ {
-							Expect(journals[i].Sequence).To(Equal("YR"))
+						for i := 2; i < 5; i++ {
+							Expect(journals[i].TopTimeframe).To(Equal("TMN"))
 						}
 					})
 

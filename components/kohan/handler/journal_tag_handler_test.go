@@ -76,10 +76,10 @@ var _ = Describe("TagHandler Integration - Section 2.4 JournalTag APIs", func() 
 
 		// Create base journal for tag operations
 		journal = barkat.Journal{
-			Ticker:   "GRSE",
-			Sequence: "MWD",
-			Type:     "REJECTED",
-			Status:   "FAIL",
+			Ticker:       "GRSE",
+			TopTimeframe: "TMN",
+			Type:         "REJECTED",
+			Status:       "FAIL",
 			Images: []barkat.Image{
 				{Timeframe: "DL", FileName: "test-dl.png"},
 				{Timeframe: "WK", FileName: "test-wk.png"},

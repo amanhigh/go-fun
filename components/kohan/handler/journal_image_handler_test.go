@@ -77,10 +77,10 @@ var _ = Describe("ImageHandler Integration - Section 2.2 JournalImage APIs", fun
 
 		// Create base journal for image operations (with minimal images)
 		journal = barkat.Journal{
-			Ticker:   "GRSE",
-			Sequence: "MWD",
-			Type:     "REJECTED",
-			Status:   "FAIL",
+			Ticker:       "GRSE",
+			TopTimeframe: "TMN",
+			Type:         "REJECTED",
+			Status:       "FAIL",
 			Images: []barkat.Image{
 				{Timeframe: "DL", FileName: "test-dl.png"}, // Only one image for testing
 			},
@@ -512,10 +512,10 @@ var _ = Describe("ImageHandler Integration - Section 2.2 JournalImage APIs", fun
 				BeforeEach(func() {
 					// Create a new journal and manually delete its images
 					emptyJournal = barkat.Journal{
-						Ticker:   "EMPTY",
-						Sequence: "YR",
-						Type:     "TAKEN",
-						Status:   "SET",
+						Ticker:       "EMPTY",
+						TopTimeframe: "SMN",
+						Type:         "TAKEN",
+						Status:       "SET",
 						Images: []barkat.Image{
 							{Timeframe: "DL"},
 							{Timeframe: "WK"},

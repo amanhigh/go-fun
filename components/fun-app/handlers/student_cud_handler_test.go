@@ -39,11 +39,11 @@ var _ = Describe("StudentHandler CUD", func() {
 		ctx              context.Context
 		db               *gorm.DB
 		dbSQL            *sql.DB
-		studentManager    manager.StudentManagerInterface
+		studentManager   manager.StudentManagerInterface
 		router           *gin.Engine
 		request          fun.StudentRequest
 		updateRequest    fun.StudentRequest
-		existingStudent   fun.Student
+		existingStudent  fun.Student
 		response         fun.Student
 		persisted        fun.Student
 		persistedErr     common.HttpError
@@ -71,9 +71,9 @@ var _ = Describe("StudentHandler CUD", func() {
 		studentCreateTime, err := meter.Float64Histogram("student_create_time")
 		Expect(err).ToNot(HaveOccurred())
 		studentHandler := &handlers.StudentHandlerImpl{
-			Manager:          studentManager,
-			Tracer:           tracer,
-			CreateCounter:    createCounter,
+			Manager:           studentManager,
+			Tracer:            tracer,
+			CreateCounter:     createCounter,
 			StudentCounter:    studentCounter,
 			StudentCreateTime: studentCreateTime,
 		}

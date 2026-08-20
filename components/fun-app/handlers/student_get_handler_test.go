@@ -65,9 +65,9 @@ var _ = Describe("Student Handler Integration - GET Tests", func() {
 		ctx              context.Context
 		db               *gorm.DB
 		dbSQL            *sql.DB
-		studentManager    manager.StudentManagerInterface
+		studentManager   manager.StudentManagerInterface
 		router           *gin.Engine
-		existingStudent   fun.Student
+		existingStudent  fun.Student
 		responseRecorder *httptest.ResponseRecorder
 	)
 
@@ -90,15 +90,15 @@ var _ = Describe("Student Handler Integration - GET Tests", func() {
 		studentCreateTime, err := meter.Float64Histogram("get_test_student_create_time")
 		Expect(err).ToNot(HaveOccurred())
 		studentHandler := &handlers.StudentHandlerImpl{
-			Manager:          studentManager,
-			Tracer:           tracer,
-			CreateCounter:    createCounter,
+			Manager:           studentManager,
+			Tracer:            tracer,
+			CreateCounter:     createCounter,
 			StudentCounter:    studentCounter,
 			StudentCreateTime: studentCreateTime,
 		}
 
 		lifecycle := &handlers.FunAppServerLifecycle{
-			StudentHandler:     studentHandler,
+			StudentHandler:    studentHandler,
 			EnrollmentHandler: studentGetEnrollmentHandlerStub{},
 			AdminHandler:      studentGetAdminHandlerStub{},
 		}

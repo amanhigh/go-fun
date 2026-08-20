@@ -77,10 +77,10 @@ var _ = Describe("NoteHandler Integration - Section 2.3 JournalNote APIs", func(
 
 		// Create base journal for note operations
 		journal = barkat.Journal{
-			Ticker:   "GRSE",
-			Sequence: "MWD",
-			Type:     "REJECTED",
-			Status:   "FAIL",
+			Ticker:       "GRSE",
+			TopTimeframe: "TMN",
+			Type:         "REJECTED",
+			Status:       "FAIL",
 			Images: []barkat.Image{
 				{Timeframe: "DL", FileName: "test-dl.png"},
 				{Timeframe: "WK", FileName: "test-wk.png"},

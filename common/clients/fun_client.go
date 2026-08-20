@@ -14,7 +14,7 @@ import (
 )
 
 type FunClient struct {
-	StudentService     StudentServiceInterface
+	StudentService    StudentServiceInterface
 	AdminService      AdminServiceInterface
 	EnrollmentService EnrollmentServiceInterface
 }
@@ -91,7 +91,7 @@ func NewFunAppClient(baseUrl string, httpConfig config.HttpClientConfig) *FunCli
 	baseService := BaseService{client: client, VersionUrl: "/v1"}
 
 	return &FunClient{
-		StudentService:     &StudentService{BaseService: baseService},
+		StudentService:    &StudentService{BaseService: baseService},
 		AdminService:      &AdminService{BaseService: baseService},
 		EnrollmentService: &EnrollmentService{BaseService: baseService},
 	}

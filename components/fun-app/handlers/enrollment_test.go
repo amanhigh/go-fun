@@ -38,7 +38,7 @@ var _ = Describe("Enrollments", func() {
 		dbSQL             *sql.DB
 		channel           *gochannel.GoChannel
 		router            *gin.Engine
-		student            fun.Student
+		student           fun.Student
 		enrollmentDao     dao.EnrollmentDaoInterface
 		enrollmentManager manager.EnrollmentManagerInterface
 		seatManager       manager.SeatManagerInterface
@@ -320,8 +320,8 @@ var _ = Describe("Enrollments", func() {
 			BeforeEach(func() {
 				enrollment = fun.Enrollment{
 					StudentID: student.Id,
-					Grade:    4,
-					Status:   fun.EnrollmentStatusSeatAllocationInitiated,
+					Grade:     4,
+					Status:    fun.EnrollmentStatusSeatAllocationInitiated,
 				}
 				Expect(enrollmentDao.Create(ctx, &enrollment)).ToNot(HaveOccurred())
 				req, recorder := util.CreateTestRequest(http.MethodGet, "/v1/enrollments/"+student.Id, nil)
@@ -347,8 +347,8 @@ var _ = Describe("Enrollments", func() {
 					BeforeEach(func() {
 						enrollment = fun.Enrollment{
 							StudentID: student.Id,
-							Grade:    4,
-							Status:   fun.EnrollmentStatusSeatAllocationInitiated,
+							Grade:     4,
+							Status:    fun.EnrollmentStatusSeatAllocationInitiated,
 						}
 						Expect(enrollmentDao.Create(ctx, &enrollment)).ToNot(HaveOccurred())
 						req, recorder := util.CreateTestRequest(http.MethodGet, "/v1/enrollments/"+student.Id, nil)
@@ -392,13 +392,13 @@ var _ = Describe("Enrollments", func() {
 		BeforeEach(func() {
 			enrollment = fun.Enrollment{
 				StudentID: student.Id,
-				Grade:    4,
-				Status:   fun.EnrollmentStatusSeatAllocationInitiated,
+				Grade:     4,
+				Status:    fun.EnrollmentStatusSeatAllocationInitiated,
 			}
 			Expect(enrollmentDao.Create(ctx, &enrollment)).ToNot(HaveOccurred())
 			command = fun.EnrollCmdV1{
 				EnrollmentID: enrollment.ID,
-				StudentID:     enrollment.StudentID,
+				StudentID:    enrollment.StudentID,
 				Grade:        enrollment.Grade,
 				RequestedAt:  time.Now().UTC(),
 			}
@@ -649,7 +649,7 @@ var _ = Describe("Enrollments", func() {
 		BeforeEach(func() {
 			command = fun.AllocateSeatCmdV1{
 				EnrollmentID: "enrollment-1",
-				StudentID:     student.Id,
+				StudentID:    student.Id,
 				Grade:        4,
 				RequestedAt:  time.Now().UTC(),
 			}
@@ -882,17 +882,17 @@ var _ = Describe("Enrollments", func() {
 		BeforeEach(func() {
 			enrollment = fun.Enrollment{
 				StudentID: student.Id,
-				Grade:    4,
-				Status:   fun.EnrollmentStatusSeatAllocationInitiated,
+				Grade:     4,
+				Status:    fun.EnrollmentStatusSeatAllocationInitiated,
 			}
 			Expect(enrollmentDao.Create(ctx, &enrollment)).ToNot(HaveOccurred())
 			event = fun.SeatReservedEvtV1{
 				EnrollmentEvent: fun.EnrollmentEvent{
 					EnrollmentID: enrollment.ID,
-					StudentID:     enrollment.StudentID,
+					StudentID:    enrollment.StudentID,
 				},
-				Grade:        enrollment.Grade,
-				ReservedAt:   time.Now().UTC(),
+				Grade:      enrollment.Grade,
+				ReservedAt: time.Now().UTC(),
 			}
 		})
 
@@ -1097,7 +1097,7 @@ var _ = Describe("Enrollments", func() {
 			event = fun.SeatWaitlistedEvtV1{
 				EnrollmentEvent: fun.EnrollmentEvent{
 					EnrollmentID: enrollment.ID,
-					StudentID:     enrollment.StudentID,
+					StudentID:    enrollment.StudentID,
 				},
 				Grade: enrollment.Grade, Reason: "capacity reached", WaitlistedAt: time.Now().UTC(),
 			}
