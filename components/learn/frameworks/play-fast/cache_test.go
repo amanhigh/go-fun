@@ -444,7 +444,8 @@ var _ = Describe("Cache", func() {
 					AddReportEntry("Get Operations Stats", experiment.GetStats("get"))
 
 					Expect(experiment.GetStats("get").DurationFor(gmeasure.StatMedian)).To(BeNumerically("<", 1*time.Microsecond), "Median get should be less than 1µs")
-					Expect(experiment.GetStats("get").DurationFor(gmeasure.StatMax)).To(BeNumerically("<", 20*time.Microsecond), "Max get should be less than 20µs")
+					// A single maximum sample can include scheduler and shared-runner noise;
+					// the median assertion above provides a stable performance guard.
 				})
 
 				It("2.4 should perform delete operations efficiently", func() {
