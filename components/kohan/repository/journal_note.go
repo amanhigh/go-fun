@@ -16,7 +16,7 @@ import (
 
 // NoteRepository provides persistence operations for journal notes.
 type NoteRepository interface {
-	util.BaseDbRepositoryInterface
+	util.BaseDbRepository
 	// ListNotes returns all notes for a journal, optionally filtered by status.
 	ListNotes(ctx context.Context, journalID uint64, status string) ([]barkat.Note, common.HttpError)
 }
@@ -28,8 +28,8 @@ type NoteRepositoryImpl struct {
 var _ NoteRepository = (*NoteRepositoryImpl)(nil)
 
 // NewNoteRepository creates a new NoteRepository backed by GORM.
-func NewNoteRepository(db *gorm.DB) *NoteRepositoryImpl {
-	return &NoteRepositoryImpl{BaseDbRepository: util.NewBaseDbRepository(db)}
+func NewNoteRepository(baseRepository util.BaseDbRepository) *NoteRepositoryImpl {
+	return &NoteRepositoryImpl{BaseDbRepository: baseRepository}
 }
 
 func (r *NoteRepositoryImpl) ListNotes(ctx context.Context, journalID uint64, status string) ([]barkat.Note, common.HttpError) {

@@ -16,7 +16,7 @@ import (
 
 // ImageRepository provides persistence operations for journal images.
 type ImageRepository interface {
-	util.BaseDbRepositoryInterface
+	util.BaseDbRepository
 	// ListImages returns all images for a journal.
 	ListImages(ctx context.Context, journalID uint64) ([]barkat.Image, common.HttpError)
 }
@@ -28,8 +28,8 @@ type ImageRepositoryImpl struct {
 var _ ImageRepository = (*ImageRepositoryImpl)(nil)
 
 // NewImageRepository creates a new ImageRepository backed by GORM.
-func NewImageRepository(db *gorm.DB) *ImageRepositoryImpl {
-	return &ImageRepositoryImpl{BaseDbRepository: util.NewBaseDbRepository(db)}
+func NewImageRepository(baseRepository util.BaseDbRepository) *ImageRepositoryImpl {
+	return &ImageRepositoryImpl{BaseDbRepository: baseRepository}
 }
 
 func (r *ImageRepositoryImpl) ListImages(ctx context.Context, journalID uint64) ([]barkat.Image, common.HttpError) {

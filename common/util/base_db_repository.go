@@ -13,29 +13,34 @@ import (
 
 const TX_TIMEOUT = 30 * time.Second
 
-type BaseDbRepositoryInterface interface {
+//nolint:interfacebloat // The shared repository contract intentionally exposes all reusable GORM operations.
+type BaseDbRepository interface {
 	FindById(c context.Context, id any, entity any) (err common.HttpError)
 	FindPaginated(c context.Context, pageParams common.Pagination, result any) (count int64, err common.HttpError)
 	Create(c context.Context, entity any, omit ...string) (err common.HttpError)
 	Update(c context.Context, entity any, omit ...string) (err common.HttpError)
+	DeleteBy(c context.Context, entity any, condition string, arg any) common.HttpError
 	DeleteById(c context.Context, id any, entity any) (err common.HttpError)
 	GetCount(c context.Context, entity any) (count int64, err common.HttpError)
 	UseOrCreateTx(c context.Context, run DbRun, readOnly ...bool) (err common.HttpError)
+	SafeTx(c context.Context) *gorm.DB
 	GetByExternalId(c context.Context, externalId string, entity any) (err common.HttpError)
 	DeleteByExternalId(c context.Context, externalId string, entity any) (err common.HttpError)
 }
 
-type BaseDbRepository struct {
+type BaseDbRepositoryImpl struct {
 	Db *gorm.DB
 }
 
-func NewBaseDbRepository(db *gorm.DB) BaseDbRepository {
-	return BaseDbRepository{Db: db}
+var _ BaseDbRepository = (*BaseDbRepositoryImpl)(nil)
+
+func NewBaseDbRepository(db *gorm.DB) *BaseDbRepositoryImpl {
+	return &BaseDbRepositoryImpl{Db: db}
 }
 
 type DbRun func(c context.Context) (err common.HttpError)
 
-func (b *BaseDbRepository) FindById(c context.Context, id, entity any) (err common.HttpError) {
+func (b *BaseDbRepositoryImpl) FindById(c context.Context, id, entity any) (err common.HttpError) {
 	var txErr error
 	query := b.SafeTx(c)
 	if txErr = query.First(entity, "id=?", id).Error; txErr != nil && !errors.Is(txErr, gorm.ErrRecordNotFound) {
@@ -45,7 +50,7 @@ func (b *BaseDbRepository) FindById(c context.Context, id, entity any) (err comm
 	return
 }
 
-func (b *BaseDbRepository) FindPaginated(c context.Context, pageParams common.Pagination, result any) (count int64, err common.HttpError) {
+func (b *BaseDbRepositoryImpl) FindPaginated(c context.Context, pageParams common.Pagination, result any) (count int64, err common.HttpError) {
 	var txErr error
 	query := b.SafeTx(c)
 	if txErr = query.Offset(pageParams.Offset).Limit(pageParams.Limit).Find(result).Error; txErr != nil && !errors.Is(txErr, gorm.ErrRecordNotFound) {
@@ -59,7 +64,7 @@ func (b *BaseDbRepository) FindPaginated(c context.Context, pageParams common.Pa
 	return
 }
 
-func (b *BaseDbRepository) Create(c context.Context, entity any, omit ...string) (err common.HttpError) {
+func (b *BaseDbRepositoryImpl) Create(c context.Context, entity any, omit ...string) (err common.HttpError) {
 	var txErr error
 	query := b.SafeTx(c)
 	if txErr = query.Omit(omit...).Create(entity).Error; txErr != nil {
@@ -70,7 +75,7 @@ func (b *BaseDbRepository) Create(c context.Context, entity any, omit ...string)
 	return
 }
 
-func (b *BaseDbRepository) Update(c context.Context, entity any, omit ...string) (err common.HttpError) {
+func (b *BaseDbRepositoryImpl) Update(c context.Context, entity any, omit ...string) (err common.HttpError) {
 	var txErr error
 	query := b.SafeTx(c)
 	if txErr = query.Omit(omit...).Save(entity).Error; txErr != nil {
@@ -85,7 +90,7 @@ func (b *BaseDbRepository) Update(c context.Context, entity any, omit ...string)
 // not-found or database errors before deletion, then deletes the hydrated
 // entity so GORM delete hooks see persisted values. Callers must provide a
 // condition that identifies the intended single record.
-func (b *BaseDbRepository) DeleteBy(c context.Context, entity any, condition string, arg any) common.HttpError {
+func (b *BaseDbRepositoryImpl) DeleteBy(c context.Context, entity any, condition string, arg any) common.HttpError {
 	query := b.SafeTx(c)
 
 	// Load exactly one matching entity; Take limits the query to one row
@@ -105,15 +110,15 @@ func (b *BaseDbRepository) DeleteBy(c context.Context, entity any, condition str
 	return nil
 }
 
-func (b *BaseDbRepository) DeleteById(c context.Context, id, entity any) (err common.HttpError) {
+func (b *BaseDbRepositoryImpl) DeleteById(c context.Context, id, entity any) (err common.HttpError) {
 	return b.DeleteBy(c, entity, "id=?", id)
 }
 
-func (b *BaseDbRepository) DeleteByExternalId(c context.Context, externalId string, entity any) (err common.HttpError) {
+func (b *BaseDbRepositoryImpl) DeleteByExternalId(c context.Context, externalId string, entity any) (err common.HttpError) {
 	return b.DeleteBy(c, entity, "external_id = ?", externalId)
 }
 
-func (b *BaseDbRepository) GetCount(c context.Context, entity any) (count int64, err common.HttpError) {
+func (b *BaseDbRepositoryImpl) GetCount(c context.Context, entity any) (count int64, err common.HttpError) {
 	var txErr error
 	query := b.SafeTx(c)
 	if txErr = query.Model(entity).Count(&count).Error; txErr != nil && !errors.Is(txErr, gorm.ErrRecordNotFound) {
@@ -122,7 +127,7 @@ func (b *BaseDbRepository) GetCount(c context.Context, entity any) (count int64,
 	return count, nil
 }
 
-func (b *BaseDbRepository) SetPagination(query *gorm.DB, offset, limit int) {
+func (b *BaseDbRepositoryImpl) SetPagination(query *gorm.DB, offset, limit int) {
 	query.Offset(offset)
 	if limit > 0 {
 		query.Limit(limit)
@@ -131,9 +136,9 @@ func (b *BaseDbRepository) SetPagination(query *gorm.DB, offset, limit int) {
 
 /*
 Transaction Handling to use already created transaction or Init New.
-Needs State, hence placed in BaseDbRepository (Not Util)
+Needs state, hence placed in BaseDbRepositoryImpl (not Util)
 */
-func (b *BaseDbRepository) UseOrCreateTx(c context.Context, run DbRun, readOnly ...bool) (err common.HttpError) {
+func (b *BaseDbRepositoryImpl) UseOrCreateTx(c context.Context, run DbRun, readOnly ...bool) (err common.HttpError) {
 	// Check if Context has Tx
 	switch {
 	case Tx(c) != nil:
@@ -172,7 +177,7 @@ func (b *BaseDbRepository) UseOrCreateTx(c context.Context, run DbRun, readOnly 
 
 // SafeTx returns a database query with automatic fallback to the repository's database
 // when no transaction is present in the context. This eliminates the need for manual nil checks.
-func (b *BaseDbRepository) SafeTx(c context.Context) *gorm.DB {
+func (b *BaseDbRepositoryImpl) SafeTx(c context.Context) *gorm.DB {
 	query := Tx(c)
 	if query == nil {
 		query = b.Db.WithContext(c)
@@ -181,7 +186,7 @@ func (b *BaseDbRepository) SafeTx(c context.Context) *gorm.DB {
 }
 
 // GetByExternalId finds an entity by its external_id field
-func (b *BaseDbRepository) GetByExternalId(c context.Context, externalId string, entity any) (err common.HttpError) {
+func (b *BaseDbRepositoryImpl) GetByExternalId(c context.Context, externalId string, entity any) (err common.HttpError) {
 	var txErr error
 	query := b.SafeTx(c)
 	if txErr = query.First(entity, "external_id=?", externalId).Error; txErr != nil && !errors.Is(txErr, gorm.ErrRecordNotFound) {

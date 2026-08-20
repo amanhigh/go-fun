@@ -1,4 +1,4 @@
-package dao
+package repository
 
 import (
 	"context"
@@ -11,28 +11,27 @@ import (
 	"gorm.io/gorm"
 )
 
-// TODO: Rename to Repository package stop using dao in files and package.
-type StudentDaoInterface interface {
-	util.BaseDbRepositoryInterface
+type StudentRepository interface {
+	util.BaseDbRepository
 	ListStudent(c context.Context, studentQuery fun.StudentQuery) (studentList fun.StudentList, err common.HttpError)
 	ListStudentAudit(c context.Context, id string) (studentAuditList []fun.StudentAudit, err common.HttpError)
 }
 
-type StudentDao struct {
+type StudentRepositoryImpl struct {
 	util.BaseDbRepository
 }
 
-var _ StudentDaoInterface = (*StudentDao)(nil)
+var _ StudentRepository = (*StudentRepositoryImpl)(nil)
 
-func NewStudentDao(baseRepo util.BaseDbRepository) *StudentDao {
-	return &StudentDao{BaseDbRepository: baseRepo}
+func NewStudentRepository(baseRepository util.BaseDbRepository) *StudentRepositoryImpl {
+	return &StudentRepositoryImpl{BaseDbRepository: baseRepository}
 }
 
-func (pd *StudentDao) ListStudent(c context.Context, studentQuery fun.StudentQuery) (studentList fun.StudentList, err common.HttpError) {
+func (r *StudentRepositoryImpl) ListStudent(c context.Context, studentQuery fun.StudentQuery) (studentList fun.StudentList, err common.HttpError) {
 	var txErr error
 
 	// Build base filtered query (no pagination)
-	txn := pd.SafeTx(c)
+	txn := r.SafeTx(c)
 	if studentQuery.Name != "" {
 		txn = txn.Where("name like ?", "%"+studentQuery.Name+"%")
 	}
@@ -67,12 +66,12 @@ func (pd *StudentDao) ListStudent(c context.Context, studentQuery fun.StudentQue
 	return
 }
 
-func (pd *StudentDao) ListStudentAudit(c context.Context, id string) (studentAuditList []fun.StudentAudit, err common.HttpError) {
+func (r *StudentRepositoryImpl) ListStudentAudit(c context.Context, id string) (studentAuditList []fun.StudentAudit, err common.HttpError) {
 	var txErr error
 	audit := fun.StudentAudit{Id: id}
 
 	// Fetch Student Audit Records ordered deterministically by audit_id
-	query := pd.SafeTx(c).Where(audit)
+	query := r.SafeTx(c).Where(audit)
 	query = util.ApplySort(query, util.SortOptions{
 		DefaultSortBy:    "audit_id",
 		DefaultSortOrder: common.SortOrderAsc,

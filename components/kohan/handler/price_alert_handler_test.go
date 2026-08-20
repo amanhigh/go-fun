@@ -99,11 +99,11 @@ var _ = Describe("PriceAlertHandler Integration - Section 2.2.3 Price Alert APIs
 		}
 		Expect(db.Create(&createdAlertTicker).Error).ToNot(HaveOccurred())
 
-		alertTickerRepo := repository.NewAlertTickerRepository(db)
+		alertTickerRepo := repository.NewAlertTickerRepository(util.NewBaseDbRepository(db))
 		alertTickerMgr := manager.NewAlertTickerManager(alertTickerRepo)
 		alertTickerHandler = handler.NewAlertTickerHandler(alertTickerMgr)
 
-		priceAlertRepo := repository.NewPriceAlertRepository(db)
+		priceAlertRepo := repository.NewPriceAlertRepository(util.NewBaseDbRepository(db))
 		priceAlertMgr := manager.NewPriceAlertManager(priceAlertRepo)
 		priceAlertHandler = handler.NewPriceAlertHandler(priceAlertMgr)
 		router = newPriceAlertTestRouter(alertTickerHandler, priceAlertHandler)

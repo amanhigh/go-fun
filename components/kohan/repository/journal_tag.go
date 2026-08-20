@@ -17,7 +17,7 @@ import (
 // TagRepository provides persistence operations for journal tags.
 // Tags provide categorical organization with type-based filtering capabilities.
 type TagRepository interface {
-	util.BaseDbRepositoryInterface
+	util.BaseDbRepository
 	// ListTags returns all tags for a journal, optionally filtered by type.
 	// Type can be "reason", "management", or empty for all tags.
 	ListTags(ctx context.Context, journalID uint64, tagType string) ([]barkat.Tag, common.HttpError)
@@ -30,8 +30,8 @@ type TagRepositoryImpl struct {
 var _ TagRepository = (*TagRepositoryImpl)(nil)
 
 // NewTagRepository creates a new TagRepository backed by GORM.
-func NewTagRepository(db *gorm.DB) *TagRepositoryImpl {
-	return &TagRepositoryImpl{BaseDbRepository: util.NewBaseDbRepository(db)}
+func NewTagRepository(baseRepository util.BaseDbRepository) *TagRepositoryImpl {
+	return &TagRepositoryImpl{BaseDbRepository: baseRepository}
 }
 
 func (r *TagRepositoryImpl) ListTags(ctx context.Context, journalID uint64, tagType string) ([]barkat.Tag, common.HttpError) {

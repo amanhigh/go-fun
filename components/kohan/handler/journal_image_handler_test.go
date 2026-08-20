@@ -65,9 +65,9 @@ var _ = Describe("ImageHandler Integration - Section 2.2 JournalImage APIs", fun
 		db, err = core.CreateTestBarkatDB()
 		Expect(err).ToNot(HaveOccurred())
 
-		journalRepo := repository.NewJournalRepository(db)
+		journalRepo := repository.NewJournalRepository(util.NewBaseDbRepository(db))
 		journalMgr = manager.NewJournalManager(journalRepo)
-		imgMgr = manager.NewImageManager(journalMgr, repository.NewImageRepository(db))
+		imgMgr = manager.NewImageManager(journalMgr, repository.NewImageRepository(util.NewBaseDbRepository(db)))
 		imageHandler = handler.NewImageHandler(imgMgr)
 
 		router = util.CreateTestGinRouter()

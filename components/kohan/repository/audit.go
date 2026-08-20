@@ -7,12 +7,11 @@ import (
 	"github.com/amanhigh/go-fun/common/util"
 	"github.com/amanhigh/go-fun/models/barkat"
 	"github.com/amanhigh/go-fun/models/common"
-	"gorm.io/gorm"
 )
 
 // AuditRepository provides read operations required by audit plugins.
 type AuditRepository interface {
-	util.BaseDbRepositoryInterface
+	util.BaseDbRepository
 	// ListAlertCoverageRows returns coverage counts for all non-blacklisted tickers.
 	ListAlertCoverageRows(ctx context.Context) ([]barkat.AlertCoverageRow, common.HttpError)
 	// ListStaleReviewTickers returns tracked tickers whose last_opened_at is older than the cutoff.
@@ -26,8 +25,8 @@ type AuditRepositoryImpl struct {
 var _ AuditRepository = (*AuditRepositoryImpl)(nil)
 
 // NewAuditRepository creates a new AuditRepository backed by GORM.
-func NewAuditRepository(db *gorm.DB) *AuditRepositoryImpl {
-	return &AuditRepositoryImpl{BaseDbRepository: util.NewBaseDbRepository(db)}
+func NewAuditRepository(baseRepository util.BaseDbRepository) *AuditRepositoryImpl {
+	return &AuditRepositoryImpl{BaseDbRepository: baseRepository}
 }
 
 func (r *AuditRepositoryImpl) ListStaleReviewTickers(ctx context.Context, cutoff time.Time) ([]barkat.Ticker, common.HttpError) {

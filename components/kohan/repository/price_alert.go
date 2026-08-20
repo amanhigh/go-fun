@@ -6,12 +6,11 @@ import (
 	"github.com/amanhigh/go-fun/common/util"
 	"github.com/amanhigh/go-fun/models/barkat"
 	"github.com/amanhigh/go-fun/models/common"
-	"gorm.io/gorm"
 )
 
 // PriceAlertRepository provides persistence operations for price alerts.
 type PriceAlertRepository interface {
-	util.BaseDbRepositoryInterface
+	util.BaseDbRepository
 	// GetByPairId resolves a pair id to an AlertTicker. When types are provided,
 	// only the first type is matched (e.g. "PRIMARY"). When no type is given,
 	// any AlertTicker for the pair id is returned.
@@ -35,8 +34,8 @@ type PriceAlertRepositoryImpl struct {
 var _ PriceAlertRepository = (*PriceAlertRepositoryImpl)(nil)
 
 // NewPriceAlertRepository creates a new PriceAlertRepository backed by GORM.
-func NewPriceAlertRepository(db *gorm.DB) *PriceAlertRepositoryImpl {
-	return &PriceAlertRepositoryImpl{BaseDbRepository: util.NewBaseDbRepository(db)}
+func NewPriceAlertRepository(baseRepository util.BaseDbRepository) *PriceAlertRepositoryImpl {
+	return &PriceAlertRepositoryImpl{BaseDbRepository: baseRepository}
 }
 
 func (r *PriceAlertRepositoryImpl) GetByPairId(ctx context.Context, pairID string, types ...string) (barkat.AlertTicker, common.HttpError) {

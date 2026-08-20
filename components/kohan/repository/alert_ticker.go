@@ -11,7 +11,7 @@ import (
 
 // AlertTickerRepository provides persistence operations for Alert tickers.
 type AlertTickerRepository interface {
-	util.BaseDbRepositoryInterface
+	util.BaseDbRepository
 	// GetAlertTicker retrieves a single Alert ticker by symbol with parent Ticker preloaded.
 	GetAlertTicker(ctx context.Context, symbol string) (barkat.AlertTicker, common.HttpError)
 	// ListAlertTickers returns a filtered, paginated list of Alert tickers with parent Ticker preloaded.
@@ -27,9 +27,9 @@ type AlertTickerRepositoryImpl struct {
 var _ AlertTickerRepository = (*AlertTickerRepositoryImpl)(nil)
 
 // NewAlertTickerRepository creates a new AlertTickerRepository backed by GORM.
-func NewAlertTickerRepository(db *gorm.DB) *AlertTickerRepositoryImpl {
+func NewAlertTickerRepository(baseRepository util.BaseDbRepository) *AlertTickerRepositoryImpl {
 	return &AlertTickerRepositoryImpl{
-		BaseDbRepository: util.NewBaseDbRepository(db),
+		BaseDbRepository: baseRepository,
 	}
 }
 

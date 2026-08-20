@@ -3,7 +3,7 @@ package manager
 import (
 	"context"
 
-	"github.com/amanhigh/go-fun/components/fun-app/dao"
+	"github.com/amanhigh/go-fun/components/fun-app/repository"
 	"github.com/amanhigh/go-fun/models/common"
 	"github.com/amanhigh/go-fun/models/fun"
 	"github.com/rs/zerolog"
@@ -22,12 +22,12 @@ type StudentManagerInterface interface {
 }
 
 type StudentManager struct {
-	Dao    dao.StudentDaoInterface
-	Tracer trace.Tracer
+	Repository repository.StudentRepository
+	Tracer     trace.Tracer
 }
 
-func NewStudentManager(dao dao.StudentDaoInterface, tracer trace.Tracer) *StudentManager {
-	return &StudentManager{Dao: dao, Tracer: tracer}
+func NewStudentManager(studentRepository repository.StudentRepository, tracer trace.Tracer) *StudentManager {
+	return &StudentManager{Repository: studentRepository, Tracer: tracer}
 }
 
 var _ StudentManagerInterface = (*StudentManager)(nil)
@@ -52,8 +52,8 @@ func (p *StudentManager) CreateStudent(c context.Context, request fun.StudentReq
 	student.Age = request.Age
 	student.Gender = request.Gender
 
-	err = p.Dao.UseOrCreateTx(ctx, func(c context.Context) (err common.HttpError) {
-		if err = p.Dao.Create(c, &student); err == nil {
+	err = p.Repository.UseOrCreateTx(ctx, func(c context.Context) (err common.HttpError) {
+		if err = p.Repository.Create(c, &student); err == nil {
 			subLogger.Info().Ctx(c).Str("Id", student.Id).Msg("Student Created")
 		}
 		return
@@ -71,8 +71,8 @@ func (p *StudentManager) ListStudents(c context.Context, studentQuery fun.Studen
 	))
 	defer span.End()
 
-	err = p.Dao.UseOrCreateTx(ctx, func(c context.Context) (err common.HttpError) {
-		response, err = p.Dao.ListStudent(c, studentQuery)
+	err = p.Repository.UseOrCreateTx(ctx, func(c context.Context) (err common.HttpError) {
+		response, err = p.Repository.ListStudent(c, studentQuery)
 		return
 	})
 	return
@@ -82,8 +82,8 @@ func (p *StudentManager) ListStudentAudit(c context.Context, id string) (respons
 	ctx, span := p.Tracer.Start(c, "GetStudentAudit.Manager", trace.WithAttributes(attribute.String("id", id)))
 	defer span.End()
 
-	err = p.Dao.UseOrCreateTx(ctx, func(c context.Context) (err1 common.HttpError) {
-		response, err1 = p.Dao.ListStudentAudit(c, id)
+	err = p.Repository.UseOrCreateTx(ctx, func(c context.Context) (err1 common.HttpError) {
+		response, err1 = p.Repository.ListStudentAudit(c, id)
 		return
 	})
 	return
@@ -93,8 +93,8 @@ func (p *StudentManager) GetStudent(c context.Context, id string) (student fun.S
 	ctx, span := p.Tracer.Start(c, "GetStudent.Manager", trace.WithAttributes(attribute.String("id", id)))
 	defer span.End()
 
-	err = p.Dao.UseOrCreateTx(ctx, func(c context.Context) (err common.HttpError) {
-		return p.Dao.FindById(c, id, &student)
+	err = p.Repository.UseOrCreateTx(ctx, func(c context.Context) (err common.HttpError) {
+		return p.Repository.FindById(c, id, &student)
 	})
 	return
 }
@@ -115,8 +115,8 @@ func (p *StudentManager) UpdateStudent(c context.Context, id string, request fun
 	))
 	defer span.End()
 
-	err = p.Dao.UseOrCreateTx(ctx, func(c context.Context) (err common.HttpError) {
-		err = p.Dao.Update(c, &student)
+	err = p.Repository.UseOrCreateTx(ctx, func(c context.Context) (err common.HttpError) {
+		err = p.Repository.Update(c, &student)
 		return
 	})
 	return
@@ -126,9 +126,9 @@ func (p *StudentManager) DeleteStudent(c context.Context, id string) (err common
 	ctx, span := p.Tracer.Start(c, "DeleteStudent.Manager", trace.WithAttributes(attribute.String("id", id)))
 	defer span.End()
 
-	err = p.Dao.UseOrCreateTx(ctx, func(c context.Context) (err common.HttpError) {
+	err = p.Repository.UseOrCreateTx(ctx, func(c context.Context) (err common.HttpError) {
 		span.AddEvent("Deleting Student", trace.WithAttributes(attribute.String("id", id)))
-		return p.Dao.DeleteById(c, id, &fun.Student{})
+		return p.Repository.DeleteById(c, id, &fun.Student{})
 	})
 
 	return

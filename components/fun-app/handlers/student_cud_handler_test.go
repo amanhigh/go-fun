@@ -11,9 +11,9 @@ import (
 	"time"
 
 	"github.com/amanhigh/go-fun/common/util"
-	"github.com/amanhigh/go-fun/components/fun-app/dao"
 	"github.com/amanhigh/go-fun/components/fun-app/handlers"
 	"github.com/amanhigh/go-fun/components/fun-app/manager"
+	"github.com/amanhigh/go-fun/components/fun-app/repository"
 	"github.com/amanhigh/go-fun/models/common"
 	"github.com/amanhigh/go-fun/models/fun"
 	"github.com/gin-gonic/gin"
@@ -39,11 +39,11 @@ var _ = Describe("StudentHandler CUD", func() {
 		ctx              context.Context
 		db               *gorm.DB
 		dbSQL            *sql.DB
-		studentManager    manager.StudentManagerInterface
+		studentManager   manager.StudentManagerInterface
 		router           *gin.Engine
 		request          fun.StudentRequest
 		updateRequest    fun.StudentRequest
-		existingStudent   fun.Student
+		existingStudent  fun.Student
 		response         fun.Student
 		persisted        fun.Student
 		persistedErr     common.HttpError
@@ -62,7 +62,7 @@ var _ = Describe("StudentHandler CUD", func() {
 		Expect(err).ToNot(HaveOccurred())
 
 		tracer := otel.Tracer("fun-app-student-handler-test")
-		studentManager = manager.NewStudentManager(dao.NewStudentDao(util.NewBaseDbRepository(db)), tracer)
+		studentManager = manager.NewStudentManager(repository.NewStudentRepository(util.NewBaseDbRepository(db)), tracer)
 		meter := noop.NewMeterProvider().Meter("fun-app-student-handler-test")
 		createCounter, err := meter.Int64Counter("create_student")
 		Expect(err).ToNot(HaveOccurred())
@@ -71,9 +71,9 @@ var _ = Describe("StudentHandler CUD", func() {
 		studentCreateTime, err := meter.Float64Histogram("student_create_time")
 		Expect(err).ToNot(HaveOccurred())
 		studentHandler := &handlers.StudentHandlerImpl{
-			Manager:          studentManager,
-			Tracer:           tracer,
-			CreateCounter:    createCounter,
+			Manager:           studentManager,
+			Tracer:            tracer,
+			CreateCounter:     createCounter,
 			StudentCounter:    studentCounter,
 			StudentCreateTime: studentCreateTime,
 		}
