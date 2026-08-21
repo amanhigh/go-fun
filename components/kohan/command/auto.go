@@ -1,7 +1,6 @@
 package command
 
 import (
-	"context"
 	"fmt"
 
 	"github.com/amanhigh/go-fun/common/tools"
@@ -33,15 +32,16 @@ var kohanServerCmd = &cobra.Command{
 	Short: "Start Kohan Server",
 	Args:  cobra.NoArgs,
 	RunE: func(cmd *cobra.Command, _ []string) (err error) {
-		osManager := core.GetKohanInterface().GetOSManager()
+		// osManager := core.GetKohanInterface().GetOSManager()
 		server, err := core.GetKohanInterface().GetKohanServer()
 		if err != nil {
 			return fmt.Errorf("failed to build kohan server: %w", err)
 		}
 
-		monitorCtx, stopMonitor := context.WithCancel(cmd.Context())
-		defer stopMonitor()
-		go osManager.MonitorInternetConnection(monitorCtx)
+		// FIXME: Remove the disabled internet-monitor infrastructure after NetworkManager autoconnect has proven stable.
+		// monitorCtx, stopMonitor := context.WithCancel(cmd.Context())
+		// defer stopMonitor()
+		// go osManager.MonitorInternetConnection(monitorCtx)
 
 		if err := server.Start(); err != nil {
 			log.Error().Err(err).Msg("Failed to start Kohan server")
