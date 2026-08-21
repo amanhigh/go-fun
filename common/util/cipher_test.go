@@ -1,7 +1,6 @@
 package util_test
 
 import (
-	"crypto/aes"
 	"encoding/base64"
 	"strings"
 
@@ -56,7 +55,7 @@ var _ = Describe("Cipher", func() {
 			It("should handle empty text", func() {
 				encrypted, err := util.Encrypt(validKey16, emptyText)
 				Expect(err).NotTo(HaveOccurred())
-				Expect(encrypted).NotTo(BeEmpty()) // IV is always present
+				Expect(encrypted).NotTo(BeEmpty()) // nonce is always present
 
 				decrypted, err := util.Decrypt(validKey16, encrypted)
 				Expect(err).NotTo(HaveOccurred())
@@ -91,7 +90,7 @@ var _ = Describe("Cipher", func() {
 
 				Expect(err1).NotTo(HaveOccurred())
 				Expect(err2).NotTo(HaveOccurred())
-				Expect(encrypted1).NotTo(Equal(encrypted2)) // Different IV each time
+				Expect(encrypted1).NotTo(Equal(encrypted2)) // Different nonce each time
 			})
 
 			It("should produce base64 encoded output", func() {
@@ -101,17 +100,6 @@ var _ = Describe("Cipher", func() {
 				// Should be valid base64
 				_, err = base64.URLEncoding.DecodeString(encrypted)
 				Expect(err).NotTo(HaveOccurred())
-			})
-
-			It("should include IV in ciphertext", func() {
-				encrypted, err := util.Encrypt(validKey16, plaintext)
-				Expect(err).NotTo(HaveOccurred())
-
-				decoded, err := base64.URLEncoding.DecodeString(encrypted)
-				Expect(err).NotTo(HaveOccurred())
-
-				// Should be at least AES block size (16 bytes for IV) + some data
-				Expect(len(decoded)).To(BeNumerically(">=", aes.BlockSize))
 			})
 		})
 
@@ -144,7 +132,8 @@ var _ = Describe("Cipher", func() {
 				})
 
 				It("should return error for ciphertext too short", func() {
-					// Create valid base64 but with content shorter than AES block size
+					// Create valid base64 but with content shorter than the minimum
+					// GCM nonce + tag length.
 					shortCipher := base64.URLEncoding.EncodeToString([]byte("short"))
 					decrypted, err := util.Decrypt(validKey16, shortCipher)
 					Expect(err).To(HaveOccurred())
@@ -165,15 +154,47 @@ var _ = Describe("Cipher", func() {
 					Expect(decrypted).To(BeEmpty())
 				})
 
-				It("should decrypt with wrong key but produce garbage", func() {
+				It("should fail to decrypt with wrong key", func() {
 					// Encrypt with one key
 					encrypted, err := util.Encrypt(validKey16, plaintext)
 					Expect(err).NotTo(HaveOccurred())
 
-					// Try to decrypt with different valid key - this succeeds but produces garbage
+					// Try to decrypt with a different valid key. AES-GCM authentication
+					// must fail because the tag was produced under a different key.
 					decrypted, err := util.Decrypt(validKey24, encrypted)
+					Expect(err).To(HaveOccurred())
+					Expect(decrypted).To(BeEmpty())
+				})
+
+				It("should fail to decrypt tampered ciphertext", func() {
+					// Encrypt with a valid key
+					encrypted, err := util.Encrypt(validKey16, plaintext)
 					Expect(err).NotTo(HaveOccurred())
-					Expect(decrypted).NotTo(Equal(plaintext)) // Should not match original
+
+					// Tamper with the ciphertext (flip the last byte of the data).
+					decoded, err := base64.URLEncoding.DecodeString(encrypted)
+					Expect(err).NotTo(HaveOccurred())
+					decoded[len(decoded)-1] ^= 0xFF
+					tampered := base64.URLEncoding.EncodeToString(decoded)
+
+					// AES-GCM authentication must detect the tampering.
+					decrypted, err := util.Decrypt(validKey16, tampered)
+					Expect(err).To(HaveOccurred())
+					Expect(decrypted).To(BeEmpty())
+				})
+
+				It("should fail to decrypt random ciphertext", func() {
+					// Random bytes are not a valid AES-GCM ciphertext, so
+					// authentication must fail rather than returning garbage.
+					random := make([]byte, 32)
+					for i := range random {
+						random[i] = byte(i)
+					}
+					randomCipher := base64.URLEncoding.EncodeToString(random)
+
+					decrypted, err := util.Decrypt(validKey16, randomCipher)
+					Expect(err).To(HaveOccurred())
+					Expect(decrypted).To(BeEmpty())
 				})
 			})
 		})
