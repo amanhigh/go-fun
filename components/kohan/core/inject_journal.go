@@ -84,8 +84,8 @@ func provideHttpServer(cfg config.HttpServerConfig, shutdown util.Shutdown, life
 
 // ---- Journal ----
 
-func provideJournalRepository(db *gorm.DB) repository.JournalRepository {
-	return repository.NewJournalRepository(db)
+func provideJournalRepository(baseRepository util.BaseDbRepository) repository.JournalRepository {
+	return repository.NewJournalRepository(baseRepository)
 }
 
 func provideJournalManager(repo repository.JournalRepository) manager.JournalManager {
@@ -98,8 +98,8 @@ func provideJournalHandler(mgr manager.JournalManager) handler.JournalHandler {
 
 // ---- Image ----
 
-func provideImageRepository(db *gorm.DB) repository.ImageRepository {
-	return repository.NewImageRepository(db)
+func provideImageRepository(baseRepository util.BaseDbRepository) repository.ImageRepository {
+	return repository.NewImageRepository(baseRepository)
 }
 
 func provideImageManager(journalMgr manager.JournalManager, repo repository.ImageRepository) manager.ImageManager {
@@ -112,8 +112,8 @@ func provideImageHandler(mgr manager.ImageManager) handler.ImageHandler {
 
 // ---- Note ----
 
-func provideNoteRepository(db *gorm.DB) repository.NoteRepository {
-	return repository.NewNoteRepository(db)
+func provideNoteRepository(baseRepository util.BaseDbRepository) repository.NoteRepository {
+	return repository.NewNoteRepository(baseRepository)
 }
 
 func provideNoteManager(journalMgr manager.JournalManager, repo repository.NoteRepository) manager.NoteManager {
@@ -126,8 +126,8 @@ func provideNoteHandler(mgr manager.NoteManager) handler.NoteHandler {
 
 // ---- Tag ----
 
-func provideTagRepository(db *gorm.DB) repository.TagRepository {
-	return repository.NewTagRepository(db)
+func provideTagRepository(baseRepository util.BaseDbRepository) repository.TagRepository {
+	return repository.NewTagRepository(baseRepository)
 }
 
 func provideTagManager(journalMgr manager.JournalManager, repo repository.TagRepository) manager.TagManager {

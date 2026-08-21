@@ -64,9 +64,9 @@ var _ = Describe("TagHandler Integration - Section 2.4 JournalTag APIs", func() 
 		db, err = core.CreateTestBarkatDB()
 		Expect(err).ToNot(HaveOccurred())
 
-		journalRepo := repository.NewJournalRepository(db)
+		journalRepo := repository.NewJournalRepository(util.NewBaseDbRepository(db))
 		journalMgr = manager.NewJournalManager(journalRepo)
-		tagMgr = manager.NewTagManager(journalMgr, repository.NewTagRepository(db))
+		tagMgr = manager.NewTagManager(journalMgr, repository.NewTagRepository(util.NewBaseDbRepository(db)))
 		tagHandler = handler.NewTagHandler(tagMgr)
 
 		router = util.CreateTestGinRouter()

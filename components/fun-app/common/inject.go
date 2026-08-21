@@ -36,7 +36,7 @@ func (fi *FunAppInjector) BuildApp() (app any, err error) {
 	fi.registerCoreDependencies()
 	fi.registerMetrics()
 	fi.registerMessagingInfra()
-	fi.registerDao()
+	fi.registerRepositories()
 	fi.registerPublishers()
 	fi.registerManager()
 	fi.registerHandlers()

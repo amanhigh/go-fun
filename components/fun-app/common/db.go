@@ -2,7 +2,7 @@ package common
 
 import (
 	"github.com/amanhigh/go-fun/common/util"
-	"github.com/amanhigh/go-fun/components/fun-app/dao"
+	"github.com/amanhigh/go-fun/components/fun-app/repository"
 	"github.com/amanhigh/go-fun/models/config"
 	"github.com/amanhigh/go-fun/models/fun"
 	"github.com/golobby/container/v3"
@@ -25,18 +25,22 @@ func newDb(config config.FunAppConfig) (db *gorm.DB, err error) {
 	return
 }
 
-// DAO providers return interfaces while delegating to pointer-returning constructors.
+// Repository providers return interfaces while delegating to pointer-returning constructors.
 
-func (fi *FunAppInjector) registerDao() {
-	container.MustSingleton(fi.di, util.NewBaseDbRepository)
-	container.MustSingleton(fi.di, fi.provideStudentDao)
-	container.MustSingleton(fi.di, fi.provideEnrollmentDao)
+func (fi *FunAppInjector) registerRepositories() {
+	container.MustSingleton(fi.di, provideBaseDbRepository)
+	container.MustSingleton(fi.di, fi.provideStudentRepository)
+	container.MustSingleton(fi.di, fi.provideEnrollmentRepository)
 }
 
-func (fi *FunAppInjector) provideStudentDao(base util.BaseDbRepository) dao.StudentDaoInterface {
-	return dao.NewStudentDao(base)
+func provideBaseDbRepository(db *gorm.DB) util.BaseDbRepository {
+	return util.NewBaseDbRepository(db)
 }
 
-func (fi *FunAppInjector) provideEnrollmentDao(base util.BaseDbRepository) dao.EnrollmentDaoInterface {
-	return dao.NewEnrollmentDao(base)
+func (fi *FunAppInjector) provideStudentRepository(baseRepository util.BaseDbRepository) repository.StudentRepository {
+	return repository.NewStudentRepository(baseRepository)
+}
+
+func (fi *FunAppInjector) provideEnrollmentRepository(baseRepository util.BaseDbRepository) repository.EnrollmentRepository {
+	return repository.NewEnrollmentRepository(baseRepository)
 }

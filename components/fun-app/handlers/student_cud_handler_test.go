@@ -11,9 +11,9 @@ import (
 	"time"
 
 	"github.com/amanhigh/go-fun/common/util"
-	"github.com/amanhigh/go-fun/components/fun-app/dao"
 	"github.com/amanhigh/go-fun/components/fun-app/handlers"
 	"github.com/amanhigh/go-fun/components/fun-app/manager"
+	"github.com/amanhigh/go-fun/components/fun-app/repository"
 	"github.com/amanhigh/go-fun/models/common"
 	"github.com/amanhigh/go-fun/models/fun"
 	"github.com/gin-gonic/gin"
@@ -62,7 +62,7 @@ var _ = Describe("StudentHandler CUD", func() {
 		Expect(err).ToNot(HaveOccurred())
 
 		tracer := otel.Tracer("fun-app-student-handler-test")
-		studentManager = manager.NewStudentManager(dao.NewStudentDao(util.NewBaseDbRepository(db)), tracer)
+		studentManager = manager.NewStudentManager(repository.NewStudentRepository(util.NewBaseDbRepository(db)), tracer)
 		meter := noop.NewMeterProvider().Meter("fun-app-student-handler-test")
 		createCounter, err := meter.Int64Counter("create_student")
 		Expect(err).ToNot(HaveOccurred())

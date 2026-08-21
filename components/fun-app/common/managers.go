@@ -1,9 +1,9 @@
 package common
 
 import (
-	"github.com/amanhigh/go-fun/components/fun-app/dao"
 	"github.com/amanhigh/go-fun/components/fun-app/manager"
 	"github.com/amanhigh/go-fun/components/fun-app/publisher"
+	"github.com/amanhigh/go-fun/components/fun-app/repository"
 	"github.com/golobby/container/v3"
 	"go.opentelemetry.io/otel/trace"
 )
@@ -16,8 +16,8 @@ func (fi *FunAppInjector) registerManager() {
 	container.MustSingleton(fi.di, fi.provideEnrollmentManager)
 }
 
-func (fi *FunAppInjector) provideStudentManager(studentDao dao.StudentDaoInterface, tracer trace.Tracer) manager.StudentManagerInterface {
-	return manager.NewStudentManager(studentDao, tracer)
+func (fi *FunAppInjector) provideStudentManager(studentRepository repository.StudentRepository, tracer trace.Tracer) manager.StudentManagerInterface {
+	return manager.NewStudentManager(studentRepository, tracer)
 }
 
 func (fi *FunAppInjector) provideSeatManager(seatPublisher publisher.SeatAllocationPublisher) manager.SeatManagerInterface {
@@ -26,9 +26,9 @@ func (fi *FunAppInjector) provideSeatManager(seatPublisher publisher.SeatAllocat
 
 func (fi *FunAppInjector) provideEnrollmentManager(
 	studentManager manager.StudentManagerInterface,
-	enrollmentDao dao.EnrollmentDaoInterface,
+	enrollmentRepository repository.EnrollmentRepository,
 	enrollmentPublisher publisher.EnrollmentPublisher,
 	seatManager manager.SeatManagerInterface,
 ) manager.EnrollmentManagerInterface {
-	return manager.NewEnrollmentManager(studentManager, enrollmentDao, enrollmentPublisher, seatManager)
+	return manager.NewEnrollmentManager(studentManager, enrollmentRepository, enrollmentPublisher, seatManager)
 }

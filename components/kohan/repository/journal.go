@@ -11,7 +11,7 @@ import (
 
 // JournalRepository provides persistence operations for journals.
 type JournalRepository interface {
-	util.BaseDbRepositoryInterface
+	util.BaseDbRepository
 	// GetJournal retrieves a single journal by external ID with preloaded associations.
 	GetJournal(ctx context.Context, journalExternalId string) (barkat.Journal, common.HttpError)
 	// ListJournals returns a filtered, paginated list of journal summaries (no associations).
@@ -25,9 +25,9 @@ type JournalRepositoryImpl struct {
 var _ JournalRepository = (*JournalRepositoryImpl)(nil)
 
 // NewJournalRepository creates a new JournalRepository backed by GORM.
-func NewJournalRepository(db *gorm.DB) *JournalRepositoryImpl {
+func NewJournalRepository(baseRepository util.BaseDbRepository) *JournalRepositoryImpl {
 	return &JournalRepositoryImpl{
-		BaseDbRepository: util.NewBaseDbRepository(db),
+		BaseDbRepository: baseRepository,
 	}
 }
 

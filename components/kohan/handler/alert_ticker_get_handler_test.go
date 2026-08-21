@@ -67,7 +67,7 @@ var _ = Describe("AlertTickerHandler Integration - GET/List Tests - Section 2.2.
 			Exchange: new("NSE"),
 			Type:     "PRIMARY",
 		}
-		alertTickerRepo := repository.NewAlertTickerRepository(db)
+		alertTickerRepo := repository.NewAlertTickerRepository(util.NewBaseDbRepository(db))
 		alertTickerMgr := manager.NewAlertTickerManager(alertTickerRepo)
 		alertTickerHandler = handler.NewAlertTickerHandler(alertTickerMgr)
 		router = newAlertTickerTestRouter(alertTickerHandler)

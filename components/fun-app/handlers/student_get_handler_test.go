@@ -10,9 +10,9 @@ import (
 	"strings"
 
 	"github.com/amanhigh/go-fun/common/util"
-	"github.com/amanhigh/go-fun/components/fun-app/dao"
 	"github.com/amanhigh/go-fun/components/fun-app/handlers"
 	"github.com/amanhigh/go-fun/components/fun-app/manager"
+	"github.com/amanhigh/go-fun/components/fun-app/repository"
 	"github.com/amanhigh/go-fun/models/fun"
 	"github.com/gin-gonic/gin"
 	. "github.com/onsi/ginkgo/v2"
@@ -81,7 +81,7 @@ var _ = Describe("Student Handler Integration - GET Tests", func() {
 		Expect(err).ToNot(HaveOccurred())
 
 		tracer := otel.Tracer("fun-app-student-get-handler-test")
-		studentManager = manager.NewStudentManager(dao.NewStudentDao(util.NewBaseDbRepository(db)), tracer)
+		studentManager = manager.NewStudentManager(repository.NewStudentRepository(util.NewBaseDbRepository(db)), tracer)
 		meter := noop.NewMeterProvider().Meter("fun-app-student-get-handler-test")
 		createCounter, err := meter.Int64Counter("get_test_create_student")
 		Expect(err).ToNot(HaveOccurred())

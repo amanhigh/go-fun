@@ -28,7 +28,12 @@ func (ki *KohanInjector) createDB() error {
 	}
 
 	container.MustSingleton(ki.di, func() *gorm.DB { return db })
+	container.MustSingleton(ki.di, provideBaseDbRepository)
 	return nil
+}
+
+func provideBaseDbRepository(db *gorm.DB) util.BaseDbRepository {
+	return util.NewBaseDbRepository(db)
 }
 
 // registerCoreDependencies registers shared dependencies used by all features.

@@ -17,11 +17,11 @@ import (
 	"github.com/stretchr/testify/mock"
 
 	"github.com/amanhigh/go-fun/common/util"
-	daomocks "github.com/amanhigh/go-fun/components/fun-app/dao/mocks"
 	"github.com/amanhigh/go-fun/components/fun-app/handlers"
 	"github.com/amanhigh/go-fun/components/fun-app/manager"
 	managermocks "github.com/amanhigh/go-fun/components/fun-app/manager/mocks"
 	"github.com/amanhigh/go-fun/components/fun-app/publisher"
+	repositorymocks "github.com/amanhigh/go-fun/components/fun-app/repository/mocks"
 	common "github.com/amanhigh/go-fun/models/common"
 	"github.com/amanhigh/go-fun/models/fun"
 )
@@ -236,22 +236,22 @@ var _ = Describe("MessagingServer causal-chain scenario", func() {
 		logger := watermill.NewStdLogger(false, false)
 		chainChannel = gochannel.NewGoChannel(gochannel.Config{}, logger)
 		recorder = &recordingPublisher{delegate: chainChannel}
-		enrollmentDAO := daomocks.NewEnrollmentDaoInterface(GinkgoT())
+		enrollmentRepository := repositorymocks.NewEnrollmentRepository(GinkgoT())
 		enrollment := fun.Enrollment{ID: "enr-chain", StudentID: "student-chain", Grade: 3, Status: fun.EnrollmentStatusSeatAllocationInitiated}
-		enrollmentDAO.EXPECT().UseOrCreateTx(mock.Anything, mock.Anything).RunAndReturn(func(ctx context.Context, run util.DbRun, _ ...bool) common.HttpError {
+		enrollmentRepository.EXPECT().UseOrCreateTx(mock.Anything, mock.Anything).RunAndReturn(func(ctx context.Context, run util.DbRun, _ ...bool) common.HttpError {
 			return run(ctx)
 		}).Once()
-		enrollmentDAO.EXPECT().FindById(mock.Anything, enrollment.ID, mock.Anything).Run(func(_ context.Context, _ any, entity any) {
+		enrollmentRepository.EXPECT().FindById(mock.Anything, enrollment.ID, mock.Anything).Run(func(_ context.Context, _ any, entity any) {
 			entityValue, ok := entity.(*fun.Enrollment)
 			Expect(ok).To(BeTrue())
 			*entityValue = enrollment
 		}).Return(nil).Once()
-		enrollmentDAO.EXPECT().Update(mock.Anything, mock.Anything).Return(nil).Once()
+		enrollmentRepository.EXPECT().Update(mock.Anything, mock.Anything).Return(nil).Once()
 
 		enrollmentPublisher := publisher.NewEnrollmentPublisher(publisher.NewBasePublisher(recorder))
 		seatPublisher := publisher.NewSeatAllocationPublisher(publisher.NewBasePublisher(recorder))
 		seatManager := manager.NewSeatManager(seatPublisher)
-		enrollmentManager := manager.NewEnrollmentManager(nil, enrollmentDAO, enrollmentPublisher, seatManager)
+		enrollmentManager := manager.NewEnrollmentManager(nil, enrollmentRepository, enrollmentPublisher, seatManager)
 		var err error
 		server, err = handlers.NewMessagingServer(logger, recorder, chainChannel,
 			handlers.NewEnrollmentMessageHandler(enrollmentManager),
