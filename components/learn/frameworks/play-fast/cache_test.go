@@ -447,7 +447,6 @@ var _ = Describe("Cache", func() {
 					// The original 20µs maximum occasionally failed in CI due to scheduler and shared-runner noise;
 					// double it for CI stability while retaining the maximum-latency guard.
 					Expect(experiment.GetStats("get").DurationFor(gmeasure.StatMax)).To(BeNumerically("<", 40*time.Microsecond), "Max get should be less than 40µs")
-					// the median assertion above provides a stable performance guard.
 				})
 
 				It("2.4 should perform delete operations efficiently", func() {
