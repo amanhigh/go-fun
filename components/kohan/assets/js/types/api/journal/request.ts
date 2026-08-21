@@ -9,7 +9,7 @@ export const ReviewedFilter = {
 } as const;
 export type ReviewedFilter = (typeof ReviewedFilter)[keyof typeof ReviewedFilter];
 
-export type JournalFilterKey = 'ticker' | 'type' | 'status' | 'sequence' | 'createdAfter' | 'createdBefore' | 'reviewed' | 'sortBy' | 'sortOrder';
+export type JournalFilterKey = 'ticker' | 'type' | 'status' | 'topTimeframe' | 'createdAfter' | 'createdBefore' | 'reviewed' | 'sortBy' | 'sortOrder';
 
 export type JournalFilters = Record<JournalFilterKey, string>;
 

@@ -32,7 +32,7 @@ templ JournalDetailHeader() {
 					<div class="flex flex-wrap items-center gap-2.5">
 						@journalcommon.TypeBadge(journalcommon.TypeBadgeProps{TypeExpr: "journal.detail.type", Class: "rounded-full px-3 py-1 text-sm font-semibold shadow-sm"})
 						@journalcommon.StatusBadge(journalcommon.StatusBadgeProps{StatusExpr: "journal.detail.status", Class: "rounded-full px-3 py-1 text-sm font-semibold shadow-sm"})
-						@JournalDetailSequenceChip()
+						@JournalDetailTopTimeframeChip()
 					</div>
 					@JournalDetailReviewDates()
 				</div>
@@ -68,8 +68,8 @@ templ JournalDetailReviewDates() {
 	</div>
 }
 
-templ JournalDetailSequenceChip() {
-	@components.FilterChip(components.FilterChipProps{TextExpr: "present.sequence.label(journal.detail.sequence)", Tone: components.ToneViolet, Class: "rounded-full px-3 py-1 text-sm font-semibold shadow-sm"})
+templ JournalDetailTopTimeframeChip() {
+	@components.FilterChip(components.FilterChipProps{TextExpr: "present.timeframe.label(journal.detail.top_timeframe)", Tone: components.ToneViolet, Class: "rounded-full px-3 py-1 text-sm font-semibold shadow-sm"})
 }
 
 templ JournalDetailReasonTags() {

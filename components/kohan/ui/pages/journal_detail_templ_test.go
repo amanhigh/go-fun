@@ -118,8 +118,8 @@ var _ = Describe("Journal Detail Page Tests", func() {
 			// Delete action
 			Expect(html).To(ContainSubstring(`x-on:click="header.deleteJournal()"`))
 
-			// Primary info row: type + status + sequence
-			Expect(html).To(ContainSubstring(`present.sequence.label(journal.detail.sequence)`))
+			// Primary info row: type + status + timeframe
+			Expect(html).To(ContainSubstring(`present.timeframe.label(journal.detail.top_timeframe)`))
 			Expect(html).To(ContainSubstring(`present.type.label(journal.detail.type)`))
 			Expect(html).To(ContainSubstring(`present.status.label(journal.detail.status)`))
 			Expect(html).To(ContainSubstring(`present.status.spec(journal.detail.status).class`))

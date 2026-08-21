@@ -94,7 +94,7 @@ func JournalDetailHeader() templ.Component {
 				if templ_7745c5c3_Err != nil {
 					return templ_7745c5c3_Err
 				}
-				templ_7745c5c3_Err = JournalDetailSequenceChip().Render(ctx, templ_7745c5c3_Buffer)
+				templ_7745c5c3_Err = JournalDetailTopTimeframeChip().Render(ctx, templ_7745c5c3_Buffer)
 				if templ_7745c5c3_Err != nil {
 					return templ_7745c5c3_Err
 				}
@@ -278,7 +278,7 @@ func JournalDetailReviewDates() templ.Component {
 	})
 }
 
-func JournalDetailSequenceChip() templ.Component {
+func JournalDetailTopTimeframeChip() templ.Component {
 	return templruntime.GeneratedTemplate(func(templ_7745c5c3_Input templruntime.GeneratedComponentInput) (templ_7745c5c3_Err error) {
 		templ_7745c5c3_W, ctx := templ_7745c5c3_Input.Writer, templ_7745c5c3_Input.Context
 		if templ_7745c5c3_CtxErr := ctx.Err(); templ_7745c5c3_CtxErr != nil {
@@ -299,7 +299,7 @@ func JournalDetailSequenceChip() templ.Component {
 			templ_7745c5c3_Var8 = templ.NopComponent
 		}
 		ctx = templ.ClearChildren(ctx)
-		templ_7745c5c3_Err = components.FilterChip(components.FilterChipProps{TextExpr: "present.sequence.label(journal.detail.sequence)", Tone: components.ToneViolet, Class: "rounded-full px-3 py-1 text-sm font-semibold shadow-sm"}).Render(ctx, templ_7745c5c3_Buffer)
+		templ_7745c5c3_Err = components.FilterChip(components.FilterChipProps{TextExpr: "present.timeframe.label(journal.detail.top_timeframe)", Tone: components.ToneViolet, Class: "rounded-full px-3 py-1 text-sm font-semibold shadow-sm"}).Render(ctx, templ_7745c5c3_Buffer)
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}

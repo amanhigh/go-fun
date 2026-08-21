@@ -1,4 +1,4 @@
-import type { JournalTimeframe, JournalStatus, JournalNoteFormat, JournalTagType, JournalType, JournalSequence } from './enums';
+import type { JournalTimeframe, JournalStatus, JournalNoteFormat, JournalTagType, JournalType, JournalTopTimeframe } from './enums';
 import type { PaginatedResponse } from '../common';
 
 export type JournalImage = {
@@ -27,7 +27,7 @@ export type JournalTag = {
 export type Journal = {
 	id: string;
 	ticker: string;
-	sequence: JournalSequence;
+	top_timeframe: JournalTopTimeframe;
 	type: JournalType;
 	status: JournalStatus;
 	created_at: string;

@@ -70,17 +70,25 @@ var _ = Describe("Journal Page Tests", func() {
 			Expect(html).To(ContainSubstring("Sort: "))
 			Expect(html).To(ContainSubstring(`present.type.label(filter.type)`))
 			Expect(html).To(ContainSubstring(`present.status.label(filter.status)`))
-			Expect(html).To(ContainSubstring(`present.sequence.label(filter.sequence)`))
+			Expect(html).To(ContainSubstring(`present.timeframe.label(filter.topTimeframe)`))
 			Expect(html).To(ContainSubstring("filter.createdAfter === filter.createdBefore"))
 			Expect(html).To(ContainSubstring("&#39;📅 Date: &#39; + filter.createdAfter"))
+		})
+
+		It("should render writable top-timeframe options without an MN option", func() {
+			Expect(html).To(ContainSubstring(`data-tui-selectbox-value="YR"`))
+			Expect(html).To(ContainSubstring(`data-tui-selectbox-value="SMN"`))
+			Expect(html).To(ContainSubstring(`data-tui-selectbox-value="TMN"`))
+			Expect(html).ToNot(ContainSubstring(`data-tui-selectbox-value="MN"`))
 		})
 	})
 
 	Context("Table Flow", func() {
 		It("should wire sortable table columns", func() {
 			Expect(html).To(ContainSubstring("Ticker"))
-			Expect(html).To(ContainSubstring("Sequence"))
+			Expect(html).To(ContainSubstring("Top Timeframe"))
 			Expect(html).To(ContainSubstring("Created"))
+			Expect(html).To(ContainSubstring(`filter.toggleSort(&#39;top_timeframe&#39;)`))
 		})
 
 		It("should wire created date click to apply exact-date filter", func() {
@@ -90,7 +98,7 @@ var _ = Describe("Journal Page Tests", func() {
 		It("should render journal row integration points", func() {
 			Expect(html).To(ContainSubstring("journal.id"))
 			Expect(html).To(ContainSubstring("x-text=\"journal.ticker\""))
-			Expect(html).To(ContainSubstring("journal.sequence"))
+			Expect(html).To(ContainSubstring("journal.top_timeframe"))
 		})
 
 		It("should wire row status and type expressions", func() {

@@ -3,10 +3,11 @@ import type { Envelope } from '../types/api/common';
 import type { Journal, JournalList, JournalUpdate } from '../types/api/journal/response';
 import type { JournalFilterKey, JournalListRequest, JournalUpdateRequest } from '../types/api/journal/request';
 
-const journalApiFields: JournalFilterKey[] = ['ticker', 'type', 'status', 'sequence', 'createdAfter', 'createdBefore', 'reviewed', 'sortBy', 'sortOrder'];
+const journalApiFields: JournalFilterKey[] = ['ticker', 'type', 'status', 'topTimeframe', 'createdAfter', 'createdBefore', 'reviewed', 'sortBy', 'sortOrder'];
 
 const journalApiQueryMap: Partial<Record<JournalFilterKey, string>> = {
 	ticker: 'search',
+	topTimeframe: 'top_timeframe',
 	createdAfter: 'created-after',
 	createdBefore: 'created-before',
 	sortBy: 'sort-by',

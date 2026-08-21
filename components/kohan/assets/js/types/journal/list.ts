@@ -1,6 +1,6 @@
 import type { Journal } from '../api/journal/response';
 import type { ReviewedFilter } from '../api/journal/request';
-import type { JournalType, JournalStatus, JournalSequence, JournalSortBy, JournalSortOrder } from '../api/journal/enums';
+import type { JournalType, JournalStatus, JournalTopTimeframeFilter, JournalSortBy, JournalSortOrder } from '../api/journal/enums';
 import type { Loader } from '../../lib/loader';
 import type { Collection } from '../core/collection';
 import type { JournalPageBase, PageProvider } from './page';
@@ -55,7 +55,7 @@ export type JournalFilterValues = {
 	ticker: string;
 	type: JournalType | '';
 	status: JournalStatus | '';
-	sequence: JournalSequence | '';
+	topTimeframe: JournalTopTimeframeFilter | '';
 	createdAfter: string;
 	createdBefore: string;
 	reviewed: ReviewedFilter;
