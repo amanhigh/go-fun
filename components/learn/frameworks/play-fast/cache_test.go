@@ -444,7 +444,9 @@ var _ = Describe("Cache", func() {
 					AddReportEntry("Get Operations Stats", experiment.GetStats("get"))
 
 					Expect(experiment.GetStats("get").DurationFor(gmeasure.StatMedian)).To(BeNumerically("<", 1*time.Microsecond), "Median get should be less than 1µs")
-					// A single maximum sample can include scheduler and shared-runner noise;
+					// The original 20µs maximum occasionally failed in CI due to scheduler and shared-runner noise;
+					// double it for CI stability while retaining the maximum-latency guard.
+					Expect(experiment.GetStats("get").DurationFor(gmeasure.StatMax)).To(BeNumerically("<", 40*time.Microsecond), "Max get should be less than 40µs")
 					// the median assertion above provides a stable performance guard.
 				})
 
