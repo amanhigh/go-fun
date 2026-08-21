@@ -80,7 +80,7 @@ templ JournalFilters() {
 	<div class="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
 		@JournalTickerFilter()
 		@JournalStatusSelect()
-		@JournalSequenceSelect()
+		@JournalTopTimeframeSelect()
 		@JournalClearFiltersButton()
 	</div>
 }
@@ -113,18 +113,18 @@ templ JournalStatusSelect() {
 	</div>
 }
 
-templ JournalSequenceSelect() {
+templ JournalTopTimeframeSelect() {
 	<div>
 		@selectbox.SelectBox() {
-			@selectbox.Trigger(selectbox.TriggerProps{ID: "journal-sequence", Name: "journal-sequence", Class: "h-9 w-full border-violet-200/70 bg-white/80", Attributes: templ.Attributes{"x-model": "filter.sequence", "x-on:change": "filter.applyManualFilters()"}}) {
-				@selectbox.Value(selectbox.ValueProps{Placeholder: "Sequence"})
+			@selectbox.Trigger(selectbox.TriggerProps{ID: "journal-top-timeframe", Name: "journal-top-timeframe", Class: "h-9 w-full border-violet-200/70 bg-white/80", Attributes: templ.Attributes{"x-model": "filter.topTimeframe", "x-on:change": "filter.applyManualFilters()"}}) {
+				@selectbox.Value(selectbox.ValueProps{Placeholder: "Top Timeframe"})
 			}
 			@selectbox.Content() {
 				@selectbox.Group() {
 					@selectbox.Item(selectbox.ItemProps{Value: ""}) { All }
-					@selectbox.Item(selectbox.ItemProps{Value: "MWD"}) { MWD }
 					@selectbox.Item(selectbox.ItemProps{Value: "YR"}) { YR }
-					@selectbox.Item(selectbox.ItemProps{Value: "WDH"}) { WDH }
+					@selectbox.Item(selectbox.ItemProps{Value: "SMN"}) { SMN }
+					@selectbox.Item(selectbox.ItemProps{Value: "TMN"}) { TMN }
 				}
 			}
 		}
@@ -142,7 +142,7 @@ templ JournalActiveFilters() {
 		@components.FilterChip(components.FilterChipProps{Tone: components.ToneBlue, ShowExpr: "filter.ticker !== ''", TextExpr: "'🔎 Ticker: ' + filter.ticker"})
 		@components.FilterChip(components.FilterChipProps{Tone: components.ToneSlate, ShowExpr: "filter.type !== ''", TextExpr: "present.type.label(filter.type)"})
 		@components.FilterChip(components.FilterChipProps{Tone: components.ToneRose, ShowExpr: "filter.status !== ''", TextExpr: "present.status.label(filter.status)"})
-		@components.FilterChip(components.FilterChipProps{Tone: components.ToneViolet, ShowExpr: "filter.sequence !== ''", TextExpr: "present.sequence.label(filter.sequence)"})
+		@components.FilterChip(components.FilterChipProps{Tone: components.ToneViolet, ShowExpr: "filter.topTimeframe !== ''", TextExpr: "present.timeframe.label(filter.topTimeframe)"})
 		@components.FilterChip(components.FilterChipProps{Tone: components.ToneGreen, ShowExpr: "filter.datePreset !== '' && presets.activeReviewPreset === ''", TextExpr: "'📅 Date: ' + filter.datePreset"})
 		@components.FilterChip(components.FilterChipProps{Tone: components.ToneGreen, ShowExpr: "filter.datePreset === '' && filter.createdAfter !== '' && filter.createdAfter === filter.createdBefore", TextExpr: "'📅 Date: ' + filter.createdAfter"})
 		@components.FilterChip(components.FilterChipProps{Tone: components.ToneAmber, ShowExpr: "presets.activeReviewPreset !== ''", TextExpr: "'🗓️ Review: ' + presets.activeReviewPreset"})
@@ -187,7 +187,7 @@ templ JournalTableHeader() {
 		@table.Row() {
 			@table.Head() { ID }
 			@widgets.SortHead(widgets.SortHeadProps{Label: "Ticker", Field: "ticker", SortByExpr: "filter.sortBy", SortOrderExpr: "filter.sortOrder", OnClick: "filter.toggleSort('ticker')"})
-			@widgets.SortHead(widgets.SortHeadProps{Label: "Sequence", Field: "sequence", SortByExpr: "filter.sortBy", SortOrderExpr: "filter.sortOrder", OnClick: "filter.toggleSort('sequence')"})
+			@widgets.SortHead(widgets.SortHeadProps{Label: "Top Timeframe", Field: "top_timeframe", SortByExpr: "filter.sortBy", SortOrderExpr: "filter.sortOrder", OnClick: "filter.toggleSort('top_timeframe')"})
 			@table.Head() { Type }
 			@table.Head() { Status }
 			@widgets.SortHead(widgets.SortHeadProps{Label: "Created", Field: "created_at", SortByExpr: "filter.sortBy", SortOrderExpr: "filter.sortOrder", OnClick: "filter.toggleSort('created_at')"})
@@ -202,7 +202,7 @@ templ JournalRow() {
 		}
 		@table.Cell(table.CellProps{Attributes: templ.Attributes{"x-text": "journal.ticker"}}) {}
 		@table.Cell() {
-			@badge.Badge(badge.Props{Variant: badge.VariantSecondary, Class: "border font-semibold", Attributes: templ.Attributes{"x-text": "present.sequence.label(journal.sequence)"}}) {}
+			@badge.Badge(badge.Props{Variant: badge.VariantSecondary, Class: "border font-semibold", Attributes: templ.Attributes{"x-text": "present.timeframe.label(journal.top_timeframe)"}}) {}
 		}
 		@table.Cell() {
 			@journalcommon.TypeBadge(journalcommon.TypeBadgeProps{TypeExpr: "journal.type"})

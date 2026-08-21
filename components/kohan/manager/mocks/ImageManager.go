@@ -181,8 +181,8 @@ func (_c *ImageManager_DeleteImage_Call) RunAndReturn(run func(ctx context.Conte
 }
 
 // ListImages provides a mock function for the type ImageManager
-func (_mock *ImageManager) ListImages(ctx context.Context, journalID string) (barkat.ImageList, common.HttpError) {
-	ret := _mock.Called(ctx, journalID)
+func (_mock *ImageManager) ListImages(ctx context.Context, journalID string, imageType string) (barkat.ImageList, common.HttpError) {
+	ret := _mock.Called(ctx, journalID, imageType)
 
 	if len(ret) == 0 {
 		panic("no return value specified for ListImages")
@@ -190,16 +190,16 @@ func (_mock *ImageManager) ListImages(ctx context.Context, journalID string) (ba
 
 	var r0 barkat.ImageList
 	var r1 common.HttpError
-	if returnFunc, ok := ret.Get(0).(func(context.Context, string) (barkat.ImageList, common.HttpError)); ok {
-		return returnFunc(ctx, journalID)
+	if returnFunc, ok := ret.Get(0).(func(context.Context, string, string) (barkat.ImageList, common.HttpError)); ok {
+		return returnFunc(ctx, journalID, imageType)
 	}
-	if returnFunc, ok := ret.Get(0).(func(context.Context, string) barkat.ImageList); ok {
-		r0 = returnFunc(ctx, journalID)
+	if returnFunc, ok := ret.Get(0).(func(context.Context, string, string) barkat.ImageList); ok {
+		r0 = returnFunc(ctx, journalID, imageType)
 	} else {
 		r0 = ret.Get(0).(barkat.ImageList)
 	}
-	if returnFunc, ok := ret.Get(1).(func(context.Context, string) common.HttpError); ok {
-		r1 = returnFunc(ctx, journalID)
+	if returnFunc, ok := ret.Get(1).(func(context.Context, string, string) common.HttpError); ok {
+		r1 = returnFunc(ctx, journalID, imageType)
 	} else {
 		if ret.Get(1) != nil {
 			r1 = ret.Get(1).(common.HttpError)
@@ -216,11 +216,12 @@ type ImageManager_ListImages_Call struct {
 // ListImages is a helper method to define mock.On call
 //   - ctx context.Context
 //   - journalID string
-func (_e *ImageManager_Expecter) ListImages(ctx interface{}, journalID interface{}) *ImageManager_ListImages_Call {
-	return &ImageManager_ListImages_Call{Call: _e.mock.On("ListImages", ctx, journalID)}
+//   - imageType string
+func (_e *ImageManager_Expecter) ListImages(ctx interface{}, journalID interface{}, imageType interface{}) *ImageManager_ListImages_Call {
+	return &ImageManager_ListImages_Call{Call: _e.mock.On("ListImages", ctx, journalID, imageType)}
 }
 
-func (_c *ImageManager_ListImages_Call) Run(run func(ctx context.Context, journalID string)) *ImageManager_ListImages_Call {
+func (_c *ImageManager_ListImages_Call) Run(run func(ctx context.Context, journalID string, imageType string)) *ImageManager_ListImages_Call {
 	_c.Call.Run(func(args mock.Arguments) {
 		var arg0 context.Context
 		if args[0] != nil {
@@ -230,9 +231,14 @@ func (_c *ImageManager_ListImages_Call) Run(run func(ctx context.Context, journa
 		if args[1] != nil {
 			arg1 = args[1].(string)
 		}
+		var arg2 string
+		if args[2] != nil {
+			arg2 = args[2].(string)
+		}
 		run(
 			arg0,
 			arg1,
+			arg2,
 		)
 	})
 	return _c
@@ -243,7 +249,7 @@ func (_c *ImageManager_ListImages_Call) Return(imageList barkat.ImageList, httpE
 	return _c
 }
 
-func (_c *ImageManager_ListImages_Call) RunAndReturn(run func(ctx context.Context, journalID string) (barkat.ImageList, common.HttpError)) *ImageManager_ListImages_Call {
+func (_c *ImageManager_ListImages_Call) RunAndReturn(run func(ctx context.Context, journalID string, imageType string) (barkat.ImageList, common.HttpError)) *ImageManager_ListImages_Call {
 	_c.Call.Return(run)
 	return _c
 }

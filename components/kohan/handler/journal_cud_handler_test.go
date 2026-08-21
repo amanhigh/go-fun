@@ -66,10 +66,10 @@ var _ = Describe("JournalHandler Integration - CUD Tests", func() {
 		w              *httptest.ResponseRecorder
 		// Common image objects to reduce duplication
 		standardImages = []barkat.Image{
-			{Timeframe: "DL", FileName: "test-dl.png"},
-			{Timeframe: "WK", FileName: "test-wk.png"},
-			{Timeframe: "MN", FileName: "test-mn.png"},
-			{Timeframe: "TMN", FileName: "test-tmn.png"},
+			{Timeframe: "DL", FileName: "test-dl.png", ImageType: "SET"},
+			{Timeframe: "WK", FileName: "test-wk.png", ImageType: "SET"},
+			{Timeframe: "MN", FileName: "test-mn.png", ImageType: "SET"},
+			{Timeframe: "TMN", FileName: "test-tmn.png", ImageType: "SET"},
 		}
 	)
 
@@ -107,6 +107,7 @@ var _ = Describe("JournalHandler Integration - CUD Tests", func() {
 				images[i] = barkat.Image{
 					Timeframe: timeframe,
 					FileName:  fmt.Sprintf("TEST.%s.rejected.oe__20240115_132138.png", timeframe),
+					ImageType: "SET",
 				}
 			}
 			return images
@@ -116,11 +117,11 @@ var _ = Describe("JournalHandler Integration - CUD Tests", func() {
 			Context("with minimal valid journal (required fields + min 4 images)", func() {
 				BeforeEach(func() {
 					journal := barkat.Journal{
-						Ticker:   "GRSE",
-						Sequence: "MWD",
-						Type:     "REJECTED",
-						Status:   "FAIL",
-						Images:   createTestImages(),
+						Ticker:       "GRSE",
+						TopTimeframe: "TMN",
+						Type:         "REJECTED",
+						Status:       "FAIL",
+						Images:       createTestImages(),
 					}
 					req, w = util.CreateTestRequest("POST", barkat.JournalBase, journal)
 					router.ServeHTTP(w, req)
@@ -144,7 +145,7 @@ var _ = Describe("JournalHandler Integration - CUD Tests", func() {
 				It("should preserve all input fields", func() {
 					response := decodeCreateJournalResponse(w)
 					Expect(response.Ticker).To(Equal("GRSE"))
-					Expect(response.Sequence).To(Equal("MWD"))
+					Expect(response.TopTimeframe).To(Equal("TMN"))
 					Expect(response.Type).To(Equal("REJECTED"))
 					Expect(response.Status).To(Equal("FAIL"))
 				})
@@ -178,11 +179,11 @@ var _ = Describe("JournalHandler Integration - CUD Tests", func() {
 			Context("with complete valid journal including images, tags, and notes", func() {
 				BeforeEach(func() {
 					journal := barkat.Journal{
-						Ticker:   "RELIANCE",
-						Sequence: "YR",
-						Type:     "REJECTED",
-						Status:   "RUNNING",
-						Images:   createTestImages(),
+						Ticker:       "RELIANCE",
+						TopTimeframe: "SMN",
+						Type:         "REJECTED",
+						Status:       "RUNNING",
+						Images:       createTestImages(),
 						Tags: []barkat.Tag{
 							{Tag: "oe", Type: "REASON"},
 						},
@@ -198,7 +199,7 @@ var _ = Describe("JournalHandler Integration - CUD Tests", func() {
 					response := decodeCreateJournalResponse(w)
 					Expect(response.ExternalID).To(HavePrefix("jrn_"))
 					Expect(response.Ticker).To(Equal("RELIANCE"))
-					Expect(response.Sequence).To(Equal("YR"))
+					Expect(response.TopTimeframe).To(Equal("SMN"))
 					Expect(response.Type).To(Equal("REJECTED"))
 					Expect(response.Status).To(Equal("RUNNING"))
 					Expect(response.Images).To(HaveLen(4))
@@ -224,11 +225,11 @@ var _ = Describe("JournalHandler Integration - CUD Tests", func() {
 				Context("Allowed Values", func() {
 					It("should accept ticker with numbers", func() {
 						journal := barkat.Journal{
-							Ticker:   "GRSE123",
-							Sequence: "MWD",
-							Type:     "REJECTED",
-							Status:   "FAIL",
-							Images:   standardImages,
+							Ticker:       "GRSE123",
+							TopTimeframe: "TMN",
+							Type:         "REJECTED",
+							Status:       "FAIL",
+							Images:       standardImages,
 						}
 						req, w = util.CreateTestRequest("POST", barkat.JournalBase, journal)
 						router.ServeHTTP(w, req)
@@ -238,11 +239,11 @@ var _ = Describe("JournalHandler Integration - CUD Tests", func() {
 
 					It("should accept ticker with dot suffix", func() {
 						journal := barkat.Journal{
-							Ticker:   "TCS.NS",
-							Sequence: "YR",
-							Type:     "TAKEN",
-							Status:   "RUNNING",
-							Images:   standardImages,
+							Ticker:       "TCS.NS",
+							TopTimeframe: "SMN",
+							Type:         "TAKEN",
+							Status:       "RUNNING",
+							Images:       standardImages,
 						}
 						req, w = util.CreateTestRequest("POST", barkat.JournalBase, journal)
 						router.ServeHTTP(w, req)
@@ -252,7 +253,7 @@ var _ = Describe("JournalHandler Integration - CUD Tests", func() {
 
 					It("should accept ticker at max length (30)", func() {
 						journal := barkat.Journal{
-							Ticker: "123456789012345678901234567890", Sequence: "MWD", Type: "REJECTED", Status: "FAIL",
+							Ticker: "123456789012345678901234567890", TopTimeframe: "TMN", Type: "REJECTED", Status: "FAIL",
 							Images: standardImages,
 						}
 						req, w = util.CreateTestRequest("POST", barkat.JournalBase, journal)
@@ -263,7 +264,7 @@ var _ = Describe("JournalHandler Integration - CUD Tests", func() {
 
 					It("should accept ticker with underscore", func() {
 						journal := barkat.Journal{
-							Ticker: "ABC_DEF", Sequence: "MWD", Type: "REJECTED", Status: "FAIL",
+							Ticker: "ABC_DEF", TopTimeframe: "TMN", Type: "REJECTED", Status: "FAIL",
 							Images: standardImages,
 						}
 						req, w = util.CreateTestRequest("POST", barkat.JournalBase, journal)
@@ -274,7 +275,7 @@ var _ = Describe("JournalHandler Integration - CUD Tests", func() {
 
 					It("should accept futures exclamation ticker", func() {
 						journal := barkat.Journal{
-							Ticker: "GOLD1!", Sequence: "MWD", Type: "REJECTED", Status: "FAIL",
+							Ticker: "GOLD1!", TopTimeframe: "TMN", Type: "REJECTED", Status: "FAIL",
 							Images: standardImages,
 						}
 						req, w = util.CreateTestRequest("POST", barkat.JournalBase, journal)
@@ -286,49 +287,49 @@ var _ = Describe("JournalHandler Integration - CUD Tests", func() {
 
 				Context("Bad Values", func() {
 					It("should return 400 for missing ticker", func() {
-						journal := barkat.Journal{Ticker: "", Sequence: "MWD", Type: "REJECTED", Status: "FAIL"}
+						journal := barkat.Journal{Ticker: "", TopTimeframe: "TMN", Type: "REJECTED", Status: "FAIL"}
 						req, w = util.CreateTestRequest("POST", barkat.JournalBase, journal)
 						router.ServeHTTP(w, req)
 						util.AssertError(w, "Ticker", "required")
 					})
 
 					It("should return 400 for ticker exceeding max length (31)", func() {
-						journal := barkat.Journal{Ticker: "1234567890123456789012345678901", Sequence: "MWD", Type: "REJECTED", Status: "FAIL"}
+						journal := barkat.Journal{Ticker: "1234567890123456789012345678901", TopTimeframe: "TMN", Type: "REJECTED", Status: "FAIL"}
 						req, w = util.CreateTestRequest("POST", barkat.JournalBase, journal)
 						router.ServeHTTP(w, req)
 						util.AssertError(w, "Ticker", "max (30)")
 					})
 
 					It("should return 400 for lowercase ticker (PRD: uppercase only)", func() {
-						journal := barkat.Journal{Ticker: "grse", Sequence: "MWD", Type: "REJECTED", Status: "FAIL", Images: standardImages}
+						journal := barkat.Journal{Ticker: "grse", TopTimeframe: "TMN", Type: "REJECTED", Status: "FAIL", Images: standardImages}
 						req, w = util.CreateTestRequest("POST", barkat.JournalBase, journal)
 						router.ServeHTTP(w, req)
 						util.AssertError(w, "Ticker", "ticker")
 					})
 
 					It("should return 400 for ticker with hyphen", func() {
-						journal := barkat.Journal{Ticker: "ABC-DEF", Sequence: "MWD", Type: "REJECTED", Status: "FAIL", Images: standardImages}
+						journal := barkat.Journal{Ticker: "ABC-DEF", TopTimeframe: "TMN", Type: "REJECTED", Status: "FAIL", Images: standardImages}
 						req, w = util.CreateTestRequest("POST", barkat.JournalBase, journal)
 						router.ServeHTTP(w, req)
 						util.AssertError(w, "Ticker", "ticker")
 					})
 
 					It("should return 400 for ticker starting with dot", func() {
-						journal := barkat.Journal{Ticker: ".MCX", Sequence: "MWD", Type: "REJECTED", Status: "FAIL", Images: standardImages}
+						journal := barkat.Journal{Ticker: ".MCX", TopTimeframe: "TMN", Type: "REJECTED", Status: "FAIL", Images: standardImages}
 						req, w = util.CreateTestRequest("POST", barkat.JournalBase, journal)
 						router.ServeHTTP(w, req)
 						util.AssertError(w, "Ticker", "ticker")
 					})
 
 					It("should return 400 for ticker with whitespace", func() {
-						journal := barkat.Journal{Ticker: "MC X", Sequence: "MWD", Type: "REJECTED", Status: "FAIL", Images: standardImages}
+						journal := barkat.Journal{Ticker: "MC X", TopTimeframe: "TMN", Type: "REJECTED", Status: "FAIL", Images: standardImages}
 						req, w = util.CreateTestRequest("POST", barkat.JournalBase, journal)
 						router.ServeHTTP(w, req)
 						util.AssertError(w, "Ticker", "ticker")
 					})
 
 					It("should return 400 for ticker with unsupported special character", func() {
-						journal := barkat.Journal{Ticker: "MCX@", Sequence: "MWD", Type: "REJECTED", Status: "FAIL", Images: standardImages}
+						journal := barkat.Journal{Ticker: "MCX@", TopTimeframe: "TMN", Type: "REJECTED", Status: "FAIL", Images: standardImages}
 						req, w = util.CreateTestRequest("POST", barkat.JournalBase, journal)
 						router.ServeHTTP(w, req)
 						util.AssertError(w, "Ticker", "ticker")
@@ -336,53 +337,60 @@ var _ = Describe("JournalHandler Integration - CUD Tests", func() {
 				})
 			})
 
-			Context("Sequence Field", func() {
+			Context("TopTimeframe Field", func() {
 				Context("Allowed Values", func() {
-					It("should accept sequence = MWD", func() {
-						journal := barkat.Journal{Ticker: "PDSL", Sequence: "MWD", Type: "TAKEN", Status: "SET", Images: standardImages}
+					It("should accept top_timeframe = YR", func() {
+						journal := barkat.Journal{Ticker: "PDSL", TopTimeframe: "YR", Type: "TAKEN", Status: "SET", Images: standardImages}
 						req, w = util.CreateTestRequest("POST", barkat.JournalBase, journal)
 						router.ServeHTTP(w, req)
 						response := decodeCreateJournalResponse(w)
-						Expect(response.Sequence).To(Equal("MWD"))
+						Expect(response.TopTimeframe).To(Equal("YR"))
 					})
 
-					It("should accept sequence = YR", func() {
-						journal := barkat.Journal{Ticker: "SNF", Sequence: "YR", Type: "TAKEN", Status: "SUCCESS", Images: standardImages}
+					It("should accept top_timeframe = SMN", func() {
+						journal := barkat.Journal{Ticker: "SNF", TopTimeframe: "SMN", Type: "TAKEN", Status: "SUCCESS", Images: standardImages}
 						req, w = util.CreateTestRequest("POST", barkat.JournalBase, journal)
 						router.ServeHTTP(w, req)
 						response := decodeCreateJournalResponse(w)
-						Expect(response.Sequence).To(Equal("YR"))
+						Expect(response.TopTimeframe).To(Equal("SMN"))
 					})
 
-					It("should accept sequence = WDH (PRD 4.8.6.3.1 legacy tag support)", func() {
-						journal := barkat.Journal{Ticker: "GRSE", Sequence: "WDH", Type: "REJECTED", Status: "FAIL", Images: standardImages}
+					It("should accept top_timeframe = TMN", func() {
+						journal := barkat.Journal{Ticker: "GRSE", TopTimeframe: "TMN", Type: "REJECTED", Status: "FAIL", Images: standardImages}
 						req, w = util.CreateTestRequest("POST", barkat.JournalBase, journal)
 						router.ServeHTTP(w, req)
 						response := decodeCreateJournalResponse(w)
-						Expect(response.Sequence).To(Equal("WDH"))
+						Expect(response.TopTimeframe).To(Equal("TMN"))
 					})
 				})
 
 				Context("Bad Values", func() {
-					It("should return 400 for missing sequence", func() {
-						journal := barkat.Journal{Ticker: "GRSE", Sequence: "", Type: "REJECTED", Status: "FAIL"}
+					It("should return 400 for missing top_timeframe", func() {
+						journal := barkat.Journal{Ticker: "GRSE", TopTimeframe: "", Type: "REJECTED", Status: "FAIL"}
 						req, w = util.CreateTestRequest("POST", barkat.JournalBase, journal)
 						router.ServeHTTP(w, req)
-						util.AssertError(w, "Sequence", "required")
+						util.AssertError(w, "TopTimeframe", "required")
 					})
 
-					It("should return 400 for invalid sequence (lowercase)", func() {
-						journal := barkat.Journal{Ticker: "INFY", Sequence: "mwd", Type: "TAKEN", Status: "SET"}
+					It("should return 400 for invalid top_timeframe (lowercase)", func() {
+						journal := barkat.Journal{Ticker: "INFY", TopTimeframe: "smn", Type: "TAKEN", Status: "SET"}
 						req, w = util.CreateTestRequest("POST", barkat.JournalBase, journal)
 						router.ServeHTTP(w, req)
-						util.AssertError(w, "Sequence", "oneof")
+						util.AssertError(w, "TopTimeframe", "oneof")
 					})
 
-					It("should return 400 for invalid sequence (unsupported)", func() {
-						journal := barkat.Journal{Ticker: "WIPRO", Sequence: "QUARTERLY", Type: "TAKEN", Status: "SET"}
+					It("should return 400 for invalid top_timeframe (unsupported)", func() {
+						journal := barkat.Journal{Ticker: "WIPRO", TopTimeframe: "DAILY", Type: "TAKEN", Status: "SET"}
 						req, w = util.CreateTestRequest("POST", barkat.JournalBase, journal)
 						router.ServeHTTP(w, req)
-						util.AssertError(w, "Sequence", "oneof")
+						util.AssertError(w, "TopTimeframe", "oneof")
+					})
+
+					It("should return 400 for migration-only top_timeframe = MN (PRD: reads may return MN, create rejects it)", func() {
+						journal := barkat.Journal{Ticker: "HDFC", TopTimeframe: "MN", Type: "TAKEN", Status: "SET"}
+						req, w = util.CreateTestRequest("POST", barkat.JournalBase, journal)
+						router.ServeHTTP(w, req)
+						util.AssertError(w, "TopTimeframe", "oneof")
 					})
 				})
 			})
@@ -390,7 +398,7 @@ var _ = Describe("JournalHandler Integration - CUD Tests", func() {
 			Context("Type Field", func() {
 				Context("Allowed Values", func() {
 					It("should accept type = REJECTED", func() {
-						journal := barkat.Journal{Ticker: "TCS", Sequence: "MWD", Type: "REJECTED", Status: "FAIL", Images: standardImages}
+						journal := barkat.Journal{Ticker: "TCS", TopTimeframe: "TMN", Type: "REJECTED", Status: "FAIL", Images: standardImages}
 						req, w = util.CreateTestRequest("POST", barkat.JournalBase, journal)
 						router.ServeHTTP(w, req)
 						response := decodeCreateJournalResponse(w)
@@ -398,7 +406,7 @@ var _ = Describe("JournalHandler Integration - CUD Tests", func() {
 					})
 
 					It("should accept type = TAKEN", func() {
-						journal := barkat.Journal{Ticker: "INFY", Sequence: "YR", Type: "TAKEN", Status: "SUCCESS", Images: standardImages}
+						journal := barkat.Journal{Ticker: "INFY", TopTimeframe: "SMN", Type: "TAKEN", Status: "SUCCESS", Images: standardImages}
 						req, w = util.CreateTestRequest("POST", barkat.JournalBase, journal)
 						router.ServeHTTP(w, req)
 						response := decodeCreateJournalResponse(w)
@@ -407,11 +415,11 @@ var _ = Describe("JournalHandler Integration - CUD Tests", func() {
 
 					It("should accept type = REJECTED", func() {
 						journal := barkat.Journal{
-							Ticker:   "RELIANCE",
-							Sequence: "MWD",
-							Type:     "REJECTED",
-							Status:   "RUNNING",
-							Images:   standardImages,
+							Ticker:       "RELIANCE",
+							TopTimeframe: "TMN",
+							Type:         "REJECTED",
+							Status:       "RUNNING",
+							Images:       standardImages,
 						}
 						req, w = util.CreateTestRequest("POST", barkat.JournalBase, journal)
 						router.ServeHTTP(w, req)
@@ -422,21 +430,21 @@ var _ = Describe("JournalHandler Integration - CUD Tests", func() {
 
 				Context("Bad Values", func() {
 					It("should return 400 for missing type", func() {
-						journal := barkat.Journal{Ticker: "GRSE", Sequence: "MWD", Type: "", Status: "FAIL"}
+						journal := barkat.Journal{Ticker: "GRSE", TopTimeframe: "TMN", Type: "", Status: "FAIL"}
 						req, w = util.CreateTestRequest("POST", barkat.JournalBase, journal)
 						router.ServeHTTP(w, req)
 						util.AssertError(w, "Type", "required")
 					})
 
 					It("should return 400 for invalid type (lowercase)", func() {
-						journal := barkat.Journal{Ticker: "GRSE", Sequence: "MWD", Type: "rejected", Status: "FAIL"}
+						journal := barkat.Journal{Ticker: "GRSE", TopTimeframe: "TMN", Type: "rejected", Status: "FAIL"}
 						req, w = util.CreateTestRequest("POST", barkat.JournalBase, journal)
 						router.ServeHTTP(w, req)
 						util.AssertError(w, "Type", "oneof")
 					})
 
 					It("should return 400 for invalid type (unsupported)", func() {
-						journal := barkat.Journal{Ticker: "HDFC", Sequence: "MWD", Type: "INVALID", Status: "FAIL"}
+						journal := barkat.Journal{Ticker: "HDFC", TopTimeframe: "TMN", Type: "INVALID", Status: "FAIL"}
 						req, w = util.CreateTestRequest("POST", barkat.JournalBase, journal)
 						router.ServeHTTP(w, req)
 						util.AssertError(w, "Type", "oneof")
@@ -448,11 +456,11 @@ var _ = Describe("JournalHandler Integration - CUD Tests", func() {
 				Context("Allowed Values - Valid Status Values", func() {
 					It("should accept status = SET", func() {
 						journal := barkat.Journal{
-							Ticker:   "T1",
-							Sequence: "MWD",
-							Type:     "TAKEN",
-							Status:   "SET",
-							Images:   standardImages,
+							Ticker:       "T1",
+							TopTimeframe: "TMN",
+							Type:         "TAKEN",
+							Status:       "SET",
+							Images:       standardImages,
 						}
 						req, w = util.CreateTestRequest("POST", barkat.JournalBase, journal)
 						router.ServeHTTP(w, req)
@@ -461,7 +469,7 @@ var _ = Describe("JournalHandler Integration - CUD Tests", func() {
 					})
 
 					It("should accept status = RUNNING", func() {
-						journal := barkat.Journal{Ticker: "T2", Sequence: "MWD", Type: "TAKEN", Status: "RUNNING", Images: standardImages}
+						journal := barkat.Journal{Ticker: "T2", TopTimeframe: "TMN", Type: "TAKEN", Status: "RUNNING", Images: standardImages}
 						req, w = util.CreateTestRequest("POST", barkat.JournalBase, journal)
 						router.ServeHTTP(w, req)
 						response := decodeCreateJournalResponse(w)
@@ -469,7 +477,7 @@ var _ = Describe("JournalHandler Integration - CUD Tests", func() {
 					})
 
 					It("should accept status = SUCCESS", func() {
-						journal := barkat.Journal{Ticker: "T6", Sequence: "YR", Type: "TAKEN", Status: "SUCCESS", Images: standardImages}
+						journal := barkat.Journal{Ticker: "T6", TopTimeframe: "SMN", Type: "TAKEN", Status: "SUCCESS", Images: standardImages}
 						req, w = util.CreateTestRequest("POST", barkat.JournalBase, journal)
 						router.ServeHTTP(w, req)
 						response := decodeCreateJournalResponse(w)
@@ -477,7 +485,7 @@ var _ = Describe("JournalHandler Integration - CUD Tests", func() {
 					})
 
 					It("should accept status = FAIL", func() {
-						journal := barkat.Journal{Ticker: "T7", Sequence: "YR", Type: "REJECTED", Status: "FAIL", Images: standardImages}
+						journal := barkat.Journal{Ticker: "T7", TopTimeframe: "SMN", Type: "REJECTED", Status: "FAIL", Images: standardImages}
 						req, w = util.CreateTestRequest("POST", barkat.JournalBase, journal)
 						router.ServeHTTP(w, req)
 						response := decodeCreateJournalResponse(w)
@@ -485,7 +493,7 @@ var _ = Describe("JournalHandler Integration - CUD Tests", func() {
 					})
 
 					It("should accept status = MISSED", func() {
-						journal := barkat.Journal{Ticker: "T8", Sequence: "YR", Type: "TAKEN", Status: "MISSED", Images: standardImages}
+						journal := barkat.Journal{Ticker: "T8", TopTimeframe: "SMN", Type: "TAKEN", Status: "MISSED", Images: standardImages}
 						req, w = util.CreateTestRequest("POST", barkat.JournalBase, journal)
 						router.ServeHTTP(w, req)
 						response := decodeCreateJournalResponse(w)
@@ -493,7 +501,7 @@ var _ = Describe("JournalHandler Integration - CUD Tests", func() {
 					})
 
 					It("should accept status = JUST_LOSS", func() {
-						journal := barkat.Journal{Ticker: "T9", Sequence: "YR", Type: "TAKEN", Status: "JUST_LOSS", Images: standardImages}
+						journal := barkat.Journal{Ticker: "T9", TopTimeframe: "SMN", Type: "TAKEN", Status: "JUST_LOSS", Images: standardImages}
 						req, w = util.CreateTestRequest("POST", barkat.JournalBase, journal)
 						router.ServeHTTP(w, req)
 						response := decodeCreateJournalResponse(w)
@@ -501,7 +509,7 @@ var _ = Describe("JournalHandler Integration - CUD Tests", func() {
 					})
 
 					It("should accept status = BROKEN", func() {
-						journal := barkat.Journal{Ticker: "T10", Sequence: "YR", Type: "REJECTED", Status: "BROKEN", Images: standardImages}
+						journal := barkat.Journal{Ticker: "T10", TopTimeframe: "SMN", Type: "REJECTED", Status: "BROKEN", Images: standardImages}
 						req, w = util.CreateTestRequest("POST", barkat.JournalBase, journal)
 						router.ServeHTTP(w, req)
 						response := decodeCreateJournalResponse(w)
@@ -511,21 +519,21 @@ var _ = Describe("JournalHandler Integration - CUD Tests", func() {
 
 				Context("Bad Values", func() {
 					It("should return 400 for missing status", func() {
-						journal := barkat.Journal{Ticker: "GRSE", Sequence: "MWD", Type: "REJECTED", Status: ""}
+						journal := barkat.Journal{Ticker: "GRSE", TopTimeframe: "TMN", Type: "REJECTED", Status: ""}
 						req, w = util.CreateTestRequest("POST", barkat.JournalBase, journal)
 						router.ServeHTTP(w, req)
 						util.AssertError(w, "Status", "required")
 					})
 
 					It("should return 400 for invalid status (lowercase)", func() {
-						journal := barkat.Journal{Ticker: "GRSE", Sequence: "MWD", Type: "REJECTED", Status: "fail"}
+						journal := barkat.Journal{Ticker: "GRSE", TopTimeframe: "TMN", Type: "REJECTED", Status: "fail"}
 						req, w = util.CreateTestRequest("POST", barkat.JournalBase, journal)
 						router.ServeHTTP(w, req)
 						util.AssertError(w, "Status", "oneof")
 					})
 
 					It("should return 400 for invalid status (unsupported)", func() {
-						journal := barkat.Journal{Ticker: "HDFC", Sequence: "MWD", Type: "TAKEN", Status: "INVALID"}
+						journal := barkat.Journal{Ticker: "HDFC", TopTimeframe: "TMN", Type: "TAKEN", Status: "INVALID"}
 						req, w = util.CreateTestRequest("POST", barkat.JournalBase, journal)
 						router.ServeHTTP(w, req)
 						util.AssertError(w, "Status", "oneof")
@@ -537,15 +545,15 @@ var _ = Describe("JournalHandler Integration - CUD Tests", func() {
 				Context("Allowed Values", func() {
 					It("should allow duplicate timeframes (PRD: duplicates allowed)", func() {
 						journal := barkat.Journal{
-							Ticker:   "GRSE",
-							Sequence: "MWD",
-							Type:     "REJECTED",
-							Status:   "FAIL",
+							Ticker:       "GRSE",
+							TopTimeframe: "TMN",
+							Type:         "REJECTED",
+							Status:       "FAIL",
 							Images: []barkat.Image{
-								{Timeframe: "DL", FileName: "test-dl.png"},
-								{Timeframe: "DL", FileName: "test-dl-duplicate.png"},
-								{Timeframe: "MN", FileName: "test-mn.png"},
-								{Timeframe: "TMN", FileName: "test-tmn.png"},
+								{Timeframe: "DL", FileName: "test-dl.png", ImageType: "SET"},
+								{Timeframe: "DL", FileName: "test-dl-duplicate.png", ImageType: "SET"},
+								{Timeframe: "MN", FileName: "test-mn.png", ImageType: "SET"},
+								{Timeframe: "TMN", FileName: "test-tmn.png", ImageType: "SET"},
 							},
 						}
 						req, w = util.CreateTestRequest("POST", barkat.JournalBase, journal)
@@ -568,11 +576,11 @@ var _ = Describe("JournalHandler Integration - CUD Tests", func() {
 				Context("Bad Values", func() {
 					It("should return 400 for empty images (PRD: min 4 required)", func() {
 						journal := barkat.Journal{
-							Ticker:   "GRSE",
-							Sequence: "MWD",
-							Type:     "REJECTED",
-							Status:   "FAIL",
-							Images:   []barkat.Image{},
+							Ticker:       "GRSE",
+							TopTimeframe: "TMN",
+							Type:         "REJECTED",
+							Status:       "FAIL",
+							Images:       []barkat.Image{},
 						}
 						req, w = util.CreateTestRequest("POST", barkat.JournalBase, journal)
 						router.ServeHTTP(w, req)
@@ -581,14 +589,14 @@ var _ = Describe("JournalHandler Integration - CUD Tests", func() {
 
 					It("should return 400 for insufficient images < 4 (PRD: min 4 required)", func() {
 						journal := barkat.Journal{
-							Ticker:   "GRSE",
-							Sequence: "MWD",
-							Type:     "REJECTED",
-							Status:   "FAIL",
+							Ticker:       "GRSE",
+							TopTimeframe: "TMN",
+							Type:         "REJECTED",
+							Status:       "FAIL",
 							Images: []barkat.Image{
-								{Timeframe: "DL", FileName: "test-dl.png"},
-								{Timeframe: "WK", FileName: "test-wk.png"},
-								{Timeframe: "MN", FileName: "test-mn.png"},
+								{Timeframe: "DL", FileName: "test-dl.png", ImageType: "SET"},
+								{Timeframe: "WK", FileName: "test-wk.png", ImageType: "SET"},
+								{Timeframe: "MN", FileName: "test-mn.png", ImageType: "SET"},
 							},
 						}
 						req, w = util.CreateTestRequest("POST", barkat.JournalBase, journal)
@@ -598,28 +606,28 @@ var _ = Describe("JournalHandler Integration - CUD Tests", func() {
 
 					It("should return 400 for excessive images > 16 (PRD: max 16 allowed)", func() {
 						journal := barkat.Journal{
-							Ticker:   "GRSE",
-							Sequence: "MWD",
-							Type:     "REJECTED",
-							Status:   "FAIL",
+							Ticker:       "GRSE",
+							TopTimeframe: "TMN",
+							Type:         "REJECTED",
+							Status:       "FAIL",
 							Images: []barkat.Image{
-								{Timeframe: "DL", FileName: "test-dl.png"},
-								{Timeframe: "WK", FileName: "test-wk.png"},
-								{Timeframe: "MN", FileName: "test-mn.png"},
-								{Timeframe: "TMN", FileName: "test-tmn.png"},
-								{Timeframe: "SMN", FileName: "test-smn.png"},
-								{Timeframe: "YR", FileName: "test-yr.png"},
-								{Timeframe: "DL", FileName: "test-dl-2.png"},
-								{Timeframe: "WK", FileName: "test-wk-2.png"},
-								{Timeframe: "MN", FileName: "test-mn-2.png"},
-								{Timeframe: "TMN", FileName: "test-tmn-2.png"},
-								{Timeframe: "SMN", FileName: "test-smn-2.png"},
-								{Timeframe: "YR", FileName: "test-yr-2.png"},
-								{Timeframe: "DL", FileName: "test-dl-3.png"},
-								{Timeframe: "WK", FileName: "test-wk-3.png"},
-								{Timeframe: "MN", FileName: "test-mn-3.png"},
-								{Timeframe: "TMN", FileName: "test-tmn-3.png"},
-								{Timeframe: "SMN", FileName: "test-smn-3.png"},
+								{Timeframe: "DL", FileName: "test-dl.png", ImageType: "SET"},
+								{Timeframe: "WK", FileName: "test-wk.png", ImageType: "SET"},
+								{Timeframe: "MN", FileName: "test-mn.png", ImageType: "SET"},
+								{Timeframe: "TMN", FileName: "test-tmn.png", ImageType: "SET"},
+								{Timeframe: "SMN", FileName: "test-smn.png", ImageType: "SET"},
+								{Timeframe: "YR", FileName: "test-yr.png", ImageType: "SET"},
+								{Timeframe: "DL", FileName: "test-dl-2.png", ImageType: "SET"},
+								{Timeframe: "WK", FileName: "test-wk-2.png", ImageType: "SET"},
+								{Timeframe: "MN", FileName: "test-mn-2.png", ImageType: "SET"},
+								{Timeframe: "TMN", FileName: "test-tmn-2.png", ImageType: "SET"},
+								{Timeframe: "SMN", FileName: "test-smn-2.png", ImageType: "SET"},
+								{Timeframe: "YR", FileName: "test-yr-2.png", ImageType: "SET"},
+								{Timeframe: "DL", FileName: "test-dl-3.png", ImageType: "SET"},
+								{Timeframe: "WK", FileName: "test-wk-3.png", ImageType: "SET"},
+								{Timeframe: "MN", FileName: "test-mn-3.png", ImageType: "SET"},
+								{Timeframe: "TMN", FileName: "test-tmn-3.png", ImageType: "SET"},
+								{Timeframe: "SMN", FileName: "test-smn-3.png", ImageType: "SET"},
 							},
 						}
 						req, w = util.CreateTestRequest("POST", barkat.JournalBase, journal)
@@ -629,15 +637,15 @@ var _ = Describe("JournalHandler Integration - CUD Tests", func() {
 
 					It("should return 400 for invalid timeframe (PRD: must be DL,WK,MN,TMN,SMN,YR)", func() {
 						journal := barkat.Journal{
-							Ticker:   "GRSE",
-							Sequence: "MWD",
-							Type:     "REJECTED",
-							Status:   "FAIL",
+							Ticker:       "GRSE",
+							TopTimeframe: "TMN",
+							Type:         "REJECTED",
+							Status:       "FAIL",
 							Images: []barkat.Image{
-								{Timeframe: "INVALID", FileName: "test-invalid.png"},
-								{Timeframe: "WK", FileName: "test-wk.png"},
-								{Timeframe: "MN", FileName: "test-mn.png"},
-								{Timeframe: "TMN", FileName: "test-tmn.png"},
+								{Timeframe: "INVALID", FileName: "test-invalid.png", ImageType: "SET"},
+								{Timeframe: "WK", FileName: "test-wk.png", ImageType: "SET"},
+								{Timeframe: "MN", FileName: "test-mn.png", ImageType: "SET"},
+								{Timeframe: "TMN", FileName: "test-tmn.png", ImageType: "SET"},
 							},
 						}
 						req, w = util.CreateTestRequest("POST", barkat.JournalBase, journal)
@@ -654,11 +662,11 @@ var _ = Describe("JournalHandler Integration - CUD Tests", func() {
 
 				BeforeEach(func() {
 					journal = barkat.Journal{
-						Ticker:   "GRSE",
-						Sequence: "MWD",
-						Type:     "REJECTED",
-						Status:   "FAIL",
-						Images:   standardImages,
+						Ticker:       "GRSE",
+						TopTimeframe: "TMN",
+						Type:         "REJECTED",
+						Status:       "FAIL",
+						Images:       standardImages,
 					}
 				})
 
@@ -729,11 +737,11 @@ var _ = Describe("JournalHandler Integration - CUD Tests", func() {
 					It("should accept tag with override field (PRD: optional override max 50 chars)", func() {
 						override := "loc"
 						journal := barkat.Journal{
-							Ticker:   "GRSE",
-							Sequence: "MWD",
-							Type:     "REJECTED",
-							Status:   "FAIL",
-							Images:   standardImages,
+							Ticker:       "GRSE",
+							TopTimeframe: "TMN",
+							Type:         "REJECTED",
+							Status:       "FAIL",
+							Images:       standardImages,
 							Tags: []barkat.Tag{
 								{Tag: "dep", Type: "REASON", Override: &override},
 							},
@@ -748,11 +756,11 @@ var _ = Describe("JournalHandler Integration - CUD Tests", func() {
 
 					It("should accept tag type = REASON (PRD: uppercase)", func() {
 						journal := barkat.Journal{
-							Ticker:   "GRSE",
-							Sequence: "MWD",
-							Type:     "REJECTED",
-							Status:   "FAIL",
-							Images:   standardImages,
+							Ticker:       "GRSE",
+							TopTimeframe: "TMN",
+							Type:         "REJECTED",
+							Status:       "FAIL",
+							Images:       standardImages,
 							Tags: []barkat.Tag{
 								{Tag: "oe", Type: "REASON"},
 							},
@@ -764,11 +772,11 @@ var _ = Describe("JournalHandler Integration - CUD Tests", func() {
 
 					It("should accept tag type = MANAGEMENT (PRD: uppercase)", func() {
 						journal := barkat.Journal{
-							Ticker:   "GRSE",
-							Sequence: "MWD",
-							Type:     "REJECTED",
-							Status:   "FAIL",
-							Images:   standardImages,
+							Ticker:       "GRSE",
+							TopTimeframe: "TMN",
+							Type:         "REJECTED",
+							Status:       "FAIL",
+							Images:       standardImages,
 							Tags: []barkat.Tag{
 								{Tag: "sl", Type: "MANAGEMENT"},
 							},
@@ -780,11 +788,11 @@ var _ = Describe("JournalHandler Integration - CUD Tests", func() {
 
 					It("should accept tag type = DIRECTION (PRD 4.8.6.3.1 legacy tag support)", func() {
 						journal := barkat.Journal{
-							Ticker:   "GRSE",
-							Sequence: "MWD",
-							Type:     "REJECTED",
-							Status:   "FAIL",
-							Images:   standardImages,
+							Ticker:       "GRSE",
+							TopTimeframe: "TMN",
+							Type:         "REJECTED",
+							Status:       "FAIL",
+							Images:       standardImages,
 							Tags: []barkat.Tag{
 								{Tag: "trend", Type: "DIRECTION"},
 							},
@@ -800,11 +808,11 @@ var _ = Describe("JournalHandler Integration - CUD Tests", func() {
 				Context("Bad Values", func() {
 					It("should return 400 for missing tag name (PRD: tag required)", func() {
 						journal := barkat.Journal{
-							Ticker:   "GRSE",
-							Sequence: "MWD",
-							Type:     "REJECTED",
-							Status:   "FAIL",
-							Images:   standardImages,
+							Ticker:       "GRSE",
+							TopTimeframe: "TMN",
+							Type:         "REJECTED",
+							Status:       "FAIL",
+							Images:       standardImages,
 							Tags: []barkat.Tag{
 								{Tag: "", Type: "REASON"},
 							},
@@ -816,11 +824,11 @@ var _ = Describe("JournalHandler Integration - CUD Tests", func() {
 
 					It("should return 400 for missing tag type (PRD: type required)", func() {
 						journal := barkat.Journal{
-							Ticker:   "GRSE",
-							Sequence: "MWD",
-							Type:     "REJECTED",
-							Status:   "FAIL",
-							Images:   standardImages,
+							Ticker:       "GRSE",
+							TopTimeframe: "TMN",
+							Type:         "REJECTED",
+							Status:       "FAIL",
+							Images:       standardImages,
 							Tags: []barkat.Tag{
 								{Tag: "oe", Type: ""},
 							},
@@ -832,11 +840,11 @@ var _ = Describe("JournalHandler Integration - CUD Tests", func() {
 
 					It("should return 400 for invalid tag type (PRD: must be REASON or MANAGEMENT)", func() {
 						journal := barkat.Journal{
-							Ticker:   "GRSE",
-							Sequence: "MWD",
-							Type:     "REJECTED",
-							Status:   "FAIL",
-							Images:   standardImages,
+							Ticker:       "GRSE",
+							TopTimeframe: "TMN",
+							Type:         "REJECTED",
+							Status:       "FAIL",
+							Images:       standardImages,
 							Tags: []barkat.Tag{
 								{Tag: "test", Type: "invalid"},
 							},
@@ -848,11 +856,11 @@ var _ = Describe("JournalHandler Integration - CUD Tests", func() {
 
 					It("should return 400 for tag exceeding max length (PRD: max 10 chars)", func() {
 						journal := barkat.Journal{
-							Ticker:   "GRSE",
-							Sequence: "MWD",
-							Type:     "REJECTED",
-							Status:   "FAIL",
-							Images:   standardImages,
+							Ticker:       "GRSE",
+							TopTimeframe: "TMN",
+							Type:         "REJECTED",
+							Status:       "FAIL",
+							Images:       standardImages,
 							Tags: []barkat.Tag{
 								{Tag: "verylongtag1", Type: "REASON"},
 							},
@@ -865,11 +873,11 @@ var _ = Describe("JournalHandler Integration - CUD Tests", func() {
 					It("should return 400 for override exceeding max length (PRD: max 5 chars)", func() {
 						longOverride := "toolong"
 						journal := barkat.Journal{
-							Ticker:   "GRSE",
-							Sequence: "MWD",
-							Type:     "REJECTED",
-							Status:   "FAIL",
-							Images:   standardImages,
+							Ticker:       "GRSE",
+							TopTimeframe: "TMN",
+							Type:         "REJECTED",
+							Status:       "FAIL",
+							Images:       standardImages,
 							Tags: []barkat.Tag{
 								{Tag: "dep", Type: "REASON", Override: &longOverride},
 							},
@@ -881,11 +889,11 @@ var _ = Describe("JournalHandler Integration - CUD Tests", func() {
 
 					It("should return 400 for invalid tag format (PRD: alphanumeric with hyphens)", func() {
 						journal := barkat.Journal{
-							Ticker:   "GRSE",
-							Sequence: "MWD",
-							Type:     "REJECTED",
-							Status:   "FAIL",
-							Images:   standardImages,
+							Ticker:       "GRSE",
+							TopTimeframe: "TMN",
+							Type:         "REJECTED",
+							Status:       "FAIL",
+							Images:       standardImages,
 							Tags: []barkat.Tag{
 								{Tag: "bad@tag", Type: "REASON"},
 							},
@@ -898,11 +906,11 @@ var _ = Describe("JournalHandler Integration - CUD Tests", func() {
 					It("should return 400 for invalid override format (PRD: letters only)", func() {
 						invalidOverride := "a-b"
 						journal := barkat.Journal{
-							Ticker:   "GRSE",
-							Sequence: "MWD",
-							Type:     "REJECTED",
-							Status:   "FAIL",
-							Images:   standardImages,
+							Ticker:       "GRSE",
+							TopTimeframe: "TMN",
+							Type:         "REJECTED",
+							Status:       "FAIL",
+							Images:       standardImages,
 							Tags: []barkat.Tag{
 								{Tag: "dep", Type: "REASON", Override: &invalidOverride},
 							},
@@ -914,11 +922,11 @@ var _ = Describe("JournalHandler Integration - CUD Tests", func() {
 
 					It("should return 400 for exceeding max tags (PRD: max 10)", func() {
 						journal := barkat.Journal{
-							Ticker:   "GRSE",
-							Sequence: "MWD",
-							Type:     "REJECTED",
-							Status:   "FAIL",
-							Images:   standardImages,
+							Ticker:       "GRSE",
+							TopTimeframe: "TMN",
+							Type:         "REJECTED",
+							Status:       "FAIL",
+							Images:       standardImages,
 							Tags: []barkat.Tag{
 								{Tag: "t1", Type: "REASON"},
 								{Tag: "t2", Type: "REASON"},
@@ -946,12 +954,12 @@ var _ = Describe("JournalHandler Integration - CUD Tests", func() {
 				It("should accept valid ISO 8601 datetime (PRD: optional for migration)", func() {
 					historicalTime := time.Date(2023, 6, 15, 14, 30, 0, 0, time.UTC)
 					journal := barkat.Journal{
-						Ticker:    "GRSE",
-						Sequence:  "MWD",
-						Type:      "REJECTED",
-						Status:    "FAIL",
-						Images:    standardImages,
-						CreatedAt: historicalTime,
+						Ticker:       "GRSE",
+						TopTimeframe: "TMN",
+						Type:         "REJECTED",
+						Status:       "FAIL",
+						Images:       standardImages,
+						CreatedAt:    historicalTime,
 					}
 					req, w = util.CreateTestRequest("POST", barkat.JournalBase, journal)
 					router.ServeHTTP(w, req)
@@ -961,11 +969,11 @@ var _ = Describe("JournalHandler Integration - CUD Tests", func() {
 
 				It("should accept omitted CreatedAt (PRD: system sets current timestamp)", func() {
 					journal := barkat.Journal{
-						Ticker:   "GRSE",
-						Sequence: "MWD",
-						Type:     "REJECTED",
-						Status:   "FAIL",
-						Images:   standardImages,
+						Ticker:       "GRSE",
+						TopTimeframe: "TMN",
+						Type:         "REJECTED",
+						Status:       "FAIL",
+						Images:       standardImages,
 						// CreatedAt omitted - BeforeCreate will set current time
 					}
 					req, w = util.CreateTestRequest("POST", barkat.JournalBase, journal)
@@ -977,12 +985,12 @@ var _ = Describe("JournalHandler Integration - CUD Tests", func() {
 
 				It("should accept zero CreatedAt (PRD: BeforeCreate hook sets current time)", func() {
 					journal := barkat.Journal{
-						Ticker:    "GRSE",
-						Sequence:  "MWD",
-						Type:      "REJECTED",
-						Status:    "FAIL",
-						Images:    standardImages,
-						CreatedAt: time.Time{}, // Zero time - BeforeCreate will set current time
+						Ticker:       "GRSE",
+						TopTimeframe: "TMN",
+						Type:         "REJECTED",
+						Status:       "FAIL",
+						Images:       standardImages,
+						CreatedAt:    time.Time{}, // Zero time - BeforeCreate will set current time
 					}
 					req, w = util.CreateTestRequest("POST", barkat.JournalBase, journal)
 					router.ServeHTTP(w, req)
@@ -1023,11 +1031,11 @@ var _ = Describe("JournalHandler Integration - CUD Tests", func() {
 
 		BeforeEach(func() {
 			journal := barkat.Journal{
-				Ticker:   "GRSE",
-				Sequence: "MWD",
-				Type:     "REJECTED",
-				Status:   "FAIL",
-				Images:   standardImages,
+				Ticker:       "GRSE",
+				TopTimeframe: "TMN",
+				Type:         "REJECTED",
+				Status:       "FAIL",
+				Images:       standardImages,
 			}
 			Expect(journalMgr.CreateJournal(testCtx, &journal)).To(Succeed())
 			createdJournal = journal
@@ -1090,11 +1098,11 @@ var _ = Describe("JournalHandler Integration - CUD Tests", func() {
 
 		BeforeEach(func() {
 			journal := barkat.Journal{
-				Ticker:   "TCS",
-				Sequence: "MWD",
-				Type:     "REJECTED",
-				Status:   "FAIL",
-				Images:   standardImages,
+				Ticker:       "TCS",
+				TopTimeframe: "TMN",
+				Type:         "REJECTED",
+				Status:       "FAIL",
+				Images:       standardImages,
 			}
 			Expect(journalMgr.CreateJournal(testCtx, &journal)).To(Succeed())
 			createdJournal = journal

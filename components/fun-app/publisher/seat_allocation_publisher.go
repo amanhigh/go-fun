@@ -28,7 +28,7 @@ func NewSeatAllocationPublisher(base BasePublisher) SeatAllocationPublisher {
 func (sap *seatAllocationPublisher) AllocateSeat(ctx context.Context, enrollment fun.Enrollment) common.HttpError {
 	payload := fun.AllocateSeatCmdV1{
 		EnrollmentID: enrollment.ID,
-		StudentID:     enrollment.StudentID,
+		StudentID:    enrollment.StudentID,
 		Grade:        enrollment.Grade,
 		RequestedAt:  time.Now().UTC(),
 	}
@@ -40,10 +40,10 @@ func (sap *seatAllocationPublisher) SeatReserved(ctx context.Context, enrollment
 	payload := fun.SeatReservedEvtV1{
 		EnrollmentEvent: fun.EnrollmentEvent{
 			EnrollmentID: enrollment.ID,
-			StudentID:     enrollment.StudentID,
+			StudentID:    enrollment.StudentID,
 		},
-		Grade:        enrollment.Grade,
-		ReservedAt:   time.Now().UTC(),
+		Grade:      enrollment.Grade,
+		ReservedAt: time.Now().UTC(),
 	}
 
 	return sap.base.PublishChild(ctx, fun.TopicSeatReservedEvt, payload)
@@ -53,7 +53,7 @@ func (sap *seatAllocationPublisher) SeatWaitlisted(ctx context.Context, enrollme
 	payload := fun.SeatWaitlistedEvtV1{
 		EnrollmentEvent: fun.EnrollmentEvent{
 			EnrollmentID: enrollment.ID,
-			StudentID:     enrollment.StudentID,
+			StudentID:    enrollment.StudentID,
 		},
 		Grade:        enrollment.Grade,
 		Reason:       reason,
@@ -67,10 +67,10 @@ func (sap *seatAllocationPublisher) SeatAllocationFailed(ctx context.Context, en
 	payload := fun.SeatAllocationFailedEvtV1{
 		EnrollmentEvent: fun.EnrollmentEvent{
 			EnrollmentID: enrollment.ID,
-			StudentID:     enrollment.StudentID,
+			StudentID:    enrollment.StudentID,
 		},
-		Reason:       reason,
-		FailedAt:     time.Now().UTC(),
+		Reason:   reason,
+		FailedAt: time.Now().UTC(),
 	}
 
 	return sap.base.PublishChild(ctx, fun.TopicSeatAllocationFailedEvt, payload)

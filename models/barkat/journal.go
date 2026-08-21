@@ -25,15 +25,15 @@ const (
 
 // Journal represents a single trade journal capture event.
 type Journal struct {
-	ID         uint64     `gorm:"column:id;primaryKey;autoIncrement" json:"-"`
-	ExternalID string     `gorm:"column:external_id;uniqueIndex;not null" json:"id"`
-	Ticker     string     `gorm:"column:ticker;not null;index:idx_journal_ticker" json:"ticker" binding:"required,max=30,ticker"`
-	Sequence   string     `gorm:"column:sequence;not null" json:"sequence" binding:"required,oneof=MWD YR WDH"`
-	Type       string     `gorm:"column:type;not null" json:"type" binding:"required,oneof=REJECTED TAKEN"`
-	Status     string     `gorm:"column:status;not null" json:"status" binding:"required,oneof=SET RUNNING SUCCESS FAIL MISSED JUST_LOSS BROKEN"`
-	CreatedAt  time.Time  `gorm:"column:created_at;not null;index:idx_journal_created_at" json:"created_at"`
-	ReviewedAt *time.Time `gorm:"column:reviewed_at" json:"reviewed_at,omitempty"`
-	DeletedAt  *time.Time `gorm:"column:deleted_at" json:"deleted_at,omitempty"`
+	ID           uint64     `gorm:"column:id;primaryKey;autoIncrement" json:"-"`
+	ExternalID   string     `gorm:"column:external_id;uniqueIndex;not null" json:"id"`
+	Ticker       string     `gorm:"column:ticker;not null;index:idx_journal_ticker" json:"ticker" binding:"required,max=30,ticker"`
+	TopTimeframe string     `gorm:"column:top_timeframe;not null" json:"top_timeframe" binding:"required,oneof=YR SMN TMN"`
+	Type         string     `gorm:"column:type;not null" json:"type" binding:"required,oneof=REJECTED TAKEN"`
+	Status       string     `gorm:"column:status;not null" json:"status" binding:"required,oneof=SET RUNNING SUCCESS FAIL MISSED JUST_LOSS BROKEN"`
+	CreatedAt    time.Time  `gorm:"column:created_at;not null;index:idx_journal_created_at" json:"created_at"`
+	ReviewedAt   *time.Time `gorm:"column:reviewed_at" json:"reviewed_at,omitempty"`
+	DeletedAt    *time.Time `gorm:"column:deleted_at" json:"deleted_at,omitempty"`
 
 	// Associations
 	Images []Image `gorm:"foreignKey:JournalID;references:ID;constraint:OnDelete:CASCADE" json:"images,omitempty" binding:"required,min=4,max=16,dive"`
@@ -61,11 +61,11 @@ type JournalQuery struct {
 	Ticker        string `form:"ticker" binding:"omitempty,min=1,max=30,ticker"`
 	Type          string `form:"type" binding:"omitempty,oneof=REJECTED TAKEN"`
 	Status        string `form:"status" binding:"omitempty,oneof=SET RUNNING SUCCESS FAIL MISSED JUST_LOSS BROKEN"`
-	Sequence      string `form:"sequence" binding:"omitempty,oneof=MWD YR WDH"`
+	TopTimeframe  string `form:"top_timeframe" binding:"omitempty,oneof=YR SMN TMN"`
 	CreatedAfter  string `form:"created-after" binding:"omitempty,datetime=2006-01-02"`
 	CreatedBefore string `form:"created-before" binding:"omitempty,datetime=2006-01-02"`
 	Reviewed      *bool  `form:"reviewed" binding:"omitempty"`
-	SortBy        string `form:"sort-by" binding:"omitempty,oneof=created_at ticker sequence"`
+	SortBy        string `form:"sort-by" binding:"omitempty,oneof=created_at ticker top_timeframe"`
 }
 
 // NewJournalQuery creates a JournalQuery struct with default pagination values

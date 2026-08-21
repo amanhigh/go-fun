@@ -1,4 +1,4 @@
-import { JournalType, JournalStatus, JournalSequence, JournalSortBy, JournalSortOrder } from '../../../types/api/journal/enums';
+import { JournalType, JournalStatus, JournalTopTimeframeFilter, JournalSortBy, JournalSortOrder } from '../../../types/api/journal/enums';
 import { ReviewedFilter } from '../../../types/api/journal/request';
 import type { JournalFilterKey } from '../../../types/api/journal/request';
 import type { JournalFilterUrlConcern, JournalPageProvider } from '../../../types/journal/list';
@@ -8,7 +8,7 @@ const journalQueryMap: Record<JournalFilterKey, string> = {
 	ticker: 'search',
 	type: 'type',
 	status: 'status',
-	sequence: 'sequence',
+	topTimeframe: 'top_timeframe',
 	createdAfter: 'created-after',
 	createdBefore: 'created-before',
 	reviewed: 'reviewed',
@@ -22,13 +22,13 @@ for (const [field, queryKey] of Object.entries(journalQueryMap)) {
 	journalReverseMap[queryKey] = field as JournalFilterKey;
 }
 
-export const journalFilterFields: JournalFilterKey[] = ['ticker', 'type', 'status', 'sequence', 'createdAfter', 'createdBefore', 'reviewed', 'sortBy', 'sortOrder'];
+export const journalFilterFields: JournalFilterKey[] = ['ticker', 'type', 'status', 'topTimeframe', 'createdAfter', 'createdBefore', 'reviewed', 'sortBy', 'sortOrder'];
 
 // Valid value sets for enum-backed filter fields when reading from URL
 const knownFilterValues: Record<string, ReadonlySet<string>> = {
 	type: new Set(['', JournalType.TAKEN, JournalType.REJECTED]),
 	status: new Set(['', ...Object.values(JournalStatus)]),
-	sequence: new Set(['', ...Object.values(JournalSequence)]),
+	topTimeframe: new Set(['', ...Object.values(JournalTopTimeframeFilter)]),
 	sortBy: new Set(Object.values(JournalSortBy)),
 	sortOrder: new Set(Object.values(JournalSortOrder)),
 	reviewed: new Set(Object.values(ReviewedFilter)),

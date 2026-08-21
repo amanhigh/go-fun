@@ -136,5 +136,5 @@ This repository follows the philosophy of Learning by Doing. It includes plays, 
 	- ### Release Management
 	  Release management includes  build and release of Artifacts like binaries, dockers etc.  
 		- Build Only - `just build` and `just components/fun-app/docker-build` (add `clean` to remove residue)
-		- Release - `just release` and `VER=v1.0.3 just components/fun-app/release-docker`
-		- Delete Release - `just unrelease VER=v1.0.3` (Not Recommended)
+		- Release - `just release v1.0.3` and `VER=v1.0.3 just components/fun-app/release-docker`
+		- Delete Release - `just unrelease v1.0.3` (Not Recommended)

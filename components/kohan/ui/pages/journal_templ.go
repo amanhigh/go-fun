@@ -355,7 +355,7 @@ func JournalFilters() templ.Component {
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
-		templ_7745c5c3_Err = JournalSequenceSelect().Render(ctx, templ_7745c5c3_Buffer)
+		templ_7745c5c3_Err = JournalTopTimeframeSelect().Render(ctx, templ_7745c5c3_Buffer)
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
@@ -725,7 +725,7 @@ func JournalStatusSelect() templ.Component {
 	})
 }
 
-func JournalSequenceSelect() templ.Component {
+func JournalTopTimeframeSelect() templ.Component {
 	return templruntime.GeneratedTemplate(func(templ_7745c5c3_Input templruntime.GeneratedComponentInput) (templ_7745c5c3_Err error) {
 		templ_7745c5c3_W, ctx := templ_7745c5c3_Input.Writer, templ_7745c5c3_Input.Context
 		if templ_7745c5c3_CtxErr := ctx.Err(); templ_7745c5c3_CtxErr != nil {
@@ -774,13 +774,13 @@ func JournalSequenceSelect() templ.Component {
 					}()
 				}
 				ctx = templ.InitializeContext(ctx)
-				templ_7745c5c3_Err = selectbox.Value(selectbox.ValueProps{Placeholder: "Sequence"}).Render(ctx, templ_7745c5c3_Buffer)
+				templ_7745c5c3_Err = selectbox.Value(selectbox.ValueProps{Placeholder: "Top Timeframe"}).Render(ctx, templ_7745c5c3_Buffer)
 				if templ_7745c5c3_Err != nil {
 					return templ_7745c5c3_Err
 				}
 				return nil
 			})
-			templ_7745c5c3_Err = selectbox.Trigger(selectbox.TriggerProps{ID: "journal-sequence", Name: "journal-sequence", Class: "h-9 w-full border-violet-200/70 bg-white/80", Attributes: templ.Attributes{"x-model": "filter.sequence", "x-on:change": "filter.applyManualFilters()"}}).Render(templ.WithChildren(ctx, templ_7745c5c3_Var27), templ_7745c5c3_Buffer)
+			templ_7745c5c3_Err = selectbox.Trigger(selectbox.TriggerProps{ID: "journal-top-timeframe", Name: "journal-top-timeframe", Class: "h-9 w-full border-violet-200/70 bg-white/80", Attributes: templ.Attributes{"x-model": "filter.topTimeframe", "x-on:change": "filter.applyManualFilters()"}}).Render(templ.WithChildren(ctx, templ_7745c5c3_Var27), templ_7745c5c3_Buffer)
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
@@ -850,13 +850,13 @@ func JournalSequenceSelect() templ.Component {
 							}()
 						}
 						ctx = templ.InitializeContext(ctx)
-						templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 41, "MWD ")
+						templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 41, "YR ")
 						if templ_7745c5c3_Err != nil {
 							return templ_7745c5c3_Err
 						}
 						return nil
 					})
-					templ_7745c5c3_Err = selectbox.Item(selectbox.ItemProps{Value: "MWD"}).Render(templ.WithChildren(ctx, templ_7745c5c3_Var31), templ_7745c5c3_Buffer)
+					templ_7745c5c3_Err = selectbox.Item(selectbox.ItemProps{Value: "YR"}).Render(templ.WithChildren(ctx, templ_7745c5c3_Var31), templ_7745c5c3_Buffer)
 					if templ_7745c5c3_Err != nil {
 						return templ_7745c5c3_Err
 					}
@@ -876,13 +876,13 @@ func JournalSequenceSelect() templ.Component {
 							}()
 						}
 						ctx = templ.InitializeContext(ctx)
-						templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 43, "YR ")
+						templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 43, "SMN ")
 						if templ_7745c5c3_Err != nil {
 							return templ_7745c5c3_Err
 						}
 						return nil
 					})
-					templ_7745c5c3_Err = selectbox.Item(selectbox.ItemProps{Value: "YR"}).Render(templ.WithChildren(ctx, templ_7745c5c3_Var32), templ_7745c5c3_Buffer)
+					templ_7745c5c3_Err = selectbox.Item(selectbox.ItemProps{Value: "SMN"}).Render(templ.WithChildren(ctx, templ_7745c5c3_Var32), templ_7745c5c3_Buffer)
 					if templ_7745c5c3_Err != nil {
 						return templ_7745c5c3_Err
 					}
@@ -902,13 +902,13 @@ func JournalSequenceSelect() templ.Component {
 							}()
 						}
 						ctx = templ.InitializeContext(ctx)
-						templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 45, "WDH ")
+						templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 45, "TMN ")
 						if templ_7745c5c3_Err != nil {
 							return templ_7745c5c3_Err
 						}
 						return nil
 					})
-					templ_7745c5c3_Err = selectbox.Item(selectbox.ItemProps{Value: "WDH"}).Render(templ.WithChildren(ctx, templ_7745c5c3_Var33), templ_7745c5c3_Buffer)
+					templ_7745c5c3_Err = selectbox.Item(selectbox.ItemProps{Value: "TMN"}).Render(templ.WithChildren(ctx, templ_7745c5c3_Var33), templ_7745c5c3_Buffer)
 					if templ_7745c5c3_Err != nil {
 						return templ_7745c5c3_Err
 					}
@@ -1030,7 +1030,7 @@ func JournalActiveFilters() templ.Component {
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
-		templ_7745c5c3_Err = components.FilterChip(components.FilterChipProps{Tone: components.ToneViolet, ShowExpr: "filter.sequence !== ''", TextExpr: "present.sequence.label(filter.sequence)"}).Render(ctx, templ_7745c5c3_Buffer)
+		templ_7745c5c3_Err = components.FilterChip(components.FilterChipProps{Tone: components.ToneViolet, ShowExpr: "filter.topTimeframe !== ''", TextExpr: "present.timeframe.label(filter.topTimeframe)"}).Render(ctx, templ_7745c5c3_Buffer)
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
@@ -1321,7 +1321,7 @@ func JournalTableHeader() templ.Component {
 				if templ_7745c5c3_Err != nil {
 					return templ_7745c5c3_Err
 				}
-				templ_7745c5c3_Err = widgets.SortHead(widgets.SortHeadProps{Label: "Sequence", Field: "sequence", SortByExpr: "filter.sortBy", SortOrderExpr: "filter.sortOrder", OnClick: "filter.toggleSort('sequence')"}).Render(ctx, templ_7745c5c3_Buffer)
+				templ_7745c5c3_Err = widgets.SortHead(widgets.SortHeadProps{Label: "Top Timeframe", Field: "top_timeframe", SortByExpr: "filter.sortBy", SortOrderExpr: "filter.sortOrder", OnClick: "filter.toggleSort('top_timeframe')"}).Render(ctx, templ_7745c5c3_Buffer)
 				if templ_7745c5c3_Err != nil {
 					return templ_7745c5c3_Err
 				}
@@ -1480,7 +1480,7 @@ func JournalRow() templ.Component {
 					}()
 				}
 				ctx = templ.InitializeContext(ctx)
-				templ_7745c5c3_Err = badge.Badge(badge.Props{Variant: badge.VariantSecondary, Class: "border font-semibold", Attributes: templ.Attributes{"x-text": "present.sequence.label(journal.sequence)"}}).Render(ctx, templ_7745c5c3_Buffer)
+				templ_7745c5c3_Err = badge.Badge(badge.Props{Variant: badge.VariantSecondary, Class: "border font-semibold", Attributes: templ.Attributes{"x-text": "present.timeframe.label(journal.top_timeframe)"}}).Render(ctx, templ_7745c5c3_Buffer)
 				if templ_7745c5c3_Err != nil {
 					return templ_7745c5c3_Err
 				}

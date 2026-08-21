@@ -25,7 +25,7 @@ func NewEnrollmentPublisher(base BasePublisher) EnrollmentPublisher {
 func (ep *enrollmentPublisher) Enroll(ctx context.Context, enrollment fun.Enrollment) common.HttpError {
 	payload := fun.EnrollCmdV1{
 		EnrollmentID: enrollment.ID,
-		StudentID:     enrollment.StudentID,
+		StudentID:    enrollment.StudentID,
 		Grade:        enrollment.Grade,
 		RequestedAt:  time.Now().UTC(),
 	}

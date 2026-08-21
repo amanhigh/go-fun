@@ -10,68 +10,73 @@ import (
 	"io"
 )
 
-var (
-	ErrCipherTooShort = errors.New("ciphertext too short")
-)
+// ErrCipherTooShort is returned when a decoded ciphertext is too short to
+// contain a valid AES-GCM nonce and authentication tag.
+var ErrCipherTooShort = errors.New("ciphertext too short")
 
-// FIXME: AES-CTR provides confidentiality but no authentication. Migrate Encrypt/Decrypt
-// to an authenticated mode such as AES-GCM in a dedicated follow-up, updating cipher_test.go.
+// Encrypt encrypts plaintext with the given AES key (16, 24, or 32 bytes) using
+// AES-GCM. A fresh random nonce is generated for each call, prepended to the
+// sealed ciphertext, and the result is returned as base64.URLEncoding.
 func Encrypt(key, text string) (encryptedText string, err error) {
 	keyBytes := []byte(key)
 	textBytes := []byte(text)
 
-	/* Create New Cipher */
 	block, err := aes.NewCipher(keyBytes)
 	if err != nil {
 		return "", fmt.Errorf("failed to create AES cipher: %w", err)
 	}
 
-	/* Build Cipher Text Placeholder */
-	ciphertext := make([]byte, aes.BlockSize+len(textBytes))
-
-	/* Generate IV */
-	iv := ciphertext[:aes.BlockSize]
-	if _, err := io.ReadFull(rand.Reader, iv); err != nil {
-		return "", fmt.Errorf("failed to generate IV: %w", err)
+	gcm, err := cipher.NewGCM(block)
+	if err != nil {
+		return "", fmt.Errorf("failed to create GCM: %w", err)
 	}
 
-	/* Encrypt using AES-CTR (recommended replacement for CFB) */
-	stream := cipher.NewCTR(block, iv)
-	stream.XORKeyStream(ciphertext[aes.BlockSize:], textBytes)
+	nonce := make([]byte, gcm.NonceSize())
+	if _, err := io.ReadFull(rand.Reader, nonce); err != nil {
+		return "", fmt.Errorf("failed to generate nonce: %w", err)
+	}
 
-	/* Do Base64 Encoding on Encrypted Text */
+	sealed := gcm.Seal(nil, nonce, textBytes, nil)
+	ciphertext := make([]byte, 0, len(nonce)+len(sealed))
+	ciphertext = append(ciphertext, nonce...)
+	ciphertext = append(ciphertext, sealed...)
+
 	encryptedText = base64.URLEncoding.EncodeToString(ciphertext)
 	return encryptedText, nil
 }
 
+// Decrypt decodes a base64.URLEncoding ciphertext produced by Encrypt and
+// authenticates and decrypts it with AES-GCM using the given key. It returns
+// ErrCipherTooShort for payloads too short to contain a nonce and tag, and
+// rejects any ciphertext that fails authentication.
 func Decrypt(key, text string) (string, error) {
 	keyBytes := []byte(key)
 
-	// Decode Base64 to get back encrypted text
 	textBytes, err := base64.URLEncoding.DecodeString(text)
 	if err != nil {
 		return "", fmt.Errorf("failed to decode base64 string: %w", err)
 	}
 
-	// Check minimum cipher text length
-	if len(textBytes) < aes.BlockSize {
-		return "", ErrCipherTooShort
-	}
-
-	// Create new cipher
 	block, err := aes.NewCipher(keyBytes)
 	if err != nil {
 		return "", fmt.Errorf("failed to create AES cipher: %w", err)
 	}
 
-	// Extract IV from the beginning
-	iv := textBytes[:aes.BlockSize]
-	textBytes = textBytes[aes.BlockSize:]
+	gcm, err := cipher.NewGCM(block)
+	if err != nil {
+		return "", fmt.Errorf("failed to create GCM: %w", err)
+	}
 
-	// Decrypt using AES-CTR (recommended replacement for CFB)
-	stream := cipher.NewCTR(block, iv)
-	stream.XORKeyStream(textBytes, textBytes)
+	if len(textBytes) < gcm.NonceSize()+gcm.Overhead() {
+		return "", ErrCipherTooShort
+	}
 
-	// Convert decrypted bytes to string
-	return string(textBytes), nil
+	nonce, sealed := textBytes[:gcm.NonceSize()], textBytes[gcm.NonceSize():]
+
+	plaintext, err := gcm.Open(nil, nonce, sealed, nil)
+	if err != nil {
+		return "", fmt.Errorf("failed to decrypt ciphertext: %w", err)
+	}
+
+	return string(plaintext), nil
 }

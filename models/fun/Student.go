@@ -30,7 +30,7 @@ type StudentQuery struct {
 }
 
 type StudentList struct {
-	Records  []Student                 `json:"records"`
+	Records  []Student                `json:"records"`
 	Metadata common.PaginatedResponse `json:"metadata"`
 }
 
@@ -90,9 +90,8 @@ type StudentAudit struct {
 	Gender string `gorm:"not null"`
 
 	// Audit Fields
-	AuditID   uint   `gorm:"primaryKey"`
-	Operation string `gorm:"not null"`
-	// TODO: Use a base GORM repository for common fields?
+	AuditID   uint      `gorm:"primaryKey"`
+	Operation string    `gorm:"not null"`
 	CreatedBy string    `gorm:"not null"`
 	CreatedAt time.Time `gorm:"not null"`
 }

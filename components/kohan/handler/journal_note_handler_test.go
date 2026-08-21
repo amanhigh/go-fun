@@ -77,15 +77,15 @@ var _ = Describe("NoteHandler Integration - Section 2.3 JournalNote APIs", func(
 
 		// Create base journal for note operations
 		journal = barkat.Journal{
-			Ticker:   "GRSE",
-			Sequence: "MWD",
-			Type:     "REJECTED",
-			Status:   "FAIL",
+			Ticker:       "GRSE",
+			TopTimeframe: "TMN",
+			Type:         "REJECTED",
+			Status:       "FAIL",
 			Images: []barkat.Image{
-				{Timeframe: "DL", FileName: "test-dl.png"},
-				{Timeframe: "WK", FileName: "test-wk.png"},
-				{Timeframe: "MN", FileName: "test-mn.png"},
-				{Timeframe: "TMN", FileName: "test-tmn.png"},
+				{Timeframe: "DL", FileName: "test-dl.png", ImageType: "SET"},
+				{Timeframe: "WK", FileName: "test-wk.png", ImageType: "SET"},
+				{Timeframe: "MN", FileName: "test-mn.png", ImageType: "SET"},
+				{Timeframe: "TMN", FileName: "test-tmn.png", ImageType: "SET"},
 			},
 		}
 		Expect(journalMgr.CreateJournal(testCtx, &journal)).To(Succeed())

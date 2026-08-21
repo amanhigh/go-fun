@@ -18,10 +18,10 @@ import (
 
 // standardImages provides 4 required images for journal creation
 var standardImages = []barkat.Image{
-	{Timeframe: "DL", FileName: "daily.png"},
-	{Timeframe: "WK", FileName: "weekly.png"},
-	{Timeframe: "MN", FileName: "monthly.png"},
-	{Timeframe: "TMN", FileName: "trend_monthly.png"},
+	{Timeframe: "DL", FileName: "daily.png", ImageType: "SET"},
+	{Timeframe: "WK", FileName: "weekly.png", ImageType: "SET"},
+	{Timeframe: "MN", FileName: "monthly.png", ImageType: "SET"},
+	{Timeframe: "TMN", FileName: "trend_monthly.png", ImageType: "SET"},
 }
 
 // decodeJournalResponse unmarshals response body into Journal envelope
@@ -138,13 +138,13 @@ var _ = Describe("Barkat E2E Test", func() {
 
 		BeforeEach(func() {
 			journal := barkat.Journal{
-				Ticker:   "LIFECYCLE",
-				Sequence: "MWD",
-				Type:     "TAKEN",
-				Status:   "RUNNING",
-				Images:   standardImages,
-				Tags:     []barkat.Tag{{Tag: "oe", Type: "REASON"}},
-				Notes:    []barkat.Note{{Status: "SET", Content: "Initial setup note", Format: "MARKDOWN"}},
+				Ticker:       "LIFECYCLE",
+				TopTimeframe: "TMN",
+				Type:         "TAKEN",
+				Status:       "RUNNING",
+				Images:       standardImages,
+				Tags:         []barkat.Tag{{Tag: "oe", Type: "REASON"}},
+				Notes:        []barkat.Note{{Status: "SET", Content: "Initial setup note", Format: "MARKDOWN"}},
 			}
 			resp, err := client.R().SetBody(journal).Post(barkat.JournalBase)
 			Expect(err).ToNot(HaveOccurred())
@@ -207,11 +207,11 @@ var _ = Describe("Barkat E2E Test", func() {
 
 		BeforeEach(func() {
 			journal := barkat.Journal{
-				Ticker:   "IMGTEST",
-				Sequence: "MWD",
-				Type:     "TAKEN",
-				Status:   "RUNNING",
-				Images:   standardImages,
+				Ticker:       "IMGTEST",
+				TopTimeframe: "TMN",
+				Type:         "TAKEN",
+				Status:       "RUNNING",
+				Images:       standardImages,
 			}
 			resp, err := client.R().SetBody(journal).Post(barkat.JournalBase)
 			Expect(err).ToNot(HaveOccurred())
@@ -221,7 +221,7 @@ var _ = Describe("Barkat E2E Test", func() {
 		})
 
 		It("should add additional timeframe image", func() {
-			newImage := barkat.Image{Timeframe: "WK", FileName: "weekly.png"}
+			newImage := barkat.Image{Timeframe: "WK", FileName: "weekly.png", ImageType: "SET"}
 			resp, err := client.R().SetBody(newImage).Post(barkat.JournalBase + "/" + createdJournal.ExternalID + "/images")
 			Expect(err).ToNot(HaveOccurred())
 			Expect(resp.StatusCode()).To(Equal(http.StatusCreated))
@@ -276,11 +276,11 @@ var _ = Describe("Barkat E2E Test", func() {
 
 		BeforeEach(func() {
 			journal := barkat.Journal{
-				Ticker:   "NOTETEST",
-				Sequence: "YR",
-				Type:     "TAKEN",
-				Status:   "SUCCESS",
-				Images:   standardImages,
+				Ticker:       "NOTETEST",
+				TopTimeframe: "SMN",
+				Type:         "TAKEN",
+				Status:       "SUCCESS",
+				Images:       standardImages,
 			}
 			resp, err := client.R().SetBody(journal).Post(barkat.JournalBase)
 			Expect(err).ToNot(HaveOccurred())
@@ -363,11 +363,11 @@ var _ = Describe("Barkat E2E Test", func() {
 
 		BeforeEach(func() {
 			journal := barkat.Journal{
-				Ticker:   "TAGTEST",
-				Sequence: "MWD",
-				Type:     "REJECTED",
-				Status:   "FAIL",
-				Images:   standardImages,
+				Ticker:       "TAGTEST",
+				TopTimeframe: "TMN",
+				Type:         "REJECTED",
+				Status:       "FAIL",
+				Images:       standardImages,
 			}
 			resp, err := client.R().SetBody(journal).Post(barkat.JournalBase)
 			Expect(err).ToNot(HaveOccurred())
@@ -449,11 +449,11 @@ var _ = Describe("Barkat E2E Test", func() {
 
 		BeforeEach(func() {
 			journal := barkat.Journal{
-				Ticker:   "REVIEW",
-				Sequence: "YR",
-				Type:     "TAKEN",
-				Status:   "SUCCESS",
-				Images:   standardImages,
+				Ticker:       "REVIEW",
+				TopTimeframe: "SMN",
+				Type:         "TAKEN",
+				Status:       "SUCCESS",
+				Images:       standardImages,
 			}
 			resp, err := client.R().SetBody(journal).Post(barkat.JournalBase)
 			Expect(err).ToNot(HaveOccurred())
@@ -533,11 +533,11 @@ var _ = Describe("Barkat E2E Test", func() {
 	Context("Validation Errors", func() {
 		It("should reject invalid ticker format", func() {
 			journal := barkat.Journal{
-				Ticker:   "lowercase", // PRD: must be uppercase
-				Sequence: "MWD",
-				Type:     "TAKEN",
-				Status:   "RUNNING",
-				Images:   standardImages,
+				Ticker:       "lowercase", // PRD: must be uppercase
+				TopTimeframe: "TMN",
+				Type:         "TAKEN",
+				Status:       "RUNNING",
+				Images:       standardImages,
 			}
 			resp, err := client.R().SetBody(journal).Post(barkat.JournalBase)
 			Expect(err).ToNot(HaveOccurred())
@@ -546,11 +546,11 @@ var _ = Describe("Barkat E2E Test", func() {
 
 		It("should reject insufficient images", func() {
 			journal := barkat.Journal{
-				Ticker:   "VALID",
-				Sequence: "MWD",
-				Type:     "TAKEN",
-				Status:   "RUNNING",
-				Images:   []barkat.Image{{Timeframe: "DL", FileName: "only_one.png"}}, // PRD: min 4
+				Ticker:       "VALID",
+				TopTimeframe: "TMN",
+				Type:         "TAKEN",
+				Status:       "RUNNING",
+				Images:       []barkat.Image{{Timeframe: "DL", FileName: "only_one.png", ImageType: "SET"}}, // PRD: min 4
 			}
 			resp, err := client.R().SetBody(journal).Post(barkat.JournalBase)
 			Expect(err).ToNot(HaveOccurred())
@@ -560,11 +560,11 @@ var _ = Describe("Barkat E2E Test", func() {
 		It("should reject future review date", func() {
 			// Create journal first
 			journal := barkat.Journal{
-				Ticker:   "FUTURE",
-				Sequence: "MWD",
-				Type:     "TAKEN",
-				Status:   "RUNNING",
-				Images:   standardImages,
+				Ticker:       "FUTURE",
+				TopTimeframe: "TMN",
+				Type:         "TAKEN",
+				Status:       "RUNNING",
+				Images:       standardImages,
 			}
 			resp, _ := client.R().SetBody(journal).Post(barkat.JournalBase)
 			created := decodeJournalResponse(resp)

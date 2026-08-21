@@ -15,12 +15,22 @@ export const JournalStatus = {
 } as const;
 export type JournalStatus = (typeof JournalStatus)[keyof typeof JournalStatus];
 
-export const JournalSequence = {
-	MWD: 'MWD',
+/** Read-domain journal top timeframe. MN is migration-only. */
+export const JournalTopTimeframe = {
 	YR: 'YR',
-	WDH: 'WDH',
+	SMN: 'SMN',
+	TMN: 'TMN',
+	MN: 'MN',
 } as const;
-export type JournalSequence = (typeof JournalSequence)[keyof typeof JournalSequence];
+export type JournalTopTimeframe = (typeof JournalTopTimeframe)[keyof typeof JournalTopTimeframe];
+
+/** Filter/URL-exposed top timeframes; excludes migration-only MN. */
+export const JournalTopTimeframeFilter = {
+	YR: 'YR',
+	SMN: 'SMN',
+	TMN: 'TMN',
+} as const;
+export type JournalTopTimeframeFilter = (typeof JournalTopTimeframeFilter)[keyof typeof JournalTopTimeframeFilter];
 
 export const JournalTimeframe = {
 	DL: 'DL',
@@ -48,7 +58,7 @@ export type JournalNoteFormat = (typeof JournalNoteFormat)[keyof typeof JournalN
 export const JournalSortBy = {
 	CREATED_AT: 'created_at',
 	TICKER: 'ticker',
-	SEQUENCE: 'sequence',
+	TOP_TIMEFRAME: 'top_timeframe',
 } as const;
 export type JournalSortBy = (typeof JournalSortBy)[keyof typeof JournalSortBy];
 

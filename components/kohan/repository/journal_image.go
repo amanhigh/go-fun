@@ -17,8 +17,8 @@ import (
 // ImageRepository provides persistence operations for journal images.
 type ImageRepository interface {
 	util.BaseDbRepository
-	// ListImages returns all images for a journal.
-	ListImages(ctx context.Context, journalID uint64) ([]barkat.Image, common.HttpError)
+	// ListImages returns all images for a journal, optionally filtered by image type.
+	ListImages(ctx context.Context, journalID uint64, imageType string) ([]barkat.Image, common.HttpError)
 }
 
 type ImageRepositoryImpl struct {
@@ -32,11 +32,17 @@ func NewImageRepository(baseRepository util.BaseDbRepository) *ImageRepositoryIm
 	return &ImageRepositoryImpl{BaseDbRepository: baseRepository}
 }
 
-func (r *ImageRepositoryImpl) ListImages(ctx context.Context, journalID uint64) ([]barkat.Image, common.HttpError) {
+func (r *ImageRepositoryImpl) ListImages(ctx context.Context, journalID uint64, imageType string) ([]barkat.Image, common.HttpError) {
 	var images []barkat.Image
 	var txErr error
-	if txErr = r.SafeTx(ctx).
-		Where(&barkat.Image{JournalID: journalID}).
+
+	where := barkat.Image{JournalID: journalID}
+	if imageType != "" {
+		where.ImageType = imageType
+	}
+	query := r.SafeTx(ctx).Where(&where)
+
+	if txErr = query.
 		Order("DATE(created_at) ASC").
 		Order(ImageTimeframeOrder + " DESC").
 		Find(&images).Error; txErr != nil && !errors.Is(txErr, gorm.ErrRecordNotFound) {

@@ -6,7 +6,7 @@ const journalFilterDefaults: JournalFilterValues = {
 	ticker: '',
 	type: '',
 	status: '',
-	sequence: '',
+	topTimeframe: '',
 	createdAfter: '',
 	createdBefore: '',
 	reviewed: ReviewedFilter.ALL,

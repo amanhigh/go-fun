@@ -61,7 +61,14 @@ func (h *ImageHandlerImpl) HandleListImages(c *gin.Context) {
 		return
 	}
 
-	imageList, httpErr := h.imageMgr.ListImages(c.Request.Context(), path.JournalID)
+	var query barkat.ImageQuery
+	if bindErr := c.ShouldBindQuery(&query); bindErr != nil {
+		httpErr := util.ProcessValidationError(bindErr)
+		c.JSON(httpErr.Code(), httpErr)
+		return
+	}
+
+	imageList, httpErr := h.imageMgr.ListImages(c.Request.Context(), path.JournalID, query.ImageType)
 	if httpErr != nil {
 		c.JSON(httpErr.Code(), httpErr)
 		return
