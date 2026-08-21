@@ -82,7 +82,7 @@ var _ = Describe("ImageHandler Integration - Section 2.2 JournalImage APIs", fun
 			Type:         "REJECTED",
 			Status:       "FAIL",
 			Images: []barkat.Image{
-				{Timeframe: "DL", FileName: "test-dl.png"}, // Only one image for testing
+				{Timeframe: "DL", FileName: "test-dl.png", ImageType: "SET"}, // Only one image for testing
 			},
 		}
 		Expect(journalMgr.CreateJournal(testCtx, &journal)).To(Succeed())
@@ -106,6 +106,7 @@ var _ = Describe("ImageHandler Integration - Section 2.2 JournalImage APIs", fun
 					image := barkat.Image{
 						Timeframe: "SMN",
 						FileName:  "RELIANCE.mwd.rejected.oe__20240115_132138.png",
+						ImageType: "SET",
 					}
 					req, w = util.CreateTestRequest("POST", barkat.JournalBase+"/"+journal.ExternalID+"/images", image)
 					router.ServeHTTP(w, req)
@@ -137,13 +138,18 @@ var _ = Describe("ImageHandler Integration - Section 2.2 JournalImage APIs", fun
 					Expect(response.FileName).To(Equal("RELIANCE.mwd.rejected.oe__20240115_132138.png"))
 				})
 
+				It("should preserve image_type field", func() {
+					response = decodeImageResponse(w)
+					Expect(response.ImageType).To(Equal("SET"))
+				})
+
 				It("should set created_at timestamp", func() {
 					response = decodeImageResponse(w)
 					Expect(response.CreatedAt).ToNot(BeZero())
 				})
 
 				It("should persist image to database", func() {
-					imageList, err := imgMgr.ListImages(testCtx, journal.ExternalID)
+					imageList, err := imgMgr.ListImages(testCtx, journal.ExternalID, "")
 					Expect(err).ToNot(HaveOccurred())
 					// 1 from journal creation + 1 new = 2
 					Expect(imageList.Images).To(HaveLen(2))
@@ -156,7 +162,7 @@ var _ = Describe("ImageHandler Integration - Section 2.2 JournalImage APIs", fun
 				Context("Allowed Values", func() {
 
 					It("should accept timeframe = DL", func() {
-						image := barkat.Image{Timeframe: "DL", FileName: "RELIANCE.mwd.test.png"}
+						image := barkat.Image{Timeframe: "DL", FileName: "RELIANCE.mwd.test.png", ImageType: "SET"}
 						req, w = util.CreateTestRequest("POST", barkat.JournalBase+"/"+journal.ExternalID+"/images", image)
 						router.ServeHTTP(w, req)
 						response := decodeImageResponse(w)
@@ -164,7 +170,7 @@ var _ = Describe("ImageHandler Integration - Section 2.2 JournalImage APIs", fun
 					})
 
 					It("should accept timeframe = WK", func() {
-						image := barkat.Image{Timeframe: "WK", FileName: "RELIANCE.mwd.test.png"}
+						image := barkat.Image{Timeframe: "WK", FileName: "RELIANCE.mwd.test.png", ImageType: "SET"}
 						req, w = util.CreateTestRequest("POST", barkat.JournalBase+"/"+journal.ExternalID+"/images", image)
 						router.ServeHTTP(w, req)
 						response := decodeImageResponse(w)
@@ -172,7 +178,7 @@ var _ = Describe("ImageHandler Integration - Section 2.2 JournalImage APIs", fun
 					})
 
 					It("should accept timeframe = MN", func() {
-						image := barkat.Image{Timeframe: "MN", FileName: "RELIANCE.mwd.test.png"}
+						image := barkat.Image{Timeframe: "MN", FileName: "RELIANCE.mwd.test.png", ImageType: "SET"}
 						req, w = util.CreateTestRequest("POST", barkat.JournalBase+"/"+journal.ExternalID+"/images", image)
 						router.ServeHTTP(w, req)
 						response := decodeImageResponse(w)
@@ -180,7 +186,7 @@ var _ = Describe("ImageHandler Integration - Section 2.2 JournalImage APIs", fun
 					})
 
 					It("should accept timeframe = TMN", func() {
-						image := barkat.Image{Timeframe: "TMN", FileName: "RELIANCE.mwd.test.png"}
+						image := barkat.Image{Timeframe: "TMN", FileName: "RELIANCE.mwd.test.png", ImageType: "SET"}
 						req, w = util.CreateTestRequest("POST", barkat.JournalBase+"/"+journal.ExternalID+"/images", image)
 						router.ServeHTTP(w, req)
 						response := decodeImageResponse(w)
@@ -188,7 +194,7 @@ var _ = Describe("ImageHandler Integration - Section 2.2 JournalImage APIs", fun
 					})
 
 					It("should accept timeframe = SMN", func() {
-						image := barkat.Image{Timeframe: "SMN", FileName: "RELIANCE.mwd.test.png"}
+						image := barkat.Image{Timeframe: "SMN", FileName: "RELIANCE.mwd.test.png", ImageType: "SET"}
 						req, w = util.CreateTestRequest("POST", barkat.JournalBase+"/"+journal.ExternalID+"/images", image)
 						router.ServeHTTP(w, req)
 						response := decodeImageResponse(w)
@@ -196,7 +202,7 @@ var _ = Describe("ImageHandler Integration - Section 2.2 JournalImage APIs", fun
 					})
 
 					It("should accept timeframe = YR", func() {
-						image := barkat.Image{Timeframe: "YR", FileName: "RELIANCE.mwd.test.png"}
+						image := barkat.Image{Timeframe: "YR", FileName: "RELIANCE.mwd.test.png", ImageType: "SET"}
 						req, w = util.CreateTestRequest("POST", barkat.JournalBase+"/"+journal.ExternalID+"/images", image)
 						router.ServeHTTP(w, req)
 						response := decodeImageResponse(w)
@@ -206,28 +212,28 @@ var _ = Describe("ImageHandler Integration - Section 2.2 JournalImage APIs", fun
 
 				Context("Bad Values", func() {
 					It("should return 400 for missing timeframe (PRD: required)", func() {
-						image := barkat.Image{Timeframe: "", FileName: "RELIANCE.mwd.test.png"}
+						image := barkat.Image{Timeframe: "", FileName: "RELIANCE.mwd.test.png", ImageType: "SET"}
 						req, w = util.CreateTestRequest("POST", barkat.JournalBase+"/"+journal.ExternalID+"/images", image)
 						router.ServeHTTP(w, req)
 						util.AssertError(w, "Timeframe", "required")
 					})
 
 					It("should return 400 for invalid timeframe enum (PRD: must be DL,WK,MN,TMN,SMN,YR)", func() {
-						image := barkat.Image{Timeframe: "INVALID", FileName: "RELIANCE.mwd.test.png"}
+						image := barkat.Image{Timeframe: "INVALID", FileName: "RELIANCE.mwd.test.png", ImageType: "SET"}
 						req, w = util.CreateTestRequest("POST", barkat.JournalBase+"/"+journal.ExternalID+"/images", image)
 						router.ServeHTTP(w, req)
 						util.AssertError(w, "Timeframe", "oneof")
 					})
 
 					It("should return 400 for lowercase timeframe (PRD: case-sensitive)", func() {
-						image := barkat.Image{Timeframe: "dl", FileName: "RELIANCE.mwd.test.png"}
+						image := barkat.Image{Timeframe: "dl", FileName: "RELIANCE.mwd.test.png", ImageType: "SET"}
 						req, w = util.CreateTestRequest("POST", barkat.JournalBase+"/"+journal.ExternalID+"/images", image)
 						router.ServeHTTP(w, req)
 						util.AssertError(w, "Timeframe", "oneof")
 					})
 
 					It("should return 400 for timeframe with whitespace", func() {
-						image := barkat.Image{Timeframe: " DL ", FileName: "RELIANCE.mwd.test.png"}
+						image := barkat.Image{Timeframe: " DL ", FileName: "RELIANCE.mwd.test.png", ImageType: "SET"}
 						req, w = util.CreateTestRequest("POST", barkat.JournalBase+"/"+journal.ExternalID+"/images", image)
 						router.ServeHTTP(w, req)
 						util.AssertError(w, "Timeframe", "oneof")
@@ -238,7 +244,7 @@ var _ = Describe("ImageHandler Integration - Section 2.2 JournalImage APIs", fun
 			Context("FileName Field", func() {
 				Context("Allowed Values", func() {
 					It("should accept minimum file name length (1 char)", func() {
-						image := barkat.Image{Timeframe: "WK", FileName: "a.png"}
+						image := barkat.Image{Timeframe: "WK", FileName: "a.png", ImageType: "SET"}
 						req, w = util.CreateTestRequest("POST", barkat.JournalBase+"/"+journal.ExternalID+"/images", image)
 						router.ServeHTTP(w, req)
 						response := decodeImageResponse(w)
@@ -251,7 +257,7 @@ var _ = Describe("ImageHandler Integration - Section 2.2 JournalImage APIs", fun
 							longFileName += "a"
 						}
 						longFileName += ".png"
-						image := barkat.Image{Timeframe: "MN", FileName: longFileName}
+						image := barkat.Image{Timeframe: "MN", FileName: longFileName, ImageType: "SET"}
 						req, w = util.CreateTestRequest("POST", barkat.JournalBase+"/"+journal.ExternalID+"/images", image)
 						router.ServeHTTP(w, req)
 						response := decodeImageResponse(w)
@@ -259,7 +265,7 @@ var _ = Describe("ImageHandler Integration - Section 2.2 JournalImage APIs", fun
 					})
 
 					It("should accept PNG file extension", func() {
-						image := barkat.Image{Timeframe: "TMN", FileName: "RELIANCE.mwd.test.png"}
+						image := barkat.Image{Timeframe: "TMN", FileName: "RELIANCE.mwd.test.png", ImageType: "SET"}
 						req, w = util.CreateTestRequest("POST", barkat.JournalBase+"/"+journal.ExternalID+"/images", image)
 						router.ServeHTTP(w, req)
 						response := decodeImageResponse(w)
@@ -267,7 +273,7 @@ var _ = Describe("ImageHandler Integration - Section 2.2 JournalImage APIs", fun
 					})
 
 					It("should accept JPG file extension", func() {
-						image := barkat.Image{Timeframe: "SMN", FileName: "RELIANCE.mwd.test.jpg"}
+						image := barkat.Image{Timeframe: "SMN", FileName: "RELIANCE.mwd.test.jpg", ImageType: "SET"}
 						req, w = util.CreateTestRequest("POST", barkat.JournalBase+"/"+journal.ExternalID+"/images", image)
 						router.ServeHTTP(w, req)
 						response := decodeImageResponse(w)
@@ -275,7 +281,7 @@ var _ = Describe("ImageHandler Integration - Section 2.2 JournalImage APIs", fun
 					})
 
 					It("should accept JPEG file extension", func() {
-						image := barkat.Image{Timeframe: "YR", FileName: "RELIANCE.mwd.test.jpeg"}
+						image := barkat.Image{Timeframe: "YR", FileName: "RELIANCE.mwd.test.jpeg", ImageType: "SET"}
 						req, w = util.CreateTestRequest("POST", barkat.JournalBase+"/"+journal.ExternalID+"/images", image)
 						router.ServeHTTP(w, req)
 						response := decodeImageResponse(w)
@@ -283,7 +289,7 @@ var _ = Describe("ImageHandler Integration - Section 2.2 JournalImage APIs", fun
 					})
 
 					It("should accept file name with special characters (dots, hyphens, underscores)", func() {
-						image := barkat.Image{Timeframe: "WK", FileName: "RELIANCE.mwd.rejected.oe__20240115_132138.png"}
+						image := barkat.Image{Timeframe: "WK", FileName: "RELIANCE.mwd.rejected.oe__20240115_132138.png", ImageType: "SET"}
 						req, w = util.CreateTestRequest("POST", barkat.JournalBase+"/"+journal.ExternalID+"/images", image)
 						router.ServeHTTP(w, req)
 						response := decodeImageResponse(w)
@@ -291,7 +297,7 @@ var _ = Describe("ImageHandler Integration - Section 2.2 JournalImage APIs", fun
 					})
 
 					It("should accept file name with numbers", func() {
-						image := barkat.Image{Timeframe: "MN", FileName: "RELIANCE123.mwd.456.test.png"}
+						image := barkat.Image{Timeframe: "MN", FileName: "RELIANCE123.mwd.456.test.png", ImageType: "SET"}
 						req, w = util.CreateTestRequest("POST", barkat.JournalBase+"/"+journal.ExternalID+"/images", image)
 						router.ServeHTTP(w, req)
 						response := decodeImageResponse(w)
@@ -301,7 +307,7 @@ var _ = Describe("ImageHandler Integration - Section 2.2 JournalImage APIs", fun
 
 				Context("Bad Values", func() {
 					It("should return 400 for missing file_name (PRD: required)", func() {
-						image := barkat.Image{Timeframe: "DL", FileName: ""}
+						image := barkat.Image{Timeframe: "DL", FileName: "", ImageType: "SET"}
 						req, w = util.CreateTestRequest("POST", barkat.JournalBase+"/"+journal.ExternalID+"/images", image)
 						router.ServeHTTP(w, req)
 						util.AssertError(w, "FileName", "required")
@@ -312,42 +318,42 @@ var _ = Describe("ImageHandler Integration - Section 2.2 JournalImage APIs", fun
 						for range 256 { // 256 chars exceeds limit
 							longFileName.WriteString("a")
 						}
-						image := barkat.Image{Timeframe: "MN", FileName: longFileName.String()}
+						image := barkat.Image{Timeframe: "MN", FileName: longFileName.String(), ImageType: "SET"}
 						req, w = util.CreateTestRequest("POST", barkat.JournalBase+"/"+journal.ExternalID+"/images", image)
 						router.ServeHTTP(w, req)
 						util.AssertError(w, "FileName", "max")
 					})
 
 					It("should return 400 for file_name without extension", func() {
-						image := barkat.Image{Timeframe: "TMN", FileName: "RELIANCE.mwd.test"}
+						image := barkat.Image{Timeframe: "TMN", FileName: "RELIANCE.mwd.test", ImageType: "SET"}
 						req, w = util.CreateTestRequest("POST", barkat.JournalBase+"/"+journal.ExternalID+"/images", image)
 						router.ServeHTTP(w, req)
 						util.AssertError(w, "FileName", "image_file")
 					})
 
 					It("should return 400 for file_name with invalid extension", func() {
-						image := barkat.Image{Timeframe: "SMN", FileName: "RELIANCE.mwd.test.txt"}
+						image := barkat.Image{Timeframe: "SMN", FileName: "RELIANCE.mwd.test.txt", ImageType: "SET"}
 						req, w = util.CreateTestRequest("POST", barkat.JournalBase+"/"+journal.ExternalID+"/images", image)
 						router.ServeHTTP(w, req)
 						util.AssertError(w, "FileName", "image_file")
 					})
 
 					It("should return 400 for file_name with invalid characters (PRD: alphanumeric, dots, hyphens, underscores only)", func() {
-						image := barkat.Image{Timeframe: "YR", FileName: "RELIANCE@mwd.test.png"}
+						image := barkat.Image{Timeframe: "YR", FileName: "RELIANCE@mwd.test.png", ImageType: "SET"}
 						req, w = util.CreateTestRequest("POST", barkat.JournalBase+"/"+journal.ExternalID+"/images", image)
 						router.ServeHTTP(w, req)
 						util.AssertError(w, "FileName", "image_file")
 					})
 
 					It("should return 400 for file_name with spaces", func() {
-						image := barkat.Image{Timeframe: "WK", FileName: "RELIANCE mwd test.png"}
+						image := barkat.Image{Timeframe: "WK", FileName: "RELIANCE mwd test.png", ImageType: "SET"}
 						req, w = util.CreateTestRequest("POST", barkat.JournalBase+"/"+journal.ExternalID+"/images", image)
 						router.ServeHTTP(w, req)
 						util.AssertError(w, "FileName", "image_file")
 					})
 
 					It("should return 400 for file_name with path separators", func() {
-						image := barkat.Image{Timeframe: "MN", FileName: "path/RELIANCE.mwd.test.png"}
+						image := barkat.Image{Timeframe: "MN", FileName: "path/RELIANCE.mwd.test.png", ImageType: "SET"}
 						req, w = util.CreateTestRequest("POST", barkat.JournalBase+"/"+journal.ExternalID+"/images", image)
 						router.ServeHTTP(w, req)
 						util.AssertError(w, "FileName", "image_file")
@@ -361,7 +367,7 @@ var _ = Describe("ImageHandler Integration - Section 2.2 JournalImage APIs", fun
 						// First image with DL timeframe already exists from journal creation
 						image := barkat.Image{
 							Timeframe: "DL",
-							FileName:  "RELIANCE.mwd.duplicate.png",
+							FileName:  "RELIANCE.mwd.duplicate.png", ImageType: "SET",
 						}
 						req, w = util.CreateTestRequest("POST", barkat.JournalBase+"/"+journal.ExternalID+"/images", image)
 						router.ServeHTTP(w, req)
@@ -373,13 +379,57 @@ var _ = Describe("ImageHandler Integration - Section 2.2 JournalImage APIs", fun
 				})
 			})
 
+			Context("ImageType Field", func() {
+				Context("Allowed Values", func() {
+					It("should accept image_type = SET", func() {
+						image := barkat.Image{Timeframe: "DL", FileName: "RELIANCE.mwd.test.png", ImageType: "SET"}
+						req, w = util.CreateTestRequest("POST", barkat.JournalBase+"/"+journal.ExternalID+"/images", image)
+						router.ServeHTTP(w, req)
+						response := decodeImageResponse(w)
+						Expect(response.ImageType).To(Equal("SET"))
+					})
+
+					It("should accept image_type = RESULT", func() {
+						image := barkat.Image{Timeframe: "WK", FileName: "RELIANCE.mwd.test.png", ImageType: "RESULT"}
+						req, w = util.CreateTestRequest("POST", barkat.JournalBase+"/"+journal.ExternalID+"/images", image)
+						router.ServeHTTP(w, req)
+						response := decodeImageResponse(w)
+						Expect(response.ImageType).To(Equal("RESULT"))
+					})
+
+					It("should accept image_type = INFO", func() {
+						image := barkat.Image{Timeframe: "MN", FileName: "RELIANCE.mwd.test.png", ImageType: "INFO"}
+						req, w = util.CreateTestRequest("POST", barkat.JournalBase+"/"+journal.ExternalID+"/images", image)
+						router.ServeHTTP(w, req)
+						response := decodeImageResponse(w)
+						Expect(response.ImageType).To(Equal("INFO"))
+					})
+				})
+
+				Context("Bad Values", func() {
+					It("should return 400 for missing image_type (PRD: required)", func() {
+						image := barkat.Image{Timeframe: "DL", FileName: "RELIANCE.mwd.test.png"}
+						req, w = util.CreateTestRequest("POST", barkat.JournalBase+"/"+journal.ExternalID+"/images", image)
+						router.ServeHTTP(w, req)
+						util.AssertError(w, "ImageType", "required")
+					})
+
+					It("should return 400 for lowercase image_type (PRD: case-sensitive)", func() {
+						image := barkat.Image{Timeframe: "DL", FileName: "RELIANCE.mwd.test.png", ImageType: "set"}
+						req, w = util.CreateTestRequest("POST", barkat.JournalBase+"/"+journal.ExternalID+"/images", image)
+						router.ServeHTTP(w, req)
+						util.AssertError(w, "ImageType", "oneof")
+					})
+				})
+			})
+
 			Context("CreatedAt Field", func() {
 				Context("Allowed Values", func() {
 					It("should accept valid ISO 8601 datetime (PRD: optional for migration)", func() {
 						historicalTime := time.Date(2023, 6, 15, 14, 30, 0, 0, time.UTC)
 						image := barkat.Image{
 							Timeframe: "TMN",
-							FileName:  "RELIANCE.yr.rejected.oe__20230615__143000.png",
+							FileName:  "RELIANCE.yr.rejected.oe__20230615__143000.png", ImageType: "SET",
 							CreatedAt: historicalTime,
 						}
 						req, w = util.CreateTestRequest("POST", barkat.JournalBase+"/"+journal.ExternalID+"/images", image)
@@ -391,7 +441,7 @@ var _ = Describe("ImageHandler Integration - Section 2.2 JournalImage APIs", fun
 					It("should accept omitted CreatedAt (PRD: system sets current timestamp)", func() {
 						image := barkat.Image{
 							Timeframe: "TMN",
-							FileName:  "RELIANCE.yr.rejected.oe__20230615__143001.png",
+							FileName:  "RELIANCE.yr.rejected.oe__20230615__143001.png", ImageType: "SET",
 							// CreatedAt omitted - BeforeCreate will set current time
 						}
 						req, w = util.CreateTestRequest("POST", barkat.JournalBase+"/"+journal.ExternalID+"/images", image)
@@ -404,7 +454,7 @@ var _ = Describe("ImageHandler Integration - Section 2.2 JournalImage APIs", fun
 					It("should accept zero CreatedAt (PRD: BeforeCreate hook sets current time)", func() {
 						image := barkat.Image{
 							Timeframe: "TMN",
-							FileName:  "RELIANCE.yr.rejected.oe__20230615__143002.png",
+							FileName:  "RELIANCE.yr.rejected.oe__20230615__143002.png", ImageType: "SET",
 							CreatedAt: time.Time{}, // Zero time - BeforeCreate will set current time
 						}
 						req, w = util.CreateTestRequest("POST", barkat.JournalBase+"/"+journal.ExternalID+"/images", image)
@@ -423,14 +473,14 @@ var _ = Describe("ImageHandler Integration - Section 2.2 JournalImage APIs", fun
 			Context("Journal ID Path Parameter", func() {
 				Context("Bad Values", func() {
 					It("should return 400 for malformed journal ID", func() {
-						image := barkat.Image{Timeframe: "MN", FileName: "RELIANCE.mwd.test.png"}
+						image := barkat.Image{Timeframe: "MN", FileName: "RELIANCE.mwd.test.png", ImageType: "SET"}
 						req, w = util.CreateTestRequest("POST", barkat.JournalBase+"/invalid-uuid-format/images", image)
 						router.ServeHTTP(w, req)
 						Expect(w.Code).To(Equal(http.StatusBadRequest))
 					})
 
 					It("should return 404 for valid ID format but non-existent", func() {
-						image := barkat.Image{Timeframe: "TMN", FileName: "RELIANCE.mwd.test.png"}
+						image := barkat.Image{Timeframe: "TMN", FileName: "RELIANCE.mwd.test.png", ImageType: "SET"}
 						req, w = util.CreateTestRequest("POST", barkat.JournalBase+"/jrn_12345678/images", image)
 						router.ServeHTTP(w, req)
 						Expect(w.Code).To(Equal(http.StatusNotFound))
@@ -559,6 +609,61 @@ var _ = Describe("ImageHandler Integration - Section 2.2 JournalImage APIs", fun
 					})
 				})
 			})
+
+			Context("ImageType Query Parameter", func() {
+				Context("Allowed Values", func() {
+					var images []barkat.Image
+
+					BeforeEach(func() {
+						// SET image already exists from journal creation (test-dl.png).
+						// Add one RESULT and one INFO image to cover all three enum values.
+						resultImage := barkat.Image{Timeframe: "WK", FileName: "RELIANCE.result.png", ImageType: "RESULT"}
+						req, w = util.CreateTestRequest("POST", barkat.JournalBase+"/"+journal.ExternalID+"/images", resultImage)
+						router.ServeHTTP(w, req)
+						Expect(w.Code).To(Equal(http.StatusCreated))
+
+						infoImage := barkat.Image{Timeframe: "MN", FileName: "RELIANCE.info.png", ImageType: "INFO"}
+						req, w = util.CreateTestRequest("POST", barkat.JournalBase+"/"+journal.ExternalID+"/images", infoImage)
+						router.ServeHTTP(w, req)
+						Expect(w.Code).To(Equal(http.StatusCreated))
+					})
+
+					It("should return only SET images when filtered by image_type=SET", func() {
+						req, w = util.CreateTestRequest("GET", barkat.JournalBase+"/"+journal.ExternalID+"/images?image_type=SET", nil)
+						router.ServeHTTP(w, req)
+						images = decodeImageListResponse(w)
+						Expect(images).To(HaveLen(1))
+						Expect(images[0].FileName).To(Equal("test-dl.png"))
+						Expect(images[0].ImageType).To(Equal("SET"))
+					})
+
+					It("should return only RESULT images when filtered by image_type=RESULT", func() {
+						req, w = util.CreateTestRequest("GET", barkat.JournalBase+"/"+journal.ExternalID+"/images?image_type=RESULT", nil)
+						router.ServeHTTP(w, req)
+						images = decodeImageListResponse(w)
+						Expect(images).To(HaveLen(1))
+						Expect(images[0].FileName).To(Equal("RELIANCE.result.png"))
+						Expect(images[0].ImageType).To(Equal("RESULT"))
+					})
+
+					It("should return only INFO images when filtered by image_type=INFO", func() {
+						req, w = util.CreateTestRequest("GET", barkat.JournalBase+"/"+journal.ExternalID+"/images?image_type=INFO", nil)
+						router.ServeHTTP(w, req)
+						images = decodeImageListResponse(w)
+						Expect(images).To(HaveLen(1))
+						Expect(images[0].FileName).To(Equal("RELIANCE.info.png"))
+						Expect(images[0].ImageType).To(Equal("INFO"))
+					})
+				})
+
+				Context("Bad Values", func() {
+					It("should return 400 for lowercase image_type query parameter", func() {
+						req, w = util.CreateTestRequest("GET", barkat.JournalBase+"/"+journal.ExternalID+"/images?image_type=result", nil)
+						router.ServeHTTP(w, req)
+						util.AssertError(w, "ImageType", "oneof")
+					})
+				})
+			})
 		})
 
 		Context("Errors", func() {
@@ -593,7 +698,7 @@ var _ = Describe("ImageHandler Integration - Section 2.2 JournalImage APIs", fun
 				})
 
 				It("should actually delete the image from database", func() {
-					imageList, err := imgMgr.ListImages(testCtx, journal.ExternalID)
+					imageList, err := imgMgr.ListImages(testCtx, journal.ExternalID, "")
 					Expect(err).ToNot(HaveOccurred())
 					Expect(imageList.Images).To(BeEmpty()) // 1 - 1 = 0
 				})

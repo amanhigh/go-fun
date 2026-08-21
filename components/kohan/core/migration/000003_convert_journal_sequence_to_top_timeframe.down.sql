@@ -1,5 +1,7 @@
--- 000003 down: Convert journals.top_timeframe back to journals.sequence
+-- 000003 down: Convert journals.top_timeframe back to journals.sequence AND
+-- drop images.image_type.
 --
+-- Part A (journal top_timeframe):
 -- Reverse mapping (new -> legacy). This mapping is LOSSY because the legacy
 -- domain ('MWD','YR','WDH') cannot represent the new domain
 -- ('YR','SMN','TMN','MN') distinctly:
@@ -13,6 +15,14 @@
 --
 -- Simple in-place inverse of the up migration: add sequence, backfill it from
 -- top_timeframe, then drop top_timeframe. No table rebuild is needed.
+--
+-- Part B (image classification):
+-- Drop images.image_type before the journal rollback so the schema matches the
+-- pre-migration state.
+
+-- 0. Drop images.image_type first so the schema is restored to its pre-000003
+--    state before the journal rollback runs.
+ALTER TABLE images DROP COLUMN image_type;
 
 -- 1. Add sequence. The DEFAULT 'YR' is required because SQLite only allows a
 --    NOT NULL column to be added with a non-NULL default; the UPDATE in step 2

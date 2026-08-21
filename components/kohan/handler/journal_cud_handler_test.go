@@ -66,10 +66,10 @@ var _ = Describe("JournalHandler Integration - CUD Tests", func() {
 		w              *httptest.ResponseRecorder
 		// Common image objects to reduce duplication
 		standardImages = []barkat.Image{
-			{Timeframe: "DL", FileName: "test-dl.png"},
-			{Timeframe: "WK", FileName: "test-wk.png"},
-			{Timeframe: "MN", FileName: "test-mn.png"},
-			{Timeframe: "TMN", FileName: "test-tmn.png"},
+			{Timeframe: "DL", FileName: "test-dl.png", ImageType: "SET"},
+			{Timeframe: "WK", FileName: "test-wk.png", ImageType: "SET"},
+			{Timeframe: "MN", FileName: "test-mn.png", ImageType: "SET"},
+			{Timeframe: "TMN", FileName: "test-tmn.png", ImageType: "SET"},
 		}
 	)
 
@@ -107,6 +107,7 @@ var _ = Describe("JournalHandler Integration - CUD Tests", func() {
 				images[i] = barkat.Image{
 					Timeframe: timeframe,
 					FileName:  fmt.Sprintf("TEST.%s.rejected.oe__20240115_132138.png", timeframe),
+					ImageType: "SET",
 				}
 			}
 			return images
@@ -549,10 +550,10 @@ var _ = Describe("JournalHandler Integration - CUD Tests", func() {
 							Type:         "REJECTED",
 							Status:       "FAIL",
 							Images: []barkat.Image{
-								{Timeframe: "DL", FileName: "test-dl.png"},
-								{Timeframe: "DL", FileName: "test-dl-duplicate.png"},
-								{Timeframe: "MN", FileName: "test-mn.png"},
-								{Timeframe: "TMN", FileName: "test-tmn.png"},
+								{Timeframe: "DL", FileName: "test-dl.png", ImageType: "SET"},
+								{Timeframe: "DL", FileName: "test-dl-duplicate.png", ImageType: "SET"},
+								{Timeframe: "MN", FileName: "test-mn.png", ImageType: "SET"},
+								{Timeframe: "TMN", FileName: "test-tmn.png", ImageType: "SET"},
 							},
 						}
 						req, w = util.CreateTestRequest("POST", barkat.JournalBase, journal)
@@ -593,9 +594,9 @@ var _ = Describe("JournalHandler Integration - CUD Tests", func() {
 							Type:         "REJECTED",
 							Status:       "FAIL",
 							Images: []barkat.Image{
-								{Timeframe: "DL", FileName: "test-dl.png"},
-								{Timeframe: "WK", FileName: "test-wk.png"},
-								{Timeframe: "MN", FileName: "test-mn.png"},
+								{Timeframe: "DL", FileName: "test-dl.png", ImageType: "SET"},
+								{Timeframe: "WK", FileName: "test-wk.png", ImageType: "SET"},
+								{Timeframe: "MN", FileName: "test-mn.png", ImageType: "SET"},
 							},
 						}
 						req, w = util.CreateTestRequest("POST", barkat.JournalBase, journal)
@@ -610,23 +611,23 @@ var _ = Describe("JournalHandler Integration - CUD Tests", func() {
 							Type:         "REJECTED",
 							Status:       "FAIL",
 							Images: []barkat.Image{
-								{Timeframe: "DL", FileName: "test-dl.png"},
-								{Timeframe: "WK", FileName: "test-wk.png"},
-								{Timeframe: "MN", FileName: "test-mn.png"},
-								{Timeframe: "TMN", FileName: "test-tmn.png"},
-								{Timeframe: "SMN", FileName: "test-smn.png"},
-								{Timeframe: "YR", FileName: "test-yr.png"},
-								{Timeframe: "DL", FileName: "test-dl-2.png"},
-								{Timeframe: "WK", FileName: "test-wk-2.png"},
-								{Timeframe: "MN", FileName: "test-mn-2.png"},
-								{Timeframe: "TMN", FileName: "test-tmn-2.png"},
-								{Timeframe: "SMN", FileName: "test-smn-2.png"},
-								{Timeframe: "YR", FileName: "test-yr-2.png"},
-								{Timeframe: "DL", FileName: "test-dl-3.png"},
-								{Timeframe: "WK", FileName: "test-wk-3.png"},
-								{Timeframe: "MN", FileName: "test-mn-3.png"},
-								{Timeframe: "TMN", FileName: "test-tmn-3.png"},
-								{Timeframe: "SMN", FileName: "test-smn-3.png"},
+								{Timeframe: "DL", FileName: "test-dl.png", ImageType: "SET"},
+								{Timeframe: "WK", FileName: "test-wk.png", ImageType: "SET"},
+								{Timeframe: "MN", FileName: "test-mn.png", ImageType: "SET"},
+								{Timeframe: "TMN", FileName: "test-tmn.png", ImageType: "SET"},
+								{Timeframe: "SMN", FileName: "test-smn.png", ImageType: "SET"},
+								{Timeframe: "YR", FileName: "test-yr.png", ImageType: "SET"},
+								{Timeframe: "DL", FileName: "test-dl-2.png", ImageType: "SET"},
+								{Timeframe: "WK", FileName: "test-wk-2.png", ImageType: "SET"},
+								{Timeframe: "MN", FileName: "test-mn-2.png", ImageType: "SET"},
+								{Timeframe: "TMN", FileName: "test-tmn-2.png", ImageType: "SET"},
+								{Timeframe: "SMN", FileName: "test-smn-2.png", ImageType: "SET"},
+								{Timeframe: "YR", FileName: "test-yr-2.png", ImageType: "SET"},
+								{Timeframe: "DL", FileName: "test-dl-3.png", ImageType: "SET"},
+								{Timeframe: "WK", FileName: "test-wk-3.png", ImageType: "SET"},
+								{Timeframe: "MN", FileName: "test-mn-3.png", ImageType: "SET"},
+								{Timeframe: "TMN", FileName: "test-tmn-3.png", ImageType: "SET"},
+								{Timeframe: "SMN", FileName: "test-smn-3.png", ImageType: "SET"},
 							},
 						}
 						req, w = util.CreateTestRequest("POST", barkat.JournalBase, journal)
@@ -641,10 +642,10 @@ var _ = Describe("JournalHandler Integration - CUD Tests", func() {
 							Type:         "REJECTED",
 							Status:       "FAIL",
 							Images: []barkat.Image{
-								{Timeframe: "INVALID", FileName: "test-invalid.png"},
-								{Timeframe: "WK", FileName: "test-wk.png"},
-								{Timeframe: "MN", FileName: "test-mn.png"},
-								{Timeframe: "TMN", FileName: "test-tmn.png"},
+								{Timeframe: "INVALID", FileName: "test-invalid.png", ImageType: "SET"},
+								{Timeframe: "WK", FileName: "test-wk.png", ImageType: "SET"},
+								{Timeframe: "MN", FileName: "test-mn.png", ImageType: "SET"},
+								{Timeframe: "TMN", FileName: "test-tmn.png", ImageType: "SET"},
 							},
 						}
 						req, w = util.CreateTestRequest("POST", barkat.JournalBase, journal)

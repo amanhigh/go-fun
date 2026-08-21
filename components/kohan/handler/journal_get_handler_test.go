@@ -75,12 +75,12 @@ var _ = Describe("JournalHandler Integration - GET Tests", func() {
 				Type:         "REJECTED",
 				Status:       "FAIL",
 				Images: []barkat.Image{
-					{Timeframe: "WK", CreatedAt: time.Date(2023, time.June, 1, 10, 0, 0, 0, time.UTC)},
-					{Timeframe: "DL", CreatedAt: time.Date(2023, time.June, 2, 10, 0, 0, 0, time.UTC)},
-					{Timeframe: "MN", CreatedAt: time.Date(2023, time.June, 2, 10, 0, 0, 0, time.UTC)},
-					{Timeframe: "TMN", CreatedAt: time.Date(2023, time.June, 2, 10, 0, 0, 0, time.UTC)},
-					{Timeframe: "SMN", CreatedAt: time.Date(2023, time.June, 2, 10, 0, 0, 0, time.UTC)},
-					{Timeframe: "YR", CreatedAt: time.Date(2023, time.June, 2, 10, 0, 0, 0, time.UTC)},
+					{Timeframe: "WK", CreatedAt: time.Date(2023, time.June, 1, 10, 0, 0, 0, time.UTC), ImageType: "SET"},
+					{Timeframe: "DL", CreatedAt: time.Date(2023, time.June, 2, 10, 0, 0, 0, time.UTC), ImageType: "SET"},
+					{Timeframe: "MN", CreatedAt: time.Date(2023, time.June, 2, 10, 0, 0, 0, time.UTC), ImageType: "SET"},
+					{Timeframe: "TMN", CreatedAt: time.Date(2023, time.June, 2, 10, 0, 0, 0, time.UTC), ImageType: "SET"},
+					{Timeframe: "SMN", CreatedAt: time.Date(2023, time.June, 2, 10, 0, 0, 0, time.UTC), ImageType: "SET"},
+					{Timeframe: "YR", CreatedAt: time.Date(2023, time.June, 2, 10, 0, 0, 0, time.UTC), ImageType: "SET"},
 				},
 			}
 			Expect(journalMgr.CreateJournal(testCtx, &journal)).To(Succeed())
@@ -159,12 +159,12 @@ var _ = Describe("JournalHandler Integration - GET Tests", func() {
 		BeforeEach(func() {
 			// Define default images template
 			defaultImages := []barkat.Image{
-				{Timeframe: "DL"},
-				{Timeframe: "WK"},
-				{Timeframe: "MN"},
-				{Timeframe: "TMN"},
-				{Timeframe: "SMN"},
-				{Timeframe: "YR"},
+				{Timeframe: "DL", ImageType: "SET"},
+				{Timeframe: "WK", ImageType: "SET"},
+				{Timeframe: "MN", ImageType: "SET"},
+				{Timeframe: "TMN", ImageType: "SET"},
+				{Timeframe: "SMN", ImageType: "SET"},
+				{Timeframe: "YR", ImageType: "SET"},
 			}
 
 			journals := []barkat.Journal{
