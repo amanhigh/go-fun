@@ -1,8 +1,6 @@
 import type { JournalTimeframe, JournalStatus, JournalNoteFormat, JournalTagType, JournalType, JournalTopTimeframe, JournalImageType } from './enums';
 import type { PaginatedResponse } from '../common';
 
-// FIXME: Backend image responses include image_type (SET/RESULT/INFO).
-// Add it to JournalImage and expose filtering/presentation when frontend work begins.
 export type JournalImage = {
 	id: string;
 	timeframe: JournalTimeframe;

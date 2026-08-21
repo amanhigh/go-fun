@@ -77,8 +77,8 @@ var _ = Describe("JournalHandler Integration - GET Tests", func() {
 				Images: []barkat.Image{
 					{Timeframe: "WK", CreatedAt: time.Date(2023, time.June, 1, 10, 0, 0, 0, time.UTC), ImageType: "SET"},
 					{Timeframe: "DL", CreatedAt: time.Date(2023, time.June, 2, 10, 0, 0, 0, time.UTC), ImageType: "SET"},
-					{Timeframe: "MN", CreatedAt: time.Date(2023, time.June, 2, 10, 0, 0, 0, time.UTC), ImageType: "SET"},
-					{Timeframe: "TMN", CreatedAt: time.Date(2023, time.June, 2, 10, 0, 0, 0, time.UTC), ImageType: "SET"},
+					{Timeframe: "MN", CreatedAt: time.Date(2023, time.June, 2, 10, 0, 0, 0, time.UTC), ImageType: "RESULT"},
+					{Timeframe: "TMN", CreatedAt: time.Date(2023, time.June, 2, 10, 0, 0, 0, time.UTC), ImageType: "INFO"},
 					{Timeframe: "SMN", CreatedAt: time.Date(2023, time.June, 2, 10, 0, 0, 0, time.UTC), ImageType: "SET"},
 					{Timeframe: "YR", CreatedAt: time.Date(2023, time.June, 2, 10, 0, 0, 0, time.UTC), ImageType: "SET"},
 				},
@@ -126,6 +126,17 @@ var _ = Describe("JournalHandler Integration - GET Tests", func() {
 					Expect(response.Images[3].Timeframe).To(Equal("TMN"))
 					Expect(response.Images[4].Timeframe).To(Equal("MN"))
 					Expect(response.Images[5].Timeframe).To(Equal("DL"))
+				})
+
+				It("should expose nested detail image_type values in returned order", func() {
+					response = decodeJournal(w, http.StatusOK)
+
+					Expect(response.Images[0].ImageType).To(Equal("SET"))
+					Expect(response.Images[1].ImageType).To(Equal("SET"))
+					Expect(response.Images[2].ImageType).To(Equal("SET"))
+					Expect(response.Images[3].ImageType).To(Equal("INFO"))
+					Expect(response.Images[4].ImageType).To(Equal("RESULT"))
+					Expect(response.Images[5].ImageType).To(Equal("SET"))
 				})
 			})
 		})
