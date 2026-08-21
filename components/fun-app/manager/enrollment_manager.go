@@ -46,7 +46,7 @@ func NewEnrollmentManager(
 		StudentManager:       studentManager,
 		EnrollmentRepository: enrollmentRepository,
 		EnrollmentPublisher:  enrollmentPublisher,
-		SeatManager:          seatManager
+		SeatManager:          seatManager,
 	}
 }
 
