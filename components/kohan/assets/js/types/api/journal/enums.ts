@@ -55,6 +55,13 @@ export const JournalNoteFormat = {
 } as const;
 export type JournalNoteFormat = (typeof JournalNoteFormat)[keyof typeof JournalNoteFormat];
 
+export const JournalImageType = {
+	SET: 'SET',
+	INFO: 'INFO',
+	RESULT: 'RESULT',
+} as const;
+export type JournalImageType = (typeof JournalImageType)[keyof typeof JournalImageType];
+
 export const JournalSortBy = {
 	CREATED_AT: 'created_at',
 	TICKER: 'ticker',

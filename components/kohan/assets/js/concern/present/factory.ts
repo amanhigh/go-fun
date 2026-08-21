@@ -5,6 +5,7 @@ import { NewTimeframePresenter } from './timeframe';
 import { NewTagPresenter } from './tag';
 import { NewDatePresenter } from './date';
 import { NewReviewPresenter } from './review';
+import { NewImageTypePresenter } from './image_type';
 
 export function NewPresentationConcern(): PresentationConcern {
 	return {
@@ -14,5 +15,6 @@ export function NewPresentationConcern(): PresentationConcern {
 		tag: NewTagPresenter(),
 		date: NewDatePresenter(),
 		review: NewReviewPresenter(),
+		imageType: NewImageTypePresenter(),
 	};
 }

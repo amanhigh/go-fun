@@ -143,6 +143,18 @@
     @apply border-slate-400 bg-slate-200 text-slate-950;
   }
 
+  .journal-image-type-set {
+    @apply border-indigo-300 bg-indigo-50 text-indigo-800;
+  }
+
+  .journal-image-type-info {
+    @apply border-sky-300 bg-sky-50 text-sky-800;
+  }
+
+  .journal-image-type-result {
+    @apply border-emerald-300 bg-emerald-50 text-emerald-800;
+  }
+
   /* --- Journal List Filter Controls --- */
 
   /* --- Date Presets --- */

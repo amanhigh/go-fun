@@ -157,6 +157,11 @@ var _ = Describe("Journal Detail Page Tests", func() {
 			Expect(html).To(ContainSubstring(`x-text="preview.counter()"`))
 		})
 
+		It("should render an image-type chip alongside the timeframe chip", func() {
+			Expect(html).To(ContainSubstring(`x-bind:class="present.imageType.spec(preview.imageType()).class"`))
+			Expect(html).To(ContainSubstring(`x-text="preview.imageType()"`))
+		})
+
 		It("should render keyboard navigation bindings for preview mode", func() {
 			Expect(html).To(ContainSubstring(`x-on:keydown.escape.window="preview.close()"`))
 			Expect(html).To(ContainSubstring(`x-on:keydown.arrow-left.window="preview.prev()"`))
@@ -184,6 +189,8 @@ var _ = Describe("Journal Detail Page Tests", func() {
 			Expect(html).To(ContainSubstring(`text-left`))
 			Expect(html).To(ContainSubstring(`x-bind:class="present.timeframe.spec(image.timeframe).class"`))
 			Expect(html).To(ContainSubstring(`x-text="image.timeframe"`))
+			Expect(html).To(ContainSubstring(`x-bind:class="present.imageType.spec(image.image_type).class"`))
+			Expect(html).To(ContainSubstring(`x-text="present.imageType.label(image.image_type)"`))
 			Expect(html).To(ContainSubstring(`x-on:click="preview.open(index)"`))
 			Expect(html).To(ContainSubstring(`x-bind:title="image.file_name"`))
 			Expect(html).To(ContainSubstring(`x-bind:src="image.src"`))

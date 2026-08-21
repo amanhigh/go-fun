@@ -1,5 +1,5 @@
 import type { JournalDetail, JournalImage } from '../api/journal/response';
-import type { JournalTimeframe } from '../api/journal/enums';
+import type { JournalTimeframe, JournalImageType } from '../api/journal/enums';
 import type { Loader } from '../../lib/loader';
 import type { Submitter } from '../../lib/submitter';
 import type { JournalNoteClient } from '../../client/journal_note';
@@ -49,6 +49,7 @@ export type JournalImagesConcern = {
 export type PreviewConcern = {
 	index: number;
 	timeframe(): JournalTimeframe | '';
+	imageType(): JournalImageType | '';
 	src(): string;
 	label(): string;
 	fileName(): string;

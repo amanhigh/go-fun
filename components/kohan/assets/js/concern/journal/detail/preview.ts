@@ -13,6 +13,7 @@ export function NewPreviewConcern(pg: JournalDetailPageProvider) {
 		close() { this.index = -1; },
 
 		timeframe() { return currentImage(pg, this.index)?.timeframe ?? ''; },
+		imageType() { return currentImage(pg, this.index)?.image_type ?? ''; },
 		src() { return currentImage(pg, this.index)?.src ?? ''; },
 		label() { return currentImage(pg, this.index)?.label ?? ''; },
 		fileName() { return currentImage(pg, this.index)?.file_name ?? ''; },

@@ -1,8 +1,19 @@
 import type { JournalImage } from '../../../types/api/journal/response';
-import type { JournalTimeframe } from '../../../types/api/journal/enums';
+import type { JournalTimeframe, JournalImageType } from '../../../types/api/journal/enums';
 import type { JournalImageView, JournalDetailPageProvider } from '../../../types/journal/detail';
 
 const TIMEFRAME_RANK: Record<JournalTimeframe, number> = { YR: 600, SMN: 500, TMN: 400, MN: 300, WK: 200, DL: 100 };
+
+// Primary sort rank: SET first, INFO second, RESULT third. Unknown runtime
+// values fall back to a rank after all known values without crashing. A large
+// finite rank (not Infinity) keeps unknown-vs-unknown comparisons stable so the
+// secondary date/timeframe/filename order is preserved instead of yielding NaN.
+const IMAGE_TYPE_RANK: Partial<Record<JournalImageType, number>> = { SET: 0, INFO: 1, RESULT: 2 };
+const UNKNOWN_IMAGE_TYPE_RANK = Number.MAX_SAFE_INTEGER;
+
+function imageTypeRank(type: JournalImageType): number {
+	return IMAGE_TYPE_RANK[type] ?? UNKNOWN_IMAGE_TYPE_RANK;
+}
 
 function toImageView(image: JournalImage): JournalImageView {
 	return {
@@ -27,10 +38,13 @@ function imageSrc(image: JournalImage): string {
 }
 
 function imageLabel(image: JournalImage): string {
-	return image.timeframe ? `${image.timeframe} • ${image.file_name}` : image.file_name;
+	const base = image.timeframe ? `${image.timeframe} • ${image.file_name}` : image.file_name;
+	return `${image.image_type} • ${base}`;
 }
 
 function compareImages(a: JournalImage, b: JournalImage): number {
+	const typeDiff = imageTypeRank(a.image_type) - imageTypeRank(b.image_type);
+	if (typeDiff !== 0) return typeDiff;
 	const aDate = a.created_at ? new Date(a.created_at).getTime() : Number.POSITIVE_INFINITY;
 	const bDate = b.created_at ? new Date(b.created_at).getTime() : Number.POSITIVE_INFINITY;
 	if (aDate !== bDate) return aDate - bDate;
