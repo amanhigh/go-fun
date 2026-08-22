@@ -157,6 +157,11 @@ var _ = Describe("Journal Detail Page Tests", func() {
 			Expect(html).To(ContainSubstring(`x-text="preview.counter()"`))
 		})
 
+		It("should render an image-type chip alongside the timeframe chip", func() {
+			Expect(html).To(ContainSubstring(`x-bind:class="present.imageType.spec(preview.imageType()).class"`))
+			Expect(html).To(ContainSubstring(`x-text="preview.imageType()"`))
+		})
+
 		It("should render keyboard navigation bindings for preview mode", func() {
 			Expect(html).To(ContainSubstring(`x-on:keydown.escape.window="preview.close()"`))
 			Expect(html).To(ContainSubstring(`x-on:keydown.arrow-left.window="preview.prev()"`))
@@ -167,6 +172,14 @@ var _ = Describe("Journal Detail Page Tests", func() {
 			Expect(html).To(ContainSubstring(`x-on:click.stop="preview.wrapNext()"`))
 			Expect(html).To(ContainSubstring(`x-on:contextmenu.prevent.stop="preview.wrapPrev()"`))
 			Expect(html).To(ContainSubstring(`aria-label="Preview Image Navigation Overlay"`))
+		})
+
+		It("should use a horizontal badge-row and remaining-height image sizing", func() {
+			// Dedicated horizontal badge-row for the timeframe/image-type chips
+			Expect(html).To(ContainSubstring(`class="flex items-center gap-2"`))
+			// Image should size to the remaining modal height, not a fixed viewport height
+			Expect(html).To(ContainSubstring(`max-h-full max-w-full`))
+			Expect(html).ToNot(ContainSubstring(`max-h-[82vh]`))
 		})
 	})
 
@@ -184,6 +197,8 @@ var _ = Describe("Journal Detail Page Tests", func() {
 			Expect(html).To(ContainSubstring(`text-left`))
 			Expect(html).To(ContainSubstring(`x-bind:class="present.timeframe.spec(image.timeframe).class"`))
 			Expect(html).To(ContainSubstring(`x-text="image.timeframe"`))
+			Expect(html).To(ContainSubstring(`x-bind:class="present.imageType.spec(image.image_type).class"`))
+			Expect(html).To(ContainSubstring(`x-text="present.imageType.label(image.image_type)"`))
 			Expect(html).To(ContainSubstring(`x-on:click="preview.open(index)"`))
 			Expect(html).To(ContainSubstring(`x-bind:title="image.file_name"`))
 			Expect(html).To(ContainSubstring(`x-bind:src="image.src"`))

@@ -28,7 +28,8 @@ templ JournalDetailImages() {
 
 templ JournalDetailImageTile() {
 	<div class="space-y-2">
-		<div class="flex items-center px-1">
+		<div class="flex items-center gap-2 px-1">
+			@badge.Badge(badge.Props{Variant: badge.VariantSecondary, Class: "border text-sm font-semibold shadow-sm", Attributes: templ.Attributes{"x-bind:class": "present.imageType.spec(image.image_type).class", "x-text": "present.imageType.label(image.image_type)"}}) {}
 			@badge.Badge(badge.Props{Variant: badge.VariantSecondary, Class: "border text-sm font-semibold shadow-sm", Attributes: templ.Attributes{"x-bind:class": "present.timeframe.spec(image.timeframe).class", "x-text": "image.timeframe"}}) {}
 		</div>
 		@button.Button(button.Props{

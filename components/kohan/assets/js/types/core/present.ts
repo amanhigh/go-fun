@@ -29,4 +29,5 @@ export interface PresentationConcern {
 	tag: TagPresenter;
 	date: DatePresenter;
 	review: Presenter;
+	imageType: Presenter;
 }
