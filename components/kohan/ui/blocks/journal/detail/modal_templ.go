@@ -143,7 +143,7 @@ func JournalImageModal(props JournalImageModalProps) templ.Component {
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
-		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 8, "\"></div><div class=\"relative z-10 flex w-full items-center justify-end gap-4\"><div class=\"flex flex-col items-center gap-2\">")
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 8, "\"></div><div class=\"relative z-10 flex w-full items-center justify-end gap-4\"><div class=\"flex flex-col items-center gap-2\"><div class=\"flex items-center gap-2\">")
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
@@ -155,14 +155,14 @@ func JournalImageModal(props JournalImageModalProps) templ.Component {
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
-		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 9, "<div class=\"text-sm font-medium text-white/60\" x-text=\"")
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 9, "</div><div class=\"text-sm font-medium text-white/60\" x-text=\"")
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
 		var templ_7745c5c3_Var9 string
 		templ_7745c5c3_Var9, templ_7745c5c3_Err = templ.JoinStringErrs(props.CounterExpr)
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `ui/blocks/journal/detail/modal.templ`, Line: 34, Col: 77}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `ui/blocks/journal/detail/modal.templ`, Line: 36, Col: 77}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var9))
 		if templ_7745c5c3_Err != nil {
@@ -208,20 +208,20 @@ func JournalImageModal(props JournalImageModalProps) templ.Component {
 		var templ_7745c5c3_Var11 string
 		templ_7745c5c3_Var11, templ_7745c5c3_Err = templ.JoinStringErrs(props.FilenameExpr)
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `ui/blocks/journal/detail/modal.templ`, Line: 48, Col: 121}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `ui/blocks/journal/detail/modal.templ`, Line: 50, Col: 121}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var11))
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
-		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 13, "\"></div></div><div class=\"mt-4 flex flex-1 items-center justify-center\"><div class=\"relative w-full\"><img class=\"max-h-[82vh] w-full rounded-xl border border-white/20 object-contain\" x-bind:src=\"")
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 13, "\"></div></div><div class=\"mt-4 flex min-h-0 flex-1 items-center justify-center\"><div class=\"relative flex h-full w-full items-center justify-center\"><img class=\"max-h-full max-w-full rounded-xl border border-white/20 object-contain\" x-bind:src=\"")
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
 		var templ_7745c5c3_Var12 string
 		templ_7745c5c3_Var12, templ_7745c5c3_Err = templ.JoinStringErrs(props.SrcExpr)
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `ui/blocks/journal/detail/modal.templ`, Line: 52, Col: 115}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `ui/blocks/journal/detail/modal.templ`, Line: 54, Col: 117}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var12))
 		if templ_7745c5c3_Err != nil {
@@ -234,7 +234,7 @@ func JournalImageModal(props JournalImageModalProps) templ.Component {
 		var templ_7745c5c3_Var13 string
 		templ_7745c5c3_Var13, templ_7745c5c3_Err = templ.JoinStringErrs(props.AltExpr)
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `ui/blocks/journal/detail/modal.templ`, Line: 52, Col: 144}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `ui/blocks/journal/detail/modal.templ`, Line: 54, Col: 146}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var13))
 		if templ_7745c5c3_Err != nil {
