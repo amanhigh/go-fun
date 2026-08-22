@@ -1,3 +1,2 @@
-# FIXME: Exclude _templ.go files - https://app.codecov.io/gh/amanhigh/go-fun/config/yaml 
 ignore:
   - "**/*_templ.go"
