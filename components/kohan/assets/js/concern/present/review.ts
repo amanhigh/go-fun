@@ -10,7 +10,7 @@ class ReviewPresenterImpl implements Presenter<DisplayValue> {
 		if (!value) {
 			return { icon: '⏳', text: 'Pending Review', class: '' };
 		}
-		return { icon: '✅', text: formatDate(value), class: '' };
+		return { icon: '✅', text: `Reviewed · ${formatDate(value)}`, class: '' };
 	}
 
 	label(value: DisplayValue): string {

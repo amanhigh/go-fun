@@ -1,8 +1,10 @@
 package detail
 
 import (
+	"github.com/amanhigh/go-fun/common/ui/layout"
 	"github.com/amanhigh/go-fun/components/kohan/ui/components"
 	journalcommon "github.com/amanhigh/go-fun/components/kohan/ui/blocks/journal/common"
+	"github.com/templui/templui/components/badge"
 	"github.com/templui/templui/components/card"
 	"github.com/templui/templui/components/icon"
 )
@@ -12,33 +14,54 @@ import (
 // ============================================================
 
 templ JournalDetailHeader() {
-	@card.Card(card.Props{Class: "overflow-hidden rounded-3xl border border-violet-200/70 bg-gradient-to-br from-white via-violet-50/70 to-sky-50/80 shadow-sm"}) {
+	@card.Card(card.Props{Class: "journal-detail-header overflow-hidden rounded-3xl border border-violet-200/70 bg-gradient-to-br from-white via-violet-50/70 to-sky-50/80 shadow-sm"}) {
 		@card.Content(card.ContentProps{Class: "p-6"}) {
 			<div class="space-y-3">
-				<div class="flex items-start justify-between gap-3">
-					<div class="text-xs font-mono text-muted-foreground" x-text="'ID: ' + journal.detail.id"></div>
-					@components.DeleteButton(components.DeleteButtonProps{
-						Label:        "Delete Journal",
-						DisabledExpr: "header.submitter.isBusy()",
-						OnClickExpr:  "header.deleteJournal()",
-						Class:        "h-9 w-9",
-					})
-					@components.Submitter(components.SubmitterProps{
-						Submitter: "header.submitter",
-					})
+				<div class="grid items-center gap-4 lg:grid-cols-[minmax(0,1fr)_auto_minmax(0,1fr)]">
+					<div class="flex flex-col items-start gap-2 min-w-0">
+						<div class="text-[11px] font-semibold uppercase tracking-[0.24em] text-muted-foreground/80">Kohan Portal</div>
+						@layout.PageBreadcrumb("Journal")
+					</div>
+					<div class="flex flex-col items-center gap-2">
+						<h2 class="text-3xl font-bold tracking-tight text-foreground" x-text="journal.detail.ticker"></h2>
+						@badge.Badge(badge.Props{Variant: badge.VariantSecondary, Class: "border-violet-300 bg-violet-100 text-violet-700 shadow-sm"}) {
+							Journal ID:
+							<span x-text="journal.detail.id"></span>
+						}
+					</div>
+					<div class="flex flex-col items-end gap-2">
+						@JournalDetailCreatedAt()
+						<div class="flex items-center gap-2">
+							@components.Submitter(components.SubmitterProps{
+								Submitter: "header.submitter",
+							})
+							@components.DeleteButton(components.DeleteButtonProps{
+								Label:        "Delete Journal",
+								DisabledExpr: "header.submitter.isBusy()",
+								OnClickExpr:  "header.deleteJournal()",
+								Class:        "h-9 w-9",
+							})
+						</div>
+					</div>
 				</div>
-				<h2 class="text-3xl font-bold tracking-tight text-foreground" x-text="journal.detail.ticker"></h2>
-				<div class="flex justify-between gap-6">
+				<div class="journal-detail-header-meta flex flex-wrap items-center gap-x-6 gap-y-3">
 					<div class="flex flex-wrap items-center gap-2.5">
 						@journalcommon.TypeBadge(journalcommon.TypeBadgeProps{TypeExpr: "journal.detail.type", Class: "rounded-full px-3 py-1 text-sm font-semibold shadow-sm"})
 						@journalcommon.StatusBadge(journalcommon.StatusBadgeProps{StatusExpr: "journal.detail.status", Class: "rounded-full px-3 py-1 text-sm font-semibold shadow-sm"})
 						@JournalDetailTopTimeframeChip()
 					</div>
-					@JournalDetailReviewDates()
-				</div>
-				<div class="flex justify-between gap-6" x-show="sidebar.tags.all().length">
-					@JournalDetailReasonTags()
-					@JournalDetailDirectionalTags()
+					<div class="flex flex-wrap items-center gap-2" x-show="sidebar.tags.all().length">
+						<span class="text-xs font-semibold uppercase tracking-wide text-muted-foreground">Tags</span>
+						@JournalDetailReasonTags()
+						@JournalDetailDirectionalTags()
+					</div>
+					<div class="flex flex-col items-end gap-2 lg:ml-auto">
+						<div class="flex items-center gap-2">
+							@JournalDetailPendingDate()
+							@JournalDetailReviewDate()
+						</div>
+						@journalDetailReviewCard()
+					</div>
 				</div>
 			</div>
 		}
@@ -53,19 +76,11 @@ templ JournalDetailCreatedAt() {
 }
 
 templ JournalDetailReviewDate() {
-	@components.FilterChip(components.FilterChipProps{ShowExpr: "journal.detail.reviewed_at", TextExpr: "present.review.label(journal.detail.reviewed_at)", Tone: components.ToneGreen, Class: "rounded-full px-2.5 py-0.5 text-xs font-medium"})
+	@components.FilterChip(components.FilterChipProps{ShowExpr: "journal.detail.reviewed_at", TextExpr: "present.review.label(journal.detail.reviewed_at)", Tone: components.ToneGreen, Class: "rounded-full px-3 py-1 text-sm font-semibold shadow-sm"})
 }
 
 templ JournalDetailPendingDate() {
-	@components.FilterChip(components.FilterChipProps{ShowExpr: "!journal.detail.reviewed_at", TextExpr: "present.review.label(journal.detail.reviewed_at)", Tone: components.ToneAmber, Class: "rounded-full px-2.5 py-0.5 text-xs font-medium"})
-}
-
-templ JournalDetailReviewDates() {
-	<div class="flex flex-col items-end gap-1">
-		@JournalDetailCreatedAt()
-		@JournalDetailPendingDate()
-		@JournalDetailReviewDate()
-	</div>
+	@components.FilterChip(components.FilterChipProps{ShowExpr: "!journal.detail.reviewed_at", TextExpr: "present.review.label(journal.detail.reviewed_at)", Tone: components.ToneAmber, Class: "rounded-full px-3 py-1 text-sm font-semibold shadow-sm"})
 }
 
 templ JournalDetailTopTimeframeChip() {
@@ -89,4 +104,29 @@ templ JournalDetailDirectionalTags() {
 			@components.FilterChip(components.FilterChipProps{Tone: components.ToneSlate, Class: "rounded-full text-xs", TextExpr: "present.tag.label(tag)"})
 		</template>
 	</div>
+}
+
+templ journalDetailReviewCard() {
+	<div>
+		@journalDetailActionBar()
+		@components.Submitter(components.SubmitterProps{Submitter: "sidebar.reviewBar.submitter"})
+	</div>
+}
+
+templ journalDetailActionBar() {
+	@components.QuickBar(components.QuickBarProps{
+		Label:    "Review",
+		IconName: "clipboard-check",
+		Theme:    components.ToneGreen,
+		Class:    "rounded-2xl border border-border bg-muted/30 px-4 py-3",
+	}) {
+		<template x-for="action in sidebar.reviewBar.actions()" x-bind:key="action.id">
+			@components.QuickAction(components.QuickActionProps{
+				OnClickExpr:  "action.apply()",
+				TextExpr:     "sidebar.reviewBar.submitter.isBusy() ? 'Saving...' : action.display.text",
+				ClassExpr:    "action.display.class",
+				DisabledExpr: "sidebar.reviewBar.submitter.isBusy()",
+			})
+		</template>
+	}
 }
