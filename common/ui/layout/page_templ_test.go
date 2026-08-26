@@ -50,12 +50,33 @@ var _ = Describe("Page Template Tests", func() {
 			Expect(doc.Find("section").First().AttrOr("class", "")).To(ContainSubstring("flex w-full flex-col gap-8"))
 			Expect(html).To(ContainSubstring("rounded-[2rem]"))
 			Expect(html).To(ContainSubstring("shadow-[0_24px_80px_-48px_rgba(15,23,42,0.85)]"))
+
+			customProps := props
+			customProps.HeroContent = templ.ComponentFunc(func(_ context.Context, w io.Writer) error {
+				_, err := io.WriteString(w, `<div id="custom-hero-content">Custom hero</div>`)
+				return err
+			})
+			customProps.HeroClass = "xl:max-w-none"
+			customHTML, customDoc := renderPage(ctx, customProps)
+
+			// Standard root remains.
+			Expect(customDoc.Find("section").First().AttrOr("class", "")).To(ContainSubstring("flex w-full flex-col gap-8"))
+			// Custom hero marker is present.
+			Expect(customHTML).To(ContainSubstring(`<div id="custom-hero-content">Custom hero</div>`))
+			// Breadcrumb and eyebrow remain.
+			Expect(customHTML).To(ContainSubstring("🏠 Home"))
+			Expect(customHTML).To(ContainSubstring("Kohan Portal"))
+			// Default heading is absent from the custom render.
+			Expect(customHTML).ToNot(ContainSubstring("Journal Detail"))
+			// Custom hero class is present.
+			Expect(customHTML).To(ContainSubstring("xl:max-w-none"))
 		})
 
 		It("keeps the hero card compact and left aligned", func() {
 			Expect(html).To(ContainSubstring("justify-start"))
 			Expect(html).To(ContainSubstring("xl:w-1/2"))
 		})
+
 	})
 
 	Context("Page root attributes", func() {
