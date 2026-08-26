@@ -7,47 +7,55 @@ import (
 	"github.com/templui/templui/components/tooltip"
 )
 
+// documentHead renders the shared <head> markup (metadata, stylesheet, and
+// required scripts) used by Base.
+templ documentHead(title string) {
+	<meta charset="UTF-8"/>
+	<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+	<title>{ title }</title>
+	<!-- Consolidated CSS (Tailwind + Custom) -->
+	<link rel="stylesheet" href="/assets/css/app.css"/>
+	<!-- Custom JS must load BEFORE Alpine.js to register alpine:init listener -->
+	<script defer src="/assets/js/app.js"></script>
+	<!-- Alpine.js must load before templUI scripts so x-data is ready first -->
+	<script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
+	@dialog.Script()
+	@selectbox.Script()
+	@toast.Script()
+	@tooltip.Script()
+}
+
+// documentBody renders the shared <body> shell: the flex column wrapper, the
+// main content area, and the footer.
+templ documentBody() {
+	<div class="min-h-screen flex flex-col">
+		<!-- Main Content -->
+		<main class="flex-1 w-full px-4 py-8 xl:px-8 2xl:px-10">
+			{ children... }
+		</main>
+		<!-- Footer -->
+		<footer class="border-t border-border bg-card mt-auto">
+			<div class="container mx-auto px-4 py-4">
+				<p class="text-sm text-muted-foreground text-center">
+					Built with TemplUI & Tailwind CSS, powered by AlpineJS
+				</p>
+			</div>
+		</footer>
+	</div>
+}
+
+// Base renders the compact document shell: title, main content area, and
+// footer, without a global visual header.
 templ Base(title string) {
 	<!DOCTYPE html>
 	<html lang="en" class="h-full">
 		<head>
-			<meta charset="UTF-8"/>
-			<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-			<title>{ title }</title>
-			<!-- Consolidated CSS (Tailwind + Custom) -->
-			<link rel="stylesheet" href="/assets/css/app.css"/>
-			<!-- Custom JS must load BEFORE Alpine.js to register alpine:init listener -->
-			<script defer src="/assets/js/app.js"></script>
-			<!-- Alpine.js must load before templUI scripts so x-data is ready first -->
-			<script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
-			@dialog.Script()
-			@selectbox.Script()
-			@toast.Script()
-			@tooltip.Script()
+			@documentHead(title)
 		</head>
 		<body class="h-full bg-background text-foreground">
-			<div class="min-h-screen flex flex-col">
-				<!-- Header -->
-				<header class="border-b border-border bg-card">
-					<div class="container mx-auto px-4 py-4">
-						<h1 class="text-xl font-semibold text-foreground">{ title }</h1>
-					</div>
-				</header>
-				
-				<!-- Main Content -->
-				<main class="flex-1 w-full px-4 py-8 xl:px-8 2xl:px-10">
-					{ children... }
-				</main>
-				
-				<!-- Footer -->
-				<footer class="border-t border-border bg-card mt-auto">
-					<div class="container mx-auto px-4 py-4">
-						<p class="text-sm text-muted-foreground text-center">
-							Built with TemplUI & Tailwind CSS, powered by AlpineJS
-						</p>
-					</div>
-				</footer>
-			</div>
+			@documentBody() {
+				{ children... }
+			}
 		</body>
 	</html>
 }
