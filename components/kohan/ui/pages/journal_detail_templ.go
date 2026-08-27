@@ -105,7 +105,6 @@ func JournalDetailPage(journalID string) templ.Component {
 				CurrentPage: "Journal",
 				Eyebrow:     "Kohan Portal",
 				HeroContent: detailblocks.JournalDetailHeader(),
-				HeroClass:   "xl:w-full",
 				Attributes: templ.Attributes{
 					"x-data": `journalDetailPage("` + journalID + `")`,
 					"x-init": "init()",
