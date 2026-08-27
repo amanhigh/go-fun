@@ -12,9 +12,7 @@ templ JournalDetailPage(journalID string) {
 		@layout.Page(layout.PageProps{
 			CurrentPage: "Journal",
 			Eyebrow:     "Kohan Portal",
-			Heading:     "Journal Detail",
-			Description: "View complete journal entry with all associated data.",
-			Tags:        []string{"Public", "Read-only", "Detail"},
+			HeroContent: detailblocks.JournalDetailHeader(),
 			Attributes: templ.Attributes{
 				"x-data": `journalDetailPage("` + journalID + `")`,
 				"x-init": "init()",
@@ -40,7 +38,6 @@ templ journalDetailLoadedContent() {
 	<div class="space-y-6">
 		<div class="grid gap-6 xl:grid-cols-[minmax(0,7fr)_minmax(320px,3fr)] xl:items-start">
 			<div class="space-y-6 min-w-0">
-				@detailblocks.JournalDetailHeader()
 				@detailblocks.JournalDetailImages()
 				@detailblocks.JournalDetailNotes()
 			</div>

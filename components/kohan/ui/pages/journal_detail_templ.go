@@ -104,9 +104,7 @@ func JournalDetailPage(journalID string) templ.Component {
 			templ_7745c5c3_Err = layout.Page(layout.PageProps{
 				CurrentPage: "Journal",
 				Eyebrow:     "Kohan Portal",
-				Heading:     "Journal Detail",
-				Description: "View complete journal entry with all associated data.",
-				Tags:        []string{"Public", "Read-only", "Detail"},
+				HeroContent: detailblocks.JournalDetailHeader(),
 				Attributes: templ.Attributes{
 					"x-data": `journalDetailPage("` + journalID + `")`,
 					"x-init": "init()",
@@ -148,10 +146,6 @@ func journalDetailLoadedContent() templ.Component {
 		}
 		ctx = templ.ClearChildren(ctx)
 		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 3, "<div class=\"space-y-6\"><div class=\"grid gap-6 xl:grid-cols-[minmax(0,7fr)_minmax(320px,3fr)] xl:items-start\"><div class=\"space-y-6 min-w-0\">")
-		if templ_7745c5c3_Err != nil {
-			return templ_7745c5c3_Err
-		}
-		templ_7745c5c3_Err = detailblocks.JournalDetailHeader().Render(ctx, templ_7745c5c3_Buffer)
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}

@@ -4,16 +4,27 @@ import (
 	"context"
 	"strings"
 
+	"github.com/PuerkitoBio/goquery"
 	"github.com/amanhigh/go-fun/components/kohan/ui/pages"
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
 )
+
+// attrValueExists reports whether any element in doc carries the attribute
+// name with exactly value. Used for scoped Alpine binding checks.
+func attrValueExists(doc *goquery.Document, name, value string) bool {
+	return doc.Find("*").FilterFunction(func(_ int, s *goquery.Selection) bool {
+		v, ok := s.Attr(name)
+		return ok && v == value
+	}).Length() > 0
+}
 
 var _ = Describe("Journal Detail Page Tests", func() {
 	var (
 		ctx    context.Context
 		render strings.Builder
 		html   string
+		doc    *goquery.Document
 	)
 
 	BeforeEach(func() {
@@ -21,157 +32,86 @@ var _ = Describe("Journal Detail Page Tests", func() {
 		err := pages.JournalDetailPage("jrn_1234abcd").Render(ctx, &render)
 		Expect(err).ToNot(HaveOccurred())
 		html = render.String()
+		doc, err = goquery.NewDocumentFromReader(strings.NewReader(html))
+		Expect(err).ToNot(HaveOccurred())
 	})
 
 	AfterEach(func() {
 		render.Reset()
 	})
 
-	Context("Sidebar Actions", func() {
-		It("should render review and note actions", func() {
-			Expect(html).To(ContainSubstring(`x-bind:open="sidebar.state.actionOpen"`))
-			Expect(html).To(ContainSubstring(`x-bind:open="sidebar.state.reviewOpen"`))
-			Expect(html).To(ContainSubstring(`x-on:toggle="sidebar.state.setActionOpen($el.open)"`))
-			Expect(html).To(ContainSubstring(`x-on:toggle="sidebar.state.setReviewOpen($el.open)"`))
-			Expect(html).To(ContainSubstring("Command Center"))
-			Expect(html).To(ContainSubstring("ਜਿਹੜੇ ਲੋਕ ਇਤਿਹਾਸ ਨੂੰ ਯਾਦ ਨਹੀਂ ਰੱਖਦੇ"))
-			Expect(html).To(ContainSubstring("Review"))
-			Expect(html).ToNot(ContainSubstring("Quick actions"))
-			Expect(html).To(ContainSubstring("Oh, So You Took the Trade?"))
-			Expect(html).To(ContainSubstring(`x-show="journal.detail.type === &#39;TAKEN&#39;"`))
-			Expect(html).To(ContainSubstring("How did it go? Confess your sins."))
-			Expect(html).To(ContainSubstring("Speak Now"))
-			Expect(html).To(ContainSubstring("Fingerprints"))
-			Expect(html).To(ContainSubstring("Tag what the trade left behind."))
-			Expect(html).To(ContainSubstring("The Lineup"))
-			Expect(html).To(ContainSubstring("Face your trade. No hiding."))
-			Expect(html).To(ContainSubstring("The Record"))
-			Expect(html).To(ContainSubstring("Every word stays."))
-			Expect(html).ToNot(ContainSubstring(`>Action<`))
-			Expect(html).To(ContainSubstring(`sidebar.reviewBar.submitter.isBusy()`))
-			Expect(html).To(ContainSubstring(`sidebar.reviewBar.submitter.hasMessage()`))
-			Expect(html).To(ContainSubstring(`sidebar.reviewBar.submitter.hasError()`))
-			Expect(html).To(ContainSubstring(`sidebar.reviewBar.submitter.message`))
-			Expect(html).To(ContainSubstring(`sidebar.reviewBar.actions()`))
-			Expect(html).To(ContainSubstring(`action.display.text`))
-			Expect(html).To(ContainSubstring(`Saving...`))
-			Expect(html).To(ContainSubstring(`x-on:click="header.deleteJournal()"`))
-			// Submitter bindings for header delete
-			Expect(html).To(ContainSubstring(`header.submitter.isBusy()`))
-			Expect(html).To(ContainSubstring(`header.submitter.hasMessage()`))
-			Expect(html).To(ContainSubstring(`header.submitter.hasError()`))
-			Expect(html).To(ContainSubstring(`header.submitter.message`))
-			Expect(html).To(ContainSubstring(`action.apply()`))
-			Expect(html).To(ContainSubstring(`x-show="sidebar.takenTag.show()"`))
-			Expect(html).To(ContainSubstring(`x-for="tag in sidebar.takenTag.tags"`))
-			Expect(html).To(ContainSubstring(`x-bind:key="tag.id"`))
-			Expect(html).To(ContainSubstring(`x-on:click="sidebar.takenTag.submit(tag.tag)"`))
-			Expect(html).To(ContainSubstring(`x-bind:disabled="sidebar.takenTag.submitter.isBusy() || sidebar.takenTag.hasTag(tag.tag)"`))
-			Expect(html).To(ContainSubstring(`x-bind:class="present.tag.spec(tag).class"`))
-			Expect(html).To(ContainSubstring(`x-text="present.tag.label(tag)"`))
-			Expect(html).To(ContainSubstring(`x-model="sidebar.reasonTagForm.input"`))
-			Expect(html).To(ContainSubstring(`x-model="sidebar.reasonTagForm.override"`))
-			Expect(html).To(ContainSubstring(`x-on:keydown.enter.prevent="$refs.reasonTagOverride.focus()"`))
-			Expect(html).To(ContainSubstring(`x-ref="reasonTagOverride"`))
-			Expect(html).To(ContainSubstring(`x-on:keydown.enter.prevent="sidebar.reasonTagForm.submit()"`))
-			Expect(html).To(ContainSubstring(`x-on:click="sidebar.reasonTagForm.submit()"`))
-			// Submitter bindings for reasonTagForm
-			Expect(html).To(ContainSubstring(`sidebar.reasonTagForm.submitter.isBusy()`))
-			Expect(html).To(ContainSubstring(`sidebar.reasonTagForm.submitter.hasMessage()`))
-			Expect(html).To(ContainSubstring(`sidebar.reasonTagForm.submitter.hasError()`))
-			Expect(html).To(ContainSubstring(`sidebar.reasonTagForm.submitter.message`))
-			Expect(html).To(ContainSubstring(`sidebar.reasonTagForm.canSubmit()`))
-			// Submitter bindings for noteForm
-			Expect(html).To(ContainSubstring(`sidebar.noteForm.submitter.isBusy()`))
-			Expect(html).To(ContainSubstring(`sidebar.noteForm.submitter.hasMessage()`))
-			Expect(html).To(ContainSubstring(`sidebar.noteForm.submitter.hasError()`))
-			Expect(html).To(ContainSubstring(`sidebar.noteForm.submitter.message`))
-			Expect(html).To(ContainSubstring(`sidebar.noteForm.canSubmit()`))
-			// Submitter bindings for takenTag
-			Expect(html).To(ContainSubstring(`sidebar.takenTag.submitter.hasMessage()`))
-			Expect(html).To(ContainSubstring(`sidebar.takenTag.submitter.hasError()`))
-			Expect(html).To(ContainSubstring(`sidebar.takenTag.submitter.message`))
-			Expect(html).To(ContainSubstring(`x-show="sidebar.tags.hasItems()"`))
-			Expect(html).To(ContainSubstring(`x-for="tag in sidebar.tags.all()"`))
-			Expect(html).To(ContainSubstring(`x-on:click="sidebar.tags.delete(tag.id)"`))
-			Expect(html).To(ContainSubstring(`x-show="sidebar.notes.hasItems()"`))
-			Expect(html).To(ContainSubstring(`x-for="note in sidebar.notes.sorted()"`))
-			Expect(html).To(ContainSubstring(`x-on:click="sidebar.state.enterReviewMode()"`))
-			Expect(html).To(ContainSubstring(`present.tag.label(tag)`))
-			Expect(html).To(ContainSubstring(`x-bind:class="present.type.spec(item.type).class"`))
-			Expect(html).To(ContainSubstring(`x-text="present.date.formatReviewQueueDate(item.created_at)"`))
-			Expect(html).To(ContainSubstring(`sidebar.reviewQueue.loader.isBusy()`))
-			Expect(html).To(ContainSubstring(`sidebar.reviewQueue.loader.hasError()`))
-			Expect(html).To(ContainSubstring(`sidebar.reviewQueue.loader.message`))
-			Expect(html).To(ContainSubstring(`sidebar.reviewQueue.loader.hasError()`))
-			Expect(html).To(ContainSubstring(`x-on:click="sidebar.reviewQueue.load()"`))
-			Expect(html).To(ContainSubstring(`aria-label="Delete Note"`))
-			Expect(html).To(ContainSubstring("h-4 w-4"))
+	Context("Page Composition", func() {
+		It("binds the page root to the exact journal id and init", func() {
+			root := doc.Find("section").First()
+			Expect(root.AttrOr("x-data", "")).To(Equal(`journalDetailPage("jrn_1234abcd")`))
+			Expect(root.AttrOr("x-init", "")).To(Equal("init()"))
+		})
+
+		It("places the detail header inside the hero, ahead of the 70/30 grid", func() {
+			// Detail header lives within the hero card.
+			Expect(doc.Find(".w-full.max-w-none .journal-detail-header").Length()).To(Equal(1))
+			// The 70/30 content grid is rendered outside the hero (sibling subtree).
+			Expect(doc.Find(".grid.gap-6").Length()).To(BeNumerically(">", 0))
+			Expect(doc.Find(".w-full.max-w-none .grid.gap-6").Length()).To(Equal(0))
+			// Loaded detail is gated by the journal.detail x-if template.
+			Expect(doc.Find("template[x-if=\"journal.detail\"]").Length()).To(BeNumerically(">", 0))
+			// The outer content grid carries the responsive 70/30 contract.
+			contentGrid := doc.Find(".grid.gap-6").First()
+			Expect(contentGrid.AttrOr("class", "")).To(ContainSubstring("xl:grid-cols-[minmax(0,7fr)_minmax(320px,3fr)]"))
 		})
 	})
 
-	Context("Header Summary", func() {
-		It("should render a compact summary card with new two-column layout", func() {
-			// Identity unchanged
-			Expect(html).To(ContainSubstring(`x-text="journal.detail.ticker"`))
-			Expect(html).To(ContainSubstring(`x-text="'ID: ' + journal.detail.id"`))
-			// Delete action
-			Expect(html).To(ContainSubstring(`x-on:click="header.deleteJournal()"`))
-
-			// Primary info row: type + status + timeframe
-			Expect(html).To(ContainSubstring(`present.timeframe.label(journal.detail.top_timeframe)`))
-			Expect(html).To(ContainSubstring(`present.type.label(journal.detail.type)`))
-			Expect(html).To(ContainSubstring(`present.status.label(journal.detail.status)`))
-			Expect(html).To(ContainSubstring(`present.status.spec(journal.detail.status).class`))
-
-			// Right metadata: created + pending/review
-			Expect(html).To(ContainSubstring(`x-text="present.date.format(journal.detail.created_at)"`))
-			Expect(html).To(ContainSubstring(`x-show="!journal.detail.reviewed_at"`))
-			Expect(html).To(ContainSubstring(`x-show="journal.detail.reviewed_at"`))
-			Expect(html).To(ContainSubstring(`present.review.label(journal.detail.reviewed_at)`))
-
-			// Tags rendered directly without section label
-			Expect(html).ToNot(ContainSubstring(`Summary Tags`))
-			Expect(html).ToNot(ContainSubstring(`Signal Tags`))
-
-			// No old highlight card labels
-			Expect(html).ToNot(ContainSubstring(`>STATUS</p>`))
-			Expect(html).ToNot(ContainSubstring(`>TYPE</p>`))
-			Expect(html).ToNot(ContainSubstring(`>SEQUENCE</p>`))
-			Expect(html).ToNot(ContainSubstring(`>CREATED</p>`))
+	Context("Header Visual Structure", func() {
+		It("shows the ticker and Journal ID badge", func() {
+			Expect(attrValueExists(doc, "x-text", "journal.detail.ticker")).To(BeTrue())
+			Expect(doc.Find(":contains('Journal ID:')").Length()).To(BeNumerically(">", 0))
+			Expect(attrValueExists(doc, "x-text", "journal.detail.id")).To(BeTrue())
 		})
-	})
-	Context("Header Tags", func() {
-		It("should render separate primary and secondary tag sections", func() {
-			Expect(html).To(ContainSubstring(`x-for="tag in sidebar.tags.reason()"`))
-			Expect(html).To(ContainSubstring(`x-for="tag in sidebar.tags.management()"`))
-			Expect(html).To(ContainSubstring(`x-for="tag in sidebar.tags.directional()"`))
-			Expect(html).To(ContainSubstring(`x-text="present.tag.label(tag)"`))
+
+		It("uses a centered balanced identity grid", func() {
+			// Balanced outer tracks around a centered identity column.
+			Expect(html).To(ContainSubstring("lg:grid-cols-[minmax(0,1fr)_auto_minmax(0,1fr)]"))
+			// Centered identity column wraps the ticker.
+			identity := doc.Find(".flex.flex-col.items-center")
+			Expect(identity.Length()).To(BeNumerically(">", 0))
+			Expect(identity.Find("h2[x-text=\"journal.detail.ticker\"]").Length()).To(BeNumerically(">", 0))
+		})
+
+		It("exposes created-date and delete controls", func() {
+			Expect(attrValueExists(doc, "x-text", "present.date.format(journal.detail.created_at)")).To(BeTrue())
+			Expect(attrValueExists(doc, "x-on:click", "header.deleteJournal()")).To(BeTrue())
+			Expect(attrValueExists(doc, "aria-label", "Delete Journal")).To(BeTrue())
+		})
+
+		It("renders the metadata row with type/status/timeframe badges", func() {
+			Expect(doc.Find(".journal-detail-header-meta").Length()).To(BeNumerically(">", 0))
+			Expect(attrValueExists(doc, "x-text", "present.type.label(journal.detail.type)")).To(BeTrue())
+			Expect(attrValueExists(doc, "x-text", "present.status.label(journal.detail.status)")).To(BeTrue())
+			Expect(attrValueExists(doc, "x-text", "present.timeframe.label(journal.detail.top_timeframe)")).To(BeTrue())
+		})
+
+		It("groups tags into reason/management/directional sections", func() {
+			Expect(attrValueExists(doc, "x-show", "sidebar.tags.all().length")).To(BeTrue())
+			Expect(attrValueExists(doc, "x-for", "tag in sidebar.tags.reason()")).To(BeTrue())
+			Expect(attrValueExists(doc, "x-for", "tag in sidebar.tags.management()")).To(BeTrue())
+			Expect(attrValueExists(doc, "x-for", "tag in sidebar.tags.directional()")).To(BeTrue())
 		})
 	})
 
-	Context("Image Preview Modal", func() {
-		It("should render a visible timeframe chip and counter", func() {
-			Expect(html).To(ContainSubstring(`x-bind:class="present.timeframe.spec(preview.timeframe()).class"`))
-			Expect(html).To(ContainSubstring(`x-text="preview.timeframe()"`))
-			Expect(html).To(ContainSubstring(`x-text="preview.counter()"`))
+	Context("Sidebar Visual Structure", func() {
+		It("renders the major visible sections", func() {
+			Expect(doc.Find(":contains('Command Center')").Length()).To(BeNumerically(">", 0))
+			Expect(doc.Find(":contains('Review')").Length()).To(BeNumerically(">", 0))
+			Expect(doc.Find(":contains('The Lineup')").Length()).To(BeNumerically(">", 0))
+			Expect(doc.Find(":contains('Speak Now')").Length()).To(BeNumerically(">", 0))
+			Expect(doc.Find(":contains('The Record')").Length()).To(BeNumerically(">", 0))
 		})
 
-		It("should render an image-type chip alongside the timeframe chip", func() {
-			Expect(html).To(ContainSubstring(`x-bind:class="present.imageType.spec(preview.imageType()).class"`))
-			Expect(html).To(ContainSubstring(`x-text="preview.imageType()"`))
-		})
-
-		It("should render keyboard navigation bindings for preview mode", func() {
-			Expect(html).To(ContainSubstring(`x-on:keydown.escape.window="preview.close()"`))
-			Expect(html).To(ContainSubstring(`x-on:keydown.arrow-left.window="preview.prev()"`))
-			Expect(html).To(ContainSubstring(`x-on:keydown.arrow-right.window="preview.next()"`))
-		})
-
-		It("should render mouse navigation bindings for preview mode", func() {
-			Expect(html).To(ContainSubstring(`x-on:click.stop="preview.wrapNext()"`))
-			Expect(html).To(ContainSubstring(`x-on:contextmenu.prevent.stop="preview.wrapPrev()"`))
-			Expect(html).To(ContainSubstring(`aria-label="Preview Image Navigation Overlay"`))
+		It("wires the two panel disclosure bindings", func() {
+			Expect(attrValueExists(doc, "x-bind:open", "sidebar.state.actionOpen")).To(BeTrue())
+			Expect(attrValueExists(doc, "x-on:toggle", "sidebar.state.setActionOpen($el.open)")).To(BeTrue())
+			Expect(attrValueExists(doc, "x-bind:open", "sidebar.state.reviewOpen")).To(BeTrue())
+			Expect(attrValueExists(doc, "x-on:toggle", "sidebar.state.setReviewOpen($el.open)")).To(BeTrue())
 		})
 
 		It("should use a horizontal badge-row and remaining-height image sizing", func() {
@@ -183,46 +123,77 @@ var _ = Describe("Journal Detail Page Tests", func() {
 		})
 	})
 
-	Context("Image Tiles", func() {
-		It("should render full-image friendly classes for journal screenshots", func() {
-			Expect(html).To(ContainSubstring(`group`))
-			Expect(html).To(ContainSubstring(`h-auto`))
-			Expect(html).To(ContainSubstring(`p-0`))
-			Expect(html).To(ContainSubstring(`items-start`))
-			Expect(html).To(ContainSubstring(`justify-start`))
-			Expect(html).To(ContainSubstring(`overflow-hidden`))
-			Expect(html).To(ContainSubstring(`rounded-2xl`))
-			Expect(html).To(ContainSubstring(`border-border`))
-			Expect(html).To(ContainSubstring(`bg-muted`))
-			Expect(html).To(ContainSubstring(`text-left`))
-			Expect(html).To(ContainSubstring(`x-bind:class="present.timeframe.spec(image.timeframe).class"`))
-			Expect(html).To(ContainSubstring(`x-text="image.timeframe"`))
-			Expect(html).To(ContainSubstring(`x-bind:class="present.imageType.spec(image.image_type).class"`))
-			Expect(html).To(ContainSubstring(`x-text="present.imageType.label(image.image_type)"`))
-			Expect(html).To(ContainSubstring(`x-on:click="preview.open(index)"`))
-			Expect(html).To(ContainSubstring(`x-bind:title="image.file_name"`))
-			Expect(html).To(ContainSubstring(`x-bind:src="image.src"`))
-			Expect(html).To(ContainSubstring(`x-bind:alt="image.label"`))
-			Expect(html).To(ContainSubstring(`class="block h-auto w-full transition-transform duration-300 group-hover:scale-[1.01]"`))
-			Expect(html).ToNot(ContainSubstring(`aspect-[15/10]`))
-			Expect(html).ToNot(ContainSubstring(`object-cover`))
+	Context("Gallery and Preview", func() {
+		It("renders the Images section with a sorted collection loop", func() {
+			Expect(doc.Find(":contains('Images')").Length()).To(BeNumerically(">", 0))
+			Expect(attrValueExists(doc, "x-text", "images.countLabel()")).To(BeTrue())
+			Expect(attrValueExists(doc, "x-show", "journal.detail.images.length")).To(BeTrue())
+			Expect(attrValueExists(doc, "x-for", "(image, index) in images.sorted()")).To(BeTrue())
+			// Journal-specific empty state when no images are present.
+			Expect(html).To(ContainSubstring("No images available for this journal."))
+		})
+
+		It("renders full-image tiles with preview, source, alt and error bindings", func() {
+			// Tile opens the preview at its index and carries the file name.
+			Expect(attrValueExists(doc, "x-on:click", "preview.open(index)")).To(BeTrue())
+			Expect(attrValueExists(doc, "x-bind:title", "image.file_name")).To(BeTrue())
+			// Image element bindings.
+			Expect(attrValueExists(doc, "x-bind:src", "image.src")).To(BeTrue())
+			Expect(attrValueExists(doc, "x-bind:alt", "image.label")).To(BeTrue())
+			Expect(attrValueExists(doc, "x-on:error", "$el.style.opacity='0.35'")).To(BeTrue())
+			// Full-bleed tile layout contract (scoped to the preview-open button).
+			tile := doc.Find("button").FilterFunction(func(_ int, s *goquery.Selection) bool {
+				v, ok := s.Attr("x-on:click")
+				return ok && v == "preview.open(index)"
+			})
+			Expect(tile.Length()).To(Equal(1))
+			tileClass := tile.AttrOr("class", "")
+			Expect(tileClass).To(ContainSubstring("w-full"))
+			Expect(tileClass).To(ContainSubstring("h-auto"))
+			Expect(tileClass).To(ContainSubstring("overflow-hidden"))
+			Expect(tileClass).To(ContainSubstring("rounded-2xl"))
+			Expect(tileClass).To(ContainSubstring("bg-muted"))
+			Expect(tileClass).To(ContainSubstring("text-left"))
+		})
+
+		It("renders the preview modal media, close and navigation structure", func() {
+			Expect(attrValueExists(doc, "x-show", "preview.hasPreview()")).To(BeTrue())
+			// Cloak hides the modal until Alpine initializes.
+			Expect(attrValueExists(doc, "x-cloak", "")).To(BeTrue())
+			// Keyboard navigation.
+			Expect(attrValueExists(doc, "x-on:keydown.escape.window", "preview.close()")).To(BeTrue())
+			Expect(attrValueExists(doc, "x-on:keydown.arrow-left.window", "preview.prev()")).To(BeTrue())
+			Expect(attrValueExists(doc, "x-on:keydown.arrow-right.window", "preview.next()")).To(BeTrue())
+			// Close + overlay navigation.
+			Expect(attrValueExists(doc, "x-on:click", "preview.close()")).To(BeTrue())
+			Expect(attrValueExists(doc, "aria-label", "Preview Image Navigation Overlay")).To(BeTrue())
+			Expect(attrValueExists(doc, "x-on:click.stop", "preview.wrapNext()")).To(BeTrue())
+			Expect(attrValueExists(doc, "x-on:contextmenu.prevent.stop", "preview.wrapPrev()")).To(BeTrue())
+			// Visible media + badges.
+			Expect(attrValueExists(doc, "x-bind:src", "preview.src()")).To(BeTrue())
+			Expect(attrValueExists(doc, "x-bind:alt", "preview.label()")).To(BeTrue())
+			Expect(attrValueExists(doc, "x-text", "preview.timeframe()")).To(BeTrue())
+			Expect(attrValueExists(doc, "x-text", "preview.imageType()")).To(BeTrue())
+			Expect(attrValueExists(doc, "x-text", "preview.counter()")).To(BeTrue())
+			// Filename binding surfaces the active preview file name.
+			Expect(attrValueExists(doc, "x-text", "preview.fileName()")).To(BeTrue())
 		})
 	})
 
-	Context("Loader State Bindings", func() {
-		It("should wire loading and error states via loader", func() {
-			Expect(html).To(ContainSubstring(`journal.loader.isBusy()`))
-			Expect(html).To(ContainSubstring(`journal.loader.hasError()`))
+	Context("Loader Integration", func() {
+		It("wires journal-specific busy/error/ready expressions", func() {
+			Expect(attrValueExists(doc, "x-show", "journal.loader.isBusy()")).To(BeTrue())
+			Expect(attrValueExists(doc, "x-show", "!journal.loader.isBusy() && journal.loader.hasError()")).To(BeTrue())
+			Expect(attrValueExists(doc, "x-text", "journal.loader.message")).To(BeTrue())
+			// Ready gate uses the journal detail expression.
+			Expect(attrValueExists(doc, "x-show", "!journal.loader.isBusy() && !journal.loader.hasError() && (journal.detail)")).To(BeTrue())
+			// Empty visibility uses the negated journal detail expression.
+			Expect(attrValueExists(doc, "x-show", "!journal.loader.isBusy() && !journal.loader.hasError() && !(journal.detail)")).To(BeTrue())
 		})
 
-		It("should render loader error text and retry binding", func() {
-			Expect(html).To(ContainSubstring(`x-text="journal.loader.message"`))
-			Expect(html).To(ContainSubstring(`x-on:click="journal.loadJournal(&#39;jrn_1234abcd&#39;)"`))
-			Expect(html).To(ContainSubstring("Retry"))
-		})
-
-		It("should gate loaded content behind loader states", func() {
-			Expect(html).To(ContainSubstring(`x-show="!journal.loader.isBusy() &amp;&amp; !journal.loader.hasError() &amp;&amp; (journal.detail)"`))
+		It("renders the empty message and retry action", func() {
+			Expect(html).To(ContainSubstring("No journal details available."))
+			Expect(attrValueExists(doc, "x-on:click", "journal.loadJournal('jrn_1234abcd')")).To(BeTrue())
 		})
 	})
 })

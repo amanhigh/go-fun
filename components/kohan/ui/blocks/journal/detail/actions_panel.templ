@@ -11,35 +11,9 @@ import (
 templ JournalDetailActionsPanel() {
 	@commondetail.JournalDetailSection("Command Center", "ਜਿਹੜੇ ਲੋਕ ਇਤਿਹਾਸ ਨੂੰ ਯਾਦ ਨਹੀਂ ਰੱਖਦੇ, ਉਹ ਇਸਨੂੰ ਦੁਹਰਾਉਣ ਲਈ ਸਰਾਪੇ ਜਾਂਦੇ ਹਨ। – ਜਾਰਜ ਸਾਂਤਾਯਾਨਾ", "sidebar.state.actionOpen", "sidebar.state.setActionOpen($el.open)") {
 		<div class="space-y-4">
-			@journalDetailReviewCard()
 			@ohYouTookTrades()
 			@journalDetailTagsCard()
 		</div>
-	}
-}
-
-templ journalDetailReviewCard() {
-	<div>
-		@journalDetailActionBar()
-		@components.Submitter(components.SubmitterProps{Submitter: "sidebar.reviewBar.submitter"})
-	</div>
-}
-
-templ journalDetailActionBar() {
-	@components.QuickBar(components.QuickBarProps{
-		Label:    "Review",
-		IconName: "clipboard-check",
-		Theme:    components.ToneGreen,
-		Class:    "rounded-2xl border border-border bg-muted/30 px-4 py-3",
-	}) {
-		<template x-for="action in sidebar.reviewBar.actions()" x-bind:key="action.id">
-			@components.QuickAction(components.QuickActionProps{
-				OnClickExpr:  "action.apply()",
-				TextExpr:     "sidebar.reviewBar.submitter.isBusy() ? 'Saving...' : action.display.text",
-				ClassExpr:    "action.display.class",
-				DisabledExpr: "sidebar.reviewBar.submitter.isBusy()",
-			})
-		</template>
 	}
 }
 

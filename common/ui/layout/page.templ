@@ -12,24 +12,35 @@ type PageProps struct {
 	Heading     string
 	Description string
 	Tags        []string
+	// HeroContent is optional caller content rendered inside the standard hero card.
+	HeroContent templ.Component
 	// Attributes are page-level Alpine/data attributes applied to the root section.
 	Attributes templ.Attributes
 }
 
 templ Page(props PageProps) {
 	<section class="flex w-full flex-col gap-8" { props.Attributes... }>
-		<div class="flex w-full justify-start">
-			@card.Card(card.Props{Class: "relative w-full max-w-4xl overflow-hidden rounded-[2rem] border border-border/80 shadow-[0_24px_80px_-48px_rgba(15,23,42,0.85)] xl:w-1/2 xl:max-w-none"}) {
-				<div class="absolute inset-0 bg-[radial-gradient(circle_at_top_left,rgba(16,185,129,0.12),transparent_32%),radial-gradient(circle_at_85%_20%,rgba(14,165,233,0.12),transparent_24%)]"></div>
-				<div class="relative px-5 py-4 sm:px-6 sm:py-5">
-					<div class="max-w-4xl space-y-4">
-						@PageBreadcrumb(props.CurrentPage)
+		@card.Card(card.Props{Class: "relative w-full max-w-none overflow-hidden rounded-[2rem] border border-border/80 shadow-[0_24px_80px_-48px_rgba(15,23,42,0.85)]"}) {
+			<div class="absolute inset-0 bg-[radial-gradient(circle_at_top_left,rgba(16,185,129,0.12),transparent_32%),radial-gradient(circle_at_85%_20%,rgba(14,165,233,0.12),transparent_24%)]"></div>
+			<div class="relative px-5 py-4 sm:px-6 sm:py-5">
+				if props.HeroContent != nil {
+					<div class="grid items-start gap-4 lg:grid-cols-[minmax(10rem,auto)_minmax(0,1fr)]">
+						<div>
+							@PageHeroCommon(props)
+						</div>
+						<div class="min-w-0">
+							@props.HeroContent
+						</div>
+					</div>
+				} else {
+					<div class="max-w-4xl space-y-3">
+						@PageHeroCommon(props)
 						@PageMeta(props)
 						@PageTagList(props.Tags)
 					</div>
-				</div>
-			}
-		</div>
+				}
+			</div>
+		}
 
 		{ children... }
 	</section>
@@ -49,13 +60,21 @@ templ PageBreadcrumb(currentPage string) {
 	</div>
 }
 
+templ PageEyebrow(eyebrow string) {
+	if eyebrow != "" {
+		<div class="text-[11px] font-semibold uppercase tracking-[0.32em] text-emerald-700/90">
+			{ eyebrow }
+		</div>
+	}
+}
+
+templ PageHeroCommon(props PageProps) {
+	@PageEyebrow(props.Eyebrow)
+	@PageBreadcrumb(props.CurrentPage)
+}
+
 templ PageMeta(props PageProps) {
-	<div class="space-y-6">
-		if props.Eyebrow != "" {
-			<div class="text-[11px] font-semibold uppercase tracking-[0.32em] text-emerald-700/90">
-				{ props.Eyebrow }
-			</div>
-		}
+	<div class="space-y-3">
 		<hgroup class="space-y-3">
 			<h1 class="max-w-4xl text-2xl font-semibold leading-[0.98] tracking-[-0.05em] text-foreground sm:text-3xl">{ props.Heading }</h1>
 			if props.Description != "" {

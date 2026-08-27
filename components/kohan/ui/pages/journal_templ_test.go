@@ -31,6 +31,7 @@ var _ = Describe("Journal Page Tests", func() {
 		It("should bootstrap the page with Alpine init", func() {
 			Expect(html).To(ContainSubstring("<title>Shadow Gate</title>"))
 			Expect(html).To(ContainSubstring("Journal Browser"))
+			Expect(html).To(ContainSubstring("Kohan Portal"))
 			Expect(html).To(ContainSubstring("Journal entries"))
 			Expect(html).To(ContainSubstring("x-data=\"journalPage()\""))
 			Expect(html).To(ContainSubstring("x-init=\"init()\""))

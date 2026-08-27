@@ -45,19 +45,16 @@ var _ = Describe("Base Template Tests", func() {
 			Expect(doc.Find("meta[name='viewport']").AttrOr("content", "")).To(Equal("width=device-width, initial-scale=1.0"))
 		})
 
-		It("renders title, header, main and footer", func() {
+		It("renders title, main and footer without a global header", func() {
 			Expect(doc.Find("title").Text()).To(Equal(title))
-			Expect(doc.Find("h1").Text()).To(Equal(title))
 			Expect(doc.Find("main").Length()).To(Equal(1))
 			Expect(doc.Find("main").AttrOr("class", "")).To(ContainSubstring("w-full"))
 			Expect(doc.Find("main").AttrOr("class", "")).ToNot(ContainSubstring("container"))
 			Expect(doc.Find("footer").Length()).To(Equal(1))
 			Expect(html).To(ContainSubstring("Built with TemplUI & Tailwind CSS, powered by AlpineJS"))
-		})
 
-		It("does not render global header navigation", func() {
-			Expect(doc.Find("header nav").Length()).To(Equal(0))
-			Expect(doc.Find("header a").Length()).To(Equal(0))
+			// Compact shell omits the global site header entirely.
+			Expect(doc.Find("header").Length()).To(Equal(0))
 		})
 	})
 
@@ -106,5 +103,4 @@ var _ = Describe("Base Template Tests", func() {
 			Expect(childDoc.Find("main #content-marker").Length()).To(Equal(1))
 		})
 	})
-
 })

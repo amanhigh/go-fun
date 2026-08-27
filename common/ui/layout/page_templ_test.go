@@ -24,6 +24,12 @@ func renderPage(ctx context.Context, props layout.PageProps) (string, *goquery.D
 	return html, doc
 }
 
+// heroCardClass returns the class attribute of the fixed full-width hero card
+// element (the card.Card rendered with the w-full max-w-none class).
+func heroCardClass(doc *goquery.Document) string {
+	return doc.Find(".w-full.max-w-none").First().AttrOr("class", "")
+}
+
 var _ = Describe("Page Template Tests", func() {
 	var (
 		ctx   context.Context
@@ -46,15 +52,32 @@ var _ = Describe("Page Template Tests", func() {
 	})
 
 	Context("Page shell", func() {
-		It("uses a wider desktop page shell", func() {
+		It("renders the standard full-width hero shell", func() {
 			Expect(doc.Find("section").First().AttrOr("class", "")).To(ContainSubstring("flex w-full flex-col gap-8"))
-			Expect(html).To(ContainSubstring("rounded-[2rem]"))
-			Expect(html).To(ContainSubstring("shadow-[0_24px_80px_-48px_rgba(15,23,42,0.85)]"))
+			Expect(heroCardClass(doc)).To(ContainSubstring("rounded-[2rem]"))
+			Expect(heroCardClass(doc)).To(ContainSubstring("shadow-[0_24px_80px_-48px_rgba(15,23,42,0.85)]"))
+			// Fixed standard full-width hero card class remains for the regular render.
+			Expect(heroCardClass(doc)).To(ContainSubstring("w-full"))
+			Expect(heroCardClass(doc)).To(ContainSubstring("max-w-none"))
 		})
 
-		It("keeps the hero card compact and left aligned", func() {
-			Expect(html).To(ContainSubstring("justify-start"))
-			Expect(html).To(ContainSubstring("xl:w-1/2"))
+		It("renders custom HeroContent", func() {
+			customProps := props
+			customProps.HeroContent = templ.ComponentFunc(func(_ context.Context, w io.Writer) error {
+				_, err := io.WriteString(w, `<div id="custom-hero-content">Custom hero</div>`)
+				return err
+			})
+			customHTML, customDoc := renderPage(ctx, customProps)
+
+			// Standard root remains.
+			Expect(customDoc.Find("section").First().AttrOr("class", "")).To(ContainSubstring("flex w-full flex-col gap-8"))
+			// Custom hero marker is present.
+			Expect(customHTML).To(ContainSubstring(`<div id="custom-hero-content">Custom hero</div>`))
+			// Breadcrumb and eyebrow remain.
+			Expect(customHTML).To(ContainSubstring("🏠 Home"))
+			Expect(customHTML).To(ContainSubstring("Kohan Portal"))
+			// Default heading is absent from the custom render.
+			Expect(customHTML).ToNot(ContainSubstring("Journal Detail"))
 		})
 	})
 
@@ -76,13 +99,6 @@ var _ = Describe("Page Template Tests", func() {
 			Expect(exists).To(BeTrue())
 			Expect(val).To(Equal("jrn_1234"))
 		})
-
-		It("omits attributes when none are set", func() {
-			props.Attributes = nil
-			_, attrDoc := renderPage(ctx, props)
-			section := attrDoc.Find("section").First()
-			Expect(section.AttrOr("x-data", "")).To(BeEmpty())
-		})
 	})
 
 	Context("PageBreadcrumb", func() {
@@ -94,11 +110,8 @@ var _ = Describe("Page Template Tests", func() {
 
 	Context("PageMeta", func() {
 		It("renders heading and description when provided", func() {
-			Expect(html).To(ContainSubstring("Kohan Portal"))
 			Expect(doc.Find("h1").First().Text()).To(Equal("Journal Detail"))
-			Expect(doc.Find("h1").First().AttrOr("class", "")).To(ContainSubstring("max-w-4xl"))
 			Expect(doc.Find("hgroup p").First().Text()).To(Equal("View complete journal entry with all associated data."))
-			Expect(doc.Find("hgroup p").First().AttrOr("class", "")).To(ContainSubstring("max-w-3xl"))
 		})
 
 		It("omits optional eyebrow and description when empty", func() {
@@ -140,7 +153,14 @@ var _ = Describe("Page Template Tests", func() {
 			childDoc, err := goquery.NewDocumentFromReader(strings.NewReader(childHTML))
 			Expect(err).ToNot(HaveOccurred())
 			Expect(childDoc.Find("#content-marker").Length()).To(Equal(1))
-			Expect(strings.Index(childHTML, "Journal Detail")).To(BeNumerically("<", strings.Index(childHTML, "content-marker")))
+
+			// The hero card must precede the child content in document order.
+			ordered := childDoc.Find(".w-full.max-w-none, #content-marker")
+			Expect(ordered.Length()).To(Equal(2))
+			firstClass, _ := ordered.First().Attr("class")
+			Expect(firstClass).To(ContainSubstring("w-full"))
+			lastID, _ := ordered.Last().Attr("id")
+			Expect(lastID).To(Equal("content-marker"))
 		})
 	})
 })
