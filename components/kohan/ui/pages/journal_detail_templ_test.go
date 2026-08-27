@@ -113,6 +113,14 @@ var _ = Describe("Journal Detail Page Tests", func() {
 			Expect(attrValueExists(doc, "x-bind:open", "sidebar.state.reviewOpen")).To(BeTrue())
 			Expect(attrValueExists(doc, "x-on:toggle", "sidebar.state.setReviewOpen($el.open)")).To(BeTrue())
 		})
+
+		It("should use a horizontal badge-row and remaining-height image sizing", func() {
+			// Dedicated horizontal badge-row for the timeframe/image-type chips
+			Expect(html).To(ContainSubstring(`class="flex items-center gap-2"`))
+			// Image should size to the remaining modal height, not a fixed viewport height
+			Expect(html).To(ContainSubstring(`max-h-full max-w-full`))
+			Expect(html).ToNot(ContainSubstring(`max-h-[82vh]`))
+		})
 	})
 
 	Context("Gallery and Preview", func() {
