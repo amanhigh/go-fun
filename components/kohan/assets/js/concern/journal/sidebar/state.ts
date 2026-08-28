@@ -12,6 +12,7 @@ export function NewSidebarStateConcern() {
 	return {
 		actionOpen: DEFAULT_ACTION_OPEN,
 		reviewOpen: DEFAULT_REVIEW_OPEN,
+		noteOpen: false,
 
 		restorePersistedSidebarState() {
 			this.actionOpen = localStorageClient.getBool(ACTION_OPEN_STORAGE_KEY, DEFAULT_ACTION_OPEN);
@@ -24,6 +25,9 @@ export function NewSidebarStateConcern() {
 		setReviewOpen(isReviewOpen: boolean) {
 			this.reviewOpen = isReviewOpen;
 			localStorageClient.setBool(REVIEW_MODE_STORAGE_KEY, isReviewOpen);
+		},
+		setNoteOpen(isOpen: boolean) {
+			this.noteOpen = isOpen;
 		},
 		enterReviewMode() {
 			this.setReviewOpen(true);

@@ -4,29 +4,24 @@ import (
 	commondetail "github.com/amanhigh/go-fun/components/kohan/ui/blocks/journal/common"
 	"github.com/amanhigh/go-fun/components/kohan/ui/components"
 	"github.com/templui/templui/components/button"
-	"github.com/templui/templui/components/card"
 	"github.com/templui/templui/components/input"
 )
 
 templ JournalDetailActionsPanel() {
-	@commondetail.JournalDetailSection("Command Center", "ਜਿਹੜੇ ਲੋਕ ਇਤਿਹਾਸ ਨੂੰ ਯਾਦ ਨਹੀਂ ਰੱਖਦੇ, ਉਹ ਇਸਨੂੰ ਦੁਹਰਾਉਣ ਲਈ ਸਰਾਪੇ ਜਾਂਦੇ ਹਨ। – ਜਾਰਜ ਸਾਂਤਾਯਾਨਾ", "sidebar.state.actionOpen", "sidebar.state.setActionOpen($el.open)") {
+	@commondetail.JournalDetailSection("Fingerprints", "ਜਿਹੜੇ ਲੋਕ ਇਤਿਹਾਸ ਨੂੰ ਯਾਦ ਨਹੀਂ ਰੱਖਦੇ, ਉਹ ਇਸਨੂੰ ਦੁਹਰਾਉਣ ਲਈ ਸਰਾਪੇ ਜਾਂਦੇ ਹਨ। – ਜਾਰਜ ਸਾਂਤਾਯਾਨਾ", "sidebar.state.actionOpen", "sidebar.state.setActionOpen($el.open)") {
 		<div class="space-y-4">
 			@ohYouTookTrades()
-			@journalDetailTagsCard()
+			@journalDetailTagsSection()
 		</div>
 	}
 }
 
 templ ohYouTookTrades() {
-	@card.Card(card.Props{Class: "rounded-3xl shadow-sm", Attributes: templ.Attributes{"x-show": "journal.detail.type === 'TAKEN'"}}) {
-		@card.Header(card.HeaderProps{}) {
-			@card.Title(card.TitleProps{Class: "tracking-tight"}) { Oh, So You Took the Trade? }
-			@card.Description(card.DescriptionProps{}) { How did it go? Confess your sins. }
-		}
-		@card.Content(card.ContentProps{Class: "space-y-3 pt-0"}) {
-			@takenTagControls()
-		}
-	}
+	<section class="space-y-3" x-show="journal.detail.type === 'TAKEN'">
+		<h4 class="text-sm font-semibold tracking-tight text-foreground">Oh, So You Took the Trade?</h4>
+		<p class="text-sm text-muted-foreground">How did it go? Confess your sins.</p>
+		@takenTagControls()
+	</section>
 }
 
 templ takenTagControls() {
@@ -51,19 +46,13 @@ templ takenTagControls() {
 	</div>
 }
 
-templ journalDetailTagsCard() {
-	@card.Card(card.Props{Class: "rounded-3xl shadow-sm"}) {
-		@card.Header(card.HeaderProps{}) {
-			@card.Title(card.TitleProps{Class: "tracking-tight"}) { Fingerprints }
-			@card.Description(card.DescriptionProps{}) { Tag what the trade left behind. }
-		}
-		@card.Content(card.ContentProps{Class: "space-y-2 pt-0"}) {
-			@journalDetailTagForm()
-			@components.Submitter(components.SubmitterProps{Submitter: "sidebar.reasonTagForm.submitter"})
-			@journalDetailTagInputs()
-			@components.EmptyState(components.EmptyStateProps{Message: "No tags added yet.", ShowExpr: "!sidebar.tags.hasItems()"})
-		}
-	}
+templ journalDetailTagsSection() {
+	<section class="space-y-2">
+		@journalDetailTagForm()
+		@components.Submitter(components.SubmitterProps{Submitter: "sidebar.reasonTagForm.submitter"})
+		@journalDetailTagInputs()
+		@components.EmptyState(components.EmptyStateProps{Message: "No tags added yet.", ShowExpr: "!sidebar.tags.hasItems()"})
+	</section>
 }
 
 templ journalDetailTagForm() {

@@ -22,9 +22,11 @@ export type JournalDetailSidebarConcern = {
 export type SidebarStateConcern = {
 	actionOpen: boolean;
 	reviewOpen: boolean;
+	noteOpen: boolean;
 	restorePersistedSidebarState(): void;
 	setActionOpen(isOpen: boolean): void;
 	setReviewOpen(isReviewOpen: boolean): void;
+	setNoteOpen(isOpen: boolean): void;
 	enterReviewMode(): void;
 };
 

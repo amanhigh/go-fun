@@ -3,61 +3,45 @@ package detail
 import (
 	commondetail "github.com/amanhigh/go-fun/components/kohan/ui/blocks/journal/common"
 	"github.com/amanhigh/go-fun/components/kohan/ui/components"
-	"github.com/templui/templui/components/card"
 	"github.com/templui/templui/components/textarea"
 )
 
 templ JournalDetailReviewPanel() {
-	@commondetail.JournalDetailSection("Review", "Face your trade. No hiding.", "sidebar.state.reviewOpen", "sidebar.state.setReviewOpen($el.open)") {
-		@journalDetailQueueCard()
-		@journalDetailNoteCard()
-	}
-}
-
-templ journalDetailQueueCard() {
-	@card.Card(card.Props{Class: "rounded-3xl shadow-sm"}) {
-		@card.Header(card.HeaderProps{}) {
-			@card.Title(card.TitleProps{Class: "tracking-tight"}) { The Lineup }
-		}
-		@card.Content(card.ContentProps{Class: "space-y-2 pt-0"}) {
-			@components.Loader(components.LoaderProps{
-				Loader:       "sidebar.reviewQueue.loader",
-				ReadyExpr:    "sidebar.reviewQueue.hasItems()",
-				EmptyMessage: "All caught up — no pending reviews.",
-				RetryExpr:    "sidebar.reviewQueue.load()",
-			}) {
-				<div class="space-y-1">
-					<template x-for="item in sidebar.reviewQueue.all()" x-bind:key="item.id">
-						<a class="flex items-center justify-between rounded-xl border px-3 py-2 text-sm transition" x-on:click="sidebar.state.enterReviewMode()" x-bind:class="present.type.spec(item.type).class" x-bind:href="'/journal/' + item.id">
-							<span class="font-semibold" x-text="item.ticker"></span>
-							<span class="text-xs font-medium" x-text="present.date.formatReviewQueueDate(item.created_at)"></span>
-						</a>
-					</template>
-				</div>
-			}
+	// The Lineup is the direct second sidebar disclosure, reusing the
+	// reviewOpen persistence bindings from the previous Review wrapper.
+	@commondetail.JournalDetailSection("The Lineup", "Choose the next pending journal.", "sidebar.state.reviewOpen", "sidebar.state.setReviewOpen($el.open)") {
+		@components.Loader(components.LoaderProps{
+			Loader:       "sidebar.reviewQueue.loader",
+			ReadyExpr:    "sidebar.reviewQueue.hasItems()",
+			EmptyMessage: "All caught up — no pending reviews.",
+			RetryExpr:    "sidebar.reviewQueue.load()",
+		}) {
+			<div class="space-y-1">
+				<template x-for="item in sidebar.reviewQueue.all()" x-bind:key="item.id">
+					<a class="flex items-center justify-between rounded-xl border px-3 py-2 text-sm transition" x-on:click="sidebar.state.enterReviewMode()" x-bind:class="present.type.spec(item.type).class" x-bind:href="'/journal/' + item.id">
+						<span class="font-semibold" x-text="item.ticker"></span>
+						<span class="text-xs font-medium" x-text="present.date.formatReviewQueueDate(item.created_at)"></span>
+					</a>
+				</template>
+			</div>
 		}
 	}
-}
 
-templ journalDetailNoteCard() {
-	@card.Card(card.Props{Class: "rounded-3xl shadow-sm"}) {
-		@card.Header(card.HeaderProps{}) {
-			@card.Title(card.TitleProps{Class: "tracking-tight"}) { Speak Now }
-		}
-		@card.Content(card.ContentProps{Class: "space-y-3 pt-0"}) {
-			@textarea.Textarea(textarea.Props{
-				Placeholder: "Write a note about this journal...",
-				Class:       "min-h-[140px] w-full rounded-2xl border-border bg-background px-4 py-3 text-sm text-foreground outline-none transition focus:border-violet-400 focus:ring-2 focus:ring-violet-200",
-				Attributes:  templ.Attributes{"x-model": "sidebar.noteForm.content"},
-			})
-			@components.SubmitButton(components.SubmitButtonProps{
-				Label:         "Add Note",
-				BusyExpr:      "sidebar.noteForm.submitter.isBusy()",
-				DisabledExpr:  "sidebar.noteForm.submitter.isBusy() || !sidebar.noteForm.canSubmit()",
-				OnClickExpr:   "sidebar.noteForm.submit()",
-				Class:         "w-full",
-			})
-			@components.Submitter(components.SubmitterProps{Submitter: "sidebar.noteForm.submitter"})
-		}
+	// Add review note is an independent, tertiary disclosure that starts
+	// closed on every page load and does NOT persist to localStorage.
+	@commondetail.JournalDetailSection("Add review note", "Leave a note about this journal.", "sidebar.state.noteOpen", "sidebar.state.setNoteOpen($el.open)") {
+		@textarea.Textarea(textarea.Props{
+			Placeholder: "Write a note about this journal...",
+			Class:       "min-h-[140px] w-full rounded-2xl border-border bg-background px-4 py-3 text-sm text-foreground outline-none transition focus:border-violet-400 focus:ring-2 focus:ring-violet-200",
+			Attributes:  templ.Attributes{"x-model": "sidebar.noteForm.content"},
+		})
+		@components.SubmitButton(components.SubmitButtonProps{
+			Label:         "Add Note",
+			BusyExpr:      "sidebar.noteForm.submitter.isBusy()",
+			DisabledExpr:  "sidebar.noteForm.submitter.isBusy() || !sidebar.noteForm.canSubmit()",
+			OnClickExpr:   "sidebar.noteForm.submit()",
+			Class:         "w-full",
+		})
+		@components.Submitter(components.SubmitterProps{Submitter: "sidebar.noteForm.submitter"})
 	}
 }
