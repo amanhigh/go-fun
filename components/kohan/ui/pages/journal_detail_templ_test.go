@@ -127,6 +127,27 @@ var _ = Describe("Journal Detail Page Tests", func() {
 			// It sits inside the meta row, not as a dedicated vertical block.
 			Expect(quoteSel.Parent().AttrOr("class", "")).To(ContainSubstring("journal-detail-header-meta"))
 		})
+
+		It("renders the deferred review-advance control", func() {
+			// Banner is shown only while the deferred review-advance is active.
+			Expect(attrValueExists(doc, "x-show", "sidebar.reviewAdvance.active")).To(BeTrue())
+			// Cancel binding on the action button.
+			Expect(attrValueExists(doc, "x-on:click", "sidebar.reviewAdvance.cancel()")).To(BeTrue())
+			// Live status/countdown text binding.
+			Expect(attrValueExists(doc, "x-text", "sidebar.reviewAdvance.message + ' (' + sidebar.reviewAdvance.remainingSeconds + 's)'")).To(BeTrue())
+
+			// The element carrying the x-show binding must also be cloaked.
+			advance := doc.Find("*").FilterFunction(func(_ int, s *goquery.Selection) bool {
+				v, ok := s.Attr("x-show")
+				return ok && v == "sidebar.reviewAdvance.active"
+			})
+			Expect(advance.Length()).To(Equal(1))
+			_, hasCloak := advance.Attr("x-cloak")
+			Expect(hasCloak).To(BeTrue())
+
+			// Visible cancel label.
+			Expect(doc.Find(":contains('Stay')").Length()).To(BeNumerically(">", 0))
+		})
 	})
 
 	Context("Images Flow", func() {

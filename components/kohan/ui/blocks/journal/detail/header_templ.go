@@ -383,6 +383,13 @@ func journalDetailReviewCard() templ.Component {
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
+		templ_7745c5c3_Err = components.DeferredAction(components.DeferredActionProps{
+			StateExpr:   "sidebar.reviewAdvance",
+			CancelLabel: "Stay",
+		}).Render(ctx, templ_7745c5c3_Buffer)
+		if templ_7745c5c3_Err != nil {
+			return templ_7745c5c3_Err
+		}
 		templ_7745c5c3_Err = components.Submitter(components.SubmitterProps{Submitter: "sidebar.reviewBar.submitter"}).Render(ctx, templ_7745c5c3_Buffer)
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err

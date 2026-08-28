@@ -106,6 +106,10 @@ templ JournalDetailDirectionalTags() {
 templ journalDetailReviewCard() {
 	<div>
 		@journalDetailActionBar()
+		@components.DeferredAction(components.DeferredActionProps{
+			StateExpr:   "sidebar.reviewAdvance",
+			CancelLabel: "Stay",
+		})
 		@components.Submitter(components.SubmitterProps{Submitter: "sidebar.reviewBar.submitter"})
 	</div>
 }
