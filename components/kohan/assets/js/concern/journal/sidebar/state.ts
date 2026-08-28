@@ -3,7 +3,7 @@ import { createLocalStorageClient } from '../../../client/local_storage';
 const ACTION_OPEN_STORAGE_KEY = 'kohan.journalDetail.sidebar.actionOpen';
 const REVIEW_MODE_STORAGE_KEY = 'kohan.journalDetail.reviewMode';
 
-const DEFAULT_ACTION_OPEN = true;
+const DEFAULT_ACTION_OPEN = false;
 const DEFAULT_REVIEW_OPEN = false;
 
 export function NewSidebarStateConcern() {
