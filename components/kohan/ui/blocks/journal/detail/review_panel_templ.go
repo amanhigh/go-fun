@@ -59,7 +59,7 @@ func JournalDetailReviewPanel() templ.Component {
 					}()
 				}
 				ctx = templ.InitializeContext(ctx)
-				templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 1, "<div class=\"space-y-1\"><template x-for=\"item in sidebar.reviewQueue.all()\" x-bind:key=\"item.id\"><a class=\"flex items-center justify-between rounded-xl border px-3 py-2 text-sm transition\" x-on:click=\"sidebar.state.enterReviewMode()\" x-bind:class=\"present.type.spec(item.type).class\" x-bind:href=\"'/journal/' + item.id\"><span class=\"font-semibold\" x-text=\"item.ticker\"></span> <span class=\"text-xs font-medium\" x-text=\"present.date.formatReviewQueueDate(item.created_at)\"></span></a></template></div>")
+				templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 1, "<div class=\"space-y-1\"><template x-for=\"item in sidebar.reviewQueue.all()\" x-bind:key=\"item.id\"><a class=\"flex items-center gap-2 rounded-xl border px-2.5 py-1.5 text-sm transition\" x-on:click=\"sidebar.state.enterReviewMode()\" x-bind:class=\"present.type.spec(item.type).class\" x-bind:href=\"'/journal/' + item.id\"><span class=\"font-semibold truncate min-w-0\" x-text=\"item.ticker\"></span> <span class=\"text-xs font-medium shrink-0\" x-text=\"present.date.formatReviewQueueDate(item.created_at)\"></span></a></template></div>")
 				if templ_7745c5c3_Err != nil {
 					return templ_7745c5c3_Err
 				}

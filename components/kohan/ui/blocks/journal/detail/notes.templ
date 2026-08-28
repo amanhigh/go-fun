@@ -13,8 +13,7 @@ import (
 templ JournalDetailNotes() {
 	@card.Card(card.Props{Class: "rounded-3xl shadow-sm"}) {
 		@card.Content(card.ContentProps{}) {
-			@components.SectionHeader(components.SectionHeaderProps{Title: "The Record", Description: "Every word stays."})
-			<p class="mt-1 text-sm text-muted-foreground"><span x-text="sidebar.notes.sorted().length"></span> note(s)</p>
+			@components.SectionHeader(components.SectionHeaderProps{Title: "The Record", Description: "Every word stays.", Meta: journalDetailNotesMeta()})
 			<div class="mt-4 space-y-3" x-show="sidebar.notes.hasItems()">
 				<template x-for="note in sidebar.notes.sorted()" x-bind:key="note.id">
 					@JournalDetailNoteRow()
@@ -24,6 +23,14 @@ templ JournalDetailNotes() {
 			@components.EmptyState(components.EmptyStateProps{Message: "No notes available for this journal.", ShowExpr: "!sidebar.notes.hasItems()", Class: "mt-5"})
 		}
 	}
+}
+
+// journalDetailNotesMeta renders the The Record header metadata: the dynamic
+// note count plus the pluralized "note(s)" label.
+templ journalDetailNotesMeta() {
+	<span class="text-sm text-muted-foreground">
+		<span x-text="sidebar.notes.sorted().length"></span> note(s)
+	</span>
 }
 
 templ JournalDetailNoteRow() {

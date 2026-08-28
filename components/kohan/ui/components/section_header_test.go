@@ -2,6 +2,7 @@ package components_test
 
 import (
 	"context"
+	"io"
 	"strings"
 
 	"github.com/a-h/templ"
@@ -48,6 +49,8 @@ var _ = Describe("SectionHeader", func() {
 			Expect(html).To(ContainSubstring("My Section"))
 			Expect(html).To(ContainSubstring(`data-testid="section-header"`))
 			Expect(html).To(ContainSubstring(`id="sec-1"`))
+			Expect(html).To(ContainSubstring(`class="space-y-0.5 `))
+			Expect(html).To(ContainSubstring(`text-base sm:text-lg`))
 		})
 	})
 
@@ -61,6 +64,25 @@ var _ = Describe("SectionHeader", func() {
 		It("omits the paragraph and still renders the title", func() {
 			Expect(html).NotTo(ContainSubstring("<p "))
 			Expect(html).To(ContainSubstring("My Section"))
+		})
+	})
+
+	Context("Meta present", func() {
+		BeforeEach(func() {
+			props.Meta = templ.ComponentFunc(func(_ context.Context, w io.Writer) error {
+				_, err := io.WriteString(w, `<span class="meta-badge">Updated 2h ago</span>`)
+				return err
+			})
+			err := components.SectionHeader(props).Render(ctx, &render)
+			Expect(err).ToNot(HaveOccurred())
+			html = render.String()
+		})
+
+		It("renders metadata alongside the title in a space-between row", func() {
+			Expect(html).To(ContainSubstring("My Section"))
+			Expect(html).To(ContainSubstring(`class="flex flex-wrap items-center justify-between gap-x-2 gap-y-0.5"`))
+			Expect(html).To(ContainSubstring(`class="meta-badge"`))
+			Expect(html).To(ContainSubstring("Updated 2h ago"))
 		})
 	})
 })
