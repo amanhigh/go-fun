@@ -15,16 +15,18 @@ import (
 	"github.com/amanhigh/go-fun/common/util"
 	"github.com/amanhigh/go-fun/models/common"
 	"github.com/amanhigh/go-fun/models/kohan"
-	"github.com/bitfield/script"
 	"github.com/go-co-op/gocron/v2"
 	"github.com/rs/zerolog"
 	"github.com/rs/zerolog/log"
 )
 
 const (
-	DATE_FORMAT           = "20060102__150405"
-	NETWORK_RESTART_DELAY = 5 * time.Second
-	TRADE_INFO            = `
+	// networkRecoveryCooldown enforces a minimum gap between recovery attempts.
+	// It is fixed policy and is not externally configurable.
+	networkRecoveryCooldown = 5 * time.Minute
+
+	DATE_FORMAT = "20060102__150405"
+	TRADE_INFO  = `
 Trends
 HTF - Up
 MTF - Up
@@ -49,6 +51,11 @@ type OSManagerImpl struct {
 	wait           time.Duration
 	screenshotPath string
 	scheduler      gocron.Scheduler
+
+	// consecutiveFailures counts back-to-back unreachable gateway checks.
+	consecutiveFailures int
+	// lastRecovery records the clock time of the most recent recovery attempt.
+	lastRecovery time.Time
 }
 
 func NewOSManager(wait time.Duration, screenshotPath string, scheduler gocron.Scheduler) *OSManagerImpl {
@@ -195,17 +202,55 @@ func (a *OSManagerImpl) MonitorInternetConnection(ctx context.Context) {
 	_ = a.scheduler.Shutdown()
 }
 
+// monitorInternetConnection probes the active connection once and delegates the
+// recovery policy and actions to recoverConnection. A resolution failure is
+// environmental (not a gateway fault), so it is logged and skipped without
+// changing failure state.
 func (a *OSManagerImpl) monitorInternetConnection() {
-	if tools.CheckInternetConnection() {
-		log.Info().Msg("Internet UP")
-	} else {
-		log.Warn().Msg("Internet DOWN")
-		a.restartNetworkManager()
-		// Extra Wait for Network Manager
-		time.Sleep(NETWORK_RESTART_DELAY)
+	conn, err := tools.ResolveWiFiConnection()
+	if err != nil {
+		// Resolution is environmental, not a gateway fault: warn and skip.
+		log.Warn().Err(err).Msg("Failed to resolve active Wi-Fi connection; skipping recovery")
+		return
 	}
+
+	reachable := tools.ConnectionGatewayReachable(conn)
+	a.recoverConnection(conn, reachable, tools.ReconnectConnection, tools.RestartNetworkManager)
 }
 
-func (a *OSManagerImpl) restartNetworkManager() {
-	script.Exec("sudo systemctl restart NetworkManager").Wait()
+// recoverConnection applies the failure-count, cooldown, and reset policy and,
+// when warranted, performs a targeted reconnect (falling back to a restart).
+//
+// reconnect and restart are injected callbacks so the recovery policy can be
+// exercised without invoking nmcli/ping/sudo/systemctl. In production they are
+// the real tools.ReconnectConnection and tools.RestartNetworkManager.
+func (a *OSManagerImpl) recoverConnection(conn string, reachable bool, reconnect func(string) error, restart func() error) {
+	if reachable {
+		// Gateway healthy: reset prior failure state.
+		a.consecutiveFailures = 0
+		return
+	}
+
+	a.consecutiveFailures++
+	// Policy: wait for two consecutive failures before acting.
+	if a.consecutiveFailures < 2 {
+		return
+	}
+
+	// Throttle recovery to one attempt per cooldown window.
+	if !a.lastRecovery.IsZero() && time.Since(a.lastRecovery) < networkRecoveryCooldown {
+		return
+	}
+
+	// Outside cooldown: record attempt time, then try targeted reconnect first.
+	a.lastRecovery = time.Now()
+	if err := reconnect(conn); err != nil {
+		log.Error().Err(err).Str("Connection", conn).Msg("Targeted reconnect failed; falling back to NetworkManager restart")
+		if rErr := restart(); rErr != nil {
+			log.Error().Err(rErr).Msg("NetworkManager restart fallback failed")
+		}
+	}
+
+	// Recovery attempted: start a fresh failure cycle.
+	a.consecutiveFailures = 0
 }
