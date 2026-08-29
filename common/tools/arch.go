@@ -121,36 +121,76 @@ func ConnectionGatewayReachable(connectionName string) bool {
 
 // ReconnectConnection performs a targeted up-only recovery of the given
 // connection by activating it directly. It does not bring the connection down
-// first; instead it relies on nmcli's activation to re-establish the link. An
-// error is returned if the up fails, including the command context (so callers
-// can detect context timeouts) and trimmed diagnostic output from nmcli. After
-// a successful up, the gateway is probed once via ConnectionGatewayReachable;
-// if the gateway is still unreachable, a descriptive error is returned so
-// callers (e.g., the network monitor) do not treat the recovery as successful
-// and can fall back to a heavier restart. All command execution is bounded by
-// context timeouts and uses direct argument arrays (never a shell). The tools
-// layer does not log; errors are returned for callers to handle.
+// first; instead it relies on nmcli's activation to re-establish the link.
+//
+// Recovery is attempted up to four times on an approximately one-minute cadence:
+// attempt 1 starts immediately, then attempts 2, 3, and 4 begin at +1m, +2m, and
+// +3m relative to the first attempt. Each activation is bounded by a per-attempt
+// budget sized to absorb the observed ~39s "ssid-not-found" failure: nmcli runs
+// with --wait 45 under a slightly larger 50s command context. After every
+// successful activation the gateway is probed once via
+// ConnectionGatewayReachable; if the gateway is reachable the recovery returns
+// success immediately. If activation or gateway verification fails, the next
+// scheduled one-minute slot is awaited and the attempt is retried.
+//
+// After the fourth attempt fails, a descriptive error is returned containing the
+// total attempt count and the last error, so callers (e.g., the network monitor)
+// do not treat the recovery as successful and can fall back to a heavier restart.
+// All command execution is bounded by context timeouts and uses direct argument
+// arrays (never a shell). The tools layer does not log; errors are returned for
+// callers to handle.
 func ReconnectConnection(connectionName string) error {
-	ctxUp, cancelUp := context.WithTimeout(context.Background(), 190*time.Second)
-	defer cancelUp()
-	up := exec.CommandContext(ctxUp, "nmcli", "--wait", "180", "connection", "up", "id", connectionName)
-	out, err := up.CombinedOutput()
-	if err != nil {
-		diag := strings.TrimSpace(string(out))
-		if diag != "" {
-			return fmt.Errorf("failed to bring up connection %q: %w (output: %s)", connectionName, err, diag)
+	const attempts = 4
+	const activationWaitSeconds = 45
+	const activationBudget = 50 * time.Second
+
+	ticker := time.NewTicker(time.Minute)
+	defer ticker.Stop()
+
+	var lastErr error
+
+	for attempt := 1; attempt <= attempts; attempt++ {
+		// Wait until the scheduled one-minute slot; attempt 1 is immediate.
+		if attempt > 1 {
+			<-ticker.C
 		}
-		return fmt.Errorf("failed to bring up connection %q: %w", connectionName, err)
+
+		ctxUp, cancelUp := context.WithTimeout(context.Background(), activationBudget)
+		up := exec.CommandContext(ctxUp, "nmcli", "--wait",
+			strconv.Itoa(activationWaitSeconds),
+			"connection", "up", "id", connectionName)
+		out, err := up.CombinedOutput()
+
+		if err != nil {
+			// Preserve the context deadline/cancellation before cancelling the
+			// context, so a per-attempt timeout is not masked by the command
+			// error. Otherwise keep the nmcli command error itself, and append
+			// the trimmed combined nmcli output directly to it.
+			if ctxUp.Err() != nil {
+				lastErr = ctxUp.Err()
+			} else {
+				lastErr = err
+			}
+			if diag := strings.TrimSpace(string(out)); diag != "" {
+				lastErr = fmt.Errorf("%w: %s", lastErr, diag)
+			}
+			cancelUp()
+			continue
+		}
+		cancelUp()
+
+		// The connection reports "up", but verify the gateway actually returned
+		// before reporting success. A connection can associate yet leave the
+		// gateway unreachable (e.g., no DHCP lease or missing route), so a bare
+		// "up" must not be treated as recovered.
+		if ConnectionGatewayReachable(connectionName) {
+			return nil
+		}
+		lastErr = errors.New("connection is up but its gateway is unreachable")
 	}
 
-	// The connection reports "up", but verify the gateway actually returned
-	// before reporting success. A connection can associate yet leave the
-	// gateway unreachable (e.g., no DHCP lease or missing route), so a bare
-	// "up" must not be treated as recovered.
-	if !ConnectionGatewayReachable(connectionName) {
-		return fmt.Errorf("connection %q is up but its gateway is unreachable", connectionName)
-	}
-	return nil
+	return fmt.Errorf("failed to recover connection %q after %d attempts: %w",
+		connectionName, attempts, lastErr)
 }
 
 // RestartNetworkManager restarts NetworkManager non-interactively via sudo with
