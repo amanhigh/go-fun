@@ -82,10 +82,9 @@ func (a *OSManagerImpl) Screenshot(_ context.Context, directoryType kohan.Screen
 	log.Info().Str("Dir", dir).Str("Name", fileName).Str("Type", string(screenshotType)).Msg("Capturing Screenshot")
 
 	var screenshotErr error
-	switch screenshotType {
-	case kohan.ScreenshotTypeRegion:
+	if screenshotType == kohan.ScreenshotTypeRegion {
 		screenshotErr = tools.NamedRegionScreenshot(dir, fileName)
-	default:
+	} else {
 		screenshotErr = tools.Screenshot(dir, fileName)
 	}
 	return fullPath, a.mapScreenshotError(screenshotErr)
