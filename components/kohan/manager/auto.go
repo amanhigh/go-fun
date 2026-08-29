@@ -66,7 +66,6 @@ func NewOSManager(wait time.Duration, screenshotPath string, scheduler gocron.Sc
 
 var _ OSManagerInterface = (*OSManagerImpl)(nil)
 
-// Copy existing implementations preserving comments but as methods
 func (a *OSManagerImpl) Screenshot(_ context.Context, directoryType kohan.ScreenshotDirectoryType, fileName string, screenshotType kohan.ScreenshotType, window string) (string, common.HttpError) {
 	if window != "" {
 		if err := tools.FocusWindow(window); err != nil {
@@ -86,8 +85,6 @@ func (a *OSManagerImpl) Screenshot(_ context.Context, directoryType kohan.Screen
 	switch screenshotType {
 	case kohan.ScreenshotTypeRegion:
 		screenshotErr = tools.NamedRegionScreenshot(dir, fileName)
-	case kohan.ScreenshotTypeFull:
-		screenshotErr = tools.Screenshot(dir, fileName)
 	default:
 		screenshotErr = tools.Screenshot(dir, fileName)
 	}
@@ -107,14 +104,11 @@ func (a *OSManagerImpl) mapScreenshotError(err error) common.HttpError {
 }
 
 func (a *OSManagerImpl) resolveDir(directoryType kohan.ScreenshotDirectoryType) string {
-	switch directoryType {
-	case kohan.ScreenshotDirectoryTypeDownload:
+	if directoryType == kohan.ScreenshotDirectoryTypeDownload {
 		return defaultDownloadsDir()
-	case kohan.ScreenshotDirectoryTypeJournal:
-		return filepath.Join(a.screenshotPath, time.Now().Format("2006"), time.Now().Format("01"))
-	default:
-		return filepath.Join(a.screenshotPath, time.Now().Format("2006"), time.Now().Format("01"))
 	}
+	now := time.Now()
+	return filepath.Join(a.screenshotPath, now.Format("2006"), now.Format("01"))
 }
 
 func defaultDownloadsDir() string {
@@ -161,7 +155,7 @@ func (a *OSManagerImpl) takeScreenshots(ticker, path string) (err error) {
 
 func (a *OSManagerImpl) recordTradeInfo(ticker, path string) (err error) {
 	var tradeInfo string
-	infoFile := fmt.Sprintf("%s/%s__%s.txt", path, ticker, time.Now().Format(DATE_FORMAT))
+	infoFile := filepath.Join(path, fmt.Sprintf("%s__%s.txt", ticker, time.Now().Format(DATE_FORMAT)))
 	if tradeInfo, err = tools.PromptText(TRADE_INFO); err == nil {
 		if err = os.WriteFile(infoFile, []byte(tradeInfo), util.DEFAULT_PERM); err != nil {
 			log.Error().Str("Ticker", ticker).Err(err).Msg("Failed to write trade info")

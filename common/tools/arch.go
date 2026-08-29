@@ -5,6 +5,7 @@ import (
 	"errors"
 	"fmt"
 	"os/exec"
+	"path/filepath"
 	"strconv"
 	"strings"
 	"time"
@@ -21,7 +22,7 @@ func Screenshot(dir, name string) (err error) {
 	if monitor, err = GetActiveMonitor(); err != nil {
 		return
 	}
-	fullPath := dir + "/" + name
+	fullPath := filepath.Join(dir, name)
 	err = script.Exec(fmt.Sprintf("grim -o %s %s", monitor, fullPath)).Error()
 	return
 }
@@ -35,7 +36,7 @@ func NamedRegionScreenshot(dir, name string) (err error) {
 	}
 
 	// Step 2: Use the geometry string for grim capture.
-	fullPath := dir + "/" + name
+	fullPath := filepath.Join(dir, name)
 	geometry = strings.TrimSpace(geometry)
 	err = script.Exec(fmt.Sprintf(`grim -g "%s" "%s"`, geometry, fullPath)).Error()
 	return
@@ -144,35 +145,36 @@ func ConnectionGatewayReachable(connectionName string) bool {
 	if gateway == "" {
 		return false
 	}
-
-	ctx, cancel := context.WithTimeout(context.Background(), nmCommandTimeout)
-	defer cancel()
-	cmd := exec.CommandContext(ctx, "ping", "-c", "1", "-W", "2", gateway)
-	return cmd.Run() == nil
+	_, err = runCommandWithTimeout(nmCommandTimeout, "ping", "-c", "1", "-W", "2", gateway)
+	return err == nil
 }
 
 // RestartNetworkManager restarts NetworkManager non-interactively via sudo with
 // a bounded timeout. Any error is returned to the caller without logging.
 func RestartNetworkManager() error {
-	ctx, cancel := context.WithTimeout(context.Background(), nmRestartTimeout)
-	defer cancel()
-	cmd := exec.CommandContext(ctx, "sudo", "-n", "/usr/bin/systemctl", "restart", "NetworkManager")
-	if err := cmd.Run(); err != nil {
+	if _, err := runCommandWithTimeout(nmRestartTimeout, "sudo", "-n", "/usr/bin/systemctl", "restart", "NetworkManager"); err != nil {
 		return fmt.Errorf("failed to restart NetworkManager: %w", err)
 	}
 	return nil
 }
 
-// runNMCLI executes nmcli with the supplied argument array (never a shell) under
-// a context timeout and returns the trimmed stdout output.
-func runNMCLI(args []string, timeout time.Duration) (string, error) {
+// runCommand executes an external command (never a shell) under a context
+// timeout and returns the trimmed stdout output. Errors are wrapped with the
+// command name for easier diagnosis.
+func runCommandWithTimeout(timeout time.Duration, name string, args ...string) (string, error) {
 	ctx, cancel := context.WithTimeout(context.Background(), timeout)
 	defer cancel()
-	out, err := exec.CommandContext(ctx, "nmcli", args...).Output()
+	out, err := exec.CommandContext(ctx, name, args...).Output()
 	if err != nil {
-		return "", fmt.Errorf("nmcli command failed: %w", err)
+		return "", fmt.Errorf("%s command failed: %w", name, err)
 	}
 	return strings.TrimSpace(string(out)), nil
+}
+
+// runNMCLI executes nmcli with the supplied argument array under a context
+// timeout and returns the trimmed stdout output.
+func runNMCLI(args []string, timeout time.Duration) (string, error) {
+	return runCommandWithTimeout(timeout, "nmcli", args...)
 }
 
 func PromptText(text string) (result string, err error) {
