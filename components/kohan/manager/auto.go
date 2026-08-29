@@ -244,11 +244,16 @@ func (a *OSManagerImpl) recoverConnection(conn string, reachable bool, reconnect
 
 	// Outside cooldown: record attempt time, then try targeted reconnect first.
 	a.lastRecovery = time.Now()
+	log.Info().Str("Connection", conn).Int("Failures", a.consecutiveFailures).Msg("Recovery threshold met; attempting connection recovery")
 	if err := reconnect(conn); err != nil {
 		log.Error().Err(err).Str("Connection", conn).Msg("Targeted reconnect failed; falling back to NetworkManager restart")
 		if rErr := restart(); rErr != nil {
 			log.Error().Err(rErr).Msg("NetworkManager restart fallback failed")
+		} else {
+			log.Info().Str("Connection", conn).Msg("NetworkManager restart fallback succeeded")
 		}
+	} else {
+		log.Info().Str("Connection", conn).Msg("Targeted reconnect succeeded")
 	}
 
 	// Recovery attempted: start a fresh failure cycle.

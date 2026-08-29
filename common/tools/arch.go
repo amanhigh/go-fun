@@ -119,23 +119,27 @@ func ConnectionGatewayReachable(connectionName string) bool {
 	return cmd.Run() == nil
 }
 
-// ReconnectConnection performs a targeted recovery of the given connection by
-// bringing it down and back up. A failed down is non-fatal; an error is
-// returned only if the subsequent up fails, including command context. After a
-// successful up, the gateway is probed once via ConnectionGatewayReachable; if
-// the gateway is still unreachable, a descriptive error is returned so callers
-// (e.g., the network monitor) do not treat the recovery as successful and can
-// fall back to a heavier restart. All command execution is bounded by context
-// timeouts and uses direct argument arrays (never a shell).
+// ReconnectConnection performs a targeted up-only recovery of the given
+// connection by activating it directly. It does not bring the connection down
+// first; instead it relies on nmcli's activation to re-establish the link. An
+// error is returned if the up fails, including the command context (so callers
+// can detect context timeouts) and trimmed diagnostic output from nmcli. After
+// a successful up, the gateway is probed once via ConnectionGatewayReachable;
+// if the gateway is still unreachable, a descriptive error is returned so
+// callers (e.g., the network monitor) do not treat the recovery as successful
+// and can fall back to a heavier restart. All command execution is bounded by
+// context timeouts and uses direct argument arrays (never a shell). The tools
+// layer does not log; errors are returned for callers to handle.
 func ReconnectConnection(connectionName string) error {
-	ctxDown, cancelDown := context.WithTimeout(context.Background(), 35*time.Second)
-	defer cancelDown()
-	_ = exec.CommandContext(ctxDown, "nmcli", "--wait", "30", "connection", "down", "id", connectionName).Run()
-
 	ctxUp, cancelUp := context.WithTimeout(context.Background(), 190*time.Second)
 	defer cancelUp()
 	up := exec.CommandContext(ctxUp, "nmcli", "--wait", "180", "connection", "up", "id", connectionName)
-	if err := up.Run(); err != nil {
+	out, err := up.CombinedOutput()
+	if err != nil {
+		diag := strings.TrimSpace(string(out))
+		if diag != "" {
+			return fmt.Errorf("failed to bring up connection %q: %w (output: %s)", connectionName, err, diag)
+		}
 		return fmt.Errorf("failed to bring up connection %q: %w", connectionName, err)
 	}
 
