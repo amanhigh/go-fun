@@ -21,9 +21,9 @@ import (
 )
 
 const (
-	// networkRecoveryCooldown enforces a minimum gap between recovery attempts.
-	// It is fixed policy and is not externally configurable.
-	networkRecoveryCooldown = 5 * time.Minute
+	// networkManagerRestartAfterFailures is the number of consecutive
+	// unreachable checks at which NetworkManager is restarted as a last resort.
+	networkManagerRestartAfterFailures = 5
 
 	DATE_FORMAT = "20060102__150405"
 	TRADE_INFO  = `
@@ -54,8 +54,6 @@ type OSManagerImpl struct {
 
 	// consecutiveFailures counts back-to-back unreachable gateway checks.
 	consecutiveFailures int
-	// lastRecovery records the clock time of the most recent recovery attempt.
-	lastRecovery time.Time
 }
 
 func NewOSManager(wait time.Duration, screenshotPath string, scheduler gocron.Scheduler) *OSManagerImpl {
@@ -188,7 +186,9 @@ func (a *OSManagerImpl) sendNotification(ticker string) {
 }
 
 func (a *OSManagerImpl) MonitorInternetConnection(ctx context.Context) {
-	// NewJob cannot fail with static hardcoded inputs; Shutdown failing is benign
+	// The first probe fires one interval after startup (no immediate probe),
+	// matching the prior gocron DurationJob semantics. NewJob cannot fail with
+	// static hardcoded inputs; Shutdown failing is benign.
 	_, _ = a.scheduler.NewJob(
 		gocron.DurationJob(a.wait),
 		gocron.NewTask(func() {
@@ -207,55 +207,60 @@ func (a *OSManagerImpl) MonitorInternetConnection(ctx context.Context) {
 // environmental (not a gateway fault), so it is logged and skipped without
 // changing failure state.
 func (a *OSManagerImpl) monitorInternetConnection() {
-	conn, err := tools.ResolveWiFiConnection()
+	// ResolveWiFiConnection returns the active Wi-Fi connection name, delegating
+	// reconnection to NetworkManager autoconnect (no device-level handling needed).
+	connectionName, err := tools.ResolveWiFiConnection()
 	if err != nil {
 		// Resolution is environmental, not a gateway fault: warn and skip.
 		log.Warn().Err(err).Msg("Failed to resolve active Wi-Fi connection; skipping recovery")
 		return
 	}
 
-	reachable := tools.ConnectionGatewayReachable(conn)
-	a.recoverConnection(conn, reachable, tools.ReconnectConnection, tools.RestartNetworkManager)
+	reachable := tools.ConnectionGatewayReachable(connectionName)
+	a.recoverConnection(connectionName, reachable, tools.RestartNetworkManager)
 }
 
-// recoverConnection applies the failure-count, cooldown, and reset policy and,
-// when warranted, performs a targeted reconnect (falling back to a restart).
+// recoverConnection applies the restart-only failure-count recovery policy.
 //
-// reconnect and restart are injected callbacks so the recovery policy can be
-// exercised without invoking nmcli/ping/sudo/systemctl. In production they are
-// the real tools.ReconnectConnection and tools.RestartNetworkManager.
-func (a *OSManagerImpl) recoverConnection(conn string, reachable bool, reconnect func(string) error, restart func() error) {
+// Reconnection is delegated to NetworkManager autoconnect. Manual
+// `nmcli connection up` must NOT be reintroduced: the rtl88x2bu driver has
+// observed MAC-reset "Operation not permitted" failures, and manual activation
+// can interrupt autoconnect or a healthy connection.
+//
+// Policy: at exactly networkManagerRestartAfterFailures consecutive unreachable
+// checks, invoke the injected restart callback (tools.RestartNetworkManager in
+// production), log the outcome, and reset the counter. No device reset or manual
+// profile activation is ever performed.
+func (a *OSManagerImpl) recoverConnection(connectionName string, reachable bool, restart func() error) {
 	if reachable {
-		// Gateway healthy: reset prior failure state.
+		// Gateway healthy: if failures had accumulated, the link came back via
+		// NetworkManager autoconnect; report and clear the failure state.
+		if a.consecutiveFailures > 0 {
+			log.Info().
+				Str("Connection", connectionName).
+				Int("Failures", a.consecutiveFailures).
+				Msg("Wi-Fi gateway recovered")
+		}
 		a.consecutiveFailures = 0
 		return
 	}
 
 	a.consecutiveFailures++
-	// Policy: wait for two consecutive failures before acting.
-	if a.consecutiveFailures < 2 {
-		return
-	}
+	log.Warn().
+		Str("Connection", connectionName).
+		Int("Failures", a.consecutiveFailures).
+		Int("Threshold", networkManagerRestartAfterFailures).
+		Msg("Wi-Fi gateway unreachable")
 
-	// Throttle recovery to one attempt per cooldown window.
-	if !a.lastRecovery.IsZero() && time.Since(a.lastRecovery) < networkRecoveryCooldown {
-		return
-	}
-
-	// Outside cooldown: record attempt time, then try targeted reconnect first.
-	a.lastRecovery = time.Now()
-	log.Info().Str("Connection", conn).Int("Failures", a.consecutiveFailures).Msg("Recovery threshold met; attempting connection recovery")
-	if err := reconnect(conn); err != nil {
-		log.Error().Err(err).Str("Connection", conn).Msg("Targeted reconnect failed; falling back to NetworkManager restart")
-		if rErr := restart(); rErr != nil {
-			log.Error().Err(rErr).Msg("NetworkManager restart fallback failed")
+	if a.consecutiveFailures == networkManagerRestartAfterFailures {
+		// Exactly the threshold of consecutive failures: restart NetworkManager
+		// as a last resort and let autoconnect re-establish the link.
+		log.Info().Str("Connection", connectionName).Msg("Wi-Fi remains unreachable; restarting NetworkManager")
+		if err := restart(); err != nil {
+			log.Error().Err(err).Str("Connection", connectionName).Msg("NetworkManager restart failed")
 		} else {
-			log.Info().Str("Connection", conn).Msg("NetworkManager restart fallback succeeded")
+			log.Info().Str("Connection", connectionName).Msg("NetworkManager restart completed; awaiting gateway recovery")
 		}
-	} else {
-		log.Info().Str("Connection", conn).Msg("Targeted reconnect succeeded")
+		a.consecutiveFailures = 0
 	}
-
-	// Recovery attempted: start a fresh failure cycle.
-	a.consecutiveFailures = 0
 }
