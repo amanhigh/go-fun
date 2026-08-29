@@ -1,8 +1,6 @@
 package manager
 
 import (
-	"errors"
-
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
 )
@@ -10,26 +8,21 @@ import (
 // These specs register on Ginkgo's global suite, which the package's
 // TestManager entrypoint runs. They live in the internal `manager` package so
 // they can reach the unexported recoverConnection and recovery state directly.
+
+// testConnectionName is the connection identifier exercised by the recovery
+// policy specs. The value is a synthetic placeholder; only the policy's failure
+// counting is under test, not the connection itself.
+const testConnectionName = "test-wifi-connection"
+
 var _ = Describe("Auto", func() {
 	Context("OS network manager", func() {
 		Describe("recoverConnection", func() {
 			var (
-				mgr *OSManagerImpl
-
-				reconnectCalls []string
-				restartCalls   int
-
-				reconnectErr error
+				mgr          *OSManagerImpl
+				restartCalls int
 			)
 
-			// fakeReconnect records the connection it was asked to reconnect and
-			// returns the configured error.
-			reconnect := func(conn string) error {
-				reconnectCalls = append(reconnectCalls, conn)
-				return reconnectErr
-			}
-
-			// fakeRestart counts invocations and always succeeds.
+			// restart counts invocations and always succeeds.
 			restart := func() error {
 				restartCalls++
 				return nil
@@ -39,83 +32,50 @@ var _ = Describe("Auto", func() {
 				// Minimal manager: recovery state lives on the struct and is exercised
 				// directly via recoverConnection, so no scheduler is required.
 				mgr = &OSManagerImpl{}
-				reconnectCalls = nil
 				restartCalls = 0
-				reconnectErr = nil
 			})
 
 			// probe drives n consecutive unreachable gateway checks through the policy.
 			probe := func(n int) {
 				for range n {
-					mgr.recoverConnection("wlan0", false, reconnect, restart)
+					mgr.recoverConnection(testConnectionName, false, restart)
 				}
 			}
 
-			Context("failure counting", func() {
-				It("does not recover after a single failure", func() {
-					probe(1)
+			Context("restart-only recovery policy", func() {
+				It("does not restart after failures just below the threshold", func() {
+					probe(networkManagerRestartAfterFailures - 1)
 
-					Expect(reconnectCalls).To(BeEmpty(), "reconnect must not run on the first failure")
-					Expect(restartCalls).To(Equal(0), "restart must never run without a reconnect attempt")
-					Expect(mgr.consecutiveFailures).To(Equal(1), "failure count should be tracked")
+					Expect(restartCalls).To(Equal(0), "restart must not run before the failure threshold")
+					Expect(mgr.consecutiveFailures).To(Equal(networkManagerRestartAfterFailures-1), "failure count continues to accumulate")
 				})
 
-				It("invokes targeted reconnect (and no restart) after two failures", func() {
-					probe(2)
+				It("restarts NetworkManager exactly once at the threshold and resets the counter", func() {
+					probe(networkManagerRestartAfterFailures)
 
-					Expect(reconnectCalls).To(Equal([]string{"wlan0"}), "reconnect should target the resolved connection")
-					Expect(restartCalls).To(Equal(0), "restart must not run when reconnect succeeds")
-					Expect(mgr.consecutiveFailures).To(Equal(0), "failure count resets after a recovery attempt")
-				})
-			})
-
-			Context("reconnect failure fallback", func() {
-				BeforeEach(func() {
-					reconnectErr = errors.New("reconnect boom")
+					Expect(restartCalls).To(Equal(1), "restart must run once at the failure threshold")
+					Expect(mgr.consecutiveFailures).To(Equal(0), "failure count resets after restart")
 				})
 
-				It("invokes restart exactly once when reconnect fails", func() {
-					probe(2)
+				It("begins a fresh cycle after a restart so the next threshold of failures does not restart", func() {
+					probe(networkManagerRestartAfterFailures)
+					Expect(restartCalls).To(Equal(1), "restart must run at the failure threshold")
 
-					Expect(reconnectCalls).To(Equal([]string{"wlan0"}), "reconnect attempted once")
-					Expect(restartCalls).To(Equal(1), "restart must run exactly once as fallback")
-				})
-			})
-
-			Context("cooldown", func() {
-				It("suppresses recovery while still within the cooldown window", func() {
-					// First recovery attempt records lastRecovery = now.
-					probe(2)
-					Expect(reconnectCalls).To(Equal([]string{"wlan0"}))
-
-					// More failures immediately after must not trigger another recovery
-					// because the cooldown has not elapsed.
-					probe(2)
-					Expect(reconnectCalls).To(Equal([]string{"wlan0"}), "cooldown should suppress repeated recovery")
-					Expect(restartCalls).To(Equal(0))
-				})
-			})
-
-			Context("state reset", func() {
-				It("resets failure count after a recovery attempt", func() {
-					probe(2)
-					Expect(mgr.consecutiveFailures).To(Equal(0), "recovered state should be reset")
-
-					// A single subsequent failure must not recover, proving the counter
-					// was reset to zero rather than left at two.
-					probe(1)
-					Expect(reconnectCalls).To(Equal([]string{"wlan0"}), "no recovery after a single post-reset failure")
+					// One less than the threshold of failures after the restart must not
+					// trigger another restart because the counter resets to zero.
+					probe(networkManagerRestartAfterFailures - 1)
+					Expect(restartCalls).To(Equal(1), "no restart within the new cycle before the threshold")
+					Expect(mgr.consecutiveFailures).To(Equal(networkManagerRestartAfterFailures-1), "failure count accumulates in the new cycle")
 				})
 
-				It("resets failure count when the gateway becomes reachable", func() {
+				It("resets the failure counter and performs no restart when the gateway is reachable", func() {
 					probe(1)
 					Expect(mgr.consecutiveFailures).To(Equal(1))
 
-					mgr.recoverConnection("wlan0", true, reconnect, restart)
+					mgr.recoverConnection(testConnectionName, true, restart)
 
 					Expect(mgr.consecutiveFailures).To(Equal(0), "reachable gateway clears failure state")
-					Expect(reconnectCalls).To(BeEmpty(), "no recovery action on a healthy gateway")
-					Expect(restartCalls).To(Equal(0))
+					Expect(restartCalls).To(Equal(0), "no recovery action on a healthy gateway")
 				})
 			})
 		})
