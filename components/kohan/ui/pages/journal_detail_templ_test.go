@@ -130,16 +130,16 @@ var _ = Describe("Journal Detail Page Tests", func() {
 
 		It("renders the deferred review-advance control", func() {
 			// Banner is shown only while the deferred review-advance is active.
-			Expect(attrValueExists(doc, "x-show", "sidebar.reviewAdvance.active")).To(BeTrue())
+			Expect(attrValueExists(doc, "x-show", "sidebar.state.reviewAdvance.active")).To(BeTrue())
 			// Cancel binding on the action button.
-			Expect(attrValueExists(doc, "x-on:click", "sidebar.reviewAdvance.cancel()")).To(BeTrue())
+			Expect(attrValueExists(doc, "x-on:click", "sidebar.state.reviewAdvance.cancel()")).To(BeTrue())
 			// Live status/countdown text binding.
-			Expect(attrValueExists(doc, "x-text", "sidebar.reviewAdvance.message + ' (' + sidebar.reviewAdvance.remainingSeconds + 's)'")).To(BeTrue())
+			Expect(attrValueExists(doc, "x-text", "sidebar.state.reviewAdvance.message + ' (' + sidebar.state.reviewAdvance.remainingSeconds + 's)'")).To(BeTrue())
 
 			// The element carrying the x-show binding must also be cloaked.
 			advance := doc.Find("*").FilterFunction(func(_ int, s *goquery.Selection) bool {
 				v, ok := s.Attr("x-show")
-				return ok && v == "sidebar.reviewAdvance.active"
+				return ok && v == "sidebar.state.reviewAdvance.active"
 			})
 			Expect(advance.Length()).To(Equal(1))
 			_, hasCloak := advance.Attr("x-cloak")

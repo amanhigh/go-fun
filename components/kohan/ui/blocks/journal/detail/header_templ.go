@@ -384,7 +384,7 @@ func journalDetailReviewCard() templ.Component {
 			return templ_7745c5c3_Err
 		}
 		templ_7745c5c3_Err = components.DeferredAction(components.DeferredActionProps{
-			StateExpr:   "sidebar.reviewAdvance",
+			StateExpr:   "sidebar.state.reviewAdvance",
 			CancelLabel: "Stay",
 		}).Render(ctx, templ_7745c5c3_Buffer)
 		if templ_7745c5c3_Err != nil {

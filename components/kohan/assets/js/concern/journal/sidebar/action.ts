@@ -52,12 +52,30 @@ async function toggleReviewedAt(submitter: Submitter, pg: JournalDetailPageProvi
 	const journal = pg().journal.detail!;
 	const reviewedAt = journal.reviewed_at ? null : localToday(pg);
 	const successMsg = reviewedAt ? 'Journal marked reviewed.' : 'Journal marked not reviewed.';
-	await submitter.run(async () => {
+	const success = await submitter.run(async () => {
 		const envelope = await pg().client.updateReview(journal.id, { reviewed_at: reviewedAt });
 		journal.reviewed_at = envelope.data.reviewed_at;
 		await pg().sidebar.reviewQueue.load();
 		// Intentionally NOT updating journal.status — review toggle only touches reviewed_at.
 	}, { success: successMsg });
+
+	// Return immediately when the review toggle failed.
+	if (!success) return;
+
+	// When un-reviewing, cancel any pending auto-advance and stop.
+	if (reviewedAt === null) {
+		pg().sidebar.state.reviewAdvance.cancel();
+		return;
+	}
+
+	// Only auto-advance while in review mode.
+	if (!pg().sidebar.state.reviewOpen) return;
+
+	// Schedule auto-advance to the next pending item when one remains.
+	const next = pg().sidebar.reviewQueue.items[0];
+	if (next) {
+		pg().sidebar.state.reviewAdvance.schedule(next);
+	}
 }
 
 /** Status-only update — changes ONLY status, never reviewed_at. */

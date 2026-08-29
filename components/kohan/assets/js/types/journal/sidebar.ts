@@ -3,6 +3,7 @@ import type { Loader } from '../../lib/loader';
 import type { Submitter } from '../../lib/submitter';
 import type { Collection } from '../core/collection';
 import type { DisplaySpec } from '../core/present';
+import type { DeferredAction } from '../../lib/deferred_action';
 
 // ===== Main Concern =====
 
@@ -23,6 +24,7 @@ export type SidebarStateConcern = {
 	actionOpen: boolean;
 	reviewOpen: boolean;
 	noteOpen: boolean;
+	reviewAdvance: ReviewAdvanceConcern;
 	restorePersistedSidebarState(): void;
 	setActionOpen(isOpen: boolean): void;
 	setReviewOpen(isReviewOpen: boolean): void;
@@ -45,6 +47,10 @@ export type QuickAction = {
 export type ReviewQueueConcern = Collection<Journal> & {
 	loader: Loader;
 	load(): Promise<void>;
+};
+
+export type ReviewAdvanceConcern = DeferredAction & {
+	schedule(next: Journal): void;
 };
 
 export type NoteFormConcern = {
