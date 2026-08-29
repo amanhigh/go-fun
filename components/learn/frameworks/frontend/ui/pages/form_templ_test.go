@@ -113,8 +113,8 @@ var _ = Describe("Form Page Tests", func() {
 			Expect(html).To(ContainSubstring("<h1"))
 			Expect(html).To(ContainSubstring("Text Inputs"))
 			Expect(html).To(ContainSubstring("Selection Controls"))
-			Expect(html).To(ContainSubstring("Header"))
-			Expect(html).To(ContainSubstring("Footer"))
+			Expect(html).To(ContainSubstring("<hgroup"))
+			Expect(html).To(ContainSubstring("<footer"))
 			Expect(len(strings.TrimSpace(html))).To(BeNumerically(">", 2000))
 		})
 
