@@ -3,13 +3,19 @@ package components
 type SectionHeaderProps struct {
 	Title       string
 	Description string
+	Meta        templ.Component
 	Class       string
 	Attributes  templ.Attributes
 }
 
 templ SectionHeader(props SectionHeaderProps) {
-	<div class={ "space-y-1 " + props.Class } { props.Attributes... }>
-		<h3 class="text-lg font-semibold tracking-tight text-foreground">{ props.Title }</h3>
+	<div class={ "space-y-0.5 " + props.Class } { props.Attributes... }>
+		<div class="flex flex-wrap items-center justify-between gap-x-2 gap-y-0.5">
+			<h3 class="text-base sm:text-lg font-semibold tracking-tight text-foreground">{ props.Title }</h3>
+			if props.Meta != nil {
+				<div class="flex items-center gap-2">@props.Meta</div>
+			}
+		</div>
 		if props.Description != "" {
 			<p class="text-sm text-muted-foreground">{ props.Description }</p>
 		}

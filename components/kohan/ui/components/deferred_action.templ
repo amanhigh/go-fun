@@ -1,0 +1,43 @@
+package components
+
+import (
+	"github.com/templui/templui/components/button"
+)
+
+// DeferredActionProps configures the deferred-action banner.
+//   StateExpr   — JS expression for the DeferredAction state object (e.g. "da").
+//   CancelLabel — text shown on the cancel button.
+//
+// The component is intentionally decoupled from any specific domain (journal,
+// sidebar, etc.). It renders only while the action is active and exposes a
+// polite live status/countdown bound to the same state expression, with the
+// cancel action bound to that expression as well.
+type DeferredActionProps struct {
+	StateExpr   string
+	CancelLabel string
+}
+
+templ DeferredAction(props DeferredActionProps) {
+	<div
+		class="inline-flex items-center gap-2 rounded-md border border-amber-300 bg-amber-50 px-3 py-1.5 text-sm text-amber-800"
+		x-cloak
+		x-show={ props.StateExpr + ".active" }
+	>
+		<span
+			class="font-medium"
+			aria-live="polite"
+			x-text={ props.StateExpr + ".message + ' (' + " + props.StateExpr + ".remainingSeconds + 's)'" }
+		></span>
+		@button.Button(button.Props{
+			Variant: button.VariantOutline,
+			Type:    button.TypeButton,
+			Size:    button.SizeSm,
+			Class:   "h-7 border-amber-300 text-amber-700 hover:bg-amber-100",
+			Attributes: templ.Attributes{
+				"x-on:click": props.StateExpr + ".cancel()",
+			},
+		}) {
+			{ props.CancelLabel }
+		}
+	</div>
+}

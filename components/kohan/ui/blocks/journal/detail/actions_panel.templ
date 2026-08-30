@@ -4,29 +4,24 @@ import (
 	commondetail "github.com/amanhigh/go-fun/components/kohan/ui/blocks/journal/common"
 	"github.com/amanhigh/go-fun/components/kohan/ui/components"
 	"github.com/templui/templui/components/button"
-	"github.com/templui/templui/components/card"
 	"github.com/templui/templui/components/input"
 )
 
 templ JournalDetailActionsPanel() {
-	@commondetail.JournalDetailSection("Command Center", "ਜਿਹੜੇ ਲੋਕ ਇਤਿਹਾਸ ਨੂੰ ਯਾਦ ਨਹੀਂ ਰੱਖਦੇ, ਉਹ ਇਸਨੂੰ ਦੁਹਰਾਉਣ ਲਈ ਸਰਾਪੇ ਜਾਂਦੇ ਹਨ। – ਜਾਰਜ ਸਾਂਤਾਯਾਨਾ", "sidebar.state.actionOpen", "sidebar.state.setActionOpen($el.open)") {
-		<div class="space-y-4">
+	@commondetail.JournalDetailSection("Fingerprints", "Tag what the trade left behind.", "sidebar.state.actionOpen", "sidebar.state.setActionOpen($el.open)") {
+		<div class="space-y-3">
 			@ohYouTookTrades()
-			@journalDetailTagsCard()
+			@journalDetailTagsSection()
 		</div>
 	}
 }
 
 templ ohYouTookTrades() {
-	@card.Card(card.Props{Class: "rounded-3xl shadow-sm", Attributes: templ.Attributes{"x-show": "journal.detail.type === 'TAKEN'"}}) {
-		@card.Header(card.HeaderProps{}) {
-			@card.Title(card.TitleProps{Class: "tracking-tight"}) { Oh, So You Took the Trade? }
-			@card.Description(card.DescriptionProps{}) { How did it go? Confess your sins. }
-		}
-		@card.Content(card.ContentProps{Class: "space-y-3 pt-0"}) {
-			@takenTagControls()
-		}
-	}
+	<section class="space-y-3" x-show="journal.detail.type === 'TAKEN'">
+		<h4 class="text-sm font-semibold tracking-tight text-foreground">Oh, So You Took the Trade?</h4>
+		<p class="text-sm text-muted-foreground">How did it go? Confess your sins.</p>
+		@takenTagControls()
+	</section>
 }
 
 templ takenTagControls() {
@@ -37,7 +32,7 @@ templ takenTagControls() {
 					Variant: button.VariantOutline,
 					Type:    button.TypeButton,
 					Size:    button.SizeSm,
-					Class:   "rounded-xl px-3 py-2 text-xs font-semibold uppercase tracking-wide",
+					Class:   "rounded-xl px-2.5 py-1.5 text-xs font-semibold uppercase tracking-wide",
 				Attributes: templ.Attributes{
 					"x-on:click":      "sidebar.takenTag.submit(tag.tag)",
 					"x-bind:disabled": "sidebar.takenTag.submitter.isBusy() || sidebar.takenTag.hasTag(tag.tag)",
@@ -51,31 +46,25 @@ templ takenTagControls() {
 	</div>
 }
 
-templ journalDetailTagsCard() {
-	@card.Card(card.Props{Class: "rounded-3xl shadow-sm"}) {
-		@card.Header(card.HeaderProps{}) {
-			@card.Title(card.TitleProps{Class: "tracking-tight"}) { Fingerprints }
-			@card.Description(card.DescriptionProps{}) { Tag what the trade left behind. }
-		}
-		@card.Content(card.ContentProps{Class: "space-y-2 pt-0"}) {
-			@journalDetailTagForm()
-			@components.Submitter(components.SubmitterProps{Submitter: "sidebar.reasonTagForm.submitter"})
-			@journalDetailTagInputs()
-			@components.EmptyState(components.EmptyStateProps{Message: "No tags added yet.", ShowExpr: "!sidebar.tags.hasItems()"})
-		}
-	}
+templ journalDetailTagsSection() {
+	<section class="space-y-2">
+		@journalDetailTagForm()
+		@components.Submitter(components.SubmitterProps{Submitter: "sidebar.reasonTagForm.submitter"})
+		@journalDetailTagInputs()
+		@components.EmptyState(components.EmptyStateProps{Message: "No tags added yet.", ShowExpr: "!sidebar.tags.hasItems()"})
+	</section>
 }
 
 templ journalDetailTagForm() {
-	<div class="grid grid-cols-1 gap-1.5 sm:grid-cols-[minmax(0,1fr)_minmax(0,1fr)_auto] sm:items-center">
+	<div class="grid grid-cols-1 gap-1 sm:grid-cols-[minmax(0,1fr)_minmax(0,1fr)_auto] sm:items-center">
 		@input.Input(input.Props{
 			Placeholder: "Reason tag",
-			Class:       "h-8 rounded-lg border-border bg-background px-2.5 text-xs text-foreground outline-none transition focus:border-violet-400 focus:ring-2 focus:ring-violet-200",
+			Class:       "h-8 rounded-lg border-border bg-background px-2 text-xs text-foreground outline-none transition focus:border-violet-400 focus:ring-2 focus:ring-violet-200",
 			Attributes:  templ.Attributes{"x-model": "sidebar.reasonTagForm.input", "x-on:keydown.enter.prevent": "$refs.reasonTagOverride.focus()"},
 		})
 		@input.Input(input.Props{
 			Placeholder: "Override (optional)",
-			Class:       "h-8 rounded-lg border-border bg-background px-2.5 text-xs text-foreground outline-none transition focus:border-violet-400 focus:ring-2 focus:ring-violet-200",
+			Class:       "h-8 rounded-lg border-border bg-background px-2 text-xs text-foreground outline-none transition focus:border-violet-400 focus:ring-2 focus:ring-violet-200",
 			Attributes:  templ.Attributes{"x-model": "sidebar.reasonTagForm.override", "x-ref": "reasonTagOverride", "x-on:keydown.enter.prevent": "sidebar.reasonTagForm.submit()"},
 		})
 		@components.SubmitButton(components.SubmitButtonProps{

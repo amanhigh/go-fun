@@ -36,7 +36,7 @@ templ JournalDetailPage(journalID string) {
 // journalDetailLoadedContent renders the main journal content when loaded.
 templ journalDetailLoadedContent() {
 	<div class="space-y-6">
-		<div class="grid gap-6 xl:grid-cols-[minmax(0,7fr)_minmax(320px,3fr)] xl:items-start">
+		<div class="grid gap-6 xl:grid-cols-[minmax(0,1fr)_minmax(20rem,22rem)] xl:items-start">
 			<div class="space-y-6 min-w-0">
 				@detailblocks.JournalDetailImages()
 				@detailblocks.JournalDetailNotes()

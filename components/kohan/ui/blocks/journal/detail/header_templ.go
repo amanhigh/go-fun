@@ -120,7 +120,7 @@ func JournalDetailHeader() templ.Component {
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
-		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 7, "</div><div class=\"flex flex-col items-end gap-2 lg:ml-auto\"><div class=\"flex items-center gap-2\">")
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 7, "</div><div class=\"min-w-0 flex-1 truncate text-sm italic text-muted-foreground\" title=\"ਜਿਹੜੇ ਲੋਕ ਇਤਿਹਾਸ ਨੂੰ ਯਾਦ ਨਹੀਂ ਰੱਖਦੇ, ਉਹ ਇਸਨੂੰ ਦੁਹਰਾਉਣ ਲਈ ਸਰਾਪੇ ਜਾਂਦੇ ਹਨ। – ਜਾਰਜ ਸਾਂਤਾਯਾਨਾ\">ਜਿਹੜੇ ਲੋਕ ਇਤਿਹਾਸ ਨੂੰ ਯਾਦ ਨਹੀਂ ਰੱਖਦੇ, ਉਹ ਇਸਨੂੰ ਦੁਹਰਾਉਣ ਲਈ ਸਰਾਪੇ ਜਾਂਦੇ ਹਨ। – ਜਾਰਜ ਸਾਂਤਾਯਾਨਾ</div><div class=\"flex flex-col items-end gap-2 lg:ml-auto\"><div class=\"flex items-center gap-2\">")
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
@@ -380,6 +380,13 @@ func journalDetailReviewCard() templ.Component {
 			return templ_7745c5c3_Err
 		}
 		templ_7745c5c3_Err = journalDetailActionBar().Render(ctx, templ_7745c5c3_Buffer)
+		if templ_7745c5c3_Err != nil {
+			return templ_7745c5c3_Err
+		}
+		templ_7745c5c3_Err = components.DeferredAction(components.DeferredActionProps{
+			StateExpr:   "sidebar.state.reviewAdvance",
+			CancelLabel: "Stay",
+		}).Render(ctx, templ_7745c5c3_Buffer)
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
