@@ -3,7 +3,6 @@ import type { Loader } from '../../lib/loader';
 import type { Submitter } from '../../lib/submitter';
 import type { Collection } from '../core/collection';
 import type { DisplaySpec } from '../core/present';
-import type { DeferredAction } from '../../lib/deferred_action';
 
 // ===== Main Concern =====
 
@@ -49,8 +48,12 @@ export type ReviewQueueConcern = Collection<Journal> & {
 	load(): Promise<void>;
 };
 
-export type ReviewAdvanceConcern = DeferredAction & {
+// ReviewAdvanceConcern owns the conditional delayed navigation after a journal
+// is marked reviewed in review mode. The pending advance is notification-owned
+// (see sidebar/state.ts), so only the schedule/cancel surface is exposed.
+export type ReviewAdvanceConcern = {
 	schedule(next: Journal): void;
+	cancel(): void;
 };
 
 export type NoteFormConcern = {

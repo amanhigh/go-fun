@@ -87,6 +87,20 @@ var _ = Describe("Base Template Tests", func() {
 		})
 	})
 
+	Context("Shared notification viewport", func() {
+		It("renders exactly one notification viewport mounted by Base", func() {
+			// The prop-free notification viewport is mounted once from the shared
+			// base layout so callers can notify() without per-page wiring.
+			Expect(doc.Find("[data-notification-viewport]").Length()).To(Equal(1))
+		})
+
+		It("includes the TemplUI Toast runtime alongside the viewport", func() {
+			// The shared base keeps the Student TemplUI Toast demo functional
+			// alongside the independent common Notification runtime.
+			Expect(html).To(ContainSubstring("toast.min.js"))
+		})
+	})
+
 	Context("Children rendering", func() {
 		It("renders child content inside main", func() {
 			var childRender strings.Builder
