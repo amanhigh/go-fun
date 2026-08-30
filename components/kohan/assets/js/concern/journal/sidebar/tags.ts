@@ -13,7 +13,7 @@ export function NewTagCollectionConcern(pg: JournalDetailPageProvider) {
 			if (!pg().journal.detail) return;
 			const ok = await this.submitter.run(
 				() => pg().tagClient.delete(pg().journal.detail!.id, tagId),
-				{ success: 'Tag deleted' },
+				{ message: 'Tag deleted', variant: 'success' },
 			);
 			if (ok) this.remove(tagId);
 		},
