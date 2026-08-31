@@ -178,6 +178,7 @@ func (a *OSManagerImpl) sendNotification(ticker string) {
 	}
 }
 
+// FIXME: Move internet monitor to Dagu workflow scheduler.
 func (a *OSManagerImpl) MonitorInternetConnection(ctx context.Context) {
 	// The first probe fires one interval after startup (no immediate probe),
 	// matching the prior gocron DurationJob semantics. NewJob cannot fail with
