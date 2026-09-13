@@ -57,16 +57,12 @@ var _ = Describe("Student", func() {
 	Context("StudentQuery", func() {
 		It("should embed Pagination and Sort", func() {
 			query := fun.StudentQuery{
-				Pagination: common.Pagination{
-					Offset: 10,
-					Limit:  5,
-				},
-				Sort: common.Sort{
-					SortOrder: common.SortOrderDesc,
-				},
-				SortBy: "name",
-				Name:   "John",
-				Gender: "MALE",
+				Offset:    10,
+				Limit:     5,
+				SortOrder: common.SortOrderDesc,
+				SortBy:    "name",
+				Name:      "John",
+				Gender:    "MALE",
 			}
 
 			Expect(query.Offset).To(Equal(10))
@@ -81,8 +77,8 @@ var _ = Describe("Student", func() {
 	Context("StudentList", func() {
 		It("should contain records and metadata", func() {
 			students := []fun.Student{
-				{StudentRequest: fun.StudentRequest{Name: "John", Age: 30, Gender: "MALE"}, Id: "1"},
-				{StudentRequest: fun.StudentRequest{Name: "Jane", Age: 25, Gender: "FEMALE"}, Id: "2"},
+				{Name: "John", Age: 30, Gender: "MALE", Id: "1"},
+				{Name: "Jane", Age: 25, Gender: "FEMALE", Id: "2"},
 			}
 
 			studentList := fun.StudentList{
@@ -106,12 +102,10 @@ var _ = Describe("Student", func() {
 	Context("Student", func() {
 		It("should embed StudentRequest and have Id field", func() {
 			student := fun.Student{
-				StudentRequest: fun.StudentRequest{
-					Name:   "John Doe",
-					Age:    30,
-					Gender: "MALE",
-				},
-				Id: "abc123",
+				Name:   "John Doe",
+				Age:    30,
+				Gender: "MALE",
+				Id:     "abc123",
 			}
 
 			Expect(student.Name).To(Equal("John Doe"))
@@ -123,11 +117,9 @@ var _ = Describe("Student", func() {
 		Context("BeforeCreate", func() {
 			It("should generate 8-character UUID for Id", func() {
 				student := &fun.Student{
-					StudentRequest: fun.StudentRequest{
-						Name:   "Test Student",
-						Age:    25,
-						Gender: "MALE",
-					},
+					Name:   "Test Student",
+					Age:    25,
+					Gender: "MALE",
 				}
 
 				err := student.BeforeCreate(nil)
@@ -153,12 +145,10 @@ var _ = Describe("Student", func() {
 	Context("CreateStudentAudit", func() {
 		It("should create audit from student", func() {
 			student := fun.Student{
-				StudentRequest: fun.StudentRequest{
-					Name:   "John Doe",
-					Age:    30,
-					Gender: "MALE",
-				},
-				Id: "abc123",
+				Name:   "John Doe",
+				Age:    30,
+				Gender: "MALE",
+				Id:     "abc123",
 			}
 
 			audit := fun.CreateStudentAudit(student)
@@ -212,12 +202,10 @@ var _ = Describe("Student", func() {
 		Context("Audit Creation Logic", func() {
 			It("should create proper audit for CREATE operation", func() {
 				student := fun.Student{
-					StudentRequest: fun.StudentRequest{
-						Name:   "Test User",
-						Age:    25,
-						Gender: "FEMALE",
-					},
-					Id: "test123",
+					Name:   "Test User",
+					Age:    25,
+					Gender: "FEMALE",
+					Id:     "test123",
 				}
 
 				audit := fun.CreateStudentAudit(student)
@@ -236,12 +224,10 @@ var _ = Describe("Student", func() {
 
 			It("should create proper audit for UPDATE operation", func() {
 				student := fun.Student{
-					StudentRequest: fun.StudentRequest{
-						Name:   "Updated User",
-						Age:    30,
-						Gender: "MALE",
-					},
-					Id: "update123",
+					Name:   "Updated User",
+					Age:    30,
+					Gender: "MALE",
+					Id:     "update123",
 				}
 
 				audit := fun.CreateStudentAudit(student)
@@ -254,12 +240,10 @@ var _ = Describe("Student", func() {
 
 			It("should create proper audit for DELETE operation", func() {
 				student := fun.Student{
-					StudentRequest: fun.StudentRequest{
-						Name:   "Deleted User",
-						Age:    35,
-						Gender: "MALE",
-					},
-					Id: "delete123",
+					Name:   "Deleted User",
+					Age:    35,
+					Gender: "MALE",
+					Id:     "delete123",
 				}
 
 				audit := fun.CreateStudentAudit(student)

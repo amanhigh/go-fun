@@ -70,8 +70,7 @@ func DefaultRetryConfig() middleware.Retry {
 func shouldRetry(params middleware.RetryParams) bool {
 	err := params.Err
 	// HTTP error classification.
-	var httpErr modelcommon.HttpError
-	if errors.As(err, &httpErr) {
+	if httpErr, ok := errors.AsType[modelcommon.HttpError](err); ok {
 		code := httpErr.Code()
 		// 408 (Request Timeout) and 429 (Too Many Requests) are retryable.
 		if code == http.StatusRequestTimeout || code == http.StatusTooManyRequests {
@@ -86,14 +85,12 @@ func shouldRetry(params middleware.RetryParams) bool {
 	}
 
 	// JSON syntax errors are not retryable.
-	var syntaxErr *json.SyntaxError
-	if errors.As(err, &syntaxErr) {
+	if _, ok := errors.AsType[*json.SyntaxError](err); ok {
 		return false
 	}
 
 	// JSON type mismatch errors are not retryable.
-	var typeErr *json.UnmarshalTypeError
-	if errors.As(err, &typeErr) {
+	if _, ok := errors.AsType[*json.UnmarshalTypeError](err); ok {
 		return false
 	}
 

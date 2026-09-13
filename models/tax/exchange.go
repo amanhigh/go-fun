@@ -31,7 +31,7 @@ func (r SbiRate) GetKey() string {
 }
 
 func (r SbiRate) GetDate() (time.Time, common.HttpError) {
-	datePart := strings.Split(r.Date, " ")[0]
+	datePart, _, _ := strings.Cut(r.Date, " ")
 	t, err := time.Parse(time.DateOnly, datePart)
 	if err != nil {
 		return time.Time{}, NewInvalidDateError(fmt.Sprintf("failed to parse date '%s': %v", r.Date, err))

@@ -125,7 +125,7 @@ func ImageFileValidator(fl validator.FieldLevel) bool {
 
 // NotFutureValidator validates business rule: date should not be in the future
 func NotFutureValidator(fl validator.FieldLevel) bool {
-	date, ok := fl.Field().Interface().(civil.Date)
+	date, ok := reflect.TypeAssert[civil.Date](fl.Field())
 	if !ok {
 		return false
 	}

@@ -35,11 +35,9 @@ var _ = Describe("ExchangeManager", func() {
 		BeforeEach(func() {
 			testDate = time.Date(2024, 1, 15, 0, 0, 0, 0, time.UTC)
 			position = tax.INRPosition{
-				Position: tax.Position{
-					Date:     testDate,
-					Quantity: 100,
-					USDPrice: 150,
-				},
+				Date:     testDate,
+				Quantity: 100,
+				USDPrice: 150,
 			}
 			exchangeables = []tax.Exchangeable{&position}
 
@@ -69,11 +67,9 @@ var _ = Describe("ExchangeManager", func() {
 			for i := range dates {
 				dates[i] = baseDate.AddDate(0, i, 0)
 				positions[i] = tax.INRPosition{
-					Position: tax.Position{
-						Date:     dates[i],
-						Quantity: 100 * float64(i+1),
-						USDPrice: 150 + float64(i*10),
-					},
+					Date:     dates[i],
+					Quantity: 100 * float64(i+1),
+					USDPrice: 150 + float64(i*10),
 				}
 			}
 
@@ -107,11 +103,9 @@ var _ = Describe("ExchangeManager", func() {
 		BeforeEach(func() {
 			testDate = time.Date(2024, 1, 15, 0, 0, 0, 0, time.UTC)
 			position = tax.INRPosition{
-				Position: tax.Position{
-					Date:     testDate,
-					Quantity: 100,
-					USDPrice: 150,
-				},
+				Date:     testDate,
+				Quantity: 100,
+				USDPrice: 150,
 			}
 			exchangeables = []tax.Exchangeable{&position}
 		})
@@ -142,11 +136,9 @@ var _ = Describe("ExchangeManager", func() {
 			BeforeEach(func() {
 				// Setup test position
 				position = tax.INRPosition{
-					Position: tax.Position{
-						Date:     requestedDate,
-						Quantity: 100,
-						USDPrice: 150,
-					},
+					Date:     requestedDate,
+					Quantity: 100,
+					USDPrice: 150,
 				}
 				exchangeables = []tax.Exchangeable{&position}
 
@@ -178,11 +170,9 @@ var _ = Describe("ExchangeManager", func() {
 
 			BeforeEach(func() {
 				position = tax.INRPosition{
-					Position: tax.Position{
-						Date:     requestedDate,
-						Quantity: 100,
-						USDPrice: 150,
-					},
+					Date:     requestedDate,
+					Quantity: 100,
+					USDPrice: 150,
 				}
 				exchangeables = []tax.Exchangeable{&position}
 
@@ -216,18 +206,14 @@ var _ = Describe("ExchangeManager", func() {
 		It("should skip exchange rate lookup for zero-value positions", func() {
 			// Create positions: one with value, one with zero value
 			nonZeroPosition := tax.INRPosition{
-				Position: tax.Position{
-					Date:     testDate,
-					Quantity: 10,
-					USDPrice: 100,
-				},
+				Date:     testDate,
+				Quantity: 10,
+				USDPrice: 100,
 			}
 			zeroPosition := tax.INRPosition{
-				Position: tax.Position{
-					Date:     yearEnd,
-					Quantity: 0, // Zero quantity
-					USDPrice: 0,
-				},
+				Date:     yearEnd,
+				Quantity: 0, // Zero quantity
+				USDPrice: 0,
 			}
 
 			exchangeables = []tax.Exchangeable{&nonZeroPosition, &zeroPosition}
@@ -255,18 +241,14 @@ var _ = Describe("ExchangeManager", func() {
 		It("should handle mixed positions with only zero-value positions", func() {
 			// All positions have zero value (fully liquidated)
 			zeroPosition1 := tax.INRPosition{
-				Position: tax.Position{
-					Date:     testDate,
-					Quantity: 0,
-					USDPrice: 0,
-				},
+				Date:     testDate,
+				Quantity: 0,
+				USDPrice: 0,
 			}
 			zeroPosition2 := tax.INRPosition{
-				Position: tax.Position{
-					Date:     yearEnd,
-					Quantity: 0,
-					USDPrice: 0,
-				},
+				Date:     yearEnd,
+				Quantity: 0,
+				USDPrice: 0,
 			}
 
 			exchangeables = []tax.Exchangeable{&zeroPosition1, &zeroPosition2}
@@ -319,7 +301,7 @@ var _ = Describe("ExchangeManager", func() {
 		Context("Successful Rate Fetch (Exact Date)", func() {
 			BeforeEach(func() {
 				gains = []tax.INRGains{
-					{Gains: tax.Gains{Symbol: "AAPL", SellDate: "2023-04-15", PNL: 100}},
+					{Symbol: "AAPL", SellDate: "2023-04-15", PNL: 100},
 				}
 				// Expected target date for SellDate "2023-04-15" is "2023-03-31"
 				expectedTargetDate := time.Date(2023, 3, 31, 0, 0, 0, 0, time.UTC)
@@ -337,7 +319,7 @@ var _ = Describe("ExchangeManager", func() {
 		Context("Closest Date Scenario", func() {
 			BeforeEach(func() {
 				gains = []tax.INRGains{
-					{Gains: tax.Gains{Symbol: "MSFT", SellDate: "2023-03-10", PNL: 200}},
+					{Symbol: "MSFT", SellDate: "2023-03-10", PNL: 200},
 				}
 				// Expected target date for SellDate "2023-03-10" is "2023-02-28"
 				requestedTargetDate := time.Date(2023, 2, 28, 0, 0, 0, 0, time.UTC)
@@ -356,7 +338,7 @@ var _ = Describe("ExchangeManager", func() {
 		Context("Error from SBIManager", func() {
 			BeforeEach(func() {
 				gains = []tax.INRGains{
-					{Gains: tax.Gains{Symbol: "GOOG", SellDate: "2023-05-20", PNL: 150}},
+					{Symbol: "GOOG", SellDate: "2023-05-20", PNL: 150},
 				}
 				// Expected target date for SellDate "2023-05-20" is "2023-04-30"
 				expectedTargetDate := time.Date(2023, 4, 30, 0, 0, 0, 0, time.UTC)
@@ -373,7 +355,7 @@ var _ = Describe("ExchangeManager", func() {
 		Context("Invalid SellDate in INRGains", func() {
 			BeforeEach(func() {
 				gains = []tax.INRGains{
-					{Gains: tax.Gains{Symbol: "TSLA", SellDate: "invalid-date", PNL: 50}},
+					{Symbol: "TSLA", SellDate: "invalid-date", PNL: 50},
 				}
 				// No mock expectation for SBIManager as it shouldn't be called
 			})
@@ -402,9 +384,9 @@ var _ = Describe("ExchangeManager", func() {
 			)
 			BeforeEach(func() {
 				gains = []tax.INRGains{
-					{Gains: tax.Gains{Symbol: "S1", SellDate: sellDate1, PNL: 10}},
-					{Gains: tax.Gains{Symbol: "S2", SellDate: sellDate2, PNL: 20}},
-					{Gains: tax.Gains{Symbol: "S3", SellDate: sellDate3, PNL: 30}},
+					{Symbol: "S1", SellDate: sellDate1, PNL: 10},
+					{Symbol: "S2", SellDate: sellDate2, PNL: 20},
+					{Symbol: "S3", SellDate: sellDate3, PNL: 30},
 				}
 				mockSBI.EXPECT().GetTTBuyRate(ctx, targetDate1).Return(rate1, nil).Once()
 				mockSBI.EXPECT().GetTTBuyRate(ctx, targetDate2).Return(rate2, tax.NewClosestDateError(targetDate2, closestDate2)).Once()
@@ -454,13 +436,11 @@ var _ = Describe("ExchangeManager", func() {
 			BeforeEach(func() {
 				paymentDate = time.Date(2024, 2, 20, 0, 0, 0, 0, time.UTC)
 				dividend = tax.INRDividend{
-					Dividend: tax.Dividend{
-						Symbol: "AAPL",
-						Date:   "2024-02-20",
-						Amount: 50.00,
-						Tax:    12.50,
-						Net:    37.50,
-					},
+					Symbol: "AAPL",
+					Date:   "2024-02-20",
+					Amount: 50.00,
+					Tax:    12.50,
+					Net:    37.50,
 				}
 				exchangeables = []tax.Exchangeable{&dividend}
 
@@ -490,11 +470,9 @@ var _ = Describe("ExchangeManager", func() {
 			BeforeEach(func() {
 				paymentDate = time.Date(2024, 2, 20, 0, 0, 0, 0, time.UTC)
 				dividend = tax.INRDividend{
-					Dividend: tax.Dividend{
-						Symbol: "AAPL",
-						Date:   "2024-02-20",
-						Amount: 50.00,
-					},
+					Symbol: "AAPL",
+					Date:   "2024-02-20",
+					Amount: 50.00,
 				}
 				exchangeables = []tax.Exchangeable{&dividend}
 
@@ -521,18 +499,14 @@ var _ = Describe("ExchangeManager", func() {
 
 			BeforeEach(func() {
 				dividend1 = tax.INRDividend{
-					Dividend: tax.Dividend{
-						Symbol: "AAPL",
-						Date:   "2024-02-20",
-						Amount: 50.00,
-					},
+					Symbol: "AAPL",
+					Date:   "2024-02-20",
+					Amount: 50.00,
 				}
 				dividend2 = tax.INRDividend{
-					Dividend: tax.Dividend{
-						Symbol: "MSFT",
-						Date:   "2024-03-15",
-						Amount: 100.00,
-					},
+					Symbol: "MSFT",
+					Date:   "2024-03-15",
+					Amount: 100.00,
 				}
 				exchangeables = []tax.Exchangeable{&dividend1, &dividend2}
 
@@ -572,11 +546,9 @@ var _ = Describe("ExchangeManager", func() {
 		Context("Invalid Date in Exchangeable", func() {
 			BeforeEach(func() {
 				dividend = tax.INRDividend{
-					Dividend: tax.Dividend{
-						Symbol: "AAPL",
-						Date:   "invalid-date",
-						Amount: 50.00,
-					},
+					Symbol: "AAPL",
+					Date:   "invalid-date",
+					Amount: 50.00,
 				}
 				exchangeables = []tax.Exchangeable{&dividend}
 			})

@@ -40,12 +40,10 @@ var _ = Describe("Valuation", func() {
 	Describe("INRPosition", func() {
 		It("should round INR value to 2 decimals", func() {
 			inrPosition := INRPosition{
-				Position: Position{
-					Date:     time.Now(),
-					Quantity: 50.5,
-					USDPrice: 85.33,
-				},
-				TTRate: 84.15,
+				Date:     time.Now(),
+				Quantity: 50.5,
+				USDPrice: 85.33,
+				TTRate:   84.15,
 			}
 			Expect(inrPosition.INRValue()).To(Equal(362616.23))
 		})

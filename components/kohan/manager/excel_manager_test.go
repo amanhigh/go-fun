@@ -202,16 +202,16 @@ var _ = Describe("ExcelManagerImpl", func() {
 			BeforeEach(func() {
 				gain1TTDate := mustParseDate("2023-01-15")
 				gain1 := tax.INRGains{
-					Gains:  tax.Gains{Symbol: "AAPL", BuyDate: "2022-10-01", SellDate: "2023-01-20", Quantity: 10.5, PNL: 100.75, Commission: 5.25, Type: "STCG", Broker: tax.BROKER_DRIVE_WEALTH},
+					Symbol: "AAPL", BuyDate: "2022-10-01", SellDate: "2023-01-20", Quantity: 10.5, PNL: 100.75, Commission: 5.25, Type: "STCG", Broker: tax.BROKER_DRIVE_WEALTH,
 					TTDate: gain1TTDate, TTRate: 82.50,
 				}
 				gain2TTDate := mustParseDate("2023-02-10")
 				gain2 := tax.INRGains{
-					Gains:  tax.Gains{Symbol: "MSFT", BuyDate: "2020-05-01", SellDate: "2023-02-15", Quantity: 5, PNL: -50.20, Commission: 0, Type: "LTCG", Broker: tax.BROKER_INTERACTIVE_BROKERS},
+					Symbol: "MSFT", BuyDate: "2020-05-01", SellDate: "2023-02-15", Quantity: 5, PNL: -50.20, Commission: 0, Type: "LTCG", Broker: tax.BROKER_INTERACTIVE_BROKERS,
 					TTDate: gain2TTDate, TTRate: 83.10,
 				}
 				gain3WithZeroTTDate := tax.INRGains{
-					Gains:  tax.Gains{Symbol: "GOOG", BuyDate: "2021-01-01", SellDate: "2023-03-10", Quantity: 20, PNL: 200.00, Commission: 1.50, Type: "LTCG", Broker: tax.BROKER_DRIVE_WEALTH},
+					Symbol: "GOOG", BuyDate: "2021-01-01", SellDate: "2023-03-10", Quantity: 20, PNL: 200.00, Commission: 1.50, Type: "LTCG", Broker: tax.BROKER_DRIVE_WEALTH,
 					TTDate: time.Time{}, TTRate: 81.75,
 				}
 				sampleSummary.INRGains = []tax.INRGains{gain1, gain2, gain3WithZeroTTDate}
@@ -413,13 +413,13 @@ var _ = Describe("ExcelManagerImpl", func() {
 			BeforeEach(func() {
 				div1TTDate := mustParseDate("2023-04-05")
 				div1 := tax.INRDividend{
-					Dividend: tax.Dividend{Symbol: "AAPL", Date: "2023-04-10", Amount: 50.25, Tax: 7.54, Net: 42.71, Broker: tax.BROKER_DRIVE_WEALTH},
-					TTDate:   div1TTDate, TTRate: 82.10,
+					Symbol: "AAPL", Date: "2023-04-10", Amount: 50.25, Tax: 7.54, Net: 42.71, Broker: tax.BROKER_DRIVE_WEALTH,
+					TTDate: div1TTDate, TTRate: 82.10,
 				}
 				div2TTDate := mustParseDate("2023-05-12")
 				div2 := tax.INRDividend{
-					Dividend: tax.Dividend{Symbol: "GOOG", Date: "2023-05-15", Amount: 75.50, Tax: 11.33, Net: 64.17, Broker: tax.BROKER_INTERACTIVE_BROKERS},
-					TTDate:   div2TTDate, TTRate: 82.50,
+					Symbol: "GOOG", Date: "2023-05-15", Amount: 75.50, Tax: 11.33, Net: 64.17, Broker: tax.BROKER_INTERACTIVE_BROKERS,
+					TTDate: div2TTDate, TTRate: 82.50,
 				}
 				sampleSummary.INRDividends = []tax.INRDividend{div1, div2}
 
@@ -788,27 +788,23 @@ var _ = Describe("ExcelManagerImpl", func() {
 
 				// First in input: older June record
 				interest1 := tax.INRInterest{
-					Interest: tax.Interest{
-						Symbol: "US-TBILL",
-						Date:   juneDate.Format(time.DateOnly),
-						Amount: 100.0,
-						Tax:    10.0,
-						Net:    90.0,
-						Broker: tax.BROKER_DRIVE_WEALTH,
-					},
+					Symbol: "US-TBILL",
+					Date:   juneDate.Format(time.DateOnly),
+					Amount: 100.0,
+					Tax:    10.0,
+					Net:    90.0,
+					Broker: tax.BROKER_DRIVE_WEALTH,
 					TTDate: juneTTDate,
 					TTRate: 82.5,
 				}
 				// Second in input: newer July record
 				interest2 := tax.INRInterest{
-					Interest: tax.Interest{
-						Symbol: "US-BOND",
-						Date:   julyDate.Format(time.DateOnly),
-						Amount: 200.0,
-						Tax:    20.0,
-						Net:    180.0,
-						Broker: tax.BROKER_INTERACTIVE_BROKERS,
-					},
+					Symbol: "US-BOND",
+					Date:   julyDate.Format(time.DateOnly),
+					Amount: 200.0,
+					Tax:    20.0,
+					Net:    180.0,
+					Broker: tax.BROKER_INTERACTIVE_BROKERS,
 					TTDate: julyTTDate,
 					TTRate: 83.0,
 				}
@@ -1294,32 +1290,32 @@ var _ = Describe("ExcelManagerImpl", func() {
 			It("should sort Gains, Dividends, and Interest by Symbol when dates are equal and leave caller slices unchanged", func() {
 				// Gains: same SellDate, reversed Symbol input order (MSFT before AAPL)
 				gainA := tax.INRGains{
-					Gains:  tax.Gains{Symbol: "AAPL", BuyDate: "2022-10-01", SellDate: "2023-01-20", Quantity: 10, PNL: 50, Commission: 1, Type: "STCG", Broker: tax.BROKER_DRIVE_WEALTH},
+					Symbol: "AAPL", BuyDate: "2022-10-01", SellDate: "2023-01-20", Quantity: 10, PNL: 50, Commission: 1, Type: "STCG", Broker: tax.BROKER_DRIVE_WEALTH,
 					TTDate: mustParseDate("2023-01-15"), TTRate: 82.0,
 				}
 				gainB := tax.INRGains{
-					Gains:  tax.Gains{Symbol: "MSFT", BuyDate: "2022-10-01", SellDate: "2023-01-20", Quantity: 5, PNL: 30, Commission: 0.5, Type: "STCG", Broker: tax.BROKER_INTERACTIVE_BROKERS},
+					Symbol: "MSFT", BuyDate: "2022-10-01", SellDate: "2023-01-20", Quantity: 5, PNL: 30, Commission: 0.5, Type: "STCG", Broker: tax.BROKER_INTERACTIVE_BROKERS,
 					TTDate: mustParseDate("2023-01-15"), TTRate: 82.0,
 				}
 
 				// Dividends: same Date, reversed Symbol input order (GOOG before AAPL)
 				divA := tax.INRDividend{
-					Dividend: tax.Dividend{Symbol: "AAPL", Date: "2023-04-10", Amount: 50, Tax: 5, Net: 45, Broker: tax.BROKER_DRIVE_WEALTH},
-					TTDate:   mustParseDate("2023-04-05"), TTRate: 82.0,
+					Symbol: "AAPL", Date: "2023-04-10", Amount: 50, Tax: 5, Net: 45, Broker: tax.BROKER_DRIVE_WEALTH,
+					TTDate: mustParseDate("2023-04-05"), TTRate: 82.0,
 				}
 				divB := tax.INRDividend{
-					Dividend: tax.Dividend{Symbol: "GOOG", Date: "2023-04-10", Amount: 60, Tax: 6, Net: 54, Broker: tax.BROKER_INTERACTIVE_BROKERS},
-					TTDate:   mustParseDate("2023-04-05"), TTRate: 82.0,
+					Symbol: "GOOG", Date: "2023-04-10", Amount: 60, Tax: 6, Net: 54, Broker: tax.BROKER_INTERACTIVE_BROKERS,
+					TTDate: mustParseDate("2023-04-05"), TTRate: 82.0,
 				}
 
 				// Interest: same Date, reversed Symbol input order (US-TBILL before US-BOND)
 				intA := tax.INRInterest{
-					Interest: tax.Interest{Symbol: "US-BOND", Date: "2023-06-01", Amount: 200, Tax: 20, Net: 180, Broker: tax.BROKER_DRIVE_WEALTH},
-					TTDate:   mustParseDate("2023-06-02"), TTRate: 82.5,
+					Symbol: "US-BOND", Date: "2023-06-01", Amount: 200, Tax: 20, Net: 180, Broker: tax.BROKER_DRIVE_WEALTH,
+					TTDate: mustParseDate("2023-06-02"), TTRate: 82.5,
 				}
 				intB := tax.INRInterest{
-					Interest: tax.Interest{Symbol: "US-TBILL", Date: "2023-06-01", Amount: 100, Tax: 10, Net: 90, Broker: tax.BROKER_INTERACTIVE_BROKERS},
-					TTDate:   mustParseDate("2023-06-02"), TTRate: 82.5,
+					Symbol: "US-TBILL", Date: "2023-06-01", Amount: 100, Tax: 10, Net: 90, Broker: tax.BROKER_INTERACTIVE_BROKERS,
+					TTDate: mustParseDate("2023-06-02"), TTRate: 82.5,
 				}
 
 				// Reversed input order for all three
@@ -1428,34 +1424,30 @@ var _ = Describe("ExcelManagerImpl", func() {
 				// Create Gains data (3 records: 1 STCG, 2 LTCG)
 				gain1TTDate := mustParseDate("2023-01-15")
 				gain1 := tax.INRGains{
-					Gains:  tax.Gains{Symbol: "AAPL", BuyDate: "2022-10-01", SellDate: "2023-01-20", Quantity: 10.5, PNL: 100.75, Commission: 5.25, Type: "STCG", Broker: tax.BROKER_DRIVE_WEALTH},
+					Symbol: "AAPL", BuyDate: "2022-10-01", SellDate: "2023-01-20", Quantity: 10.5, PNL: 100.75, Commission: 5.25, Type: "STCG", Broker: tax.BROKER_DRIVE_WEALTH,
 					TTDate: gain1TTDate, TTRate: 82.50,
 				}
 				gain2TTDate := mustParseDate("2023-02-10")
 				gain2 := tax.INRGains{
-					Gains:  tax.Gains{Symbol: "MSFT", BuyDate: "2020-05-01", SellDate: "2023-02-15", Quantity: 5, PNL: -50.20, Commission: 0, Type: "LTCG", Broker: tax.BROKER_INTERACTIVE_BROKERS},
+					Symbol: "MSFT", BuyDate: "2020-05-01", SellDate: "2023-02-15", Quantity: 5, PNL: -50.20, Commission: 0, Type: "LTCG", Broker: tax.BROKER_INTERACTIVE_BROKERS,
 					TTDate: gain2TTDate, TTRate: 83.10,
 				}
 				gain3WithZeroTTDate := tax.INRGains{
-					Gains:  tax.Gains{Symbol: "GOOG", BuyDate: "2021-01-01", SellDate: "2023-03-10", Quantity: 20, PNL: 200.00, Commission: 1.50, Type: "LTCG", Broker: tax.BROKER_DRIVE_WEALTH},
+					Symbol: "GOOG", BuyDate: "2021-01-01", SellDate: "2023-03-10", Quantity: 20, PNL: 200.00, Commission: 1.50, Type: "LTCG", Broker: tax.BROKER_DRIVE_WEALTH,
 					TTDate: time.Time{}, TTRate: 81.75,
 				}
 
 				// Create Dividends data (2 records)
 				div1TTDate := mustParseDate("2023-03-01")
 				div1 := tax.INRDividend{
-					Dividend: tax.Dividend{
-						Symbol: "AAPL", Date: "2023-03-15",
-						Amount: 50.25, Tax: 7.54, Net: 42.71, Broker: tax.BROKER_DRIVE_WEALTH,
-					},
+					Symbol: "AAPL", Date: "2023-03-15",
+					Amount: 50.25, Tax: 7.54, Net: 42.71, Broker: tax.BROKER_DRIVE_WEALTH,
 					TTDate: div1TTDate, TTRate: 82.10,
 				}
 				div2TTDate := mustParseDate("2023-03-05")
 				div2 := tax.INRDividend{
-					Dividend: tax.Dividend{
-						Symbol: "GOOG", Date: "2023-03-20",
-						Amount: 75.50, Tax: 11.33, Net: 64.17, Broker: tax.BROKER_INTERACTIVE_BROKERS,
-					},
+					Symbol: "GOOG", Date: "2023-03-20",
+					Amount: 75.50, Tax: 11.33, Net: 64.17, Broker: tax.BROKER_INTERACTIVE_BROKERS,
 					TTDate: div2TTDate, TTRate: 82.50,
 				}
 
@@ -1463,10 +1455,8 @@ var _ = Describe("ExcelManagerImpl", func() {
 				interestDate := mustParseDate("2023-06-15")
 				ttDate := mustParseDate("2023-06-30")
 				interest1 := tax.INRInterest{
-					Interest: tax.Interest{
-						Symbol: "US-TBILL", Date: interestDate.Format(time.DateOnly),
-						Amount: 100.0, Tax: 10.0, Net: 90.0, Broker: tax.BROKER_DRIVE_WEALTH,
-					},
+					Symbol: "US-TBILL", Date: interestDate.Format(time.DateOnly),
+					Amount: 100.0, Tax: 10.0, Net: 90.0, Broker: tax.BROKER_DRIVE_WEALTH,
 					TTDate: ttDate, TTRate: 82.5,
 				}
 
@@ -1642,16 +1632,16 @@ var _ = Describe("ExcelManagerImpl", func() {
 
 			// Minimal fixtures
 			gain1 := tax.INRGains{
-				Gains:  tax.Gains{Symbol: "AAPL", BuyDate: "2022-10-01", SellDate: "2023-01-20", Quantity: 10, PNL: 100.75, Commission: 5.25, Type: "STCG", Broker: tax.BROKER_DRIVE_WEALTH},
+				Symbol: "AAPL", BuyDate: "2022-10-01", SellDate: "2023-01-20", Quantity: 10, PNL: 100.75, Commission: 5.25, Type: "STCG", Broker: tax.BROKER_DRIVE_WEALTH,
 				TTDate: mustParseDate("2023-01-15"), TTRate: 82.50,
 			}
 			div1 := tax.INRDividend{
-				Dividend: tax.Dividend{Symbol: "AAPL", Date: "2023-03-15", Amount: 50.25, Tax: 7.54, Net: 42.71, Broker: tax.BROKER_DRIVE_WEALTH},
-				TTDate:   mustParseDate("2023-03-01"), TTRate: 82.10,
+				Symbol: "AAPL", Date: "2023-03-15", Amount: 50.25, Tax: 7.54, Net: 42.71, Broker: tax.BROKER_DRIVE_WEALTH,
+				TTDate: mustParseDate("2023-03-01"), TTRate: 82.10,
 			}
 			interest1 := tax.INRInterest{
-				Interest: tax.Interest{Symbol: "US-TBILL", Date: "2023-06-15", Amount: 100.0, Tax: 10.0, Net: 90.0, Broker: tax.BROKER_DRIVE_WEALTH},
-				TTDate:   mustParseDate("2023-06-30"), TTRate: 82.5,
+				Symbol: "US-TBILL", Date: "2023-06-15", Amount: 100.0, Tax: 10.0, Net: 90.0, Broker: tax.BROKER_DRIVE_WEALTH,
+				TTDate: mustParseDate("2023-06-30"), TTRate: 82.5,
 			}
 
 			Context("only Gains", func() {

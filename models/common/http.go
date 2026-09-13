@@ -45,8 +45,8 @@ func NewHttpError(msg string, code int) HttpError {
 // Always uses 400 Bad Request as the status code for field validation failures.
 func NewFieldHttpError(field, msg string) FieldHttpError {
 	return &FieldHttpErrorImpl{
-		HttpErrorImpl: HttpErrorImpl{Msg: msg, ErrCode: http.StatusBadRequest},
-		fieldName:     field,
+		Msg: msg, ErrCode: http.StatusBadRequest,
+		fieldName: field,
 	}
 }
 

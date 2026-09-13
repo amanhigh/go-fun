@@ -169,14 +169,14 @@ func (m *DriveWealthManagerImpl) parseTradeRow(row []string, commissionMap map[s
 
 	// Apply commission fallback: if Trades sheet commission is zero, lookup from All Transactions
 	if commission == 0 && len(commissionMap) > 0 {
-		date := strings.Split(row[0], " ")[0]
+		date, _, _ := strings.Cut(row[0], " ")
 		lookupKey := fmt.Sprintf("%s|%s|%s", date, row[3], row[4])
 		if fallbackCommission, exists := commissionMap[lookupKey]; exists {
 			commission = fallbackCommission
 		}
 	}
 
-	date := strings.Split(row[0], " ")[0]
+	date, _, _ := strings.Cut(row[0], " ")
 	return tax.Trade{
 		Symbol:     row[3],
 		Date:       date,
@@ -249,7 +249,7 @@ func (m *DriveWealthManagerImpl) buildTaxMap(rows [][]string) map[string]map[str
 	for _, row := range rows[1:] { // Skip header
 		if len(row) >= 5 && row[2] == "Tax" {
 			symbol := row[3]
-			date := strings.Split(row[0], " ")[0]
+			date, _, _ := strings.Cut(row[0], " ")
 			taxAmount, err := strconv.ParseFloat(row[4], 64)
 			if err != nil {
 				continue // Skip row if tax amount is not a valid number.
@@ -295,7 +295,7 @@ func (m *DriveWealthManagerImpl) parseCommissions(rows [][]string) map[string]fl
 						continue // Skip malformed entries
 					}
 
-					date := strings.Split(row[0], " ")[0]
+					date, _, _ := strings.Cut(row[0], " ")
 					lookupKey := fmt.Sprintf("%s|%s|%s", date, symbol, tradeType)
 					commissionMap[lookupKey] = commission
 				}

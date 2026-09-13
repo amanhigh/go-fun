@@ -65,11 +65,9 @@ func (d *deploymentHelperImpl) CreateNewDeployment(ctx context.Context, memcache
 
 	// Create deployment object
 	dep := &appsv1.Deployment{
-		ObjectMeta: metav1.ObjectMeta{
-			Name:      memcached.Name,
-			Namespace: memcached.Namespace,
-		},
-		Spec: *deploymentSpec,
+		Name:      memcached.Name,
+		Namespace: memcached.Namespace,
+		Spec:      *deploymentSpec,
 	}
 
 	// Set controller reference

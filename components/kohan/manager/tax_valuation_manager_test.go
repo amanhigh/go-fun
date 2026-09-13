@@ -182,16 +182,16 @@ var _ = Describe("TaxValuationManager", func() {
 		It("should calculate AmountPaid when dividends are provided", func() {
 			dividends = []tax.INRDividend{
 				{
-					Dividend: tax.Dividend{Symbol: "IEF", Date: "2024-01-10", Amount: 10.0},
-					TTRate:   82.5,
+					Symbol: "IEF", Date: "2024-01-10", Amount: 10.0,
+					TTRate: 82.5,
 				},
 				{
-					Dividend: tax.Dividend{Symbol: "IEF", Date: "2024-02-10", Amount: 15.0},
-					TTRate:   83.0,
+					Symbol: "IEF", Date: "2024-02-10", Amount: 15.0,
+					TTRate: 83.0,
 				},
 				{
-					Dividend: tax.Dividend{Symbol: "IVV", Date: "2024-03-10", Amount: 20.0},
-					TTRate:   82.0,
+					Symbol: "IVV", Date: "2024-03-10", Amount: 20.0,
+					TTRate: 82.0,
 				},
 			}
 
@@ -227,16 +227,16 @@ var _ = Describe("TaxValuationManager", func() {
 		It("should handle multiple dividends for same ticker", func() {
 			dividends = []tax.INRDividend{
 				{
-					Dividend: tax.Dividend{Symbol: "IEF", Date: "2024-01-10", Amount: 5.0},
-					TTRate:   80.0,
+					Symbol: "IEF", Date: "2024-01-10", Amount: 5.0,
+					TTRate: 80.0,
 				},
 				{
-					Dividend: tax.Dividend{Symbol: "IEF", Date: "2024-02-10", Amount: 10.0},
-					TTRate:   81.0,
+					Symbol: "IEF", Date: "2024-02-10", Amount: 10.0,
+					TTRate: 81.0,
 				},
 				{
-					Dividend: tax.Dividend{Symbol: "IEF", Date: "2024-03-10", Amount: 8.0},
-					TTRate:   82.0,
+					Symbol: "IEF", Date: "2024-03-10", Amount: 8.0,
+					TTRate: 82.0,
 				},
 			}
 
@@ -252,12 +252,12 @@ var _ = Describe("TaxValuationManager", func() {
 		It("should handle dividends for tickers not in valuations", func() {
 			dividends = []tax.INRDividend{
 				{
-					Dividend: tax.Dividend{Symbol: "IEF", Date: "2024-01-10", Amount: 10.0},
-					TTRate:   82.0,
+					Symbol: "IEF", Date: "2024-01-10", Amount: 10.0,
+					TTRate: 82.0,
 				},
 				{
-					Dividend: tax.Dividend{Symbol: "UNKNOWN", Date: "2024-02-10", Amount: 100.0},
-					TTRate:   83.0,
+					Symbol: "UNKNOWN", Date: "2024-02-10", Amount: 100.0,
+					TTRate: 83.0,
 				},
 			}
 
