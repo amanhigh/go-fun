@@ -25,7 +25,7 @@ export function NewNoteFormConcern(pg: JournalDetailPageProvider) {
 			}
 			await this.submitter.run(
 				() => this.createNote(journal.status, content),
-				{ message: 'Note added.', variant: 'success' },
+				'Note added.',
 			);
 		},
 

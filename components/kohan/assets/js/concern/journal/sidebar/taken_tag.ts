@@ -28,7 +28,7 @@ export function TakenTagConcern(pg: JournalDetailPageProvider) {
 			if (!pg().journal.detail) return;
 			await this.submitter.run(
 				() => this.addTag(tagValue),
-				{ message: `${tagValue} tag added.`, variant: 'success' },
+				`${tagValue} tag added.`,
 			);
 		},
 

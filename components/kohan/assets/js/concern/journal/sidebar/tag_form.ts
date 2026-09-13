@@ -29,7 +29,7 @@ export function TagFormConcern(pg: JournalDetailPageProvider) {
 
 			await this.submitter.run(
 				() => this.createTag(tag, override),
-				{ message: 'Reason tag added.', variant: 'success' },
+				'Reason tag added.',
 			);
 		},
 

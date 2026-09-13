@@ -14,7 +14,7 @@ export function NewHeaderConcern(pg: JournalDetailPageProvider) {
 			await this.submitter.run(async () => {
 				await pg().client.delete(pg().journal.detail!.id);
 				window.location.href = '/journal';
-			});
+			}, null);
 		},
 	};
 }

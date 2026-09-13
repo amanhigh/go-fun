@@ -52,30 +52,34 @@ async function toggleReviewedAt(submitter: Submitter, pg: JournalDetailPageProvi
 	const journal = pg().journal.detail!;
 	const reviewedAt = journal.reviewed_at ? null : localToday(pg);
 	const successMsg = reviewedAt ? 'Journal marked reviewed.' : 'Journal marked not reviewed.';
+
 	const success = await submitter.run(async () => {
 		const envelope = await pg().client.updateReview(journal.id, { reviewed_at: reviewedAt });
 		journal.reviewed_at = envelope.data.reviewed_at;
 		await pg().sidebar.reviewQueue.load();
 		// Intentionally NOT updating journal.status — review toggle only touches reviewed_at.
-	}, { success: successMsg });
+	}, null);
 
-	// Return immediately when the review toggle failed.
+	// Return immediately when the review toggle failed (error already notified).
 	if (!success) return;
 
-	// When un-reviewing, cancel any pending auto-advance and stop.
+	// When un-reviewing, cancel any pending auto-advance.
 	if (reviewedAt === null) {
 		pg().sidebar.state.reviewAdvance.cancel();
-		return;
 	}
 
-	// Only auto-advance while in review mode.
-	if (!pg().sidebar.state.reviewOpen) return;
-
-	// Schedule auto-advance to the next pending item when one remains.
-	const next = pg().sidebar.reviewQueue.items[0];
-	if (next) {
-		pg().sidebar.state.reviewAdvance.schedule(next);
+	// Only auto-advance while in review mode when a next item remains; the
+	// actionable notification is the only message for that transition.
+	if (reviewedAt !== null && pg().sidebar.state.reviewOpen) {
+		const next = pg().sidebar.reviewQueue.items[0];
+		if (next) {
+			pg().sidebar.state.reviewAdvance.schedule(next);
+			return;
+		}
 	}
+
+	// Simple reviewed/unreviewed notification for every other successful path.
+	notify({ message: successMsg, variant: 'success' });
 }
 
 /** Status-only update — changes ONLY status, never reviewed_at. */
@@ -83,7 +87,7 @@ async function applyStatusOnly(submitter: Submitter, pg: JournalDetailPageProvid
 	await submitter.run(async () => {
 		const envelope = await pg().client.updateReview(pg().journal.detail!.id, { status: targetStatus });
 		pg().journal.detail!.status = envelope.data.status;
-	}, { success: successMsg });
+	}, successMsg);
 }
 
 // ===== Action Builders =====

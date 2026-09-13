@@ -1,0 +1,71 @@
+@layer components {
+  /* --- Shared UI: Notification Viewport --- */
+
+  .notification-viewport {
+    @apply fixed top-4 left-4 right-4 z-50 flex flex-col gap-2 pointer-events-none sm:left-auto sm:right-4 sm:w-full sm:max-w-sm;
+  }
+
+  /* The card is a TemplUI Alert root, so its base utilities (bg-card,
+     text-card-foreground, rounded-lg, grid-cols-[0_1fr], border) remain in the
+     class attribute. The important modifier keeps this shared presentation in
+      control in the Kohan bundle. */
+  .notification-card {
+    @apply pointer-events-auto w-full grid-cols-[2rem_1fr]! gap-x-3 rounded-xl! border-slate-200 bg-white! text-slate-900! shadow-sm ring-1 ring-slate-900/5 border-l-4! dark:bg-slate-800! dark:text-slate-100! dark:border-slate-700 dark:ring-slate-100/10;
+  }
+
+  /* Each variant is a thin left accent rail on the neutral card. */
+  .notification-card[data-variant="success"] {
+    @apply border-l-green-500 dark:border-l-green-400;
+  }
+
+  .notification-card[data-variant="error"] {
+    @apply border-l-red-500 dark:border-l-red-400;
+  }
+
+  /* Badges are centered flex spans that only become flex when the runtime
+     removes their hidden attribute (not-[hidden]:flex), so exactly one icon is
+     visible at runtime. */
+  .notification-icon {
+    @apply not-[hidden]:flex size-8 items-center justify-center rounded-full border ring-1;
+  }
+
+  .notification-icon[data-variant-icon="success"] {
+    @apply bg-green-50 border-green-200 ring-green-100 text-green-600 dark:bg-green-950 dark:border-green-800 dark:ring-green-900 dark:text-green-400;
+  }
+
+  .notification-icon[data-variant-icon="error"] {
+    @apply bg-red-50 border-red-200 ring-red-100 text-red-600 dark:bg-red-950 dark:border-red-800 dark:ring-red-900 dark:text-red-400;
+  }
+
+  .notification-title {
+    @apply line-clamp-1 min-h-4 font-medium leading-snug tracking-tight text-slate-900 dark:text-slate-100;
+  }
+
+  .notification-message {
+    @apply grid justify-items-start gap-1 text-sm leading-relaxed text-slate-600 dark:text-slate-300;
+  }
+
+  .notification-content {
+    @apply flex min-w-0 flex-1 items-start justify-between gap-2;
+  }
+
+  .notification-body {
+    @apply flex min-w-0 flex-col gap-1;
+  }
+
+  .notification-controls {
+    @apply flex items-center gap-2;
+  }
+
+  /* Action and dismiss are TemplUI Button roots; their variant utilities
+     (bg-secondary, hover:bg-accent, focus-visible:ring-[3px], ...) remain in
+     the class attribute, so the important modifier keeps this presentation in
+      control in the Kohan bundle. */
+  .notification-action {
+    @apply bg-slate-900! text-white! shadow-sm! hover:bg-slate-700! focus-visible:ring-2! focus-visible:ring-slate-400! focus-visible:border-slate-400! dark:bg-slate-100! dark:text-slate-900! dark:hover:bg-slate-200! dark:focus-visible:ring-slate-500! dark:focus-visible:border-slate-500!;
+  }
+
+  .notification-dismiss {
+    @apply text-slate-500 hover:bg-slate-100! hover:text-slate-900! focus-visible:ring-2! focus-visible:ring-slate-400! focus-visible:border-slate-400! dark:text-slate-400 dark:hover:bg-slate-700! dark:hover:text-slate-100! dark:focus-visible:ring-slate-500! dark:focus-visible:border-slate-500!;
+  }
+}

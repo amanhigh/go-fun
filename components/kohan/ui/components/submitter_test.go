@@ -14,46 +14,25 @@ var _ = Describe("Submitter", func() {
 		ctx    context.Context
 		render strings.Builder
 		html   string
-		props  components.SubmitterProps
 	)
 
 	BeforeEach(func() {
 		ctx = context.Background()
-		props = components.SubmitterProps{Submitter: "header.submitter"}
 	})
 
 	AfterEach(func() {
 		render.Reset()
 	})
 
-	Context("Default prefix rendering", func() {
+	Context("Busy spinner binding", func() {
 		BeforeEach(func() {
-			err := components.Submitter(props).Render(ctx, &render)
+			err := components.Submitter(components.SubmitterProps{Submitter: "header.submitter"}).Render(ctx, &render)
 			Expect(err).ToNot(HaveOccurred())
 			html = render.String()
 		})
 
-		It("renders busy, message, error/success class bindings, and message output", func() {
+		It("renders the supplied busy expression on the spinner root", func() {
 			Expect(html).To(ContainSubstring(`x-show="header.submitter.isBusy()"`))
-			Expect(html).To(ContainSubstring(`header.submitter.hasMessage()`))
-			Expect(html).To(ContainSubstring(`header.submitter.hasError()`))
-			Expect(html).To(ContainSubstring(`statebox-error`))
-			Expect(html).To(ContainSubstring(`statebox-success`))
-			Expect(html).To(ContainSubstring(`x-text="header.submitter.message"`))
-		})
-	})
-
-	Context("Prefix propagation", func() {
-		BeforeEach(func() {
-			props = components.SubmitterProps{Submitter: "form.submitter"}
-			err := components.Submitter(props).Render(ctx, &render)
-			Expect(err).ToNot(HaveOccurred())
-			html = render.String()
-		})
-
-		It("uses the provided prefix for all bindings", func() {
-			Expect(html).To(ContainSubstring(`x-show="form.submitter.isBusy()"`))
-			Expect(html).To(ContainSubstring(`x-text="form.submitter.message"`))
 		})
 	})
 })

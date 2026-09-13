@@ -1,43 +1,37 @@
 import { createRunnerState, type Runner } from './runner';
 
-// ===== Types =====
-
-export type SubmitMessages = {
-	success?: string;
-};
-
 // ===== Submitter Type =====
 
 export type Submitter = Runner & {
-	run(action: () => Promise<void>, messages: SubmitMessages): Promise<boolean>;
+	// run executes the action. On success it emits the supplied success
+	// message as a transient success notification when a non-null string is
+	// provided; pass null to skip the success notification. Validation and
+	// caught failures are surfaced automatically as persistent error
+	// notifications via setError, so callers never manage inline success/error
+	// UI state boxes.
+	run(action: () => Promise<void>, successMessage: string | null): Promise<boolean>;
 };
 
 // ===== Factory =====
 
 export function createSubmitter(): Submitter {
-	let dismissTimer: ReturnType<typeof setTimeout> | undefined;
+	const base = createRunnerState();
 
 	return {
-		...createRunnerState(),
+		...base,
 
-		async run(this: Submitter, action: () => Promise<void>, messages: SubmitMessages): Promise<boolean> {
-			// Cancel any previous dismiss timer before starting a new submission.
-			if (dismissTimer !== undefined) {
-				clearTimeout(dismissTimer);
-				dismissTimer = undefined;
-			}
+		// setError surfaces validation and caught failures as a prop-free
+		// persistent error notification. The local message state is preserved for the
+		// shared execution path.
+		setError(this: Submitter, message: string) {
+			notify({ message, variant: 'error' });
+			base.setError.call(this, message);
+		},
 
+		async run(this: Submitter, action: () => Promise<void>, successMessage: string | null): Promise<boolean> {
 			const outcome = await this.tryRun(action);
-			if (outcome.success) {
-				this.setSuccess(messages.success ?? '');
-				// Auto-dismiss success message after 3 seconds.
-				// Only clears if the message is unchanged and submitter is not in error state.
-				dismissTimer = setTimeout(() => {
-					if (!this.hasError() && this.message === (messages.success ?? '')) {
-						this.clearMessage();
-					}
-					dismissTimer = undefined;
-				}, 3000);
+			if (outcome.success && successMessage !== null) {
+				notify({ message: successMessage, variant: 'success' });
 			}
 			return outcome.success;
 		},

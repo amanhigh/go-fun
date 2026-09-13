@@ -12,7 +12,7 @@ export function NewNotesConcern(pg: JournalDetailPageProvider) {
 			if (!pg().journal.detail) return;
 			const ok = await this.submitter.run(
 				() => pg().noteClient.delete(pg().journal.detail!.id, noteId),
-				{ message: 'Note deleted', variant: 'success' },
+				'Note deleted',
 			);
 			if (ok) this.remove(noteId);
 		},
