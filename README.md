@@ -10,9 +10,10 @@
 This repository follows the philosophy of Learning by Doing. It includes plays, experiments with Golang and its frameworks to learn. Later Kubernetes including Docker, Istio (Service Mesh), Performance testing is also included.  
 - ## FunApp
 	FunApp is a Sample Rest App which tries to use various golang Frameworks commonly required. It tries to follow good practices and standards. It runs without any dependencies with in memory [sqlite3](https://github.com/mattn/go-sqlite3) database by default.  
-	- ### Setup
-		- #### Onetime
-			- We will use [Just](https://github.com/casey/just) for project management.
+		- ### Setup
+			- #### Onetime
+				- We will use [Just](https://github.com/casey/just) for project management.
+				- The repository requires stable Go `1.27.1` for all modules, tools, and CI builds.
 			- Install repository development tools and validate the environment: `just prepare`
 			- Check external display and environment dependencies without changing the system: `just doctor`
 			- Configure Kubernetes Helm repositories and local `.docker` ingress hosts when needed: `just prepare-k8s`

@@ -52,7 +52,7 @@ dev:
     imageSelector: go-fun
     # Replace the container image with this dev-optimized image (allows to skip image building during development)
     # https://github.com/loft-sh/devspace-containers
-    devImage: ghcr.io/loft-sh/devspace-containers/go:1.21-alpine
+     devImage: golang:1.27.1-alpine
     # Start Fun App
     command: ["go", "run", "./components/fun-app/main.go"]
     env:
