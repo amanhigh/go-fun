@@ -77,7 +77,7 @@ type ValuationManager_AnalyzeValuation_Call struct {
 //   - tickerSymbol string
 //   - trades []tax.Trade
 //   - year int
-func (_e *ValuationManager_Expecter) AnalyzeValuation(ctx interface{}, tickerSymbol interface{}, trades interface{}, year interface{}) *ValuationManager_AnalyzeValuation_Call {
+func (_e *ValuationManager_Expecter) AnalyzeValuation(ctx any, tickerSymbol any, trades any, year any) *ValuationManager_AnalyzeValuation_Call {
 	return &ValuationManager_AnalyzeValuation_Call{Call: _e.mock.On("AnalyzeValuation", ctx, tickerSymbol, trades, year)}
 }
 
@@ -157,7 +157,7 @@ type ValuationManager_GetYearlyValuationsUSD_Call struct {
 // GetYearlyValuationsUSD is a helper method to define mock.On call
 //   - ctx context.Context
 //   - year int
-func (_e *ValuationManager_Expecter) GetYearlyValuationsUSD(ctx interface{}, year interface{}) *ValuationManager_GetYearlyValuationsUSD_Call {
+func (_e *ValuationManager_Expecter) GetYearlyValuationsUSD(ctx any, year any) *ValuationManager_GetYearlyValuationsUSD_Call {
 	return &ValuationManager_GetYearlyValuationsUSD_Call{Call: _e.mock.On("GetYearlyValuationsUSD", ctx, year)}
 }
 

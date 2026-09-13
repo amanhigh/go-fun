@@ -66,7 +66,7 @@ type SeatManagerInterface_AllocateSeat_Call struct {
 // AllocateSeat is a helper method to define mock.On call
 //   - ctx context.Context
 //   - cmd fun.AllocateSeatCmdV1
-func (_e *SeatManagerInterface_Expecter) AllocateSeat(ctx interface{}, cmd interface{}) *SeatManagerInterface_AllocateSeat_Call {
+func (_e *SeatManagerInterface_Expecter) AllocateSeat(ctx any, cmd any) *SeatManagerInterface_AllocateSeat_Call {
 	return &SeatManagerInterface_AllocateSeat_Call{Call: _e.mock.On("AllocateSeat", ctx, cmd)}
 }
 
@@ -125,7 +125,7 @@ type SeatManagerInterface_PublishAllocateSeat_Call struct {
 // PublishAllocateSeat is a helper method to define mock.On call
 //   - ctx context.Context
 //   - enrollment fun.Enrollment
-func (_e *SeatManagerInterface_Expecter) PublishAllocateSeat(ctx interface{}, enrollment interface{}) *SeatManagerInterface_PublishAllocateSeat_Call {
+func (_e *SeatManagerInterface_Expecter) PublishAllocateSeat(ctx any, enrollment any) *SeatManagerInterface_PublishAllocateSeat_Call {
 	return &SeatManagerInterface_PublishAllocateSeat_Call{Call: _e.mock.On("PublishAllocateSeat", ctx, enrollment)}
 }
 
@@ -185,7 +185,7 @@ type SeatManagerInterface_PublishSeatAllocationFailed_Call struct {
 //   - ctx context.Context
 //   - enrollment fun.Enrollment
 //   - reason string
-func (_e *SeatManagerInterface_Expecter) PublishSeatAllocationFailed(ctx interface{}, enrollment interface{}, reason interface{}) *SeatManagerInterface_PublishSeatAllocationFailed_Call {
+func (_e *SeatManagerInterface_Expecter) PublishSeatAllocationFailed(ctx any, enrollment any, reason any) *SeatManagerInterface_PublishSeatAllocationFailed_Call {
 	return &SeatManagerInterface_PublishSeatAllocationFailed_Call{Call: _e.mock.On("PublishSeatAllocationFailed", ctx, enrollment, reason)}
 }
 

@@ -52,7 +52,7 @@ type OSManagerInterface_MonitorInternetConnection_Call struct {
 
 // MonitorInternetConnection is a helper method to define mock.On call
 //   - ctx context.Context
-func (_e *OSManagerInterface_Expecter) MonitorInternetConnection(ctx interface{}) *OSManagerInterface_MonitorInternetConnection_Call {
+func (_e *OSManagerInterface_Expecter) MonitorInternetConnection(ctx any) *OSManagerInterface_MonitorInternetConnection_Call {
 	return &OSManagerInterface_MonitorInternetConnection_Call{Call: _e.mock.On("MonitorInternetConnection", ctx)}
 }
 
@@ -106,7 +106,7 @@ type OSManagerInterface_RecordTicker_Call struct {
 // RecordTicker is a helper method to define mock.On call
 //   - ctx context.Context
 //   - ticker string
-func (_e *OSManagerInterface_Expecter) RecordTicker(ctx interface{}, ticker interface{}) *OSManagerInterface_RecordTicker_Call {
+func (_e *OSManagerInterface_Expecter) RecordTicker(ctx any, ticker any) *OSManagerInterface_RecordTicker_Call {
 	return &OSManagerInterface_RecordTicker_Call{Call: _e.mock.On("RecordTicker", ctx, ticker)}
 }
 
@@ -177,7 +177,7 @@ type OSManagerInterface_Screenshot_Call struct {
 //   - fileName string
 //   - screenshotType kohan.ScreenshotType
 //   - window string
-func (_e *OSManagerInterface_Expecter) Screenshot(ctx interface{}, directoryType interface{}, fileName interface{}, screenshotType interface{}, window interface{}) *OSManagerInterface_Screenshot_Call {
+func (_e *OSManagerInterface_Expecter) Screenshot(ctx any, directoryType any, fileName any, screenshotType any, window any) *OSManagerInterface_Screenshot_Call {
 	return &OSManagerInterface_Screenshot_Call{Call: _e.mock.On("Screenshot", ctx, directoryType, fileName, screenshotType, window)}
 }
 

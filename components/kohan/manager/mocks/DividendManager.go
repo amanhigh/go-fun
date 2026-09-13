@@ -77,7 +77,7 @@ type DividendManager_GetDividendsForUSYear_Call struct {
 // GetDividendsForUSYear is a helper method to define mock.On call
 //   - ctx context.Context
 //   - year int
-func (_e *DividendManager_Expecter) GetDividendsForUSYear(ctx interface{}, year interface{}) *DividendManager_GetDividendsForUSYear_Call {
+func (_e *DividendManager_Expecter) GetDividendsForUSYear(ctx any, year any) *DividendManager_GetDividendsForUSYear_Call {
 	return &DividendManager_GetDividendsForUSYear_Call{Call: _e.mock.On("GetDividendsForUSYear", ctx, year)}
 }
 
@@ -147,7 +147,7 @@ type DividendManager_GetDividendsForYear_Call struct {
 // GetDividendsForYear is a helper method to define mock.On call
 //   - ctx context.Context
 //   - year int
-func (_e *DividendManager_Expecter) GetDividendsForYear(ctx interface{}, year interface{}) *DividendManager_GetDividendsForYear_Call {
+func (_e *DividendManager_Expecter) GetDividendsForYear(ctx any, year any) *DividendManager_GetDividendsForYear_Call {
 	return &DividendManager_GetDividendsForYear_Call{Call: _e.mock.On("GetDividendsForYear", ctx, year)}
 }
 
@@ -217,7 +217,7 @@ type DividendManager_ProcessDividends_Call struct {
 // ProcessDividends is a helper method to define mock.On call
 //   - ctx context.Context
 //   - dividends []tax.Dividend
-func (_e *DividendManager_Expecter) ProcessDividends(ctx interface{}, dividends interface{}) *DividendManager_ProcessDividends_Call {
+func (_e *DividendManager_Expecter) ProcessDividends(ctx any, dividends any) *DividendManager_ProcessDividends_Call {
 	return &DividendManager_ProcessDividends_Call{Call: _e.mock.On("ProcessDividends", ctx, dividends)}
 }
 

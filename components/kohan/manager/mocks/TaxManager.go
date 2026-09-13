@@ -75,7 +75,7 @@ type TaxManager_GetTaxSummary_Call struct {
 // GetTaxSummary is a helper method to define mock.On call
 //   - ctx context.Context
 //   - year int
-func (_e *TaxManager_Expecter) GetTaxSummary(ctx interface{}, year interface{}) *TaxManager_GetTaxSummary_Call {
+func (_e *TaxManager_Expecter) GetTaxSummary(ctx any, year any) *TaxManager_GetTaxSummary_Call {
 	return &TaxManager_GetTaxSummary_Call{Call: _e.mock.On("GetTaxSummary", ctx, year)}
 }
 
@@ -133,7 +133,7 @@ type TaxManager_SaveTaxSummaryToExcel_Call struct {
 //   - ctx context.Context
 //   - year int
 //   - summary tax.Summary
-func (_e *TaxManager_Expecter) SaveTaxSummaryToExcel(ctx interface{}, year interface{}, summary interface{}) *TaxManager_SaveTaxSummaryToExcel_Call {
+func (_e *TaxManager_Expecter) SaveTaxSummaryToExcel(ctx any, year any, summary any) *TaxManager_SaveTaxSummaryToExcel_Call {
 	return &TaxManager_SaveTaxSummaryToExcel_Call{Call: _e.mock.On("SaveTaxSummaryToExcel", ctx, year, summary)}
 }
 

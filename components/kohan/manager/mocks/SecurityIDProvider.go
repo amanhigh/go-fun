@@ -74,7 +74,7 @@ type SecurityIDProvider_GetSecurityID_Call struct {
 // GetSecurityID is a helper method to define mock.On call
 //   - ctx context.Context
 //   - ticker string
-func (_e *SecurityIDProvider_Expecter) GetSecurityID(ctx interface{}, ticker interface{}) *SecurityIDProvider_GetSecurityID_Call {
+func (_e *SecurityIDProvider_Expecter) GetSecurityID(ctx any, ticker any) *SecurityIDProvider_GetSecurityID_Call {
 	return &SecurityIDProvider_GetSecurityID_Call{Call: _e.mock.On("GetSecurityID", ctx, ticker)}
 }
 

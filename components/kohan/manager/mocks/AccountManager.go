@@ -67,7 +67,7 @@ type AccountManager_GenerateYearEndAccounts_Call struct {
 //   - ctx context.Context
 //   - year int
 //   - valuations []tax.Valuation
-func (_e *AccountManager_Expecter) GenerateYearEndAccounts(ctx interface{}, year interface{}, valuations interface{}) *AccountManager_GenerateYearEndAccounts_Call {
+func (_e *AccountManager_Expecter) GenerateYearEndAccounts(ctx any, year any, valuations any) *AccountManager_GenerateYearEndAccounts_Call {
 	return &AccountManager_GenerateYearEndAccounts_Call{Call: _e.mock.On("GenerateYearEndAccounts", ctx, year, valuations)}
 }
 
@@ -142,7 +142,7 @@ type AccountManager_GetAllRecords_Call struct {
 // GetAllRecords is a helper method to define mock.On call
 //   - ctx context.Context
 //   - year int
-func (_e *AccountManager_Expecter) GetAllRecords(ctx interface{}, year interface{}) *AccountManager_GetAllRecords_Call {
+func (_e *AccountManager_Expecter) GetAllRecords(ctx any, year any) *AccountManager_GetAllRecords_Call {
 	return &AccountManager_GetAllRecords_Call{Call: _e.mock.On("GetAllRecords", ctx, year)}
 }
 
@@ -211,7 +211,7 @@ type AccountManager_GetRecord_Call struct {
 //   - ctx context.Context
 //   - symbol string
 //   - year int
-func (_e *AccountManager_Expecter) GetRecord(ctx interface{}, symbol interface{}, year interface{}) *AccountManager_GetRecord_Call {
+func (_e *AccountManager_Expecter) GetRecord(ctx any, symbol any, year any) *AccountManager_GetRecord_Call {
 	return &AccountManager_GetRecord_Call{Call: _e.mock.On("GetRecord", ctx, symbol, year)}
 }
 

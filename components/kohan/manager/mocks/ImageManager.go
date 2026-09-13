@@ -78,7 +78,7 @@ type ImageManager_CreateImage_Call struct {
 //   - ctx context.Context
 //   - journalID string
 //   - image barkat.Image
-func (_e *ImageManager_Expecter) CreateImage(ctx interface{}, journalID interface{}, image interface{}) *ImageManager_CreateImage_Call {
+func (_e *ImageManager_Expecter) CreateImage(ctx any, journalID any, image any) *ImageManager_CreateImage_Call {
 	return &ImageManager_CreateImage_Call{Call: _e.mock.On("CreateImage", ctx, journalID, image)}
 }
 
@@ -143,7 +143,7 @@ type ImageManager_DeleteImage_Call struct {
 //   - ctx context.Context
 //   - journalID string
 //   - imageID string
-func (_e *ImageManager_Expecter) DeleteImage(ctx interface{}, journalID interface{}, imageID interface{}) *ImageManager_DeleteImage_Call {
+func (_e *ImageManager_Expecter) DeleteImage(ctx any, journalID any, imageID any) *ImageManager_DeleteImage_Call {
 	return &ImageManager_DeleteImage_Call{Call: _e.mock.On("DeleteImage", ctx, journalID, imageID)}
 }
 
@@ -217,7 +217,7 @@ type ImageManager_ListImages_Call struct {
 //   - ctx context.Context
 //   - journalID string
 //   - imageType string
-func (_e *ImageManager_Expecter) ListImages(ctx interface{}, journalID interface{}, imageType interface{}) *ImageManager_ListImages_Call {
+func (_e *ImageManager_Expecter) ListImages(ctx any, journalID any, imageType any) *ImageManager_ListImages_Call {
 	return &ImageManager_ListImages_Call{Call: _e.mock.On("ListImages", ctx, journalID, imageType)}
 }
 

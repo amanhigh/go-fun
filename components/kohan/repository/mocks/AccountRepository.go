@@ -77,7 +77,7 @@ type AccountRepository_GetAllRecordsForYear_Call struct {
 // GetAllRecordsForYear is a helper method to define mock.On call
 //   - ctx context.Context
 //   - year int
-func (_e *AccountRepository_Expecter) GetAllRecordsForYear(ctx interface{}, year interface{}) *AccountRepository_GetAllRecordsForYear_Call {
+func (_e *AccountRepository_Expecter) GetAllRecordsForYear(ctx any, year any) *AccountRepository_GetAllRecordsForYear_Call {
 	return &AccountRepository_GetAllRecordsForYear_Call{Call: _e.mock.On("GetAllRecordsForYear", ctx, year)}
 }
 
@@ -137,7 +137,7 @@ type AccountRepository_SaveYearEndAccounts_Call struct {
 //   - ctx context.Context
 //   - year int
 //   - accounts []tax.Account
-func (_e *AccountRepository_Expecter) SaveYearEndAccounts(ctx interface{}, year interface{}, accounts interface{}) *AccountRepository_SaveYearEndAccounts_Call {
+func (_e *AccountRepository_Expecter) SaveYearEndAccounts(ctx any, year any, accounts any) *AccountRepository_SaveYearEndAccounts_Call {
 	return &AccountRepository_SaveYearEndAccounts_Call{Call: _e.mock.On("SaveYearEndAccounts", ctx, year, accounts)}
 }
 

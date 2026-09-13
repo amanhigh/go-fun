@@ -76,7 +76,7 @@ type AlertTickerManager_CreateAlertTicker_Call struct {
 //   - ctx context.Context
 //   - ticker string
 //   - alert *barkat.AlertTicker
-func (_e *AlertTickerManager_Expecter) CreateAlertTicker(ctx interface{}, ticker interface{}, alert interface{}) *AlertTickerManager_CreateAlertTicker_Call {
+func (_e *AlertTickerManager_Expecter) CreateAlertTicker(ctx any, ticker any, alert any) *AlertTickerManager_CreateAlertTicker_Call {
 	return &AlertTickerManager_CreateAlertTicker_Call{Call: _e.mock.On("CreateAlertTicker", ctx, ticker, alert)}
 }
 
@@ -140,7 +140,7 @@ type AlertTickerManager_DeleteAlertTicker_Call struct {
 // DeleteAlertTicker is a helper method to define mock.On call
 //   - ctx context.Context
 //   - symbol string
-func (_e *AlertTickerManager_Expecter) DeleteAlertTicker(ctx interface{}, symbol interface{}) *AlertTickerManager_DeleteAlertTicker_Call {
+func (_e *AlertTickerManager_Expecter) DeleteAlertTicker(ctx any, symbol any) *AlertTickerManager_DeleteAlertTicker_Call {
 	return &AlertTickerManager_DeleteAlertTicker_Call{Call: _e.mock.On("DeleteAlertTicker", ctx, symbol)}
 }
 
@@ -208,7 +208,7 @@ type AlertTickerManager_GetAlertTicker_Call struct {
 // GetAlertTicker is a helper method to define mock.On call
 //   - ctx context.Context
 //   - symbol string
-func (_e *AlertTickerManager_Expecter) GetAlertTicker(ctx interface{}, symbol interface{}) *AlertTickerManager_GetAlertTicker_Call {
+func (_e *AlertTickerManager_Expecter) GetAlertTicker(ctx any, symbol any) *AlertTickerManager_GetAlertTicker_Call {
 	return &AlertTickerManager_GetAlertTicker_Call{Call: _e.mock.On("GetAlertTicker", ctx, symbol)}
 }
 
@@ -276,7 +276,7 @@ type AlertTickerManager_ListAlertTickers_Call struct {
 // ListAlertTickers is a helper method to define mock.On call
 //   - ctx context.Context
 //   - query barkat.AlertTickerQuery
-func (_e *AlertTickerManager_Expecter) ListAlertTickers(ctx interface{}, query interface{}) *AlertTickerManager_ListAlertTickers_Call {
+func (_e *AlertTickerManager_Expecter) ListAlertTickers(ctx any, query any) *AlertTickerManager_ListAlertTickers_Call {
 	return &AlertTickerManager_ListAlertTickers_Call{Call: _e.mock.On("ListAlertTickers", ctx, query)}
 }
 

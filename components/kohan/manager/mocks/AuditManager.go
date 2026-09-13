@@ -76,7 +76,7 @@ type AuditManager_ExecuteAudit_Call struct {
 //   - ctx context.Context
 //   - auditID string
 //   - query common.Pagination
-func (_e *AuditManager_Expecter) ExecuteAudit(ctx interface{}, auditID interface{}, query interface{}) *AuditManager_ExecuteAudit_Call {
+func (_e *AuditManager_Expecter) ExecuteAudit(ctx any, auditID any, query any) *AuditManager_ExecuteAudit_Call {
 	return &AuditManager_ExecuteAudit_Call{Call: _e.mock.On("ExecuteAudit", ctx, auditID, query)}
 }
 
@@ -148,7 +148,7 @@ type AuditManager_ListAudits_Call struct {
 
 // ListAudits is a helper method to define mock.On call
 //   - ctx context.Context
-func (_e *AuditManager_Expecter) ListAudits(ctx interface{}) *AuditManager_ListAudits_Call {
+func (_e *AuditManager_Expecter) ListAudits(ctx any) *AuditManager_ListAudits_Call {
 	return &AuditManager_ListAudits_Call{Call: _e.mock.On("ListAudits", ctx)}
 }
 

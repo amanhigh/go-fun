@@ -67,7 +67,7 @@ type TickerManager_DownloadTicker_Call struct {
 // DownloadTicker is a helper method to define mock.On call
 //   - ctx context.Context
 //   - ticker string
-func (_e *TickerManager_Expecter) DownloadTicker(ctx interface{}, ticker interface{}) *TickerManager_DownloadTicker_Call {
+func (_e *TickerManager_Expecter) DownloadTicker(ctx any, ticker any) *TickerManager_DownloadTicker_Call {
 	return &TickerManager_DownloadTicker_Call{Call: _e.mock.On("DownloadTicker", ctx, ticker)}
 }
 
@@ -138,7 +138,7 @@ type TickerManager_GetDailyPrices_Call struct {
 //   - ctx context.Context
 //   - ticker string
 //   - year int
-func (_e *TickerManager_Expecter) GetDailyPrices(ctx interface{}, ticker interface{}, year interface{}) *TickerManager_GetDailyPrices_Call {
+func (_e *TickerManager_Expecter) GetDailyPrices(ctx any, ticker any, year any) *TickerManager_GetDailyPrices_Call {
 	return &TickerManager_GetDailyPrices_Call{Call: _e.mock.On("GetDailyPrices", ctx, ticker, year)}
 }
 
@@ -212,7 +212,7 @@ type TickerManager_GetPrice_Call struct {
 //   - ctx context.Context
 //   - ticker string
 //   - date time.Time
-func (_e *TickerManager_Expecter) GetPrice(ctx interface{}, ticker interface{}, date interface{}) *TickerManager_GetPrice_Call {
+func (_e *TickerManager_Expecter) GetPrice(ctx any, ticker any, date any) *TickerManager_GetPrice_Call {
 	return &TickerManager_GetPrice_Call{Call: _e.mock.On("GetPrice", ctx, ticker, date)}
 }
 
@@ -285,7 +285,7 @@ type TickerManager_GetSecurityInfo_Call struct {
 // GetSecurityInfo is a helper method to define mock.On call
 //   - ctx context.Context
 //   - ticker string
-func (_e *TickerManager_Expecter) GetSecurityInfo(ctx interface{}, ticker interface{}) *TickerManager_GetSecurityInfo_Call {
+func (_e *TickerManager_Expecter) GetSecurityInfo(ctx any, ticker any) *TickerManager_GetSecurityInfo_Call {
 	return &TickerManager_GetSecurityInfo_Call{Call: _e.mock.On("GetSecurityInfo", ctx, ticker)}
 }
 
@@ -357,7 +357,7 @@ type TickerManager_GetSplits_Call struct {
 //   - ticker string
 //   - from time.Time
 //   - to time.Time
-func (_e *TickerManager_Expecter) GetSplits(ctx interface{}, ticker interface{}, from interface{}, to interface{}) *TickerManager_GetSplits_Call {
+func (_e *TickerManager_Expecter) GetSplits(ctx any, ticker any, from any, to any) *TickerManager_GetSplits_Call {
 	return &TickerManager_GetSplits_Call{Call: _e.mock.On("GetSplits", ctx, ticker, from, to)}
 }
 
