@@ -9,12 +9,12 @@ export interface Submitter {
 	setError(message: string): void;
 
 	// run executes the action. On success it emits the supplied success
-	// message as a transient success notification when a non-null string is
-	// provided; pass null to skip the success notification. Validation and
+	// message as a transient success notification when a string is
+	// provided; omit the message to skip the success notification. Validation and
 	// caught failures are surfaced automatically as persistent error
 	// notifications via setError, so callers never manage inline success/error
 	// UI state boxes.
-	run(action: () => Promise<void>, successMessage: string | null): Promise<boolean>;
+	run(action: () => Promise<void>, successMessage?: string): Promise<boolean>;
 }
 
 // ===== Factory =====
@@ -31,13 +31,13 @@ export function createSubmitter(): Submitter {
 			notify({ message, variant: 'error' });
 		},
 
-		async run(action: () => Promise<void>, successMessage: string | null): Promise<boolean> {
+		async run(action: () => Promise<void>, successMessage?: string): Promise<boolean> {
 			const outcome = await base.tryRun.call(this, action);
 			if (outcome.kind === RunOutcomeKind.ERROR) {
 				this.setError(outcome.error.message);
 				return false;
 			}
-			if (outcome.kind === RunOutcomeKind.SUCCESS && successMessage !== null) {
+			if (outcome.kind === RunOutcomeKind.SUCCESS && successMessage !== undefined) {
 				notify({ message: successMessage, variant: 'success' });
 			}
 			return outcome.kind === RunOutcomeKind.SUCCESS;

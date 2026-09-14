@@ -59,7 +59,7 @@ async function toggleReviewedAt(submitter: Submitter, pg: JournalDetailPageProvi
 		journal.reviewed_at = envelope.data.reviewed_at;
 		await pg().sidebar.reviewQueue.load();
 		// Intentionally NOT updating journal.status — review toggle only touches reviewed_at.
-	}, null);
+	});
 
 	// Return immediately when the review toggle failed (error already notified).
 	if (!success) return;
