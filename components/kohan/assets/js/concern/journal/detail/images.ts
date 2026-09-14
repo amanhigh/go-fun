@@ -65,5 +65,11 @@ export function NewImagesConcern(pg: JournalDetailPageProvider) {
 			const count = pg().journal.detail?.images?.length ?? 0;
 			return `${count} timeframe image${count === 1 ? '' : 's'}`;
 		},
+
+		secondSetIndex(): number {
+			const sorted = this.sorted();
+			const secondSet = sorted.filter((image) => image.image_type === 'SET')[1];
+			return secondSet ? sorted.findIndex((image) => image.id === secondSet.id) : -1;
+		},
 	};
 }
