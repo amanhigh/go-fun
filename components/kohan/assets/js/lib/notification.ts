@@ -1,13 +1,12 @@
 // Shared notification runtime for the common UI notification viewport.
 //
-// This file is bundled into Kohan's app.js via esbuild (imported as a side
-// effect from input.ts) and exposes window.notify for callers across
-// components. The notification viewport .templ template provides the DOM
-// scaffold; this runtime owns queue, timer, and dismissal state privately.
+// This file is bundled into Kohan's app.js via esbuild. The notification
+// viewport .templ template provides the DOM scaffold; this runtime owns
+// queue, timer, and dismissal state privately.
 //
 // Public API (intentionally small):
 //   - notify(notification)  enqueue a notification; returns a dismiss callback
-//   - window.notify          global handle used by callers across components
+// Callers import notify directly so the runtime dependency remains explicit.
 //
 // Variant icons and the optional action button are rendered by the Templ
 // template as TemplUI scaffolds with static classes. This runtime only selects
@@ -138,7 +137,7 @@ function removeNotification(id: string): void {
  *
  * @returns a dismiss callback that clears the timer and removes the item
  */
-function notify(notification: Notification): () => void {
+export function notify(notification: Notification): () => void {
   const viewport = getViewport();
   if (!viewport || !notification || typeof notification.message !== "string") {
     // Always return the documented DismissNotification contract, even on no-op.
@@ -174,6 +173,3 @@ function notify(notification: Notification): () => void {
     removeNotification(id);
   };
 }
-
-// Expose the single public entry point for callers across components.
-window.notify = notify;

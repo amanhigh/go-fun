@@ -6,9 +6,8 @@
 // module with `import type` provides types without resolving the runtime file
 // or bundling a second runtime implementation.
 //
-// Because this module contains only type declarations and ambient global
-// declarations (no runtime code), it emits no JavaScript and can be safely
-// imported as a type-only module by any caller.
+// Because this module contains only type declarations, it emits no JavaScript
+// and can be safely imported as a type-only module by any caller.
 
 /** Visual variant of a notification. */
 export type NotificationVariant = "success" | "error";
@@ -36,16 +35,4 @@ export interface Notification {
   action?: NotificationAction;
   /** One-time callback fired only when the notification expires via its timer. */
   onExpire?: () => void;
-}
-
-/** Enqueue a notification into the shared viewport; returns a dismiss callback. */
-export declare function notify(notification: Notification): DismissNotification;
-
-declare global {
-  /** Global handle exposed by the Kohan JS bundle runtime. */
-  interface Window {
-    notify: (notification: Notification) => DismissNotification;
-  }
-  /** Standalone global notify handle used by callers across components. */
-  function notify(notification: Notification): DismissNotification;
 }

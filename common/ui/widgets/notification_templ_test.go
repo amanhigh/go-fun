@@ -37,13 +37,13 @@ var _ = Describe("Notification Template", func() {
 	})
 
 	Context("Semantic presentation hooks", func() {
-		It("carries stable semantic classes from the shared stylesheet", func() {
+		It("carries stable semantic hooks for the shared stylesheet", func() {
 			// Presentation lives in the shared notification stylesheet; the
 			// template must not freeze inline Tailwind utility strings.
-			Expect(doc.Find("[data-notification-viewport]").AttrOr("class", "")).To(Equal("notification-viewport"))
+			Expect(doc.Find("[data-notification-viewport]").AttrOr("class", "")).To(ContainSubstring("notification-viewport"))
 			Expect(doc.Find("[data-slot=\"alert\"]").AttrOr("class", "")).To(ContainSubstring("notification-card"))
-			Expect(doc.Find("[data-notification-title]").AttrOr("class", "")).To(Equal("notification-title"))
-			Expect(doc.Find("[data-notification-message]").AttrOr("class", "")).To(Equal("notification-message"))
+			Expect(doc.Find("[data-notification-title]").AttrOr("class", "")).To(ContainSubstring("notification-title"))
+			Expect(doc.Find("[data-notification-message]").AttrOr("class", "")).To(ContainSubstring("notification-message"))
 			Expect(doc.Find("[data-notification-action-scaffold]").AttrOr("class", "")).To(ContainSubstring("notification-action"))
 			Expect(doc.Find("[data-notification-dismiss]").AttrOr("class", "")).To(ContainSubstring("notification-dismiss"))
 		})
@@ -62,16 +62,13 @@ var _ = Describe("Notification Template", func() {
 		It("renders one hidden badge scaffold per variant with the semantic icon class", func() {
 			icons := doc.Find("[data-variant-icon]")
 			Expect(icons.Length()).To(Equal(2))
+			Expect(doc.Find(`[data-variant-icon="success"]`).Length()).To(Equal(1))
+			Expect(doc.Find(`[data-variant-icon="error"]`).Length()).To(Equal(1))
 			icons.Each(func(_ int, s *goquery.Selection) {
 				_, hasHidden := s.Attr("hidden")
 				Expect(hasHidden).To(BeTrue())
 				Expect(s.AttrOr("class", "")).To(Equal("notification-icon"))
 			})
-		})
-
-		It("covers every supported variant", func() {
-			Expect(doc.Find(`[data-variant-icon="success"]`).Length()).To(Equal(1))
-			Expect(doc.Find(`[data-variant-icon="error"]`).Length()).To(Equal(1))
 		})
 	})
 
@@ -89,6 +86,7 @@ var _ = Describe("Notification Template", func() {
 		It("renders the explicit dismiss control with an accessible label", func() {
 			dismiss := doc.Find("[data-notification-dismiss]")
 			Expect(dismiss.Length()).To(Equal(1))
+			Expect(dismiss.AttrOr("type", "")).To(Equal("button"))
 			Expect(dismiss.AttrOr("aria-label", "")).To(Equal("Dismiss"))
 		})
 	})

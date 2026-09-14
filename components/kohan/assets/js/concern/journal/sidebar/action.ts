@@ -1,4 +1,5 @@
 import { createSubmitter, type Submitter } from '../../../lib/submitter';
+import { notify } from '../../../lib/notification';
 import type { DisplaySpec } from '../../../types/core/present';
 import type { QuickAction } from '../../../types/journal/sidebar';
 import { JournalType, JournalStatus } from '../../../types/api/journal/enums';

@@ -4,6 +4,11 @@ import type { Envelope } from '../types/api/common';
 // ===== Loader Type =====
 
 export type Loader = Runner & {
+	message: string;
+	hasError(): boolean;
+	setError(message: string): void;
+	clearMessage(): void;
+
 	load<TData>(
 		action: () => Promise<Envelope<TData>>,
 		onSuccess: (data: TData) => void | Promise<void>,
@@ -13,22 +18,42 @@ export type Loader = Runner & {
 // ===== Factory =====
 
 export function createLoader(): Loader {
+	const base = createRunnerState();
+
 	return {
-		...createRunnerState(),
+		...base,
+		message: '',
+
+		hasError(this: Loader) {
+			return this.message !== '';
+		},
+
+		setError(this: Loader, message: string) {
+			this.message = message;
+		},
+
+		clearMessage(this: Loader) {
+			this.message = '';
+		},
 
 		async load<TData>(
 			this: Loader,
 			action: () => Promise<Envelope<TData>>,
 			onSuccess: (data: TData) => void | Promise<void>,
 		): Promise<boolean> {
-			const outcome = await this.tryRun(async () => {
+			const outcome = await base.tryRun.call(this, async () => {
+				this.clearMessage();
 				const envelope = await action();
 				if (envelope.data) {
 					await onSuccess(envelope.data);
 				}
 			});
 
-			return outcome.success;
+			if (outcome.status === 'error') {
+				this.setError(outcome.message);
+			}
+
+			return outcome.status === 'success';
 		},
 	};
 }
