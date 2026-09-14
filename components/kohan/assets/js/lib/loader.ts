@@ -1,4 +1,4 @@
-import { createRunnerState, type Runner } from './runner';
+import { createRunnerState, RunOutcomeKind, type Runner } from './runner';
 import type { Envelope } from '../types/api/common';
 
 // ===== Loader Type =====
@@ -49,11 +49,11 @@ export function createLoader(): Loader {
 				}
 			});
 
-			if (outcome.status === 'error') {
-				this.setError(outcome.message);
+			if (outcome.kind === RunOutcomeKind.ERROR) {
+				this.setError(outcome.error.message);
 			}
 
-			return outcome.status === 'success';
+			return outcome.kind === RunOutcomeKind.SUCCESS;
 		},
 	};
 }

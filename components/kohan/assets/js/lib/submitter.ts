@@ -1,4 +1,4 @@
-import { createRunnerState } from './runner';
+import { createRunnerState, RunOutcomeKind } from './runner';
 import { notify } from './notification';
 
 // ===== Submitter Type =====
@@ -33,14 +33,14 @@ export function createSubmitter(): Submitter {
 
 		async run(action: () => Promise<void>, successMessage: string | null): Promise<boolean> {
 			const outcome = await base.tryRun.call(this, action);
-			if (outcome.status === 'error') {
-				this.setError(outcome.message);
+			if (outcome.kind === RunOutcomeKind.ERROR) {
+				this.setError(outcome.error.message);
 				return false;
 			}
-			if (outcome.status === 'success' && successMessage !== null) {
+			if (outcome.kind === RunOutcomeKind.SUCCESS && successMessage !== null) {
 				notify({ message: successMessage, variant: 'success' });
 			}
-			return outcome.status === 'success';
+			return outcome.kind === RunOutcomeKind.SUCCESS;
 		},
 	};
 }
