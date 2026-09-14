@@ -16,6 +16,7 @@ templ JournalDetailPage(journalID string) {
 			Attributes: templ.Attributes{
 				"x-data": `journalDetailPage("` + journalID + `")`,
 				"x-init": "init()",
+				"data-journal-bridge": "journal-detail",
 			},
 		}) {
 			<div class="space-y-6">

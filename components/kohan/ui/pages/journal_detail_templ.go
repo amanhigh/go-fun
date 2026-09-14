@@ -106,8 +106,9 @@ func JournalDetailPage(journalID string) templ.Component {
 				Eyebrow:     "Kohan Portal",
 				HeroContent: detailblocks.JournalDetailHeader(),
 				Attributes: templ.Attributes{
-					"x-data": `journalDetailPage("` + journalID + `")`,
-					"x-init": "init()",
+					"x-data":              `journalDetailPage("` + journalID + `")`,
+					"x-init":              "init()",
+					"data-journal-bridge": "journal-detail",
 				},
 			}).Render(templ.WithChildren(ctx, templ_7745c5c3_Var3), templ_7745c5c3_Buffer)
 			if templ_7745c5c3_Err != nil {
