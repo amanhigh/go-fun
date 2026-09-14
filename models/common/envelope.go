@@ -7,6 +7,9 @@ package common
 type EnvelopeStatus string
 
 const (
+	envelopeStatusKey  = "status"
+	envelopeMessageKey = "message"
+
 	// EnvelopeSuccess indicates the request was successful.
 	EnvelopeSuccess EnvelopeStatus = "success"
 	// EnvelopeFail indicates the request failed due to client error (4xx).
@@ -45,8 +48,8 @@ func NewErrorEnvelope(message string, code int) Envelope[map[string]any] {
 	return Envelope[map[string]any]{
 		Status: EnvelopeError,
 		Data: map[string]any{
-			"message": message,
-			"code":    code,
+			envelopeMessageKey: message,
+			"code":             code,
 		},
 	}
 }

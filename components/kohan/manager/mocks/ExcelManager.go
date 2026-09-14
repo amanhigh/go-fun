@@ -64,7 +64,7 @@ type ExcelManager_GenerateTaxSummaryExcel_Call struct {
 //   - ctx context.Context
 //   - year int
 //   - summary tax.Summary
-func (_e *ExcelManager_Expecter) GenerateTaxSummaryExcel(ctx interface{}, year interface{}, summary interface{}) *ExcelManager_GenerateTaxSummaryExcel_Call {
+func (_e *ExcelManager_Expecter) GenerateTaxSummaryExcel(ctx any, year any, summary any) *ExcelManager_GenerateTaxSummaryExcel_Call {
 	return &ExcelManager_GenerateTaxSummaryExcel_Call{Call: _e.mock.On("GenerateTaxSummaryExcel", ctx, year, summary)}
 }
 

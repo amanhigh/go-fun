@@ -49,7 +49,7 @@ type OSHandler_HandleReadClip_Call struct {
 
 // HandleReadClip is a helper method to define mock.On call
 //   - ctx *gin.Context
-func (_e *OSHandler_Expecter) HandleReadClip(ctx interface{}) *OSHandler_HandleReadClip_Call {
+func (_e *OSHandler_Expecter) HandleReadClip(ctx any) *OSHandler_HandleReadClip_Call {
 	return &OSHandler_HandleReadClip_Call{Call: _e.mock.On("HandleReadClip", ctx)}
 }
 
@@ -89,7 +89,7 @@ type OSHandler_HandleRecordTicker_Call struct {
 
 // HandleRecordTicker is a helper method to define mock.On call
 //   - ctx *gin.Context
-func (_e *OSHandler_Expecter) HandleRecordTicker(ctx interface{}) *OSHandler_HandleRecordTicker_Call {
+func (_e *OSHandler_Expecter) HandleRecordTicker(ctx any) *OSHandler_HandleRecordTicker_Call {
 	return &OSHandler_HandleRecordTicker_Call{Call: _e.mock.On("HandleRecordTicker", ctx)}
 }
 
@@ -129,7 +129,7 @@ type OSHandler_HandleScreenshot_Call struct {
 
 // HandleScreenshot is a helper method to define mock.On call
 //   - ctx *gin.Context
-func (_e *OSHandler_Expecter) HandleScreenshot(ctx interface{}) *OSHandler_HandleScreenshot_Call {
+func (_e *OSHandler_Expecter) HandleScreenshot(ctx any) *OSHandler_HandleScreenshot_Call {
 	return &OSHandler_HandleScreenshot_Call{Call: _e.mock.On("HandleScreenshot", ctx)}
 }
 

@@ -305,7 +305,7 @@ func (m *InteractiveBrokersManagerImpl) isValidTradeRecord(record []string) bool
 func (m *InteractiveBrokersManagerImpl) parseTradeRecord(record []string) (tax.Trade, error) {
 	symbol := record[5]
 	dateTime := record[6]
-	date := strings.Split(dateTime, ",")[0]
+	date, _, _ := strings.Cut(dateTime, ",")
 
 	quantity, err := strconv.ParseFloat(record[7], 64)
 	if err != nil {
@@ -371,8 +371,7 @@ func (m *InteractiveBrokersManagerImpl) parseDividends(records [][]string) ([]ta
 
 		dividend, err := m.parseDividendRecord(record, taxMap)
 		if err != nil {
-			var missingTaxErr *missingWithholdingTaxError
-			if errors.As(err, &missingTaxErr) {
+			if _, ok := errors.AsType[*missingWithholdingTaxError](err); ok {
 				return nil, err
 			}
 			continue

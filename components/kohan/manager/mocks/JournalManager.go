@@ -66,7 +66,7 @@ type JournalManager_CreateJournal_Call struct {
 // CreateJournal is a helper method to define mock.On call
 //   - ctx context.Context
 //   - journal *barkat.Journal
-func (_e *JournalManager_Expecter) CreateJournal(ctx interface{}, journal interface{}) *JournalManager_CreateJournal_Call {
+func (_e *JournalManager_Expecter) CreateJournal(ctx any, journal any) *JournalManager_CreateJournal_Call {
 	return &JournalManager_CreateJournal_Call{Call: _e.mock.On("CreateJournal", ctx, journal)}
 }
 
@@ -125,7 +125,7 @@ type JournalManager_DeleteJournal_Call struct {
 // DeleteJournal is a helper method to define mock.On call
 //   - ctx context.Context
 //   - journalExternalId string
-func (_e *JournalManager_Expecter) DeleteJournal(ctx interface{}, journalExternalId interface{}) *JournalManager_DeleteJournal_Call {
+func (_e *JournalManager_Expecter) DeleteJournal(ctx any, journalExternalId any) *JournalManager_DeleteJournal_Call {
 	return &JournalManager_DeleteJournal_Call{Call: _e.mock.On("DeleteJournal", ctx, journalExternalId)}
 }
 
@@ -193,7 +193,7 @@ type JournalManager_GetJournal_Call struct {
 // GetJournal is a helper method to define mock.On call
 //   - ctx context.Context
 //   - journalExternalId string
-func (_e *JournalManager_Expecter) GetJournal(ctx interface{}, journalExternalId interface{}) *JournalManager_GetJournal_Call {
+func (_e *JournalManager_Expecter) GetJournal(ctx any, journalExternalId any) *JournalManager_GetJournal_Call {
 	return &JournalManager_GetJournal_Call{Call: _e.mock.On("GetJournal", ctx, journalExternalId)}
 }
 
@@ -261,7 +261,7 @@ type JournalManager_ListJournals_Call struct {
 // ListJournals is a helper method to define mock.On call
 //   - ctx context.Context
 //   - query barkat.JournalQuery
-func (_e *JournalManager_Expecter) ListJournals(ctx interface{}, query interface{}) *JournalManager_ListJournals_Call {
+func (_e *JournalManager_Expecter) ListJournals(ctx any, query any) *JournalManager_ListJournals_Call {
 	return &JournalManager_ListJournals_Call{Call: _e.mock.On("ListJournals", ctx, query)}
 }
 
@@ -330,7 +330,7 @@ type JournalManager_UpdateReviewStatus_Call struct {
 //   - ctx context.Context
 //   - journalExternalId string
 //   - update barkat.JournalReviewUpdate
-func (_e *JournalManager_Expecter) UpdateReviewStatus(ctx interface{}, journalExternalId interface{}, update interface{}) *JournalManager_UpdateReviewStatus_Call {
+func (_e *JournalManager_Expecter) UpdateReviewStatus(ctx any, journalExternalId any, update any) *JournalManager_UpdateReviewStatus_Call {
 	return &JournalManager_UpdateReviewStatus_Call{Call: _e.mock.On("UpdateReviewStatus", ctx, journalExternalId, update)}
 }
 

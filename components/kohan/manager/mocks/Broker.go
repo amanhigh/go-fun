@@ -113,7 +113,7 @@ type Broker_Parse_Call struct {
 
 // Parse is a helper method to define mock.On call
 //   - year int
-func (_e *Broker_Expecter) Parse(year interface{}) *Broker_Parse_Call {
+func (_e *Broker_Expecter) Parse(year any) *Broker_Parse_Call {
 	return &Broker_Parse_Call{Call: _e.mock.On("Parse", year)}
 }
 

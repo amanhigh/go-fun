@@ -66,7 +66,7 @@ type BarkatTickerManager_CreateTicker_Call struct {
 // CreateTicker is a helper method to define mock.On call
 //   - ctx context.Context
 //   - ticker *barkat.Ticker
-func (_e *BarkatTickerManager_Expecter) CreateTicker(ctx interface{}, ticker interface{}) *BarkatTickerManager_CreateTicker_Call {
+func (_e *BarkatTickerManager_Expecter) CreateTicker(ctx any, ticker any) *BarkatTickerManager_CreateTicker_Call {
 	return &BarkatTickerManager_CreateTicker_Call{Call: _e.mock.On("CreateTicker", ctx, ticker)}
 }
 
@@ -125,7 +125,7 @@ type BarkatTickerManager_DeleteTicker_Call struct {
 // DeleteTicker is a helper method to define mock.On call
 //   - ctx context.Context
 //   - ticker string
-func (_e *BarkatTickerManager_Expecter) DeleteTicker(ctx interface{}, ticker interface{}) *BarkatTickerManager_DeleteTicker_Call {
+func (_e *BarkatTickerManager_Expecter) DeleteTicker(ctx any, ticker any) *BarkatTickerManager_DeleteTicker_Call {
 	return &BarkatTickerManager_DeleteTicker_Call{Call: _e.mock.On("DeleteTicker", ctx, ticker)}
 }
 
@@ -193,7 +193,7 @@ type BarkatTickerManager_GetTicker_Call struct {
 // GetTicker is a helper method to define mock.On call
 //   - ctx context.Context
 //   - ticker string
-func (_e *BarkatTickerManager_Expecter) GetTicker(ctx interface{}, ticker interface{}) *BarkatTickerManager_GetTicker_Call {
+func (_e *BarkatTickerManager_Expecter) GetTicker(ctx any, ticker any) *BarkatTickerManager_GetTicker_Call {
 	return &BarkatTickerManager_GetTicker_Call{Call: _e.mock.On("GetTicker", ctx, ticker)}
 }
 
@@ -261,7 +261,7 @@ type BarkatTickerManager_ListTickers_Call struct {
 // ListTickers is a helper method to define mock.On call
 //   - ctx context.Context
 //   - query barkat.TickerQuery
-func (_e *BarkatTickerManager_Expecter) ListTickers(ctx interface{}, query interface{}) *BarkatTickerManager_ListTickers_Call {
+func (_e *BarkatTickerManager_Expecter) ListTickers(ctx any, query any) *BarkatTickerManager_ListTickers_Call {
 	return &BarkatTickerManager_ListTickers_Call{Call: _e.mock.On("ListTickers", ctx, query)}
 }
 
@@ -330,7 +330,7 @@ type BarkatTickerManager_PatchTickerLastOpened_Call struct {
 //   - ctx context.Context
 //   - ticker string
 //   - update barkat.TickerLastOpenedUpdate
-func (_e *BarkatTickerManager_Expecter) PatchTickerLastOpened(ctx interface{}, ticker interface{}, update interface{}) *BarkatTickerManager_PatchTickerLastOpened_Call {
+func (_e *BarkatTickerManager_Expecter) PatchTickerLastOpened(ctx any, ticker any, update any) *BarkatTickerManager_PatchTickerLastOpened_Call {
 	return &BarkatTickerManager_PatchTickerLastOpened_Call{Call: _e.mock.On("PatchTickerLastOpened", ctx, ticker, update)}
 }
 
@@ -404,7 +404,7 @@ type BarkatTickerManager_UpdateTicker_Call struct {
 //   - ctx context.Context
 //   - ticker string
 //   - req barkat.TickerUpdateRequest
-func (_e *BarkatTickerManager_Expecter) UpdateTicker(ctx interface{}, ticker interface{}, req interface{}) *BarkatTickerManager_UpdateTicker_Call {
+func (_e *BarkatTickerManager_Expecter) UpdateTicker(ctx any, ticker any, req any) *BarkatTickerManager_UpdateTicker_Call {
 	return &BarkatTickerManager_UpdateTicker_Call{Call: _e.mock.On("UpdateTicker", ctx, ticker, req)}
 }
 

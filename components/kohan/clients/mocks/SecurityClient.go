@@ -75,7 +75,7 @@ type SecurityClient_FetchDailyPrices_Call struct {
 // FetchDailyPrices is a helper method to define mock.On call
 //   - ctx context.Context
 //   - ticker string
-func (_e *SecurityClient_Expecter) FetchDailyPrices(ctx interface{}, ticker interface{}) *SecurityClient_FetchDailyPrices_Call {
+func (_e *SecurityClient_Expecter) FetchDailyPrices(ctx any, ticker any) *SecurityClient_FetchDailyPrices_Call {
 	return &SecurityClient_FetchDailyPrices_Call{Call: _e.mock.On("FetchDailyPrices", ctx, ticker)}
 }
 
@@ -145,7 +145,7 @@ type SecurityClient_GetSecurityInfo_Call struct {
 // GetSecurityInfo is a helper method to define mock.On call
 //   - ctx context.Context
 //   - query string
-func (_e *SecurityClient_Expecter) GetSecurityInfo(ctx interface{}, query interface{}) *SecurityClient_GetSecurityInfo_Call {
+func (_e *SecurityClient_Expecter) GetSecurityInfo(ctx any, query any) *SecurityClient_GetSecurityInfo_Call {
 	return &SecurityClient_GetSecurityInfo_Call{Call: _e.mock.On("GetSecurityInfo", ctx, query)}
 }
 

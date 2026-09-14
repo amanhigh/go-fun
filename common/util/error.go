@@ -94,15 +94,14 @@ func handleValidatorError(err error) common.HttpError {
 
 	e := errs[0]
 	// Strip array index suffix (e.g. "Timeframes[0]" → "Timeframes") for cleaner error keys
-	fieldName := strings.SplitN(e.Field(), "[", 2)[0]
+	fieldName, _, _ := strings.Cut(e.Field(), "[")
 	msg := fmt.Sprintf("'%s' with Value '%v' Violates '%s (%s)'", fieldName, e.Value(), e.Tag(), e.Param())
 	return common.NewFieldHttpError(fieldName, msg)
 }
 
 // handleHttpError passes through existing HttpError instances.
 func handleHttpError(err error) common.HttpError {
-	var httpErr common.HttpError
-	if errors.As(err, &httpErr) {
+	if httpErr, ok := errors.AsType[common.HttpError](err); ok {
 		return httpErr
 	}
 	return nil
@@ -110,13 +109,11 @@ func handleHttpError(err error) common.HttpError {
 
 // handleJSONError processes JSON parsing errors (syntax and type mismatch).
 func handleJSONError(err error) common.HttpError {
-	var syntaxErr *json.SyntaxError
-	if errors.As(err, &syntaxErr) {
+	if syntaxErr, ok := errors.AsType[*json.SyntaxError](err); ok {
 		return common.NewHttpError(fmt.Sprintf("Invalid JSON at position %d", syntaxErr.Offset), http.StatusBadRequest)
 	}
 
-	var typeErr *json.UnmarshalTypeError
-	if errors.As(err, &typeErr) {
+	if typeErr, ok := errors.AsType[*json.UnmarshalTypeError](err); ok {
 		field := typeErr.Field
 		if field == "" {
 			field = typeErr.Struct
@@ -134,8 +131,7 @@ func handleJSONError(err error) common.HttpError {
 // handleTimeParseError processes errors from time.Time JSON binding (invalid timestamp formats).
 // Handles both *time.ParseError (bad format string) and Go 1.26+ *errors.errorString (non-string input).
 func handleTimeParseError(err error) common.HttpError {
-	var parseErr *time.ParseError
-	if errors.As(err, &parseErr) {
+	if parseErr, ok := errors.AsType[*time.ParseError](err); ok {
 		return common.NewHttpError(fmt.Sprintf("Invalid time format: '%s'", parseErr.Value), http.StatusBadRequest)
 	}
 	// Go 1.26+: time.Time.UnmarshalJSON returns *errors.errorString for non-string values
@@ -147,8 +143,7 @@ func handleTimeParseError(err error) common.HttpError {
 
 // handleNumericError processes strconv parsing errors.
 func handleNumericError(err error) common.HttpError {
-	var numErr *strconv.NumError
-	if errors.As(err, &numErr) {
+	if numErr, ok := errors.AsType[*strconv.NumError](err); ok {
 		return common.NewHttpError(fmt.Sprintf("Query parameter '%s' must be numeric", numErr.Func), http.StatusBadRequest)
 	}
 	return nil

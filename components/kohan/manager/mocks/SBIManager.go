@@ -66,7 +66,7 @@ type SBIManager_DownloadRates_Call struct {
 
 // DownloadRates is a helper method to define mock.On call
 //   - ctx context.Context
-func (_e *SBIManager_Expecter) DownloadRates(ctx interface{}) *SBIManager_DownloadRates_Call {
+func (_e *SBIManager_Expecter) DownloadRates(ctx any) *SBIManager_DownloadRates_Call {
 	return &SBIManager_DownloadRates_Call{Call: _e.mock.On("DownloadRates", ctx)}
 }
 
@@ -131,7 +131,7 @@ type SBIManager_GetDailyRates_Call struct {
 // GetDailyRates is a helper method to define mock.On call
 //   - ctx context.Context
 //   - year int
-func (_e *SBIManager_Expecter) GetDailyRates(ctx interface{}, year interface{}) *SBIManager_GetDailyRates_Call {
+func (_e *SBIManager_Expecter) GetDailyRates(ctx any, year any) *SBIManager_GetDailyRates_Call {
 	return &SBIManager_GetDailyRates_Call{Call: _e.mock.On("GetDailyRates", ctx, year)}
 }
 
@@ -199,7 +199,7 @@ type SBIManager_GetLastMonthEndRate_Call struct {
 // GetLastMonthEndRate is a helper method to define mock.On call
 //   - ctx context.Context
 //   - date time.Time
-func (_e *SBIManager_Expecter) GetLastMonthEndRate(ctx interface{}, date interface{}) *SBIManager_GetLastMonthEndRate_Call {
+func (_e *SBIManager_Expecter) GetLastMonthEndRate(ctx any, date any) *SBIManager_GetLastMonthEndRate_Call {
 	return &SBIManager_GetLastMonthEndRate_Call{Call: _e.mock.On("GetLastMonthEndRate", ctx, date)}
 }
 
@@ -267,7 +267,7 @@ type SBIManager_GetTTBuyRate_Call struct {
 // GetTTBuyRate is a helper method to define mock.On call
 //   - ctx context.Context
 //   - date time.Time
-func (_e *SBIManager_Expecter) GetTTBuyRate(ctx interface{}, date interface{}) *SBIManager_GetTTBuyRate_Call {
+func (_e *SBIManager_Expecter) GetTTBuyRate(ctx any, date any) *SBIManager_GetTTBuyRate_Call {
 	return &SBIManager_GetTTBuyRate_Call{Call: _e.mock.On("GetTTBuyRate", ctx, date)}
 }
 

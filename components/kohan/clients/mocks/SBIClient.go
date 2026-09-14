@@ -73,7 +73,7 @@ type SBIClient_FetchExchangeRates_Call struct {
 
 // FetchExchangeRates is a helper method to define mock.On call
 //   - ctx context.Context
-func (_e *SBIClient_Expecter) FetchExchangeRates(ctx interface{}) *SBIClient_FetchExchangeRates_Call {
+func (_e *SBIClient_Expecter) FetchExchangeRates(ctx any) *SBIClient_FetchExchangeRates_Call {
 	return &SBIClient_FetchExchangeRates_Call{Call: _e.mock.On("FetchExchangeRates", ctx)}
 }
 

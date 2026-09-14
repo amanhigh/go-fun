@@ -78,7 +78,7 @@ type TagManager_CreateTag_Call struct {
 //   - ctx context.Context
 //   - journalID string
 //   - tag barkat.Tag
-func (_e *TagManager_Expecter) CreateTag(ctx interface{}, journalID interface{}, tag interface{}) *TagManager_CreateTag_Call {
+func (_e *TagManager_Expecter) CreateTag(ctx any, journalID any, tag any) *TagManager_CreateTag_Call {
 	return &TagManager_CreateTag_Call{Call: _e.mock.On("CreateTag", ctx, journalID, tag)}
 }
 
@@ -143,7 +143,7 @@ type TagManager_DeleteTag_Call struct {
 //   - ctx context.Context
 //   - journalID string
 //   - tagID string
-func (_e *TagManager_Expecter) DeleteTag(ctx interface{}, journalID interface{}, tagID interface{}) *TagManager_DeleteTag_Call {
+func (_e *TagManager_Expecter) DeleteTag(ctx any, journalID any, tagID any) *TagManager_DeleteTag_Call {
 	return &TagManager_DeleteTag_Call{Call: _e.mock.On("DeleteTag", ctx, journalID, tagID)}
 }
 
@@ -217,7 +217,7 @@ type TagManager_ListTags_Call struct {
 //   - ctx context.Context
 //   - journalID string
 //   - tagType string
-func (_e *TagManager_Expecter) ListTags(ctx interface{}, journalID interface{}, tagType interface{}) *TagManager_ListTags_Call {
+func (_e *TagManager_Expecter) ListTags(ctx any, journalID any, tagType any) *TagManager_ListTags_Call {
 	return &TagManager_ListTags_Call{Call: _e.mock.On("ListTags", ctx, journalID, tagType)}
 }
 

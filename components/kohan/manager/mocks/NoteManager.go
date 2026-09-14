@@ -78,7 +78,7 @@ type NoteManager_CreateNote_Call struct {
 //   - ctx context.Context
 //   - journalID string
 //   - note barkat.Note
-func (_e *NoteManager_Expecter) CreateNote(ctx interface{}, journalID interface{}, note interface{}) *NoteManager_CreateNote_Call {
+func (_e *NoteManager_Expecter) CreateNote(ctx any, journalID any, note any) *NoteManager_CreateNote_Call {
 	return &NoteManager_CreateNote_Call{Call: _e.mock.On("CreateNote", ctx, journalID, note)}
 }
 
@@ -143,7 +143,7 @@ type NoteManager_DeleteNote_Call struct {
 //   - ctx context.Context
 //   - journalID string
 //   - noteID string
-func (_e *NoteManager_Expecter) DeleteNote(ctx interface{}, journalID interface{}, noteID interface{}) *NoteManager_DeleteNote_Call {
+func (_e *NoteManager_Expecter) DeleteNote(ctx any, journalID any, noteID any) *NoteManager_DeleteNote_Call {
 	return &NoteManager_DeleteNote_Call{Call: _e.mock.On("DeleteNote", ctx, journalID, noteID)}
 }
 
@@ -217,7 +217,7 @@ type NoteManager_ListNotes_Call struct {
 //   - ctx context.Context
 //   - journalID string
 //   - status string
-func (_e *NoteManager_Expecter) ListNotes(ctx interface{}, journalID interface{}, status interface{}) *NoteManager_ListNotes_Call {
+func (_e *NoteManager_Expecter) ListNotes(ctx any, journalID any, status any) *NoteManager_ListNotes_Call {
 	return &NoteManager_ListNotes_Call{Call: _e.mock.On("ListNotes", ctx, journalID, status)}
 }
 

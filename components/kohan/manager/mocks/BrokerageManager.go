@@ -62,7 +62,7 @@ type BrokerageManager_ParseAndGenerate_Call struct {
 // ParseAndGenerate is a helper method to define mock.On call
 //   - ctx context.Context
 //   - year int
-func (_e *BrokerageManager_Expecter) ParseAndGenerate(ctx interface{}, year interface{}) *BrokerageManager_ParseAndGenerate_Call {
+func (_e *BrokerageManager_Expecter) ParseAndGenerate(ctx any, year any) *BrokerageManager_ParseAndGenerate_Call {
 	return &BrokerageManager_ParseAndGenerate_Call{Call: _e.mock.On("ParseAndGenerate", ctx, year)}
 }
 

@@ -1,45 +1,46 @@
-import { createRunnerState, type Runner } from './runner';
-
-// ===== Types =====
-
-export type SubmitMessages = {
-	success?: string;
-};
+import { createRunnerState, RunOutcomeKind } from './runner';
+import { notify } from './notification';
 
 // ===== Submitter Type =====
 
-export type Submitter = Runner & {
-	run(action: () => Promise<void>, messages: SubmitMessages): Promise<boolean>;
-};
+export interface Submitter {
+	busy: boolean;
+	isBusy(): boolean;
+	setError(message: string): void;
+
+	// run executes the action. On success it emits the supplied success
+	// message as a transient success notification when a string is
+	// provided; omit the message to skip the success notification. Validation and
+	// caught failures are surfaced automatically as persistent error
+	// notifications via setError, so callers never manage inline success/error
+	// UI state boxes.
+	run(action: () => Promise<void>, successMessage?: string): Promise<boolean>;
+}
 
 // ===== Factory =====
 
 export function createSubmitter(): Submitter {
-	let dismissTimer: ReturnType<typeof setTimeout> | undefined;
+	const base = createRunnerState();
 
 	return {
-		...createRunnerState(),
+		...base,
 
-		async run(this: Submitter, action: () => Promise<void>, messages: SubmitMessages): Promise<boolean> {
-			// Cancel any previous dismiss timer before starting a new submission.
-			if (dismissTimer !== undefined) {
-				clearTimeout(dismissTimer);
-				dismissTimer = undefined;
-			}
+		// setError surfaces validation and caught failures as a prop-free
+		// persistent error notification.
+		setError(message: string) {
+			notify({ message, variant: 'error' });
+		},
 
-			const outcome = await this.tryRun(action);
-			if (outcome.success) {
-				this.setSuccess(messages.success ?? '');
-				// Auto-dismiss success message after 3 seconds.
-				// Only clears if the message is unchanged and submitter is not in error state.
-				dismissTimer = setTimeout(() => {
-					if (!this.hasError() && this.message === (messages.success ?? '')) {
-						this.clearMessage();
-					}
-					dismissTimer = undefined;
-				}, 3000);
+		async run(action: () => Promise<void>, successMessage?: string): Promise<boolean> {
+			const outcome = await base.tryRun.call(this, action);
+			if (outcome.kind === RunOutcomeKind.ERROR) {
+				this.setError(outcome.error.message);
+				return false;
 			}
-			return outcome.success;
+			if (outcome.kind === RunOutcomeKind.SUCCESS && successMessage !== undefined) {
+				notify({ message: successMessage, variant: 'success' });
+			}
+			return outcome.kind === RunOutcomeKind.SUCCESS;
 		},
 	};
 }

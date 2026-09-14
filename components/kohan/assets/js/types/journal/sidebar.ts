@@ -1,9 +1,9 @@
 import type { Journal, JournalNote, JournalTag } from '../api/journal/response';
+import type { ReviewAdvanceConcern } from '../../concern/journal/sidebar/review_advance';
 import type { Loader } from '../../lib/loader';
 import type { Submitter } from '../../lib/submitter';
 import type { Collection } from '../core/collection';
 import type { DisplaySpec } from '../core/present';
-import type { DeferredAction } from '../../lib/deferred_action';
 
 // ===== Main Concern =====
 
@@ -47,10 +47,6 @@ export type QuickAction = {
 export type ReviewQueueConcern = Collection<Journal> & {
 	loader: Loader;
 	load(): Promise<void>;
-};
-
-export type ReviewAdvanceConcern = DeferredAction & {
-	schedule(next: Journal): void;
 };
 
 export type NoteFormConcern = {

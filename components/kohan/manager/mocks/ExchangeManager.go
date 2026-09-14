@@ -66,7 +66,7 @@ type ExchangeManager_Exchange_Call struct {
 // Exchange is a helper method to define mock.On call
 //   - ctx context.Context
 //   - exchangeables []tax.Exchangeable
-func (_e *ExchangeManager_Expecter) Exchange(ctx interface{}, exchangeables interface{}) *ExchangeManager_Exchange_Call {
+func (_e *ExchangeManager_Expecter) Exchange(ctx any, exchangeables any) *ExchangeManager_Exchange_Call {
 	return &ExchangeManager_Exchange_Call{Call: _e.mock.On("Exchange", ctx, exchangeables)}
 }
 
@@ -125,7 +125,7 @@ type ExchangeManager_ExchangeGains_Call struct {
 // ExchangeGains is a helper method to define mock.On call
 //   - ctx context.Context
 //   - gains []tax.INRGains
-func (_e *ExchangeManager_Expecter) ExchangeGains(ctx interface{}, gains interface{}) *ExchangeManager_ExchangeGains_Call {
+func (_e *ExchangeManager_Expecter) ExchangeGains(ctx any, gains any) *ExchangeManager_ExchangeGains_Call {
 	return &ExchangeManager_ExchangeGains_Call{Call: _e.mock.On("ExchangeGains", ctx, gains)}
 }
 
@@ -184,7 +184,7 @@ type ExchangeManager_ExchangeWithPrecedingMonth_Call struct {
 // ExchangeWithPrecedingMonth is a helper method to define mock.On call
 //   - ctx context.Context
 //   - exchangeables []tax.Exchangeable
-func (_e *ExchangeManager_Expecter) ExchangeWithPrecedingMonth(ctx interface{}, exchangeables interface{}) *ExchangeManager_ExchangeWithPrecedingMonth_Call {
+func (_e *ExchangeManager_Expecter) ExchangeWithPrecedingMonth(ctx any, exchangeables any) *ExchangeManager_ExchangeWithPrecedingMonth_Call {
 	return &ExchangeManager_ExchangeWithPrecedingMonth_Call{Call: _e.mock.On("ExchangeWithPrecedingMonth", ctx, exchangeables)}
 }
 

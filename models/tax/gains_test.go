@@ -11,7 +11,7 @@ var _ = Describe("Gains", func() {
 		Describe("INRValue", func() {
 			It("should convert negative PNL to INR with rounding", func() {
 				gains := INRGains{
-					Gains:  Gains{PNL: -3134.91},
+					PNL:    -3134.91,
 					TTRate: 82.50,
 				}
 				Expect(gains.INRValue()).To(Equal(-258630.08))
@@ -19,7 +19,7 @@ var _ = Describe("Gains", func() {
 
 			It("should convert positive PNL to INR with rounding", func() {
 				gains := INRGains{
-					Gains:  Gains{PNL: 1234.56},
+					PNL:    1234.56,
 					TTRate: 85.75,
 				}
 				Expect(gains.INRValue()).To(Equal(105863.52))

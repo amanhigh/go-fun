@@ -1,7 +1,6 @@
 package command
 
 import (
-	"context"
 	"fmt"
 
 	"github.com/amanhigh/go-fun/common/tools"
@@ -32,11 +31,15 @@ var kohanServerCmd = &cobra.Command{
 	Use:   "serve",
 	Short: "Start Kohan Server",
 	Args:  cobra.NoArgs,
-	RunE: func(cmd *cobra.Command, _ []string) (err error) {
-		osManager := core.GetKohanInterface().GetOSManager()
-		monitorCtx, stopMonitor := context.WithCancel(cmd.Context())
-		defer stopMonitor()
-		go osManager.MonitorInternetConnection(monitorCtx)
+	RunE: func(_ *cobra.Command, _ []string) (err error) {
+		// osManager := core.GetKohanInterface().GetOSManager()
+		// Internet connectivity monitoring has moved to the Scripts Hatchet
+		// "internet" workflow (automation/workflows/internet.py). Disabled here
+		// to avoid a second NetworkManager restarter; the monitor code is kept
+		// for reference until the go-fun cleanup removes it.
+		// monitorCtx, stopMonitor := context.WithCancel(cmd.Context())
+		// defer stopMonitor()
+		// go osManager.MonitorInternetConnection(monitorCtx)
 
 		server, err := core.GetKohanInterface().GetKohanServer()
 		if err != nil {

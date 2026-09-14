@@ -66,7 +66,7 @@ type EnrollmentManagerInterface_CancelEnrollment_Call struct {
 // CancelEnrollment is a helper method to define mock.On call
 //   - ctx context.Context
 //   - enrollmentID string
-func (_e *EnrollmentManagerInterface_Expecter) CancelEnrollment(ctx interface{}, enrollmentID interface{}) *EnrollmentManagerInterface_CancelEnrollment_Call {
+func (_e *EnrollmentManagerInterface_Expecter) CancelEnrollment(ctx any, enrollmentID any) *EnrollmentManagerInterface_CancelEnrollment_Call {
 	return &EnrollmentManagerInterface_CancelEnrollment_Call{Call: _e.mock.On("CancelEnrollment", ctx, enrollmentID)}
 }
 
@@ -125,7 +125,7 @@ type EnrollmentManagerInterface_EnrollCmd_Call struct {
 // EnrollCmd is a helper method to define mock.On call
 //   - ctx context.Context
 //   - cmd fun.EnrollCmdV1
-func (_e *EnrollmentManagerInterface_Expecter) EnrollCmd(ctx interface{}, cmd interface{}) *EnrollmentManagerInterface_EnrollCmd_Call {
+func (_e *EnrollmentManagerInterface_Expecter) EnrollCmd(ctx any, cmd any) *EnrollmentManagerInterface_EnrollCmd_Call {
 	return &EnrollmentManagerInterface_EnrollCmd_Call{Call: _e.mock.On("EnrollCmd", ctx, cmd)}
 }
 
@@ -194,7 +194,7 @@ type EnrollmentManagerInterface_EnrollStudent_Call struct {
 //   - ctx context.Context
 //   - studentID string
 //   - grade int
-func (_e *EnrollmentManagerInterface_Expecter) EnrollStudent(ctx interface{}, studentID interface{}, grade interface{}) *EnrollmentManagerInterface_EnrollStudent_Call {
+func (_e *EnrollmentManagerInterface_Expecter) EnrollStudent(ctx any, studentID any, grade any) *EnrollmentManagerInterface_EnrollStudent_Call {
 	return &EnrollmentManagerInterface_EnrollStudent_Call{Call: _e.mock.On("EnrollStudent", ctx, studentID, grade)}
 }
 
@@ -267,7 +267,7 @@ type EnrollmentManagerInterface_GetEnrollment_Call struct {
 // GetEnrollment is a helper method to define mock.On call
 //   - ctx context.Context
 //   - studentID string
-func (_e *EnrollmentManagerInterface_Expecter) GetEnrollment(ctx interface{}, studentID interface{}) *EnrollmentManagerInterface_GetEnrollment_Call {
+func (_e *EnrollmentManagerInterface_Expecter) GetEnrollment(ctx any, studentID any) *EnrollmentManagerInterface_GetEnrollment_Call {
 	return &EnrollmentManagerInterface_GetEnrollment_Call{Call: _e.mock.On("GetEnrollment", ctx, studentID)}
 }
 
@@ -326,7 +326,7 @@ type EnrollmentManagerInterface_OnSeatReservedEvt_Call struct {
 // OnSeatReservedEvt is a helper method to define mock.On call
 //   - ctx context.Context
 //   - enrollment fun.Enrollment
-func (_e *EnrollmentManagerInterface_Expecter) OnSeatReservedEvt(ctx interface{}, enrollment interface{}) *EnrollmentManagerInterface_OnSeatReservedEvt_Call {
+func (_e *EnrollmentManagerInterface_Expecter) OnSeatReservedEvt(ctx any, enrollment any) *EnrollmentManagerInterface_OnSeatReservedEvt_Call {
 	return &EnrollmentManagerInterface_OnSeatReservedEvt_Call{Call: _e.mock.On("OnSeatReservedEvt", ctx, enrollment)}
 }
 
@@ -385,7 +385,7 @@ type EnrollmentManagerInterface_UpdateToWaitlisted_Call struct {
 // UpdateToWaitlisted is a helper method to define mock.On call
 //   - ctx context.Context
 //   - enrollment fun.Enrollment
-func (_e *EnrollmentManagerInterface_Expecter) UpdateToWaitlisted(ctx interface{}, enrollment interface{}) *EnrollmentManagerInterface_UpdateToWaitlisted_Call {
+func (_e *EnrollmentManagerInterface_Expecter) UpdateToWaitlisted(ctx any, enrollment any) *EnrollmentManagerInterface_UpdateToWaitlisted_Call {
 	return &EnrollmentManagerInterface_UpdateToWaitlisted_Call{Call: _e.mock.On("UpdateToWaitlisted", ctx, enrollment)}
 }
 

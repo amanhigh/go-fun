@@ -75,9 +75,9 @@ type EnrollmentRepository_Create_Call struct {
 //   - c context.Context
 //   - entity any
 //   - omit ...string
-func (_e *EnrollmentRepository_Expecter) Create(c interface{}, entity interface{}, omit ...interface{}) *EnrollmentRepository_Create_Call {
+func (_e *EnrollmentRepository_Expecter) Create(c any, entity any, omit ...any) *EnrollmentRepository_Create_Call {
 	return &EnrollmentRepository_Create_Call{Call: _e.mock.On("Create",
-		append([]interface{}{c, entity}, omit...)...)}
+		append([]any{c, entity}, omit...)...)}
 }
 
 func (_c *EnrollmentRepository_Create_Call) Run(run func(c context.Context, entity any, omit ...string)) *EnrollmentRepository_Create_Call {
@@ -144,7 +144,7 @@ type EnrollmentRepository_DeleteBy_Call struct {
 //   - entity any
 //   - condition string
 //   - arg any
-func (_e *EnrollmentRepository_Expecter) DeleteBy(c interface{}, entity interface{}, condition interface{}, arg interface{}) *EnrollmentRepository_DeleteBy_Call {
+func (_e *EnrollmentRepository_Expecter) DeleteBy(c any, entity any, condition any, arg any) *EnrollmentRepository_DeleteBy_Call {
 	return &EnrollmentRepository_DeleteBy_Call{Call: _e.mock.On("DeleteBy", c, entity, condition, arg)}
 }
 
@@ -214,7 +214,7 @@ type EnrollmentRepository_DeleteByExternalId_Call struct {
 //   - c context.Context
 //   - externalId string
 //   - entity any
-func (_e *EnrollmentRepository_Expecter) DeleteByExternalId(c interface{}, externalId interface{}, entity interface{}) *EnrollmentRepository_DeleteByExternalId_Call {
+func (_e *EnrollmentRepository_Expecter) DeleteByExternalId(c any, externalId any, entity any) *EnrollmentRepository_DeleteByExternalId_Call {
 	return &EnrollmentRepository_DeleteByExternalId_Call{Call: _e.mock.On("DeleteByExternalId", c, externalId, entity)}
 }
 
@@ -279,7 +279,7 @@ type EnrollmentRepository_DeleteById_Call struct {
 //   - c context.Context
 //   - id any
 //   - entity any
-func (_e *EnrollmentRepository_Expecter) DeleteById(c interface{}, id interface{}, entity interface{}) *EnrollmentRepository_DeleteById_Call {
+func (_e *EnrollmentRepository_Expecter) DeleteById(c any, id any, entity any) *EnrollmentRepository_DeleteById_Call {
 	return &EnrollmentRepository_DeleteById_Call{Call: _e.mock.On("DeleteById", c, id, entity)}
 }
 
@@ -344,7 +344,7 @@ type EnrollmentRepository_FindById_Call struct {
 //   - c context.Context
 //   - id any
 //   - entity any
-func (_e *EnrollmentRepository_Expecter) FindById(c interface{}, id interface{}, entity interface{}) *EnrollmentRepository_FindById_Call {
+func (_e *EnrollmentRepository_Expecter) FindById(c any, id any, entity any) *EnrollmentRepository_FindById_Call {
 	return &EnrollmentRepository_FindById_Call{Call: _e.mock.On("FindById", c, id, entity)}
 }
 
@@ -409,7 +409,7 @@ type EnrollmentRepository_FindByStudentID_Call struct {
 //   - ctx context.Context
 //   - studentID string
 //   - enrollment *fun.Enrollment
-func (_e *EnrollmentRepository_Expecter) FindByStudentID(ctx interface{}, studentID interface{}, enrollment interface{}) *EnrollmentRepository_FindByStudentID_Call {
+func (_e *EnrollmentRepository_Expecter) FindByStudentID(ctx any, studentID any, enrollment any) *EnrollmentRepository_FindByStudentID_Call {
 	return &EnrollmentRepository_FindByStudentID_Call{Call: _e.mock.On("FindByStudentID", ctx, studentID, enrollment)}
 }
 
@@ -483,7 +483,7 @@ type EnrollmentRepository_FindPaginated_Call struct {
 //   - c context.Context
 //   - pageParams common.Pagination
 //   - result any
-func (_e *EnrollmentRepository_Expecter) FindPaginated(c interface{}, pageParams interface{}, result interface{}) *EnrollmentRepository_FindPaginated_Call {
+func (_e *EnrollmentRepository_Expecter) FindPaginated(c any, pageParams any, result any) *EnrollmentRepository_FindPaginated_Call {
 	return &EnrollmentRepository_FindPaginated_Call{Call: _e.mock.On("FindPaginated", c, pageParams, result)}
 }
 
@@ -548,7 +548,7 @@ type EnrollmentRepository_GetByExternalId_Call struct {
 //   - c context.Context
 //   - externalId string
 //   - entity any
-func (_e *EnrollmentRepository_Expecter) GetByExternalId(c interface{}, externalId interface{}, entity interface{}) *EnrollmentRepository_GetByExternalId_Call {
+func (_e *EnrollmentRepository_Expecter) GetByExternalId(c any, externalId any, entity any) *EnrollmentRepository_GetByExternalId_Call {
 	return &EnrollmentRepository_GetByExternalId_Call{Call: _e.mock.On("GetByExternalId", c, externalId, entity)}
 }
 
@@ -621,7 +621,7 @@ type EnrollmentRepository_GetCount_Call struct {
 // GetCount is a helper method to define mock.On call
 //   - c context.Context
 //   - entity any
-func (_e *EnrollmentRepository_Expecter) GetCount(c interface{}, entity interface{}) *EnrollmentRepository_GetCount_Call {
+func (_e *EnrollmentRepository_Expecter) GetCount(c any, entity any) *EnrollmentRepository_GetCount_Call {
 	return &EnrollmentRepository_GetCount_Call{Call: _e.mock.On("GetCount", c, entity)}
 }
 
@@ -679,7 +679,7 @@ type EnrollmentRepository_SafeTx_Call struct {
 
 // SafeTx is a helper method to define mock.On call
 //   - c context.Context
-func (_e *EnrollmentRepository_Expecter) SafeTx(c interface{}) *EnrollmentRepository_SafeTx_Call {
+func (_e *EnrollmentRepository_Expecter) SafeTx(c any) *EnrollmentRepository_SafeTx_Call {
 	return &EnrollmentRepository_SafeTx_Call{Call: _e.mock.On("SafeTx", c)}
 }
 
@@ -740,9 +740,9 @@ type EnrollmentRepository_Update_Call struct {
 //   - c context.Context
 //   - entity any
 //   - omit ...string
-func (_e *EnrollmentRepository_Expecter) Update(c interface{}, entity interface{}, omit ...interface{}) *EnrollmentRepository_Update_Call {
+func (_e *EnrollmentRepository_Expecter) Update(c any, entity any, omit ...any) *EnrollmentRepository_Update_Call {
 	return &EnrollmentRepository_Update_Call{Call: _e.mock.On("Update",
-		append([]interface{}{c, entity}, omit...)...)}
+		append([]any{c, entity}, omit...)...)}
 }
 
 func (_c *EnrollmentRepository_Update_Call) Run(run func(c context.Context, entity any, omit ...string)) *EnrollmentRepository_Update_Call {
@@ -814,9 +814,9 @@ type EnrollmentRepository_UseOrCreateTx_Call struct {
 //   - c context.Context
 //   - run util.DbRun
 //   - readOnly ...bool
-func (_e *EnrollmentRepository_Expecter) UseOrCreateTx(c interface{}, run interface{}, readOnly ...interface{}) *EnrollmentRepository_UseOrCreateTx_Call {
+func (_e *EnrollmentRepository_Expecter) UseOrCreateTx(c any, run any, readOnly ...any) *EnrollmentRepository_UseOrCreateTx_Call {
 	return &EnrollmentRepository_UseOrCreateTx_Call{Call: _e.mock.On("UseOrCreateTx",
-		append([]interface{}{c, run}, readOnly...)...)}
+		append([]any{c, run}, readOnly...)...)}
 }
 
 func (_c *EnrollmentRepository_UseOrCreateTx_Call) Run(run func(c context.Context, run util.DbRun, readOnly ...bool)) *EnrollmentRepository_UseOrCreateTx_Call {

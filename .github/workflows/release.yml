@@ -33,7 +33,7 @@ jobs:
       - name: INSTALL -> Go
         uses: actions/setup-go@v4
         with:
-          go-version: "1.21"
+           go-version: "1.27.1"
 
       - name: INSTALL -> Just
         uses: extractions/setup-just@v3

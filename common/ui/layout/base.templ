@@ -5,6 +5,7 @@ import (
 	"github.com/templui/templui/components/selectbox"
 	"github.com/templui/templui/components/toast"
 	"github.com/templui/templui/components/tooltip"
+	widgets "github.com/amanhigh/go-fun/common/ui/widgets"
 )
 
 // documentHead renders the shared <head> markup (metadata, stylesheet, and
@@ -33,6 +34,8 @@ templ documentBody() {
 		<main class="flex-1 w-full px-4 py-8 xl:px-8 2xl:px-10">
 			{ children... }
 		</main>
+		<!-- Shared notification viewport: fixed overlay mounted once, outside page content -->
+		@widgets.Notification()
 		<!-- Footer -->
 		<footer class="border-t border-border bg-card mt-auto">
 			<div class="container mx-auto px-4 py-4">

@@ -77,7 +77,7 @@ type InterestManager_GetInterestForYear_Call struct {
 // GetInterestForYear is a helper method to define mock.On call
 //   - ctx context.Context
 //   - year int
-func (_e *InterestManager_Expecter) GetInterestForYear(ctx interface{}, year interface{}) *InterestManager_GetInterestForYear_Call {
+func (_e *InterestManager_Expecter) GetInterestForYear(ctx any, year any) *InterestManager_GetInterestForYear_Call {
 	return &InterestManager_GetInterestForYear_Call{Call: _e.mock.On("GetInterestForYear", ctx, year)}
 }
 
@@ -147,7 +147,7 @@ type InterestManager_ProcessInterest_Call struct {
 // ProcessInterest is a helper method to define mock.On call
 //   - ctx context.Context
 //   - interest []tax.Interest
-func (_e *InterestManager_Expecter) ProcessInterest(ctx interface{}, interest interface{}) *InterestManager_ProcessInterest_Call {
+func (_e *InterestManager_Expecter) ProcessInterest(ctx any, interest any) *InterestManager_ProcessInterest_Call {
 	return &InterestManager_ProcessInterest_Call{Call: _e.mock.On("ProcessInterest", ctx, interest)}
 }
 

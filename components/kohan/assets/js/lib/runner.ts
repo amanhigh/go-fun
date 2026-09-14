@@ -1,28 +1,32 @@
-// ===== CSS Class Constants =====
-
-export const errorVariant = 'feedback-error';
-export const successVariant = 'feedback-success';
-
 // ===== Types =====
 
+export const RunOutcomeKind = {
+	SUCCESS: 'success',
+	BUSY: 'busy',
+	ERROR: 'error',
+} as const;
+
+export type RunOutcomeKind = (typeof RunOutcomeKind)[keyof typeof RunOutcomeKind];
+
 export type RunOutcome<T = void> = {
-	success: boolean;
-	result?: T;
+	kind: typeof RunOutcomeKind.SUCCESS;
+	value: T;
+} | {
+	kind: typeof RunOutcomeKind.BUSY;
+} | {
+	kind: typeof RunOutcomeKind.ERROR;
+	error: Error;
 };
 
 export interface Runner {
 	busy: boolean;
-	message: string;
-	variant: string;
 
-	hasMessage(): boolean;
 	isBusy(): boolean;
-	hasError(): boolean;
-	setError(message: string): void;
-	setSuccess(message: string): void;
-	clearMessage(): void;
-
 	tryRun<T>(action: () => Promise<T>): Promise<RunOutcome<T>>;
+}
+
+function normalizeError(error: unknown): Error {
+	return error instanceof Error ? error : new Error(String(error));
 }
 
 // ===== Factory =====
@@ -30,48 +34,24 @@ export interface Runner {
 export function createRunnerState(): Runner {
 	return {
 		busy: false,
-		message: '',
-		variant: '',
-
-		hasMessage(this: Runner) {
-			return this.message !== '';
-		},
 
 		isBusy(this: Runner) {
 			return this.busy;
 		},
 
-		hasError(this: Runner) {
-			return this.variant === errorVariant;
-		},
-
-		setError(this: Runner, message: string) {
-			this.message = message;
-			this.variant = errorVariant;
-		},
-
-		setSuccess(this: Runner, message: string) {
-			this.message = message;
-			this.variant = successVariant;
-		},
-
-		clearMessage(this: Runner) {
-			this.message = '';
-			this.variant = '';
-		},
-
-		async tryRun<T>(this: Runner, action: () => Promise<T>): Promise<RunOutcome<T>> {
-			if (this.busy) return { success: false };
+		async tryRun<T>(this: Pick<Runner, 'busy'>, action: () => Promise<T>): Promise<RunOutcome<T>> {
+			if (this.busy) return { kind: RunOutcomeKind.BUSY };
 
 			this.busy = true;
-			this.clearMessage();
 
 			try {
 				const result = await action();
-				return { success: true, result };
+				return { kind: RunOutcomeKind.SUCCESS, value: result };
 			} catch (err) {
-				this.setError((err as Error).message);
-				return { success: false };
+				return {
+					kind: RunOutcomeKind.ERROR,
+					error: normalizeError(err),
+				};
 			} finally {
 				this.busy = false;
 			}

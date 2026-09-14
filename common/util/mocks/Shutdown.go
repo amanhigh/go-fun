@@ -50,7 +50,7 @@ type Shutdown_Stop_Call struct {
 
 // Stop is a helper method to define mock.On call
 //   - c context.Context
-func (_e *Shutdown_Expecter) Stop(c interface{}) *Shutdown_Stop_Call {
+func (_e *Shutdown_Expecter) Stop(c any) *Shutdown_Stop_Call {
 	return &Shutdown_Stop_Call{Call: _e.mock.On("Stop", c)}
 }
 

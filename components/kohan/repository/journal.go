@@ -9,6 +9,8 @@ import (
 	"gorm.io/gorm"
 )
 
+const journalCreatedAtColumn = "created_at"
+
 // JournalRepository provides persistence operations for journals.
 type JournalRepository interface {
 	util.BaseDbRepository
@@ -98,7 +100,7 @@ func (r *JournalRepositoryImpl) fetchJournals(tx *gorm.DB, query barkat.JournalQ
 	tx = util.ApplySort(tx, util.SortOptions{
 		SortBy:           query.SortBy,
 		SortOrder:        query.SortOrder,
-		DefaultSortBy:    "created_at",
+		DefaultSortBy:    journalCreatedAtColumn,
 		DefaultSortOrder: common.SortOrderDesc,
 	})
 

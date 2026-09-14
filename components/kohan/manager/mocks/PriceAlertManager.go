@@ -76,7 +76,7 @@ type PriceAlertManager_CreatePendingPriceAlert_Call struct {
 //   - ctx context.Context
 //   - ticker string
 //   - request barkat.PendingPriceAlertRequest
-func (_e *PriceAlertManager_Expecter) CreatePendingPriceAlert(ctx interface{}, ticker interface{}, request interface{}) *PriceAlertManager_CreatePendingPriceAlert_Call {
+func (_e *PriceAlertManager_Expecter) CreatePendingPriceAlert(ctx any, ticker any, request any) *PriceAlertManager_CreatePendingPriceAlert_Call {
 	return &PriceAlertManager_CreatePendingPriceAlert_Call{Call: _e.mock.On("CreatePendingPriceAlert", ctx, ticker, request)}
 }
 
@@ -140,7 +140,7 @@ type PriceAlertManager_DeletePriceAlert_Call struct {
 // DeletePriceAlert is a helper method to define mock.On call
 //   - ctx context.Context
 //   - alertID string
-func (_e *PriceAlertManager_Expecter) DeletePriceAlert(ctx interface{}, alertID interface{}) *PriceAlertManager_DeletePriceAlert_Call {
+func (_e *PriceAlertManager_Expecter) DeletePriceAlert(ctx any, alertID any) *PriceAlertManager_DeletePriceAlert_Call {
 	return &PriceAlertManager_DeletePriceAlert_Call{Call: _e.mock.On("DeletePriceAlert", ctx, alertID)}
 }
 
@@ -208,7 +208,7 @@ type PriceAlertManager_ListPriceAlerts_Call struct {
 // ListPriceAlerts is a helper method to define mock.On call
 //   - ctx context.Context
 //   - query barkat.PriceAlertQuery
-func (_e *PriceAlertManager_Expecter) ListPriceAlerts(ctx interface{}, query interface{}) *PriceAlertManager_ListPriceAlerts_Call {
+func (_e *PriceAlertManager_Expecter) ListPriceAlerts(ctx any, query any) *PriceAlertManager_ListPriceAlerts_Call {
 	return &PriceAlertManager_ListPriceAlerts_Call{Call: _e.mock.On("ListPriceAlerts", ctx, query)}
 }
 
@@ -276,7 +276,7 @@ type PriceAlertManager_ReplacePriceAlerts_Call struct {
 // ReplacePriceAlerts is a helper method to define mock.On call
 //   - ctx context.Context
 //   - request barkat.PriceAlertReplaceRequest
-func (_e *PriceAlertManager_Expecter) ReplacePriceAlerts(ctx interface{}, request interface{}) *PriceAlertManager_ReplacePriceAlerts_Call {
+func (_e *PriceAlertManager_Expecter) ReplacePriceAlerts(ctx any, request any) *PriceAlertManager_ReplacePriceAlerts_Call {
 	return &PriceAlertManager_ReplacePriceAlerts_Call{Call: _e.mock.On("ReplacePriceAlerts", ctx, request)}
 }
 

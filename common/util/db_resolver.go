@@ -85,8 +85,7 @@ Report any DB Errors which will be used to fallback if applicable
 This ignores any nil or non relevant errors.
 */
 func (fb *FallBackPolicy) ReportError(err error) {
-	var netErr net.Error
-	if errors.As(err, &netErr) {
+	if _, ok := errors.AsType[net.Error](err); ok {
 		fb.errChan <- err
 	}
 }

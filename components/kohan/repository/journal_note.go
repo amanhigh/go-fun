@@ -41,7 +41,7 @@ func (r *NoteRepositoryImpl) ListNotes(ctx context.Context, journalID uint64, st
 	}
 	query := r.SafeTx(ctx).Where(&where)
 	query = util.ApplySort(query, util.SortOptions{
-		DefaultSortBy:    "created_at",
+		DefaultSortBy:    journalCreatedAtColumn,
 		DefaultSortOrder: common.SortOrderAsc,
 	})
 	if txErr = query.Find(&notes).Error; txErr != nil && !errors.Is(txErr, gorm.ErrRecordNotFound) {

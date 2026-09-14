@@ -78,7 +78,7 @@ type FinancialYearManager_FilterIndia_Call[T tax.CSVRecord] struct {
 //   - ctx context.Context
 //   - records []T
 //   - year int
-func (_e *FinancialYearManager_Expecter[T]) FilterIndia(ctx interface{}, records interface{}, year interface{}) *FinancialYearManager_FilterIndia_Call[T] {
+func (_e *FinancialYearManager_Expecter[T]) FilterIndia(ctx any, records any, year any) *FinancialYearManager_FilterIndia_Call[T] {
 	return &FinancialYearManager_FilterIndia_Call[T]{Call: _e.mock.On("FilterIndia", ctx, records, year)}
 }
 
@@ -154,7 +154,7 @@ type FinancialYearManager_FilterUS_Call[T tax.CSVRecord] struct {
 //   - ctx context.Context
 //   - records []T
 //   - year int
-func (_e *FinancialYearManager_Expecter[T]) FilterUS(ctx interface{}, records interface{}, year interface{}) *FinancialYearManager_FilterUS_Call[T] {
+func (_e *FinancialYearManager_Expecter[T]) FilterUS(ctx any, records any, year any) *FinancialYearManager_FilterUS_Call[T] {
 	return &FinancialYearManager_FilterUS_Call[T]{Call: _e.mock.On("FilterUS", ctx, records, year)}
 }
 

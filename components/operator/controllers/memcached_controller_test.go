@@ -51,10 +51,8 @@ var _ = Describe("Memcached controller", Label(models.GINKGO_SETUP), func() {
 		sidecarImage = common.SIDECAR_IMAGE_NAME
 
 		namespace = &corev1.Namespace{
-			ObjectMeta: metav1.ObjectMeta{
-				Name:      MemcachedName,
-				Namespace: MemcachedName,
-			},
+			Name:      MemcachedName,
+			Namespace: MemcachedName,
 		}
 
 		memcached *cachev1beta1.Memcached
@@ -69,10 +67,8 @@ var _ = Describe("Memcached controller", Label(models.GINKGO_SETUP), func() {
 		// Let's mock our custom resource at the same way that we would
 		// apply on the cluster the manifest under config/samples
 		memcached = &cachev1beta1.Memcached{
-			ObjectMeta: metav1.ObjectMeta{
-				Name:      MemcachedName,
-				Namespace: namespace.Name,
-			},
+			Name:      MemcachedName,
+			Namespace: namespace.Name,
 			Spec: cachev1beta1.MemcachedSpec{
 				Size:          size,
 				ContainerPort: port,

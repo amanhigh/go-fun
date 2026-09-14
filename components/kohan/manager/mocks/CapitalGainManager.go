@@ -77,7 +77,7 @@ type CapitalGainManager_GetGainsForYear_Call struct {
 // GetGainsForYear is a helper method to define mock.On call
 //   - ctx context.Context
 //   - year int
-func (_e *CapitalGainManager_Expecter) GetGainsForYear(ctx interface{}, year interface{}) *CapitalGainManager_GetGainsForYear_Call {
+func (_e *CapitalGainManager_Expecter) GetGainsForYear(ctx any, year any) *CapitalGainManager_GetGainsForYear_Call {
 	return &CapitalGainManager_GetGainsForYear_Call{Call: _e.mock.On("GetGainsForYear", ctx, year)}
 }
 
@@ -147,7 +147,7 @@ type CapitalGainManager_ProcessTaxGains_Call struct {
 // ProcessTaxGains is a helper method to define mock.On call
 //   - ctx context.Context
 //   - gains []tax.Gains
-func (_e *CapitalGainManager_Expecter) ProcessTaxGains(ctx interface{}, gains interface{}) *CapitalGainManager_ProcessTaxGains_Call {
+func (_e *CapitalGainManager_Expecter) ProcessTaxGains(ctx any, gains any) *CapitalGainManager_ProcessTaxGains_Call {
 	return &CapitalGainManager_ProcessTaxGains_Call{Call: _e.mock.On("ProcessTaxGains", ctx, gains)}
 }
 

@@ -94,9 +94,7 @@ var _ = Describe("K8client", Label(models.GINKGO_SETUP), func() {
 
 				// Define Deployment
 				deployment = &appsv1.Deployment{
-					ObjectMeta: metav1.ObjectMeta{
-						Name: deploymentName,
-					},
+					Name: deploymentName,
 					Spec: appsv1.DeploymentSpec{
 						Replicas: &size,
 						Selector: selector,

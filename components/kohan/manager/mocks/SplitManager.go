@@ -77,7 +77,7 @@ type SplitManager_NormalizeTrades_Call struct {
 // NormalizeTrades is a helper method to define mock.On call
 //   - ctx context.Context
 //   - trades []tax.Trade
-func (_e *SplitManager_Expecter) NormalizeTrades(ctx interface{}, trades interface{}) *SplitManager_NormalizeTrades_Call {
+func (_e *SplitManager_Expecter) NormalizeTrades(ctx any, trades any) *SplitManager_NormalizeTrades_Call {
 	return &SplitManager_NormalizeTrades_Call{Call: _e.mock.On("NormalizeTrades", ctx, trades)}
 }
 

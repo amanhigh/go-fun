@@ -77,7 +77,7 @@ type TaxValuationManager_GetYearlyValuationsUSD_Call struct {
 // GetYearlyValuationsUSD is a helper method to define mock.On call
 //   - ctx context.Context
 //   - year int
-func (_e *TaxValuationManager_Expecter) GetYearlyValuationsUSD(ctx interface{}, year interface{}) *TaxValuationManager_GetYearlyValuationsUSD_Call {
+func (_e *TaxValuationManager_Expecter) GetYearlyValuationsUSD(ctx any, year any) *TaxValuationManager_GetYearlyValuationsUSD_Call {
 	return &TaxValuationManager_GetYearlyValuationsUSD_Call{Call: _e.mock.On("GetYearlyValuationsUSD", ctx, year)}
 }
 
@@ -148,7 +148,7 @@ type TaxValuationManager_ProcessValuations_Call struct {
 //   - ctx context.Context
 //   - valuations []tax.Valuation
 //   - dividends []tax.INRDividend
-func (_e *TaxValuationManager_Expecter) ProcessValuations(ctx interface{}, valuations interface{}, dividends interface{}) *TaxValuationManager_ProcessValuations_Call {
+func (_e *TaxValuationManager_Expecter) ProcessValuations(ctx any, valuations any, dividends any) *TaxValuationManager_ProcessValuations_Call {
 	return &TaxValuationManager_ProcessValuations_Call{Call: _e.mock.On("ProcessValuations", ctx, valuations, dividends)}
 }
 

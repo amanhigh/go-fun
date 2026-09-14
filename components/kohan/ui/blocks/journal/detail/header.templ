@@ -103,13 +103,13 @@ templ JournalDetailDirectionalTags() {
 	</div>
 }
 
+// journalDetailReviewCard renders the review action bar and the submitter
+// spinner. The conditional advance to the next journal after a review is owned
+// by the shared notification runtime (sidebar.state.reviewAdvance), so no
+// inline deferred-action banner is rendered here.
 templ journalDetailReviewCard() {
 	<div>
 		@journalDetailActionBar()
-		@components.DeferredAction(components.DeferredActionProps{
-			StateExpr:   "sidebar.state.reviewAdvance",
-			CancelLabel: "Stay",
-		})
 		@components.Submitter(components.SubmitterProps{Submitter: "sidebar.reviewBar.submitter"})
 	</div>
 }

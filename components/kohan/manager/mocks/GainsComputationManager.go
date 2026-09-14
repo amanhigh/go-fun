@@ -77,7 +77,7 @@ type GainsComputationManager_ComputeGainsFromTrades_Call struct {
 // ComputeGainsFromTrades is a helper method to define mock.On call
 //   - ctx context.Context
 //   - trades []tax.Trade
-func (_e *GainsComputationManager_Expecter) ComputeGainsFromTrades(ctx interface{}, trades interface{}) *GainsComputationManager_ComputeGainsFromTrades_Call {
+func (_e *GainsComputationManager_Expecter) ComputeGainsFromTrades(ctx any, trades any) *GainsComputationManager_ComputeGainsFromTrades_Call {
 	return &GainsComputationManager_ComputeGainsFromTrades_Call{Call: _e.mock.On("ComputeGainsFromTrades", ctx, trades)}
 }
 
