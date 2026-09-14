@@ -40,7 +40,7 @@ func (h *JournalPortalImpl) ImagePath() string {
 func (h *JournalPortalImpl) ListJournals(ctx *gin.Context) {
 	ctx.Header("Content-Type", "text/html")
 	if err := pages.JournalPage().Render(ctx.Request.Context(), ctx.Writer); err != nil {
-		ctx.JSON(http.StatusInternalServerError, gin.H{"error": "failed to render journal page"})
+		ctx.JSON(http.StatusInternalServerError, gin.H{errorResponseKey: "failed to render journal page"})
 	}
 }
 
@@ -54,6 +54,6 @@ func (h *JournalPortalImpl) DisplayJournal(ctx *gin.Context) {
 
 	ctx.Header("Content-Type", "text/html")
 	if err := pages.JournalDetailPage(path.JournalID).Render(ctx.Request.Context(), ctx.Writer); err != nil {
-		ctx.JSON(http.StatusInternalServerError, gin.H{"error": "failed to render journal detail page"})
+		ctx.JSON(http.StatusInternalServerError, gin.H{errorResponseKey: "failed to render journal detail page"})
 	}
 }

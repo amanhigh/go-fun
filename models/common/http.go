@@ -69,9 +69,9 @@ func (e *HttpErrorImpl) MarshalJSON() ([]byte, error) {
 	if e.ErrCode >= http.StatusInternalServerError {
 		// 5xx: JSend "error" format
 		data, err := json.Marshal(map[string]any{
-			"status":  EnvelopeError,
-			"message": e.Msg,
-			"code":    e.ErrCode,
+			envelopeStatusKey:  EnvelopeError,
+			envelopeMessageKey: e.Msg,
+			"code":             e.ErrCode,
 		})
 		if err != nil {
 			return nil, fmt.Errorf("failed to marshal server error (code %d): %w", e.ErrCode, err)
@@ -80,9 +80,9 @@ func (e *HttpErrorImpl) MarshalJSON() ([]byte, error) {
 	}
 	// 4xx: JSend "fail" format - use message key for regular HttpError
 	data, err := json.Marshal(map[string]any{
-		"status": EnvelopeFail,
+		envelopeStatusKey: EnvelopeFail,
 		"data": map[string]string{
-			"message": e.Msg,
+			envelopeMessageKey: e.Msg,
 		},
 	})
 	if err != nil {
@@ -96,10 +96,10 @@ func (e *FieldHttpErrorImpl) MarshalJSON() ([]byte, error) {
 	// FieldHttpError should only be used for 4xx errors, so always use "fail" format
 	fieldName := e.Field()
 	if fieldName == "" {
-		fieldName = "message" // fallback for non-field-specific errors
+		fieldName = envelopeMessageKey // fallback for non-field-specific errors
 	}
 	data, err := json.Marshal(map[string]any{
-		"status": EnvelopeFail,
+		envelopeStatusKey: EnvelopeFail,
 		"data": map[string]string{
 			fieldName: e.Msg,
 		},

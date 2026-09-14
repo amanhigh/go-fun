@@ -31,7 +31,7 @@ var kohanServerCmd = &cobra.Command{
 	Use:   "serve",
 	Short: "Start Kohan Server",
 	Args:  cobra.NoArgs,
-	RunE: func(cmd *cobra.Command, _ []string) (err error) {
+	RunE: func(_ *cobra.Command, _ []string) (err error) {
 		// osManager := core.GetKohanInterface().GetOSManager()
 		// Internet connectivity monitoring has moved to the Scripts Hatchet
 		// "internet" workflow (automation/workflows/internet.py). Disabled here

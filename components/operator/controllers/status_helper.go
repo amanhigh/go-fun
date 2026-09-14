@@ -32,6 +32,8 @@ type statusHelperImpl struct {
 	controller *MemcachedReconciler
 }
 
+const reconcilingReason = "Reconciling"
+
 func NewStatusHelper(controller *MemcachedReconciler) StatusHelper {
 	return &statusHelperImpl{
 		controller: controller,
@@ -47,7 +49,7 @@ func (s *statusHelperImpl) InitializeStatus(ctx context.Context, memcached *cach
 		meta.SetStatusCondition(&memcached.Status.Conditions, metav1.Condition{
 			Type:    typeAvailableMemcached,
 			Status:  metav1.ConditionUnknown,
-			Reason:  "Reconciling",
+			Reason:  reconcilingReason,
 			Message: "Starting reconciliation",
 		})
 
@@ -68,7 +70,7 @@ func (s *statusHelperImpl) UpdateSuccessStatus(ctx context.Context, memcached *c
 	meta.SetStatusCondition(&memcached.Status.Conditions, metav1.Condition{
 		Type:    typeAvailableMemcached,
 		Status:  metav1.ConditionTrue,
-		Reason:  "Reconciling",
+		Reason:  reconcilingReason,
 		Message: fmt.Sprintf("Deployment for custom resource (%s) with %d replicas created successfully", memcached.Name, size),
 	})
 
@@ -87,7 +89,7 @@ func (s *statusHelperImpl) UpdateStatusWithError(ctx context.Context, memcached 
 	meta.SetStatusCondition(&memcached.Status.Conditions, metav1.Condition{
 		Type:    typeAvailableMemcached,
 		Status:  metav1.ConditionFalse,
-		Reason:  "Reconciling",
+		Reason:  reconcilingReason,
 		Message: fmt.Sprintf("%s: %s", message, err),
 	})
 

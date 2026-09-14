@@ -59,7 +59,7 @@ func (h *StudentHandler) RegisterRoutes(r *gin.Engine) {
 func (h *StudentHandler) listStudents(c *gin.Context) {
 	var query StudentListQuery
 	if err := c.ShouldBindQuery(&query); err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"success": false, "error": err.Error()})
+		c.JSON(http.StatusBadRequest, gin.H{studentSuccessKey: false, studentErrorKey: err.Error()})
 		return
 	}
 	response := h.studentService.ListStudents(query.Offset, query.Limit, query.SearchQuery, query.Grade, query.SortBy, query.SortOrder)
@@ -69,8 +69,8 @@ func (h *StudentHandler) listStudents(c *gin.Context) {
 // getGradeOptions returns available grade options
 func (h *StudentHandler) getGradeOptions(c *gin.Context) {
 	c.JSON(http.StatusOK, gin.H{
-		"success": true,
-		"data":    []string{"Freshman", "Sophomore", "Junior", "Senior"},
+		studentSuccessKey: true,
+		studentDataKey:    []string{gradeFreshman, gradeSophomore, gradeJunior, gradeSenior},
 	})
 }
 
@@ -81,15 +81,15 @@ func (h *StudentHandler) getStudentByID(c *gin.Context) {
 
 	if student == nil {
 		c.JSON(http.StatusNotFound, gin.H{
-			"success": false,
-			"error":   "Student not found",
+			studentSuccessKey: false,
+			studentErrorKey:   studentNotFound,
 		})
 		return
 	}
 
 	c.JSON(http.StatusOK, gin.H{
-		"success": true,
-		"data":    student,
+		studentSuccessKey: true,
+		studentDataKey:    student,
 	})
 }
 
@@ -98,24 +98,24 @@ func (h *StudentHandler) createStudent(c *gin.Context) {
 	var student Student
 	if err := c.ShouldBindJSON(&student); err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{
-			"success": false,
-			"error":   err.Error(),
+			studentSuccessKey: false,
+			studentErrorKey:   err.Error(),
 		})
 		return
 	}
 
 	if err := validateStudentPayload(student); err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{
-			"success": false,
-			"error":   err.Error(),
+			studentSuccessKey: false,
+			studentErrorKey:   err.Error(),
 		})
 		return
 	}
 
 	createdStudent := h.studentService.CreateStudent(student)
 	c.JSON(http.StatusCreated, gin.H{
-		"success": true,
-		"data":    createdStudent,
+		studentSuccessKey: true,
+		studentDataKey:    createdStudent,
 	})
 }
 
@@ -126,16 +126,16 @@ func (h *StudentHandler) updateStudent(c *gin.Context) {
 
 	if err := c.ShouldBindJSON(&updatedStudent); err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{
-			"success": false,
-			"error":   err.Error(),
+			studentSuccessKey: false,
+			studentErrorKey:   err.Error(),
 		})
 		return
 	}
 
 	if err := validateStudentPayload(updatedStudent); err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{
-			"success": false,
-			"error":   err.Error(),
+			studentSuccessKey: false,
+			studentErrorKey:   err.Error(),
 		})
 		return
 	}
@@ -143,15 +143,15 @@ func (h *StudentHandler) updateStudent(c *gin.Context) {
 	student := h.studentService.UpdateStudent(id, updatedStudent)
 	if student == nil {
 		c.JSON(http.StatusNotFound, gin.H{
-			"success": false,
-			"error":   "Student not found",
+			studentSuccessKey: false,
+			studentErrorKey:   studentNotFound,
 		})
 		return
 	}
 
 	c.JSON(http.StatusOK, gin.H{
-		"success": true,
-		"data":    student,
+		studentSuccessKey: true,
+		studentDataKey:    student,
 	})
 }
 
@@ -161,14 +161,14 @@ func (h *StudentHandler) deleteStudent(c *gin.Context) {
 
 	if !h.studentService.DeleteStudent(id) {
 		c.JSON(http.StatusNotFound, gin.H{
-			"success": false,
-			"error":   "Student not found",
+			studentSuccessKey: false,
+			studentErrorKey:   studentNotFound,
 		})
 		return
 	}
 
 	c.JSON(http.StatusOK, gin.H{
-		"success": true,
-		"message": "Student deleted successfully",
+		studentSuccessKey: true,
+		"message":         "Student deleted successfully",
 	})
 }

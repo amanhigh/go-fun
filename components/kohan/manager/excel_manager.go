@@ -28,6 +28,21 @@ const (
 	colWidthMax       = 18
 
 	sheetNameInterest = "Interest"
+
+	excelHeaderSymbol    = "Symbol"
+	excelHeaderTTDate    = "TTDate"
+	excelHeaderBroker    = "Broker"
+	excelHeaderPrice     = "Price"
+	excelHeaderQty       = "Qty"
+	excelHeaderTTRate    = "TTRate"
+	excelHeaderAmountUSD = "Amount (USD)"
+	excelHeaderAmountINR = "Amount (INR)"
+	excelHeaderTaxUSD    = "Tax (USD)"
+	excelHeaderTaxINR    = "Tax (INR)"
+	excelHeaderNetUSD    = "Net (USD)"
+	excelHeaderNetINR    = "Net (INR)"
+	excelHeaderValUSD    = "ValUSD"
+	excelHeaderValINR    = "ValINR"
 )
 
 type ExcelManager interface {
@@ -214,9 +229,9 @@ func (e *ExcelManagerImpl) createSheetWithHeaders(ctx context.Context, f *exceli
 func (e *ExcelManagerImpl) writeGainsSheet(ctx context.Context, f *excelize.File, gains []tax.INRGains) error {
 	sheetName := "Gains"
 	headers := []string{
-		"Symbol", "BuyDate", "SellDate", "Quantity", "PNL (USD)",
-		"Commission (USD)", "Type", "TTDate", "TTRate", "PNL (INR)",
-		"Broker",
+		excelHeaderSymbol, "BuyDate", "SellDate", "Quantity", "PNL (USD)",
+		"Commission (USD)", "Type", excelHeaderTTDate, excelHeaderTTRate, "PNL (INR)",
+		excelHeaderBroker,
 	}
 	if err := e.createSheetWithHeaders(ctx, f, sheetName, headers); err != nil {
 		return err
@@ -272,9 +287,9 @@ func (e *ExcelManagerImpl) writeGainsSheet(ctx context.Context, f *excelize.File
 func (e *ExcelManagerImpl) writeDividendsSheet(ctx context.Context, f *excelize.File, dividends []tax.INRDividend) error {
 	sheetName := "Dividends"
 	headers := []string{
-		"Symbol", "Date", "Amount (USD)", "Tax (USD)", "Net (USD)", "TTDate", "TTRate",
-		"Amount (INR)", "Tax (INR)", "Net (INR)",
-		"Broker",
+		excelHeaderSymbol, "Date", excelHeaderAmountUSD, excelHeaderTaxUSD, excelHeaderNetUSD, excelHeaderTTDate, excelHeaderTTRate,
+		excelHeaderAmountINR, excelHeaderTaxINR, excelHeaderNetINR,
+		excelHeaderBroker,
 	}
 	if err := e.createSheetWithHeaders(ctx, f, sheetName, headers); err != nil {
 		return err
@@ -376,10 +391,10 @@ func (e *ExcelManagerImpl) writeValuationsSheet(ctx context.Context, f *excelize
 
 func (e *ExcelManagerImpl) getValuationHeaders() []string {
 	return []string{
-		"Symbol",
-		"Date (First)", "Qty", "Price", "ValUSD", "TTDate", "TTRate", "ValINR",
-		"Date (Peak)", "Qty", "Price", "ValUSD", "TTDate", "TTRate", "ValINR",
-		"Date (YearEnd)", "Qty", "Price", "ValUSD", "TTDate", "TTRate", "ValINR",
+		excelHeaderSymbol,
+		"Date (First)", excelHeaderQty, excelHeaderPrice, excelHeaderValUSD, excelHeaderTTDate, excelHeaderTTRate, excelHeaderValINR,
+		"Date (Peak)", excelHeaderQty, excelHeaderPrice, excelHeaderValUSD, excelHeaderTTDate, excelHeaderTTRate, excelHeaderValINR,
+		"Date (YearEnd)", excelHeaderQty, excelHeaderPrice, excelHeaderValUSD, excelHeaderTTDate, excelHeaderTTRate, excelHeaderValINR,
 		"AmountPaid (INR)",
 	}
 }
@@ -409,9 +424,9 @@ func (e *ExcelManagerImpl) getPositionRowData(pos *tax.INRPosition) []any {
 func (e *ExcelManagerImpl) writeInterestSheet(ctx context.Context, f *excelize.File, interest []tax.INRInterest) error {
 	sheetName := sheetNameInterest
 	headers := []string{
-		"Symbol", "Date", "Amount (USD)", "Tax (USD)", "Net (USD)",
-		"TTDate", "TTRate", "Amount (INR)", "Tax (INR)", "Net (INR)",
-		"Broker",
+		excelHeaderSymbol, "Date", excelHeaderAmountUSD, excelHeaderTaxUSD, excelHeaderNetUSD,
+		excelHeaderTTDate, excelHeaderTTRate, excelHeaderAmountINR, excelHeaderTaxINR, excelHeaderNetINR,
+		excelHeaderBroker,
 	}
 	if err := e.createSheetWithHeaders(ctx, f, sheetName, headers); err != nil {
 		return err
@@ -699,7 +714,7 @@ func colLetter(i int) string {
 // and the day of the week.
 func (e *ExcelManagerImpl) writeTTRatesSheet(ctx context.Context, f *excelize.File, year int, rates []tax.MonthEndRate) error {
 	sheetName := "TT Rates"
-	headers := []string{"Month", "Year", "TTDate", "TTRate", "PDF Link", "DayOfWeek"}
+	headers := []string{"Month", "Year", excelHeaderTTDate, excelHeaderTTRate, "PDF Link", "DayOfWeek"}
 	if err := e.createSheetWithHeaders(ctx, f, sheetName, headers); err != nil {
 		return err
 	}
@@ -782,7 +797,7 @@ func (e *ExcelManagerImpl) writePDFLink(f *excelize.File, sheetName string, rowN
 // entity names do not overlap.
 func (e *ExcelManagerImpl) writeSecurityInfoSheet(ctx context.Context, f *excelize.File, securities []tax.SecurityInfo) error {
 	sheetName := "Security Info"
-	headers := []string{"Sr No", "Symbol", "Country Name", "Name of entity", "Address", "Zip code", "Nature of entity"}
+	headers := []string{"Sr No", excelHeaderSymbol, "Country Name", "Name of entity", "Address", "Zip code", "Nature of entity"}
 	if err := e.createSheetWithHeaders(ctx, f, sheetName, headers); err != nil {
 		return err
 	}
@@ -924,8 +939,8 @@ func (e *ExcelManagerImpl) writeDividendsSection(f *excelize.File, sheetName str
 	// Row startRow+1: Column headers (USD first, then INR) - bold
 	headerRow := startRow + 1
 	headers := []any{
-		"Amount (USD)", "Tax (USD)", "Net (USD)",
-		"Amount (INR)", "Tax (INR)", "Net (INR)",
+		excelHeaderAmountUSD, excelHeaderTaxUSD, excelHeaderNetUSD,
+		excelHeaderAmountINR, excelHeaderTaxINR, excelHeaderNetINR,
 	}
 	if err := util.WriteRow(f, sheetName, headerRow, headers); err != nil {
 		return fmt.Errorf("failed to write row %d in sheet %s: %w", headerRow, sheetName, err)
@@ -1012,8 +1027,8 @@ func (e *ExcelManagerImpl) writeInterestSection(f *excelize.File, sheetName stri
 	// Row startRow+1: Column headers (USD first, then INR) - bold
 	headerRow := startRow + 1
 	headers := []any{
-		"Amount (USD)", "Tax (USD)", "Net (USD)",
-		"Amount (INR)", "Tax (INR)", "Net (INR)",
+		excelHeaderAmountUSD, excelHeaderTaxUSD, excelHeaderNetUSD,
+		excelHeaderAmountINR, excelHeaderTaxINR, excelHeaderNetINR,
 	}
 	if err := util.WriteRow(f, sheetName, headerRow, headers); err != nil {
 		return fmt.Errorf("failed to write row %d in sheet %s: %w", headerRow, sheetName, err)

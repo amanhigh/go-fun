@@ -9,6 +9,17 @@ import (
 	"time"
 )
 
+const (
+	gradeFreshman     = "Freshman"
+	gradeSophomore    = "Sophomore"
+	gradeJunior       = "Junior"
+	gradeSenior       = "Senior"
+	studentErrorKey   = "error"
+	studentSuccessKey = "success"
+	studentDataKey    = "data"
+	studentNotFound   = "Student not found"
+)
+
 // StudentService interface for student operations
 type StudentService interface {
 	ListStudents(offset, limit int, searchQuery, grade, sortBy, sortOrder string) StudentListResponse
@@ -40,26 +51,26 @@ func NewInMemoryStudentService() *InMemoryStudentService {
 // sampleStudents returns seed data for the in-memory store.
 func sampleStudents() []Student {
 	return []Student{
-		{FirstName: "John", LastName: "Doe", Email: "john.doe@school.edu", Age: 20, Grade: "Sophomore"},
-		{FirstName: "Jane", LastName: "Smith", Email: "jane.smith@school.edu", Age: 21, Grade: "Junior"},
-		{FirstName: "Mike", LastName: "Johnson", Email: "mike.johnson@school.edu", Age: 19, Grade: "Freshman"},
-		{FirstName: "Sarah", LastName: "Williams", Email: "sarah.williams@school.edu", Age: 22, Grade: "Senior"},
-		{FirstName: "David", LastName: "Brown", Email: "david.brown@school.edu", Age: 20, Grade: "Sophomore"},
-		{FirstName: "Emma", LastName: "Davis", Email: "emma.davis@school.edu", Age: 18, Grade: "Freshman"},
-		{FirstName: "Liam", LastName: "Miller", Email: "liam.miller@school.edu", Age: 23, Grade: "Senior"},
-		{FirstName: "Olivia", LastName: "Wilson", Email: "olivia.wilson@school.edu", Age: 20, Grade: "Junior"},
-		{FirstName: "Noah", LastName: "Moore", Email: "noah.moore@school.edu", Age: 19, Grade: "Sophomore"},
-		{FirstName: "Ava", LastName: "Taylor", Email: "ava.taylor@school.edu", Age: 21, Grade: "Senior"},
-		{FirstName: "Ethan", LastName: "Anderson", Email: "ethan.anderson@school.edu", Age: 18, Grade: "Freshman"},
-		{FirstName: "Sophia", LastName: "Thomas", Email: "sophia.thomas@school.edu", Age: 22, Grade: "Junior"},
-		{FirstName: "Lucas", LastName: "Jackson", Email: "lucas.jackson@school.edu", Age: 20, Grade: "Sophomore"},
-		{FirstName: "Mia", LastName: "White", Email: "mia.white@school.edu", Age: 19, Grade: "Freshman"},
-		{FirstName: "Mason", LastName: "Harris", Email: "mason.harris@school.edu", Age: 23, Grade: "Senior"},
-		{FirstName: "Isabella", LastName: "Martin", Email: "isabella.martin@school.edu", Age: 20, Grade: "Junior"},
-		{FirstName: "Logan", LastName: "Thompson", Email: "logan.thompson@school.edu", Age: 18, Grade: "Freshman"},
-		{FirstName: "Amelia", LastName: "Garcia", Email: "amelia.garcia@school.edu", Age: 21, Grade: "Senior"},
-		{FirstName: "Elijah", LastName: "Martinez", Email: "elijah.martinez@school.edu", Age: 19, Grade: "Sophomore"},
-		{FirstName: "Harper", LastName: "Robinson", Email: "harper.robinson@school.edu", Age: 22, Grade: "Junior"},
+		{FirstName: "John", LastName: "Doe", Email: "john.doe@school.edu", Age: 20, Grade: gradeSophomore},
+		{FirstName: "Jane", LastName: "Smith", Email: "jane.smith@school.edu", Age: 21, Grade: gradeJunior},
+		{FirstName: "Mike", LastName: "Johnson", Email: "mike.johnson@school.edu", Age: 19, Grade: gradeFreshman},
+		{FirstName: "Sarah", LastName: "Williams", Email: "sarah.williams@school.edu", Age: 22, Grade: gradeSenior},
+		{FirstName: "David", LastName: "Brown", Email: "david.brown@school.edu", Age: 20, Grade: gradeSophomore},
+		{FirstName: "Emma", LastName: "Davis", Email: "emma.davis@school.edu", Age: 18, Grade: gradeFreshman},
+		{FirstName: "Liam", LastName: "Miller", Email: "liam.miller@school.edu", Age: 23, Grade: gradeSenior},
+		{FirstName: "Olivia", LastName: "Wilson", Email: "olivia.wilson@school.edu", Age: 20, Grade: gradeJunior},
+		{FirstName: "Noah", LastName: "Moore", Email: "noah.moore@school.edu", Age: 19, Grade: gradeSophomore},
+		{FirstName: "Ava", LastName: "Taylor", Email: "ava.taylor@school.edu", Age: 21, Grade: gradeSenior},
+		{FirstName: "Ethan", LastName: "Anderson", Email: "ethan.anderson@school.edu", Age: 18, Grade: gradeFreshman},
+		{FirstName: "Sophia", LastName: "Thomas", Email: "sophia.thomas@school.edu", Age: 22, Grade: gradeJunior},
+		{FirstName: "Lucas", LastName: "Jackson", Email: "lucas.jackson@school.edu", Age: 20, Grade: gradeSophomore},
+		{FirstName: "Mia", LastName: "White", Email: "mia.white@school.edu", Age: 19, Grade: gradeFreshman},
+		{FirstName: "Mason", LastName: "Harris", Email: "mason.harris@school.edu", Age: 23, Grade: gradeSenior},
+		{FirstName: "Isabella", LastName: "Martin", Email: "isabella.martin@school.edu", Age: 20, Grade: gradeJunior},
+		{FirstName: "Logan", LastName: "Thompson", Email: "logan.thompson@school.edu", Age: 18, Grade: gradeFreshman},
+		{FirstName: "Amelia", LastName: "Garcia", Email: "amelia.garcia@school.edu", Age: 21, Grade: gradeSenior},
+		{FirstName: "Elijah", LastName: "Martinez", Email: "elijah.martinez@school.edu", Age: 19, Grade: gradeSophomore},
+		{FirstName: "Harper", LastName: "Robinson", Email: "harper.robinson@school.edu", Age: 22, Grade: gradeJunior},
 	}
 }
 

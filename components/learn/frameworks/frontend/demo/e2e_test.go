@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"io"
+	"net"
 	"net/http"
 	"time"
 
@@ -13,17 +14,14 @@ import (
 	. "github.com/onsi/gomega"
 )
 
-const testPort = 18081
-
 var (
-	server    *http.Server
-	serverURL string
+	server       *http.Server
+	serverURL    string
+	serverListen net.Listener
 )
 
 var _ = BeforeSuite(func() {
 	By("Starting the actual HTTP server for integration testing")
-
-	serverURL = fmt.Sprintf("http://localhost:%d", testPort)
 
 	// Create gin router using same pattern as server
 	gin.SetMode(gin.ReleaseMode)
@@ -33,14 +31,19 @@ var _ = BeforeSuite(func() {
 	components := demo.CreateComponents()
 	demo.SetupRoutes(router, components)
 
+	var err error
+	serverListen, err = net.Listen("tcp", "127.0.0.1:0")
+	Expect(err).ToNot(HaveOccurred())
+	serverURL = "http://" + serverListen.Addr().String()
+
 	server = &http.Server{
-		Addr:              fmt.Sprintf(":%d", testPort),
+		Addr:              serverListen.Addr().String(),
 		Handler:           router,
 		ReadHeaderTimeout: 10 * time.Second,
 	}
 
 	go func() {
-		server.ListenAndServe()
+		_ = server.Serve(serverListen)
 	}()
 
 	// Wait for server to be ready

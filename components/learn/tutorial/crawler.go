@@ -7,6 +7,11 @@ import (
 	"github.com/rs/zerolog/log"
 )
 
+const (
+	goLangURL    = "http://golang.org/"
+	goLangPkgURL = "http://golang.org/pkg/"
+)
+
 type Fetcher interface {
 	// Fetch returns the body of URL and
 	// a slice of URLs found on that page.
@@ -89,34 +94,34 @@ func (f fakeFetcher) Fetch(url string) (string, []string, error) {
 
 // fetcher is a populated fakeFetcher.
 var fetcher = fakeFetcher{
-	"http://golang.org/": &fakeResult{
+	goLangURL: &fakeResult{
 		"The Go Programming Language",
 		[]string{
-			"http://golang.org/pkg/",
+			goLangPkgURL,
 			"http://golang.org/cmd/",
 		},
 	},
-	"http://golang.org/pkg/": &fakeResult{
+	goLangPkgURL: &fakeResult{
 		"Packages",
 		[]string{
-			"http://golang.org/",
+			goLangURL,
 			"http://golang.org/cmd/",
-			"http://golang.org/pkg/fmt/",
-			"http://golang.org/pkg/os/",
+			goLangPkgURL + "fmt/",
+			goLangPkgURL + "os/",
 		},
 	},
-	"http://golang.org/pkg/fmt/": &fakeResult{
+	goLangPkgURL + "fmt/": &fakeResult{
 		"Package fmt",
 		[]string{
-			"http://golang.org/",
-			"http://golang.org/pkg/",
+			goLangURL,
+			goLangPkgURL,
 		},
 	},
-	"http://golang.org/pkg/os/": &fakeResult{
+	goLangPkgURL + "os/": &fakeResult{
 		"Package os",
 		[]string{
-			"http://golang.org/",
-			"http://golang.org/pkg/",
+			goLangURL,
+			goLangPkgURL,
 		},
 	},
 }

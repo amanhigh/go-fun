@@ -15,6 +15,8 @@ type IndexPortal interface {
 
 type IndexPortalImpl struct{}
 
+const errorResponseKey = "error"
+
 // NewIndexPortal creates a new IndexPortal.
 func NewIndexPortal() *IndexPortalImpl {
 	return &IndexPortalImpl{}
@@ -25,6 +27,6 @@ var _ IndexPortal = (*IndexPortalImpl)(nil)
 func (h *IndexPortalImpl) HandleIndex(ctx *gin.Context) {
 	ctx.Header("Content-Type", "text/html")
 	if err := pages.IndexPage().Render(ctx.Request.Context(), ctx.Writer); err != nil {
-		ctx.JSON(http.StatusInternalServerError, gin.H{"error": "failed to render index page"})
+		ctx.JSON(http.StatusInternalServerError, gin.H{errorResponseKey: "failed to render index page"})
 	}
 }
