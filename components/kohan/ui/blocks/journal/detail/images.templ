@@ -15,12 +15,12 @@ templ JournalDetailImages() {
 	@card.Card(card.Props{Class: "rounded-3xl shadow-sm"}) {
 		@card.Content(card.ContentProps{}) {
 			@components.SectionHeader(components.SectionHeaderProps{Title: "Images", Meta: journalDetailImagesMeta()})
-			<div class="mt-5 grid grid-cols-1 gap-5 lg:grid-cols-2" x-show="journal.detail.images.length">
+			<div class="mt-5 grid grid-cols-1 gap-5 lg:grid-cols-2" x-show="journal.detail?.images?.length">
 				<template x-for="(image, index) in images.sorted()" x-bind:key="image.id">
 					@JournalDetailImageTile()
 				</template>
 			</div>
-			@components.EmptyState(components.EmptyStateProps{Message: "No images available for this journal.", ShowExpr: "!journal.detail.images.length", Class: "mt-5"})
+			@components.EmptyState(components.EmptyStateProps{Message: "No images available for this journal.", ShowExpr: "!journal.detail?.images?.length", Class: "mt-5"})
 		}
 	}
 }

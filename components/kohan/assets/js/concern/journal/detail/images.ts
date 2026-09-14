@@ -56,13 +56,13 @@ function compareImages(a: JournalImage, b: JournalImage): number {
 export function NewImagesConcern(pg: JournalDetailPageProvider) {
 	return {
 		sorted(): JournalImageView[] {
-			const images = pg().journal.detail!.images;
-			if (!images?.length) return [];
+			const images = pg().journal.detail?.images ?? [];
+			if (!images.length) return [];
 			return [...images].map(toImageView).sort(compareImages);
 		},
 
 		countLabel(): string {
-			const count = pg().journal.detail!.images.length;
+			const count = pg().journal.detail?.images?.length ?? 0;
 			return `${count} timeframe image${count === 1 ? '' : 's'}`;
 		},
 	};

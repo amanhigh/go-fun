@@ -95,7 +95,7 @@ func ohYouTookTrades() templ.Component {
 			templ_7745c5c3_Var3 = templ.NopComponent
 		}
 		ctx = templ.ClearChildren(ctx)
-		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 3, "<section class=\"space-y-3\" x-show=\"journal.detail.type === 'TAKEN'\"><h4 class=\"text-sm font-semibold tracking-tight text-foreground\">Oh, So You Took the Trade?</h4><p class=\"text-sm text-muted-foreground\">How did it go? Confess your sins.</p>")
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 3, "<section class=\"space-y-3\" x-show=\"journal.detail?.type === 'TAKEN'\"><h4 class=\"text-sm font-semibold tracking-tight text-foreground\">Oh, So You Took the Trade?</h4><p class=\"text-sm text-muted-foreground\">How did it go? Confess your sins.</p>")
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}

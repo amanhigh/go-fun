@@ -143,10 +143,11 @@ var _ = Describe("Journal Detail Page Tests", func() {
 			Expect(headerRow.Find("span[x-text=\"images.countLabel()\"]").Length()).To(Equal(1))
 			Expect(headerRow.Text()).To(ContainSubstring("· click to zoom"))
 
-			Expect(attrValueExists(doc, "x-show", "journal.detail.images.length")).To(BeTrue())
+			Expect(attrValueExists(doc, "x-show", "journal.detail?.images?.length")).To(BeTrue())
 			Expect(attrValueExists(doc, "x-for", "(image, index) in images.sorted()")).To(BeTrue())
 			// Journal-specific empty state when no images are present.
 			Expect(html).To(ContainSubstring("No images available for this journal."))
+			Expect(attrValueExists(doc, "x-show", "journal.detail?.type === 'TAKEN'")).To(BeTrue())
 
 			// Full-image tiles open the preview at their index and carry the file name.
 			Expect(attrValueExists(doc, "x-on:click", "preview.open(index)")).To(BeTrue())
