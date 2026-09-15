@@ -17,7 +17,7 @@ templ JournalDetailActionsPanel() {
 }
 
 templ ohYouTookTrades() {
-	<section class="space-y-3" x-show="journal.detail.type === 'TAKEN'">
+	<section class="space-y-3" x-show="journal.detail?.type === 'TAKEN'">
 		<h4 class="text-sm font-semibold tracking-tight text-foreground">Oh, So You Took the Trade?</h4>
 		<p class="text-sm text-muted-foreground">How did it go? Confess your sins.</p>
 		@takenTagControls()

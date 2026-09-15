@@ -44,6 +44,7 @@ export type JournalImageView = JournalImage & {
 export type JournalImagesConcern = {
 	countLabel(): string;
 	sorted(): JournalImageView[];
+	secondSetIndex(): number;
 };
 
 export type PreviewConcern = {
