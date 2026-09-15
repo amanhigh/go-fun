@@ -31,6 +31,12 @@ export interface Notification {
   title?: string;
   /** Visual variant and dismissal policy. */
   variant: NotificationVariant;
+  /**
+   * Optional display duration in milliseconds. Overrides the variant default:
+   * success notifications auto-expire (default 3000 ms) and error notifications
+   * persist until dismissed, unless this is provided.
+   */
+  duration?: number;
   /** Optional action button. */
   action?: NotificationAction;
   /** One-time callback fired only when the notification expires via its timer. */
