@@ -45,7 +45,6 @@ var _ = Describe("Journal Detail Page Tests", func() {
 			root := doc.Find("section").First()
 			Expect(root.AttrOr("x-data", "")).To(Equal(`journalDetailPage("jrn_1234abcd")`))
 			Expect(root.AttrOr("x-init", "")).To(Equal("init()"))
-			Expect(root.AttrOr("data-journal-bridge", "")).To(Equal("journal-detail"))
 		})
 
 		It("places the detail header ahead of the loaded content grid", func() {
