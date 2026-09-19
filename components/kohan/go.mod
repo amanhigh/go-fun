@@ -9,7 +9,6 @@ require (
 	github.com/amanhigh/go-fun/models v1.0.0
 	github.com/gdamore/tcell/v2 v2.7.1
 	github.com/gin-gonic/gin v1.12.0
-	github.com/go-co-op/gocron/v2 v2.19.1
 	github.com/go-playground/validator/v10 v10.30.3
 	github.com/go-resty/resty/v2 v2.17.2
 	github.com/gocarina/gocsv v0.0.0-20240520201108-78e41c74b4b1
@@ -61,7 +60,6 @@ require (
 	github.com/inconshreveable/mousetrap v1.1.0 // indirect
 	github.com/jinzhu/inflection v1.0.0 // indirect
 	github.com/jinzhu/now v1.1.5 // indirect
-	github.com/jonboulle/clockwork v0.5.0 // indirect
 	github.com/josharian/intern v1.0.0 // indirect
 	github.com/json-iterator/go v1.1.12 // indirect
 	github.com/klauspost/cpuid/v2 v2.4.0 // indirect
@@ -81,7 +79,6 @@ require (
 	github.com/richardlehane/mscfb v1.0.4 // indirect
 	github.com/richardlehane/msoleps v1.0.4 // indirect
 	github.com/rivo/uniseg v0.4.7 // indirect
-	github.com/robfig/cron/v3 v3.0.1 // indirect
 	github.com/sirupsen/logrus v1.9.3 // indirect
 	github.com/spf13/pflag v1.0.5 // indirect
 	github.com/stretchr/objx v0.5.2 // indirect
