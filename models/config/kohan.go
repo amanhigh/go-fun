@@ -2,7 +2,6 @@ package config
 
 import (
 	"fmt"
-	"time"
 
 	"github.com/caarlos0/env/v6"
 )
@@ -28,7 +27,6 @@ type KohanConfig struct {
 	Tax            TaxConfig
 	Barkat         BarkatConfig
 	Server         HttpServerConfig
-	OSWaitInterval time.Duration `env:"KOHAN_OS_WAIT_INTERVAL" envDefault:"1m"`
 }
 
 // BarkatConfig defines configuration for the Barkat Journal Explorer

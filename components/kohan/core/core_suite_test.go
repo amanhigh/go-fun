@@ -152,3 +152,14 @@ var _ = AfterSuite(func() {
 		Expect(os.RemoveAll(testImageDir)).To(Succeed())
 	}
 })
+
+var _ = Describe("OS Manager Dependency Injection", func() {
+	It("provides an OS manager from screenshot configuration", func() {
+		core.SetupKohanInjector(config.KohanConfig{
+			Barkat: config.BarkatConfig{ScreenshotPath: testImageDir},
+		})
+
+		osManager := core.GetKohanInterface().GetOSManager()
+		Expect(osManager).To(BeAssignableToTypeOf(&manager.OSManagerImpl{}))
+	})
+})

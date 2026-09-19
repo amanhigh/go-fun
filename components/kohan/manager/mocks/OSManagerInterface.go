@@ -39,46 +39,6 @@ func (_m *OSManagerInterface) EXPECT() *OSManagerInterface_Expecter {
 	return &OSManagerInterface_Expecter{mock: &_m.Mock}
 }
 
-// MonitorInternetConnection provides a mock function for the type OSManagerInterface
-func (_mock *OSManagerInterface) MonitorInternetConnection(ctx context.Context) {
-	_mock.Called(ctx)
-	return
-}
-
-// OSManagerInterface_MonitorInternetConnection_Call is a *mock.Call that shadows Run/Return methods with type explicit version for method 'MonitorInternetConnection'
-type OSManagerInterface_MonitorInternetConnection_Call struct {
-	*mock.Call
-}
-
-// MonitorInternetConnection is a helper method to define mock.On call
-//   - ctx context.Context
-func (_e *OSManagerInterface_Expecter) MonitorInternetConnection(ctx any) *OSManagerInterface_MonitorInternetConnection_Call {
-	return &OSManagerInterface_MonitorInternetConnection_Call{Call: _e.mock.On("MonitorInternetConnection", ctx)}
-}
-
-func (_c *OSManagerInterface_MonitorInternetConnection_Call) Run(run func(ctx context.Context)) *OSManagerInterface_MonitorInternetConnection_Call {
-	_c.Call.Run(func(args mock.Arguments) {
-		var arg0 context.Context
-		if args[0] != nil {
-			arg0 = args[0].(context.Context)
-		}
-		run(
-			arg0,
-		)
-	})
-	return _c
-}
-
-func (_c *OSManagerInterface_MonitorInternetConnection_Call) Return() *OSManagerInterface_MonitorInternetConnection_Call {
-	_c.Call.Return()
-	return _c
-}
-
-func (_c *OSManagerInterface_MonitorInternetConnection_Call) RunAndReturn(run func(ctx context.Context)) *OSManagerInterface_MonitorInternetConnection_Call {
-	_c.Run(run)
-	return _c
-}
-
 // RecordTicker provides a mock function for the type OSManagerInterface
 func (_mock *OSManagerInterface) RecordTicker(ctx context.Context, ticker string) common.HttpError {
 	ret := _mock.Called(ctx, ticker)
