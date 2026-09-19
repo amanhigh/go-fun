@@ -131,7 +131,7 @@ var _ = Describe("Journal Detail Page Tests", func() {
 	})
 
 	Context("Images Flow", func() {
-		It("renders the image gallery with sorted loop and full-image preview entry point", func() {
+		It("renders the image gallery with delete and full-image preview entry points", func() {
 			// Section identity: the title uses the standard header h3.
 			title := doc.Find("h3").FilterFunction(func(_ int, s *goquery.Selection) bool {
 				return s.Text() == "Images"
@@ -144,6 +144,10 @@ var _ = Describe("Journal Detail Page Tests", func() {
 
 			Expect(attrValueExists(doc, "x-show", "journal.detail?.images?.length")).To(BeTrue())
 			Expect(attrValueExists(doc, "x-for", "(image, index) in images.sorted()")).To(BeTrue())
+			Expect(attrValueExists(doc, "x-on:click", "images.delete(image.id)")).To(BeTrue())
+			Expect(attrValueExists(doc, "x-bind:disabled", "images.submitter.isBusy()")).To(BeTrue())
+			Expect(attrValueExists(doc, "aria-label", "Delete Image")).To(BeTrue())
+			Expect(attrValueExists(doc, "x-show", "images.submitter.isBusy()")).To(BeTrue())
 			// Journal-specific empty state when no images are present.
 			Expect(html).To(ContainSubstring("No images available for this journal."))
 			Expect(attrValueExists(doc, "x-show", "journal.detail?.type === 'TAKEN'")).To(BeTrue())

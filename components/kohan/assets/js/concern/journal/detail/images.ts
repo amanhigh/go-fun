@@ -1,3 +1,6 @@
+import { notify } from '../../../lib/notification';
+import { createSubmitter } from '../../../lib/submitter';
+import type { DismissNotification } from '../../../types/notification';
 import type { JournalImage } from '../../../types/api/journal/response';
 import type { JournalTimeframe, JournalImageType } from '../../../types/api/journal/enums';
 import type { JournalImageView, JournalDetailPageProvider } from '../../../types/journal/detail';
@@ -54,7 +57,20 @@ function compareImages(a: JournalImage, b: JournalImage): number {
 }
 
 export function NewImagesConcern(pg: JournalDetailPageProvider) {
+	let dismiss: DismissNotification | undefined;
+	const submitter = createSubmitter();
+
+	function clearHandle(): void {
+		dismiss = undefined;
+	}
+
+	function clearPending(): void {
+		dismiss?.();
+		dismiss = undefined;
+	}
+
 	return {
+		submitter,
 		sorted(): JournalImageView[] {
 			const images = pg().journal.detail?.images ?? [];
 			if (!images.length) return [];
@@ -66,6 +82,31 @@ export function NewImagesConcern(pg: JournalDetailPageProvider) {
 			return `${count} timeframe image${count === 1 ? '' : 's'}`;
 		},
 
+		delete(imageId: string): void {
+			const journal = pg().journal.detail;
+			if (!journal) return;
+
+			clearPending();
+			dismiss = notify({
+				message: 'Image will be deleted…',
+				variant: 'success',
+				duration: 3000,
+				action: {
+					label: 'Undo',
+					run: clearHandle,
+				},
+				onExpire: () => {
+					clearHandle();
+					void submitter.run(async () => {
+						await pg().imageClient.delete(journal.id, imageId);
+						const current = pg().journal.detail;
+						if (current?.id === journal.id) {
+							current.images = (current.images ?? []).filter((image) => image.id !== imageId);
+						}
+					});
+				},
+			});
+		},
 		secondSetIndex(): number {
 			const sorted = this.sorted();
 			const secondSet = sorted.filter((image) => image.image_type === 'SET')[1];

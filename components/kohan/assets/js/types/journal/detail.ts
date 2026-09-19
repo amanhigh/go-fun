@@ -2,6 +2,7 @@ import type { JournalDetail, JournalImage } from '../api/journal/response';
 import type { JournalTimeframe, JournalImageType } from '../api/journal/enums';
 import type { Loader } from '../../lib/loader';
 import type { Submitter } from '../../lib/submitter';
+import type { JournalImageClient } from '../../client/journal_image';
 import type { JournalNoteClient } from '../../client/journal_note';
 import type { JournalTagClient } from '../../client/journal_tag';
 import type { JournalDetailSidebarConcern } from './sidebar';
@@ -10,6 +11,7 @@ import type { JournalPageBase, PageProvider } from './page';
 // ===== Main Page Composition =====
 
 export type JournalDetailPage = JournalPageBase & {
+	imageClient: JournalImageClient;
 	noteClient: JournalNoteClient;
 	tagClient: JournalTagClient;
 
@@ -42,7 +44,9 @@ export type JournalImageView = JournalImage & {
 };
 
 export type JournalImagesConcern = {
+	submitter: Submitter;
 	countLabel(): string;
+	delete(imageId: string): void;
 	sorted(): JournalImageView[];
 	secondSetIndex(): number;
 };
