@@ -38,7 +38,6 @@ export function NewReviewAdvanceConcern(): ReviewAdvanceConcern {
 				},
 				onExpire: () => {
 					clearHandle();
-					// FIXME: Open the second-last timeframe automatically on the next review.
 					window.location.href = `/journal/${next.id}`;
 				},
 			});
