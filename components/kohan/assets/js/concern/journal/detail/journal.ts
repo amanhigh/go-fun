@@ -24,6 +24,8 @@ export function NewJournalConcern(pg: JournalDetailPageProvider) {
 					this.detail = normalizeJournal(data);
 					pg().sidebar.tags.sync(this.detail.tags);
 					pg().sidebar.notes.sync(this.detail.notes);
+					const index = pg().images.secondSetIndex();
+					if (index >= 0) pg().preview.open(index);
 				},
 			);
 		},

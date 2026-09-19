@@ -31,12 +31,14 @@ export function NewReviewAdvanceConcern(): ReviewAdvanceConcern {
 				title: 'Journal reviewed',
 				message: `Advancing to ${next.ticker}…`,
 				variant: 'success',
+				duration: 1500,
 				action: {
 					label: 'Stay',
 					run: clearHandle,
 				},
 				onExpire: () => {
 					clearHandle();
+					// FIXME: Open the second-last timeframe automatically on the next review.
 					window.location.href = `/journal/${next.id}`;
 				},
 			});

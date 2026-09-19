@@ -131,7 +131,7 @@ function removeNotification(id: string): void {
  *
  * Behavior:
  *   - Stacks new notifications below existing ones in the viewport.
- *   - Auto-dismisses success notifications after 3000 ms; errors persist.
+ *   - Auto-dismisses success notifications after 3000 ms by default; a caller-supplied duration overrides the variant default, while errors persist unless a duration is provided.
  *   - Calls `onExpire` at most once, only when the timer expires (not on explicit dismiss).
  *   - Supports an optional action button and an explicit dismiss control.
  *
@@ -150,7 +150,7 @@ export function notify(notification: Notification): () => void {
   const node = buildNotificationNode(notification, id);
   viewport.appendChild(node);
 
-  const duration = notification.variant === "success" ? SUCCESS_NOTIFICATION_DURATION : 0;
+  const duration = notification.duration ?? (notification.variant === "success" ? SUCCESS_NOTIFICATION_DURATION : 0);
 
   const state: { timer: ReturnType<typeof setTimeout> | undefined; onExpire?: () => void } = { timer: undefined, onExpire: notification.onExpire };
   notificationState.set(id, state);
