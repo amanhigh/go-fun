@@ -66,6 +66,10 @@ func JournalDetailImages() templ.Component {
 				if templ_7745c5c3_Err != nil {
 					return templ_7745c5c3_Err
 				}
+				templ_7745c5c3_Err = components.Submitter(components.SubmitterProps{Submitter: "images.submitter"}).Render(ctx, templ_7745c5c3_Buffer)
+				if templ_7745c5c3_Err != nil {
+					return templ_7745c5c3_Err
+				}
 				templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 1, " <div class=\"mt-5 grid grid-cols-1 gap-5 lg:grid-cols-2\" x-show=\"journal.detail?.images?.length\"><template x-for=\"(image, index) in images.sorted()\" x-bind:key=\"image.id\">")
 				if templ_7745c5c3_Err != nil {
 					return templ_7745c5c3_Err
@@ -159,6 +163,15 @@ func JournalDetailImageTile() templ.Component {
 			return templ_7745c5c3_Err
 		}
 		templ_7745c5c3_Err = badge.Badge(badge.Props{Variant: badge.VariantSecondary, Class: "border text-sm font-semibold shadow-sm", Attributes: templ.Attributes{"x-bind:class": "present.timeframe.spec(image.timeframe).class", "x-text": "image.timeframe"}}).Render(ctx, templ_7745c5c3_Buffer)
+		if templ_7745c5c3_Err != nil {
+			return templ_7745c5c3_Err
+		}
+		templ_7745c5c3_Err = components.DeleteButton(components.DeleteButtonProps{
+			Label:        "Delete Image",
+			DisabledExpr: "images.submitter.isBusy()",
+			OnClickExpr:  "images.delete(image.id)",
+			Class:        "ml-auto",
+		}).Render(ctx, templ_7745c5c3_Buffer)
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}

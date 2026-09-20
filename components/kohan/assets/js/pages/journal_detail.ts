@@ -1,4 +1,5 @@
 import { NewJournalClient } from '../client/journal';
+import { NewJournalImageClient } from '../client/journal_image';
 import { NewJournalNoteClient } from '../client/journal_note';
 import { NewJournalTagClient } from '../client/journal_tag';
 import type { JournalDetailPage } from '../types/journal/detail';
@@ -15,6 +16,7 @@ function createJournalDetailPageData(journalId = '') {
 	const pg = () => page;
 
 	page.client = NewJournalClient();
+	page.imageClient = NewJournalImageClient();
 	page.noteClient = NewJournalNoteClient();
 	page.tagClient = NewJournalTagClient();
 
