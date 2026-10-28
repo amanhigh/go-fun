@@ -35,6 +35,7 @@ templ journalDetailImagesMeta() {
 
 templ JournalDetailImageTile() {
 	// FIXME: Add an image-delete action to the journal detail UI.
+	// FIXME: Add an action to attach a new image to the currently opened journal after sync.
 	<div class="space-y-2">
 		<div class="flex items-center gap-2 px-1">
 			@badge.Badge(badge.Props{Variant: badge.VariantSecondary, Class: "border text-sm font-semibold shadow-sm", Attributes: templ.Attributes{"x-bind:class": "present.imageType.spec(image.image_type).class", "x-text": "present.imageType.label(image.image_type)"}}) {}

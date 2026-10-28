@@ -1,5 +1,6 @@
 set shell := ["bash", "-cu"]
 
+# FIXME: Align Justfile targets, linting, and developer tooling with the mature Scripts project.
 import './.just/lib.just'
 import './.just/bootstrap.just'
 import './.just/build.just'
