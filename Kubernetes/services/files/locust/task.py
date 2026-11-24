@@ -24,7 +24,8 @@ class FunAppUser(HttpUser):
         with self.client.post(f"/{API_VERSION}/student", json=payload, catch_response=True) as response:
             if self._handle_response(response, "create") == 201:
                 try:
-                    student_data = response.json().get('data')
+                    response_body = response.json()
+                    student_data = response_body.get('data') if isinstance(response_body, dict) else None
                     student_id = student_data.get('id') if isinstance(student_data, dict) else None
                 except (TypeError, ValueError):
                     student_id = None
