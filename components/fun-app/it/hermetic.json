@@ -142,6 +142,83 @@
       "responseMode": null
     },
     {
+      "uuid": "c6e7aabc-0105-4c21-91f0-2020f2a7af68",
+      "type": "http",
+      "documentation": "",
+      "method": "post",
+      "endpoint": "v1/student",
+      "responses": [
+        {
+          "uuid": "43ae6ac6-48ad-4de8-ac6b-a97e1d58e55b",
+          "body": "{{setVar 'student' (object id=(objectId) name=(bodyRaw 'name') age=(bodyRaw 'age') gender=(bodyRaw 'gender'))}}\n{{setData 'push' 'Student' '' @student}}\n{\"status\":\"success\",\"data\": {{{stringify @student}}} }\n",
+          "latency": 0,
+          "statusCode": 201,
+          "label": "",
+          "headers": [],
+          "bodyType": "INLINE",
+          "filePath": "",
+          "databucketID": "",
+          "sendFileAsBody": false,
+          "rules": [],
+          "rulesOperator": "OR",
+          "disableTemplating": false,
+          "fallbackTo404": false,
+          "default": true,
+          "crudKey": "id",
+          "callbacks": []
+        },
+        {
+          "uuid": "22600da5-b6dd-4b27-b0e6-1e398943c340",
+          "body": "{}",
+          "latency": 0,
+          "statusCode": 400,
+          "label": "",
+          "headers": [],
+          "bodyType": "INLINE",
+          "filePath": "",
+          "databucketID": "",
+          "sendFileAsBody": false,
+          "rules": [
+            {
+              "target": "body",
+              "modifier": "name",
+              "value": "^[A-Za-z0-9 ]{1,30}$",
+              "invert": true,
+              "operator": "regex_i"
+            },
+            {
+              "target": "body",
+              "modifier": "gender",
+              "value": "(MALE|FEMALE)",
+              "invert": true,
+              "operator": "regex_i"
+            },
+            {
+              "target": "body",
+              "modifier": "age",
+              "value": "0",
+              "invert": false,
+              "operator": "equals"
+            },
+            {
+              "target": "body",
+              "modifier": "age",
+              "value": "^-.*$",
+              "invert": false,
+              "operator": "regex_i"
+            }
+          ],
+          "rulesOperator": "OR",
+          "disableTemplating": false,
+          "fallbackTo404": false,
+          "default": false,
+          "crudKey": "id",
+          "callbacks": []
+        }
+      ],
+      "responseMode": null
+    },
+    {
       "uuid": "38fa7276-f1b3-4f3b-ada3-87642ea70951",
       "type": "crud",
       "documentation": "",
@@ -373,6 +450,10 @@
     },
     {
       "type": "route",
+      "uuid": "c6e7aabc-0105-4c21-91f0-2020f2a7af68"
+    },
+    {
+      "type": "route",
       "uuid": "38fa7276-f1b3-4f3b-ada3-87642ea70951"
     }
   ],
@@ -413,7 +494,7 @@
       "id": "sfma",
       "name": "Student",
       "documentation": "Student Bank",
-      "value": "[\n  {{#repeat 4}}\n    {\n      \"id\": \"{{faker 'string.alpha' length=5 casing='upper'}}\",\n      \"name\": \"{{faker 'student.firstName'}} {{faker 'student.lastName'}}\",\n      \"age\": {{faker 'number.int' min=18 max=65}},\n      \"gender\": \"{{oneOf (array 'MALE' 'FEMALE')}}\"\n    }\n  {{/repeat}}\n]"
+      "value": "[\n  {{#repeat 4}}\n    {\n      \"id\": \"{{faker 'string.alpha' length=5 casing='upper'}}\",\n      \"name\": \"{{faker 'person.firstName'}} {{faker 'person.lastName'}}\",\n      \"age\": {{faker 'number.int' min=18 max=65}},\n      \"gender\": \"{{oneOf (array 'MALE' 'FEMALE')}}\"\n    }\n  {{/repeat}}\n]"
     }
   ],
   "callbacks": []

@@ -109,9 +109,9 @@ const docTemplate = `{
                 ],
                 "responses": {
                     "201": {
-                        "description": "Id of created student",
+                        "description": "Created student",
                         "schema": {
-                            "type": "string"
+                            "$ref": "#/definitions/common.Envelope-fun_Student"
                         }
                     },
                     "400": {
@@ -309,6 +309,30 @@ const docTemplate = `{
         }
     },
     "definitions": {
+        "common.Envelope-fun_Student": {
+            "type": "object",
+            "properties": {
+                "data": {
+                    "$ref": "#/definitions/fun.Student"
+                },
+                "status": {
+                    "$ref": "#/definitions/common.EnvelopeStatus"
+                }
+            }
+        },
+        "common.EnvelopeStatus": {
+            "type": "string",
+            "enum": [
+                "success",
+                "fail",
+                "error"
+            ],
+            "x-enum-varnames": [
+                "EnvelopeSuccess",
+                "EnvelopeFail",
+                "EnvelopeError"
+            ]
+        },
         "common.PaginatedResponse": {
             "type": "object",
             "properties": {

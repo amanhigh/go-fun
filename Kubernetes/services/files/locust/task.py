@@ -23,11 +23,17 @@ class FunAppUser(HttpUser):
         payload = self._generate_student_payload()
         with self.client.post(f"/{API_VERSION}/student", json=payload, catch_response=True) as response:
             if self._handle_response(response, "create") == 201:
-                student_id = response.json().get('id')
-                if student_id:
+                try:
+                    student_data = response.json().get('data')
+                    student_id = student_data.get('id') if isinstance(student_data, dict) else None
+                except (TypeError, ValueError):
+                    student_id = None
+                if isinstance(student_id, str) and student_id.strip():
                     self.student_ids.append(student_id)
                 else:
-                    logging.error(f"Student created but no ID found in response. Response: {response.text}")
+                    error_msg = f"Student created but no nonempty data.id found in response. Response: {response.text}"
+                    logging.error(error_msg)
+                    response.failure(error_msg)
 
     @task(5)
     @tag('read')

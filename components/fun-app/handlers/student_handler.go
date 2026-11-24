@@ -6,6 +6,7 @@ import (
 
 	"github.com/amanhigh/go-fun/common/util"
 	"github.com/amanhigh/go-fun/components/fun-app/manager"
+	"github.com/amanhigh/go-fun/models/common"
 	"github.com/amanhigh/go-fun/models/fun"
 	"github.com/rs/zerolog"
 	"go.opentelemetry.io/otel/attribute"
@@ -41,7 +42,7 @@ type StudentHandlerImpl struct {
 // @Accept json
 // @Produce json
 // @Param request body fun.StudentRequest true "Student Request"
-// @Success 201 {string} string "Id of created student"
+// @Success 201 {object} common.Envelope[fun.Student] "Created student"
 // @Failure 400 {string} string "Bad Request"
 // @Failure 500 {string} string "Internal Server Error"
 // @Router /student [post]
@@ -62,7 +63,7 @@ func (ph *StudentHandlerImpl) CreateStudent(c *gin.Context) {
 
 		// TODO: #B Move Student Flows and API's to Envelope similar to kohan API's
 		if student, err := ph.Manager.CreateStudent(ctx, request); err == nil {
-			c.JSON(http.StatusCreated, student)
+			c.JSON(http.StatusCreated, common.NewEnvelope(student))
 			span.SetStatus(codes.Ok, "Student Created")
 		} else {
 			span.SetStatus(codes.Error, err.Error())

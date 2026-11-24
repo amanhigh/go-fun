@@ -1,4 +1,21 @@
 definitions:
+  common.Envelope-fun_Student:
+    properties:
+      data:
+        $ref: '#/definitions/fun.Student'
+      status:
+        $ref: '#/definitions/common.EnvelopeStatus'
+    type: object
+  common.EnvelopeStatus:
+    enum:
+    - success
+    - fail
+    - error
+    type: string
+    x-enum-varnames:
+    - EnvelopeSuccess
+    - EnvelopeFail
+    - EnvelopeError
   common.PaginatedResponse:
     properties:
       limit:
@@ -147,9 +164,9 @@ paths:
       - application/json
       responses:
         "201":
-          description: Id of created student
+          description: Created student
           schema:
-            type: string
+            $ref: '#/definitions/common.Envelope-fun_Student'
         "400":
           description: Bad Request
           schema:

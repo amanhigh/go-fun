@@ -33,11 +33,12 @@ load-write:
     #!/usr/bin/env bash
     set -euo pipefail
     just _title "LOAD" "Write Load Test"
-    URL="{{url}}" jq -ncM --slurpfile a payload.json \
-        'while(true; .+1) as $i | $a | $a[0].name="\($a[0].name)-\($i)" | {method: "POST", header: {"Content-Type": ["application/json"]}, url: "\(env.URL)/student", body: .[0] | @base64}' \
+    URL="{{url}}" TOTAL_RECORDS="{{total_records}}" jq -ncM --slurpfile a payload.json \
+        'range(0; (env.TOTAL_RECORDS | tonumber)) as $i | $a[0] | .name="\(.name)-\($i)" | {method: "POST", header: {"Content-Type": ["application/json"]}, url: "\(env.URL)/student", body: . | @base64}' \
         | vegeta attack -lazy -format=json -duration={{duration}} -output={{result_file}}
     just _detail "LOAD" "Extracting IDs"
-    vegeta encode {{result_file}} | jq -r '.body | @base64d | fromjson | .id' > {{id_file}}
+    vegeta encode {{result_file}} | jq -ers 'map(select(.code == 201)) as $created | [$created[] | (.body | @base64d | fromjson | .data.id)] as $ids | if ($created | length) == 0 or any($ids[]; type != "string" or length == 0) then error("201 create response missing nonempty data.id") else $ids[] end' > {{id_file}}
+    test -s {{id_file}}
     just _detail "LOAD" "Test Result"
     vegeta report {{result_file}}
 
