@@ -28,10 +28,11 @@ import (
 func decodeStudentResponse(responseRecorder *httptest.ResponseRecorder) fun.Student {
 	Expect(responseRecorder.Code).To(Equal(http.StatusCreated))
 
-	var response fun.Student
-	Expect(json.Unmarshal(responseRecorder.Body.Bytes(), &response)).To(Succeed())
+	var envelope common.Envelope[fun.Student]
+	Expect(json.Unmarshal(responseRecorder.Body.Bytes(), &envelope)).To(Succeed())
+	Expect(envelope.Status).To(Equal(common.EnvelopeSuccess))
 
-	return response
+	return envelope.Data
 }
 
 var _ = Describe("StudentHandler CUD", func() {
@@ -103,7 +104,7 @@ var _ = Describe("StudentHandler CUD", func() {
 				req, recorder := util.CreateTestRequest(http.MethodPost, "/v1/student", request)
 				responseRecorder = recorder
 				router.ServeHTTP(responseRecorder, req)
-				Expect(json.Unmarshal(responseRecorder.Body.Bytes(), &response)).To(Succeed())
+				response = decodeStudentResponse(responseRecorder)
 				var err error
 				persisted, err = studentManager.GetStudent(ctx, response.Id)
 				Expect(err).ToNot(HaveOccurred())
@@ -127,6 +128,32 @@ var _ = Describe("StudentHandler CUD", func() {
 				Expect(audit[0].CreatedBy).To(Equal(fun.CreatedByAman))
 				Expect(audit[0].CreatedAt).ToNot(BeZero())
 				Expect(audit[0].CreatedAt).To(BeTemporally("~", time.Now(), 5*time.Second))
+			})
+
+			It("returns the created student in an exact 201 success envelope", func() {
+				Expect(responseRecorder.Header().Get("Content-Type")).To(Equal("application/json; charset=utf-8"))
+
+				var wireBody map[string]json.RawMessage
+				Expect(json.Unmarshal(responseRecorder.Body.Bytes(), &wireBody)).To(Succeed())
+				Expect(wireBody).To(HaveLen(2))
+				Expect(wireBody).To(HaveKey("status"))
+				Expect(wireBody).To(HaveKey("data"))
+
+				var status string
+				Expect(json.Unmarshal(wireBody["status"], &status)).To(Succeed())
+				Expect(status).To(Equal("success"))
+
+				var studentFields map[string]json.RawMessage
+				Expect(json.Unmarshal(wireBody["data"], &studentFields)).To(Succeed())
+				Expect(studentFields).To(HaveLen(4))
+				Expect(studentFields).To(HaveKey("id"))
+				Expect(studentFields).To(HaveKey("name"))
+				Expect(studentFields).To(HaveKey("age"))
+				Expect(studentFields).To(HaveKey("gender"))
+
+				var returnedStudent fun.Student
+				Expect(json.Unmarshal(wireBody["data"], &returnedStudent)).To(Succeed())
+				Expect(returnedStudent).To(Equal(response))
 			})
 		})
 

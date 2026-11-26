@@ -48,11 +48,11 @@ Content-Type: application/json
 }
 
 ### Get
-@studentId= {{createStudent.response.body.$.id}}
+@studentId= {{createStudent.response.body.$.data.id}}
 GET http://{{host}}:{{port}}/{{version}}/student/{{studentId}}
 
 ### Update
-@studentId= {{createStudent.response.body.$.id}}
+@studentId= {{createStudent.response.body.$.data.id}}
 PUT http://{{host}}:{{port}}/{{version}}/student/{{studentId}}
 Content-Type: application/json
 

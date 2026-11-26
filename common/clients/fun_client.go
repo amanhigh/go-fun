@@ -98,9 +98,11 @@ func NewFunAppClient(baseUrl string, httpConfig config.HttpClientConfig) *FunCli
 }
 
 func (c *StudentService) CreateStudent(ctx context.Context, request fun.StudentRequest) (student fun.Student, err common.HttpError) {
+	var envelope common.Envelope[fun.Student]
 	response, err1 := c.request(ctx).SetHeader("Content-Type", "application/json").
-		SetBody(request).SetResult(&student).Post(c.VersionUrl + "/student")
+		SetBody(request).SetResult(&envelope).Post(c.VersionUrl + "/student")
 	err = util.ResponseProcessor(response, err1)
+	student = envelope.Data
 	return
 }
 
