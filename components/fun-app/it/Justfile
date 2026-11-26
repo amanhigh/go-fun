@@ -33,14 +33,24 @@ load-write:
     #!/usr/bin/env bash
     set -euo pipefail
     just _title "LOAD" "Write Load Test"
-    URL="{{url}}" TOTAL_RECORDS="{{total_records}}" jq -ncM --slurpfile a payload.json \
+    id_file={{quote(id_file)}}
+    result_file={{quote(result_file)}}
+    target_file=$(mktemp)
+    filtered_result_file=$(mktemp "${result_file}.filtered.XXXXXX")
+    trap 'rm -f "$target_file" "$filtered_result_file"' EXIT
+    rm -f "$id_file" "$result_file"
+    URL={{quote(url)}} TOTAL_RECORDS={{quote(total_records)}} jq -ncM --slurpfile a payload.json \
         'range(0; (env.TOTAL_RECORDS | tonumber)) as $i | $a[0] | .name="\(.name)-\($i)" | {method: "POST", header: {"Content-Type": ["application/json"]}, url: "\(env.URL)/student", body: . | @base64}' \
-        | vegeta attack -lazy -format=json -duration={{duration}} -output={{result_file}}
+        > "$target_file"
+    vegeta attack -lazy -format=json -duration={{duration}} -targets="$target_file" -output="$result_file"
+    # Vegeta emits a code-0 sentinel when a finite target file runs out.
+    vegeta encode "$result_file" | jq -c 'select(.code != 0 or .error != "no targets to attack")' | vegeta encode -to gob > "$filtered_result_file"
+    mv "$filtered_result_file" "$result_file"
     just _detail "LOAD" "Extracting IDs"
-    vegeta encode {{result_file}} | jq -ers 'map(select(.code == 201)) as $created | [$created[] | (.body | @base64d | fromjson | .data.id)] as $ids | if ($created | length) == 0 or any($ids[]; if type == "string" then (gsub("[[:space:]]"; "") | length == 0) else true end) then error("201 create response missing nonempty data.id") else $ids[] end' > {{id_file}}
-    test -s {{id_file}}
+    vegeta encode "$result_file" | jq -ers 'map(select(.code == 201)) as $created | [$created[] | (.body | @base64d | fromjson | .data.id)] as $ids | if ($created | length) == 0 or any($ids[]; if type == "string" then (gsub("[[:space:]]"; "") | length == 0) else true end) then error("201 create response missing nonempty data.id") else $ids[] end' > "$id_file"
+    test -s "$id_file"
     just _detail "LOAD" "Test Result"
-    vegeta report {{result_file}}
+    vegeta report "$result_file"
 
 [group('run')]
 [doc('Run the full load workflow')]
